@@ -3,23 +3,23 @@
   "description": "初始版本",
   "files": [
     {
-      "name": "floatyBtn",
+      "name": "floatyBtn.js",
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js"
     },
     {
-      "name": "main",
+      "name": "main.js",
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
-      "name": "shuadi",
+      "name": "shuadi.js",
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {
-      "name": "project",
+      "name": "project.json",
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
-      "name": "zhongshu",
+      "name": "zhongshu.js",
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js"
     }
   ]
