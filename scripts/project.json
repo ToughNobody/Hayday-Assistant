@@ -1,0 +1,29 @@
+{
+  "abis": [],
+  "assets": [
+    "s"
+  ],
+  "build": {
+    "id": "B764FCB9-5",
+    "number": 5,
+    "time": 1756730850042
+  },
+  "excludedDirs": [],
+  "useFeatures": [],
+  "icon": "res/logo.png",
+  "launchConfig": {
+    "launcherVisible": true,
+    "logsVisible": true,
+    "splashVisible": true,
+    "permissions": [],
+    "slug": "Powered by AutoJs6"
+  },
+  "libs": [],
+  "main": "main.js",
+  "name": "卡通农场小助手",
+  "packageName": "com.ToughNobody.hayday",
+  "permissions": [],
+  "signatureScheme": "V1 + V2",
+  "versionCode": 2,
+  "versionName": "1.1.0"
+}

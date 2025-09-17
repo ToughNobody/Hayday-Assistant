@@ -1,0 +1,1291 @@
+"ui";
+
+
+
+let engine0 = engines.myEngine();
+const engineIds = {
+    main: engine0.id,
+    shuadi: null,
+    zhongshu: null,
+    guapai: null
+};
+
+
+// 配置文件路径
+// 获取应用专属外部目录的完整路径
+let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
+const configDir = files.join(appExternalDir, "configs");
+const configPath = files.join(configDir, "config.json");
+let logDir = files.join(appExternalDir, "logs");
+// 确保目录存在
+files.ensureDir(configDir);  // 创建配置目录
+files.ensureDir(logDir);  // 创建日志目录
+// 确保配置文件存在
+if (!files.exists(configPath)) {
+    files.create(configPath);  // 创建配置文件
+}
+
+// 格式化日期为易读格式：YYYY-MM-DD_HH-mm-ss
+let now = new Date();
+let formatDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
+let logPath = files.join(logDir, `${formatDate}.txt`);
+
+
+
+// 确保日志目录存在
+files.ensureDir(logDir);
+
+console.setGlobalLogConfig({
+    file: logPath, // 日志路径
+    maxFileSize: 1024 * 1024,          // 1MB 后分割
+    maxBackupSize: 10,                 // 最多保留 10 个备份
+    rootLevel: "all",                  // 记录所有级别日志
+    filePattern: "%d [%p] %m%n",      // 格式：时间 + 日志级别 + 消息
+    writeSyncInterval: 500             // 每500ms同步写入一次
+});
+
+// 颜色库
+const colorLibrary = [
+    "#009688",
+    "#FF9800",
+    "#4CAF50",
+    "#2196F3",
+    "#DB7093",
+    "#F44336",
+    "#00BCD4",
+    "#FFEB3B",
+    "#795548",
+    "#607D8B"
+];
+
+// 随机选择一个颜色
+var color;
+
+// 初始化颜色函数
+function initColor() {
+    // 尝试从配置文件加载颜色设置
+    const config = loadConfig();
+    if (config && config.themeColor && config.themeColor.code >= 0) {
+        // 如果配置中有颜色设置，使用配置中的颜色
+        color = colorLibrary[config.themeColor.code];
+    } else {
+        // 否则随机选择一个颜色
+        color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)];
+    }
+}
+
+// 初始化颜色
+initColor();
+
+// 从project.json中读取版本号
+function getAppVersion() {
+    try {
+        let projectPath = files.cwd() + "/project.json";
+        if (files.exists(projectPath)) {
+            let projectContent = files.read(projectPath);
+            let projectJson = JSON.parse(projectContent);
+            return projectJson.versionName || "未知版本";
+        }
+        return "未知版本";
+    } catch (e) {
+        console.error("读取版本号失败: " + e);
+        return "未知版本";
+    }
+}
+
+ui.layout(
+    <drawer id="drawer">
+        <vertical>
+            {/*页头*/}
+            <appbar id="appbar" bg="{{color}}">
+                <toolbar id="toolbar" title="卡通农场小助手" />
+                <tabs id="tabs" />
+            </appbar>
+            <viewpager id="viewpager">
+                <frame>
+                    <scroll>
+                        <vertical w="*" h="*" padding="16">
+
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="权限设置" textSize="16" textStyle="bold" marginBottom="8" />
+                                    <horizontal gravity="center_vertical" marginBottom="12">
+                                        {/*无障碍服务开关*/}
+                                        <text text="无障碍服务" textSize="14" w="100" marginRight="8" />
+                                        <Switch id="autoService" w="*" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical" marginBottom="12">
+                                        {/*浮动按钮开关*/}
+                                        <text text="浮动按钮" textSize="14" w="100" marginRight="8" />
+                                        <Switch id="win_switch" w="*" />
+                                    </horizontal>
+                                </vertical>
+                            </card>
+                            {/* 功能选择卡片 */}
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="功能设置" textSize="16" textStyle="bold" />
+
+                                    {/* 主功能选择 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="选择功能：" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="functionSelect" entries="刷地|种树|枯树上牌"
+                                            w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+
+                                    {/* 作物选择 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="种植作物：" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆"
+                                            w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+
+                                    {/* 树木选择 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="种植树木：" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
+                                            w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+
+                                    {/* 商店售价 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="商店售价：" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="shopPrice" entries="最低|平价|最高" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+                                </vertical>
+                            </card>
+
+                            {/* 账号设置卡片 */}
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="账号设置" textSize="16" textStyle="bold" />
+                                    <horizontal gravity="center_vertical">
+                                        <text text="切换账号：" textSize="14" w="100" marginRight="8" />
+                                        <switch id="accountSwitch" w="*" h="48"
+                                            gravity="left|center" />
+                                    </horizontal>
+
+                                    {/* 账号输入框 */}
+                                    <horizontal gravity="center_vertical" marginBottom="12">
+                                        <text text="账号名称：" textSize="14" w="100" marginRight="8" />
+                                        <input id="accountNamesInput" hint="多个账号用英文逗号分隔" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+
+                                    {/* 账号列表显示 */}
+                                    <vertical id="accountListDisplay" marginTop="8">
+                                        <text text="账号列表：" textSize="14" textStyle="bold" />
+                                        <text id="accountNamesText" text="未输入账号" textSize="14" marginTop="4" />
+                                    </vertical>
+                                </vertical>
+                            </card>
+
+                            {/* 操作按钮区 */}
+                            <horizontal gravity="center" marginTop="8">
+                                <button id="btnInstructions" text="使用须知" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
+                                <button id="btnLoadConfig" text="加载配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
+                                <button id="btnSave" text="保存配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" />
+                            </horizontal>
+
+                            <horizontal gravity="center" marginTop="16">
+                                <button id="btnStop" text="停止" w="100" h="48" textSize="16" color="#FFFFFF" backgroundTint="#FF9AA2" />
+                                <space w="16" />
+                                <button id="btnStart" text="开始" w="216" h="48" textSize="16" color="#FFFFFF" backgroundTint="#4ECDC4" />
+                            </horizontal>
+                        </vertical>
+                    </scroll>
+                </frame>
+                <frame>
+                    <scroll>
+                        <vertical w="*" h="*" padding="16">
+                            {/* 寻找土地方法卡片 - 使用按钮模拟单选 */}
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="寻找土地方法" textSize="16" textStyle="bold" marginBottom="16" />
+                                    <horizontal gravity="center_vertical">
+                                        <button id="methodShop" text="商店" w="120" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="16" />
+                                        <button id="methodBakery" text="面包房" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
+                                    </horizontal>
+                                </vertical>
+                            </card>
+
+                            {/* 坐标偏移卡片 */}
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="坐标偏移设置" textSize="16" textStyle="bold" />
+
+                                    {/* 土地坐标偏移 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="土地坐标偏移：" textSize="14" w="120" marginRight="8" />
+                                        <input id="landOffsetX" hint="X:60" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <input id="landOffsetY" hint="Y:-30" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                    </horizontal>
+
+                                    {/* 商店坐标偏移 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="商店坐标偏移：" textSize="14" w="120" marginRight="8" />
+                                        <input id="shopOffsetX" hint="X:-60" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <input id="shopOffsetY" hint="Y:-50" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="收割横向偏移：" textSize="14" w="120" marginRight="8" />
+                                        <input id="harvestOffsetXX" hint="X:-480" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <input id="harvestOffsetXY" hint="Y:-225" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="收割纵向偏移：" textSize="14" w="120" marginRight="8" />
+                                        <input id="harvestOffsetYX" hint="X:100" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <input id="harvestOffsetYY" hint="Y:-50" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="初始土地偏移：" textSize="14" w="120" marginRight="8" />
+                                        <input id="firstlandX" hint="X:20" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <input id="firstlandY" hint="Y:40" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="收割两指间距：" textSize="14" w="120" marginRight="8" />
+                                        <input id="distance" hint="75" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="悬浮窗坐标：" textSize="14" w="120" marginRight="8" />
+                                        <input id="showTextX" hint="X:0(百分比)" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal|numberSigned" marginRight="8" />
+                                        <input id="showTextY" hint="Y:0.65(百分比)" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal|numberSigned" />
+                                    </horizontal>
+                                </vertical>
+                            </card>
+
+                            {/* 照片路径卡片 */}
+                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="路径设置" textSize="16" textStyle="bold" marginBottom="8" />
+                                    <horizontal gravity="center_vertical">
+                                        <text text="照片文件夹路径：" textSize="14" w="100" marginRight="8" />
+                                        <input id="photoPath" text="./res/pictures.1280_720" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+                                </vertical>
+                            </card>
+                        </vertical>
+                    </scroll>
+                </frame>
+                <frame>
+                    <scroll>
+                        <vertical w="*" h="*" padding="16">
+
+                            {/* 硬件信息卡片 */}
+                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="主题颜色" textSize="16" textStyle="bold" marginBottom="8" />
+
+                                    {/* 主题颜色 */}
+                                                            <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="随机颜色：" textSize="14" w="100" marginRight="8" />
+                                        <Switch id="randomColor" checked="{{false}}" w="*" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="固定颜色：" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="themeColor" entries="碧玉青|落日橙|翠竹绿|晴空蓝|胭脂粉|朱砂红|湖水蓝|柠檬黄|咖啡棕|烟雨灰"
+                                            w="*" textSize="14" textColor="{{color}}" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+
+                                    
+                                </vertical>
+                            </card>
+
+                            {/* 设备信息卡片 */}
+                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="设备信息" textSize="16" textStyle="bold" marginBottom="8" />
+
+                                    {/* 屏幕分辨率 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="分辨率：" textSize="14" w="100" marginRight="8" />
+                                        <text id="screenResolution" text="{{device.width}}×{{device.height}}"
+                                            textSize="14" w="*" />
+                                    </horizontal>
+
+                                    {/* 屏幕密度 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="DPI：" textSize="14" w="100" marginRight="8" />
+                                        <text id="screenDensity" text="{{device.density}}"
+                                            textSize="14" w="*" />
+                                    </horizontal>
+
+                                    {/* 品牌型号 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="设备型号：" textSize="14" w="100" marginRight="8" />
+                                        <text id="deviceModel" text="{{device.brand}} {{device.model}}"
+                                            textSize="14" w="*" />
+                                    </horizontal>
+
+                                    {/* Android版本 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="系统版本：" textSize="14" w="100" marginRight="8" />
+                                        <text id="androidVersion" text="Android {{device.release}}"
+                                            textSize="14" w="*" />
+                                    </horizontal>
+                                </vertical>
+                            </card>
+                        </vertical>
+                    </scroll>
+                </frame>
+            </viewpager>
+        </vertical>
+        <vertical layout_gravity="left" bg="#ffffff" w="280">
+            <img w="280" h="200" scaleType="fitXY" src="./res/images/sidebar.png" />
+            <list id="menu">
+                <horizontal bg="?selectableItemBackground" w="*">
+                    <img w="50" h="50" padding="16" src="{{this.icon}}" tint="{{color}}" />
+                    <text textColor="black" textSize="15sp" text="{{this.title}}" layout_gravity="center" />
+                </horizontal>
+            </list>
+        </vertical>
+    </drawer>
+);
+
+
+//创建选项菜单(右上角)
+ui.emitter.on("create_options_menu", menu => {
+    menu.add("开始");
+    menu.add("关于");
+    menu.add("日志");
+});
+//监听选项菜单点击
+ui.emitter.on("options_item_selected", (e, item) => {
+    switch (item.getTitle()) {
+        case "开始":
+            startButton()
+            break;
+        case "关于":
+            alert("关于",
+                "脚本名称：卡通农场小助手\n" +
+                "版本：" + getAppVersion() + "\n" +
+                "作者：ToughNobody\n\n" +
+                "希望对你有帮助！",
+                "确定");
+            break;
+        case "日志":
+            showLogDialog();
+            break;
+
+    }
+    e.consumed = true;
+});
+activity.setSupportActionBar(ui.toolbar);
+//监听主题颜色
+ui.themeColor.on("item_selected", (item) => {
+    // 只有在randomColor关闭时才使用选择的颜色
+    if (!ui.randomColor.isChecked()) {
+        color = item.color;
+        ui.statusBarColor(color)
+        ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
+        // 更新按钮的选中状态颜色
+        updateButtonColors();
+    }
+});
+
+// 监听randomColor开关
+ui.randomColor.on("check", (checked) => {
+    if (checked) {
+        // 如果打开随机颜色，则随机选择一个颜色
+        color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)];
+        ui.statusBarColor(color);
+        ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
+        // 更新按钮的选中状态颜色
+        updateButtonColors();
+    } else {
+        // 如果关闭随机颜色，则使用当前选择的颜色
+        // 使用getSelectedItem方法获取当前选择的文本
+        const selectedItem = ui.themeColor.getSelectedItem();
+        const colorNames = ["碧玉青","落日橙","翠竹绿","晴空蓝","胭脂粉","朱砂红","湖水蓝","柠檬黄","咖啡棕","烟雨灰"];
+        const selectedIndex = colorNames.indexOf(selectedItem);
+        if (selectedIndex >= 0) {
+            color = colorLibrary[selectedIndex];
+            ui.statusBarColor(color);
+            ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
+            // 更新按钮的选中状态颜色
+            updateButtonColors();
+        }
+    }
+});
+
+// 更新按钮颜色函数
+function updateButtonColors() {
+    // 直接从配置中获取当前选中的土地方法
+    const config = loadConfig();
+    setLandMethod(config.landFindMethod);
+}
+//
+ui.statusBarColor(color)
+//设置滑动页面的标题
+ui.viewpager.setTitles(["首页", "参数配置", "更多"]);
+//让滑动页面和标签栏联动
+ui.tabs.setupWithViewPager(ui.viewpager);
+
+//让工具栏左上角可以打开侧拉菜单
+ui.toolbar.setupWithDrawer(ui.drawer);
+
+ui.menu.setDataSource([{
+    title: "赏",
+    icon: "@drawable/ic_thumb_up_black_48dp"
+},
+{
+    title: "群",
+    icon: "@drawable/ic_group_black_48dp"
+},
+{
+    title: "谢",
+    icon: "@drawable/ic_favorite_black_48dp"
+},
+{
+    title: "退出",
+    icon: "@drawable/ic_exit_to_app_black_48dp"
+}
+]);
+
+ui.menu.on("item_click", item => {
+    switch (item.title) {
+        case "赏":
+            dialogs.build({
+                title: "🌟投喂作者🌟 ",
+                content: "真的吗真的吗真的吗\n" +
+                    "(ฅ´ω`ฅ)",
+                positive: "真的😍",
+                neutral: "逗你玩😝",
+            }).on("positive", () => {
+                toast("您的支持是我最大的动力！❤️")
+                // 创建悬浮窗显示二维码
+                let floatWindow = floaty.window(
+                    <vertical padding="10">
+                        <card w="*" h="*" cardCornerRadius="32" cardElevation="2" gravity="center">
+                            <vertical padding="8" bg="#afe2a7">
+                                <text text="感谢您的支持！" textSize="18" textStyle="bold" textColor="#333333" gravity="center" marginBottom="12" />
+                                <img src="./res/images/qrcode_wechat_reward.jpg" w="260" h="260" scaleType="fitXY" />
+                                <horizontal gravity="center" marginTop="12">
+                                    <button id="closeBtn" text="关闭" style="Widget.AppCompat.Button.Colored" textColor="#000000" w="120" marginRight="10" />
+                                    <button id="loveBtn" text="爱发电链接🔗" style="Widget.AppCompat.Button.Colored" textColor="#000000" w="120" marginRight="10" />
+                                </horizontal>
+                            </vertical>
+                        </card>
+                    </vertical>
+                );
+
+                // 设置悬浮窗位置，更靠左上方
+                floatWindow.setPosition(device.width / 10, device.height / 5);
+
+                // 爱发电按钮点击事件
+                floatWindow.loveBtn.on("click", () => {
+                    app.openUrl("https://afdian.com/a/ToughNobody");
+                    floatWindow.close();
+                });
+
+                // 关闭按钮点击事件
+                floatWindow.closeBtn.on("click", () => {
+                    floatWindow.close();
+                });
+
+
+            }).on("neutral", () => {
+                toast("我哭死！😭");
+            }).show();
+            break;
+        case "群":
+            dialogs.build({
+                title: "👥 加入交流群 👥",
+                content: "想要加入我们的QQ交流群吗？\n这里有更多资源和帮助！\n群号:933276299",
+                positive: "立即加入 🚀",
+                negative: "复制群号",
+                neutral: "再想想"
+            }).on("positive", () => {
+                app.openUrl("https://qm.qq.com/q/yfhVwFL3Zm");
+            }).on("negative", () => {
+                setClip("933276299");
+            }).on("neutral", () => {
+                // toast("没关系，随时欢迎加入！😊");
+            }).show();
+            break;
+        case "谢":
+            dialogs.build({
+                title: "致谢🙏",
+                content: "感谢开源社区的支持！❤️\n本脚本悬浮窗功能参考了https://zhima.blog.csdn.net/"
+                    + "\n",
+                positive: "确定",
+                negative: "",
+                neutral: ""
+            }).on("positive", () => {
+
+            }).on("negative", () => {
+
+            }).on("neutral", () => {
+
+            }).show();
+            break;
+        case "退出":
+            stopOtherEngines(true);
+            break;
+
+    }
+})
+
+// 显示日志对话框函数
+function showLogDialog() {
+    // 获取所有日志文件
+    let logFiles = [];
+    try {
+        logFiles = files.listDir(logDir, function (name) {
+            return name.endsWith(".txt") && files.isFile(files.join(logDir, name));
+        });
+    } catch (e) {
+        toastLog("获取日志文件失败: " + e);
+        return;
+    }
+    let displayItems = logFiles.map(file => "📄 " + file);
+
+    // 创建单选列表对话框
+    let selectedIndex = -1; // 当前选中的文件索引
+    let dialog = dialogs.build({
+        title: "应用日志 (" + logFiles.length + "个文件)",
+        items: displayItems,
+        itemsSelectMode: "select", // 使用单选模式
+        positive: "打开文件",      // 按钮1：打开选中的日志文件
+        negative: "退出",         // 按钮2：退出对话框
+        neutral: "清空日志",      // 按钮3：清空日志文件夹
+        cancelable: true,         // 允许点击外部关闭
+        autoDismiss: false        // 关键：点击项目不自动关闭对话框
+    }).on("positive", () => {
+        // 打开选中的日志文件
+        if (selectedIndex === -1) {
+            toast("请先选择一个日志文件");
+            return;
+        }
+        try {
+            const filePath = files.join(logDir, logFiles[selectedIndex]);
+            app.viewFile(filePath); // 打开文件
+        } catch (e) {
+            toastLog("打开文件失败: " + e);
+        }
+    }).on("item_select", (index) => {
+        // 记录用户选择的文件索引
+        selectedIndex = index;
+    }).on("neutral", () => {
+        // 清空日志文件夹
+        dialogs.confirm("确定要清空日志文件夹吗？", "这将删除所有日志文件", (confirmed) => {
+            if (confirmed) {
+                try {
+                    // 删除所有日志文件
+                    logFiles.forEach(file => {
+                        files.remove(files.join(logDir, file));
+                    });
+
+                    // 更新对话框状态
+                    dialog.setItems([]); // 清空列表
+                    dialog.setTitle("应用日志 (0个文件)");
+                    toast("日志文件夹已清空");
+
+                    // 重置选择状态
+                    selectedIndex = -1;
+                    logFiles = [];
+                } catch (e) {
+                    toastLog("清空失败: " + e);
+                }
+            }
+        });
+    }).on("negative", () => {
+        // 添加退出按钮的处理
+        dialog.dismiss();
+    }).show();
+}
+
+// 开启无障碍服务监听
+ui.autoService.on("check", function (checked) {
+    if (checked && auto.service == null) {
+        // 跳转到无障碍设置界面
+        app.startActivity({
+            action: "android.settings.ACCESSIBILITY_SETTINGS"
+        });
+    }
+    if (!checked && auto.service != null) {
+        // 关闭无障碍服务
+        auto.service.disableSelf();
+    }
+});
+
+//导入浮动按钮模块
+const float_win = require('./floatyBtn.js');
+//浮动按钮状态监听
+ui.win_switch.on("check", function (checked) {
+    if (checked) {
+        // 开启悬浮窗
+        float_win.open();
+    } else {
+        // 关闭悬浮窗
+        float_win.close();
+    }
+});
+
+//
+
+events.broadcast.on("win_showLogDialog", showLogDialog);
+events.broadcast.on("win_startButton", startButton);
+events.broadcast.on("win_stopOtherEngines", stopOtherEngines);
+events.broadcast.on("win_stopAll", () => stopOtherEngines(true));
+// 监听浮动按钮状态变化
+events.broadcast.on("win_switch_state", (state) => {
+    ui.win_switch.setChecked(state);
+});
+// events.broadcast.on("win_startButton",startButton);
+
+// 监听界面恢复事件，更新开关状态
+ui.emitter.on("resume", function () {
+    ui.autoService.checked = (auto.service != null);
+    ui.win_switch.checked = float_win.isCreated();
+});
+
+
+
+//
+
+
+
+// ==================== 配置文件处理 ====================
+
+/**
+ * 获取当前配置
+ */
+function getConfig() {
+    const accountNames = parseAccountNames(ui.accountNamesInput.text());
+
+    return {
+        selectedFunction: {
+            text: ui.functionSelect.getSelectedItem(),
+            code: ["刷地", "种树", "枯树上牌"].indexOf(ui.functionSelect.getSelectedItem())
+        },
+
+        selectedCrop: {
+            text: ui.cropSelect.getSelectedItem(),
+            code: ["小麦", "玉米", "胡萝卜", "大豆"].indexOf(ui.cropSelect.getSelectedItem())
+        },
+        selectedTree: {
+            text: ui.treeSelect.getSelectedItem(),
+            code: ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "咖啡丛", "橄榄树", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"].indexOf(ui.treeSelect.getSelectedItem())
+        },
+        switchAccount: ui.accountSwitch.isChecked(),
+        accountNames: accountNames,
+        shopPrice: {
+            text: ui.shopPrice.getSelectedItem(),
+            code: ["最低", "平价", "最高"].indexOf(ui.shopPrice.getSelectedItem())
+        },
+        landFindMethod: ui.methodShop.attr("bg") === color ? "商店" : "面包房",
+        landOffset: {
+            x: parseInt(ui.landOffsetX.text()) ?? defaultConfig.landOffset.x,
+            y: parseInt(ui.landOffsetY.text()) ?? defaultConfig.landOffset.y
+        },
+        shopOffset: {
+            x: parseInt(ui.shopOffsetX.text()) ?? defaultConfig.shopOffset.x,
+            y: parseInt(ui.shopOffsetY.text()) ?? defaultConfig.shopOffset.y
+        },
+        harvestOffset: {
+            x: parseInt(ui.harvestOffsetXX.text()) ?? defaultConfig.harvestOffset.x,
+            y: parseInt(ui.harvestOffsetXY.text()) ?? defaultConfig.harvestOffset.y,
+            x2: parseInt(ui.harvestOffsetYX.text()) ?? defaultConfig.harvestOffset.x2,
+            y2: parseInt(ui.harvestOffsetYY.text()) ?? defaultConfig.harvestOffset.y2
+        },
+        firstland: {
+            x: parseInt(ui.firstlandX.text()) ?? defaultConfig.firstland.x,
+            y: parseInt(ui.firstlandY.text()) ?? defaultConfig.firstland.y,
+        },
+        distance: parseInt(ui.distance.text()) ?? defaultConfig.distance,
+        showText: {
+            x: parseFloat(ui.showTextX.text()) ?? defaultConfig.showText.x,
+            y: parseFloat(ui.showTextY.text()) ?? defaultConfig.showText.y
+        },
+        photoPath: ui.photoPath.text().toString(),
+        deviceScreenSize: ui.screenResolution.text().toString(),
+
+        randomColor: ui.randomColor.isChecked(),
+        themeColor: {
+            text: ui.themeColor.getSelectedItem(),
+            code: ["碧玉青","落日橙","翠竹绿","晴空蓝","胭脂粉","朱砂红","湖水蓝","柠檬黄","咖啡棕","烟雨灰"].indexOf(ui.themeColor.getSelectedItem())
+        },
+    };
+}
+
+/**
+ * 保存配置到文件
+ */
+function saveConfig(config) {
+    try {
+        console.log("开始保存配置，树木选择:", config.selectedTree);
+        // 创建配置目录（如果不存在）
+        if (!files.exists(configPath)) {
+            files.createWithDirs(configPath);
+        }
+
+        // 格式化并保存配置
+        files.write(configPath, JSON.stringify(config, null, 2));
+        console.log("配置保存成功");
+        return true;
+    } catch (e) {
+        console.error("保存配置失败:", e);
+        toast("保存配置失败: " + e.message, "long");
+        return false;
+    }
+}
+
+/**
+ * 从文件加载配置
+ */
+function loadConfig() {
+    try {
+        if (files.exists(configPath)) {
+            const config = JSON.parse(files.read(configPath));
+            return validateConfig(config);
+        }
+    } catch (e) {
+        console.error("加载配置失败:", e);
+        toast("配置文件损坏，使用默认配置", "long");
+    }
+    return getDefaultConfig();
+}
+
+/**
+ * 验证配置有效性
+ */
+function validateConfig(config) {
+    const defaultConfig = getDefaultConfig();
+    // 验证偏移值
+    if (!config.harvestOffset) config.harvestOffset = defaultConfig.harvestOffset;
+    config.landOffset.x = config.landOffset.x != null ? Number(config.landOffset.x) : defaultConfig.landOffset.x;
+    config.landOffset.y = config.landOffset.y != null ? Number(config.landOffset.y) : defaultConfig.landOffset.y;
+    config.shopOffset.x = config.shopOffset.x != null ? Number(config.shopOffset.x) : defaultConfig.shopOffset.x;
+    config.shopOffset.y = config.shopOffset.y != null ? Number(config.shopOffset.y) : defaultConfig.shopOffset.y;
+    config.harvestOffset.x = config.harvestOffset.x != null ? Number(config.harvestOffset.x) : defaultConfig.harvestOffset.x;
+    config.harvestOffset.y = config.harvestOffset.y != null ? Number(config.harvestOffset.y) : defaultConfig.harvestOffset.y;
+    config.harvestOffset.x2 = config.harvestOffset.x2 != null ? Number(config.harvestOffset.x2) : defaultConfig.harvestOffset.x2;
+    config.harvestOffset.y2 = config.harvestOffset.y2 != null ? Number(config.harvestOffset.y2) : defaultConfig.harvestOffset.y2;
+    config.firstland.x = config.firstland.x != null ? Number(config.firstland.x) : defaultConfig.firstland.x;
+    config.firstland.y = config.firstland.y != null ? Number(config.firstland.y) : defaultConfig.firstland.y;
+    config.distance = config.distance != null ? Number(config.distance) : defaultConfig.distance;
+
+    //验证悬浮窗坐标
+    if (!config.showText) config.showText = defaultConfig.showText;
+    config.showText.x = config.showText.x != null ? Number(config.showText.x) : defaultConfig.showText.x;
+    config.showText.y = config.showText.y != null ? Number(config.showText.y) : defaultConfig.showText.y;
+
+    // 验证树木选择
+    if (!config.selectedTree) config.selectedTree = defaultConfig.selectedTree;
+    const treeOptions = ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "咖啡丛", "橄榄树", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"];
+    if (config.selectedTree.code < 0 || config.selectedTree.code >= treeOptions.length) {
+        config.selectedTree.code = defaultConfig.selectedTree.code;
+    }
+    config.selectedTree.text = treeOptions[config.selectedTree.code];
+    
+    // 验证主题颜色
+    if (!config.themeColor) config.themeColor = defaultConfig.themeColor;
+    if (config.themeColor.code < 0 || config.themeColor.code >= colorLibrary.length) {
+        config.themeColor.code = defaultConfig.themeColor.code;
+    }
+    config.themeColor.text = ["碧玉青","落日橙","翠竹绿","晴空蓝","胭脂粉","朱砂红","湖水蓝","柠檬黄","咖啡棕","烟雨灰"][config.themeColor.code];
+
+    // 其他验证...
+    if (!Array.isArray(config.accountNames)) config.accountNames = [];
+    if (config.photoPath.length == 0) config.photoPath = "./res/pictures.1280_720"
+    return config;
+}
+
+/**
+ * 获取默认配置
+ */
+function getDefaultConfig() {
+    return {
+        selectedFunction: {
+            text: "刷地",
+            code: 0
+        },
+        selectedCrop: {
+            text: "小麦",
+            code: 0
+        },
+        selectedTree: {
+            text: "苹果树",
+            code: 0
+        },
+        switchAccount: false,
+        accountNames: [],
+        shopPrice: {
+            text: "最低",
+            code: 0
+        },
+        landFindMethod: "商店",
+        landOffset: {
+            x: 60,
+            y: -30
+        },
+        shopOffset: {
+            x: -60,
+            y: -50
+        },
+        harvestOffset: {
+            x: -480,
+            y: -225,
+            x2: 100,
+            y2: -50
+        },
+        firstland: {
+            x: 20,
+            y: 40
+        },
+        distance: 75,
+        showText: {
+            x: 0,
+            y: 0.65
+        },
+        photoPath: "./res/pictures.1280_720",
+        randomColor: false,
+        themeColor: {
+            text: "碧玉青",
+            code: 0
+        },
+    };
+}
+
+
+// ==================== 功能函数 ====================
+
+// 解析账号名称
+function parseAccountNames(text) {
+    if (!text) return [];
+    return text.split(",")
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+}
+
+// 更新账号列表显示
+function updateAccountListDisplay(accounts) {
+    if (accounts.length === 0) {
+        ui.accountNamesText.setText("未输入账号");
+        return;
+    }
+
+    let displayText = "";
+    accounts.forEach((account, index) => {
+        displayText += `${index + 1}. ${account}\n`;
+    });
+    ui.accountNamesText.setText(displayText.trim());
+}
+
+/**
+ * 加载配置到界面
+ */
+function loadConfigToUI() {
+    const config = loadConfig();
+
+    // 设置功能选择
+    ui.functionSelect.setSelection(config.selectedFunction.code);
+
+    // 设置作物选择
+    ui.cropSelect.setSelection(config.selectedCrop.code);
+
+    // 设置树木选择
+    ui.treeSelect.setSelection(config.selectedTree.code);
+
+
+    
+
+
+    // 设置账号相关
+    ui.accountSwitch.setChecked(config.switchAccount);
+    if (config.accountNames.length > 0) {
+        ui.accountNamesInput.setText(config.accountNames.join(", "));
+        updateAccountListDisplay(config.accountNames);
+    }
+
+    // 设置商店售价
+    ui.shopPrice.setSelection(config.shopPrice.code);
+
+    // 设置寻找土地方法
+    setLandMethod(config.landFindMethod);
+
+    // 设置坐标偏移
+    ui.landOffsetX.setText(String(config.landOffset.x));
+    ui.landOffsetY.setText(String(config.landOffset.y));
+    ui.shopOffsetX.setText(String(config.shopOffset.x));
+    ui.shopOffsetY.setText(String(config.shopOffset.y));
+
+    // 为坐标偏移输入框添加变化监听
+    ui.landOffsetX.on("text_change", () => autoSaveConfig());
+    ui.landOffsetY.on("text_change", () => autoSaveConfig());
+    ui.shopOffsetX.on("text_change", () => autoSaveConfig());
+    ui.shopOffsetY.on("text_change", () => autoSaveConfig());
+
+    // 设置收割偏移
+    ui.harvestOffsetXX.setText(String(config.harvestOffset.x));
+    ui.harvestOffsetXY.setText(String(config.harvestOffset.y));
+    ui.harvestOffsetYX.setText(String(config.harvestOffset.x2));
+    ui.harvestOffsetYY.setText(String(config.harvestOffset.y2));
+
+    ui.firstlandX.setText(String(config.firstland.x));
+    ui.firstlandY.setText(String(config.firstland.y));
+    ui.distance.setText(String(config.distance));
+
+    //设置悬浮窗坐标
+    ui.showTextX.setText(String(config.showText.x));
+    ui.showTextY.setText(String(config.showText.y));
+    // 设置照片路径
+    ui.photoPath.setText(config.photoPath);
+
+    // 为收割偏移输入框添加变化监听
+    ui.harvestOffsetXX.on("text_change", () => autoSaveConfig());
+    ui.harvestOffsetXY.on("text_change", () => autoSaveConfig());
+    ui.harvestOffsetYX.on("text_change", () => autoSaveConfig());
+    ui.harvestOffsetYY.on("text_change", () => autoSaveConfig());
+
+    // 为初始土地偏移输入框添加变化监听
+    ui.firstlandX.on("text_change", () => autoSaveConfig());
+    ui.firstlandY.on("text_change", () => autoSaveConfig());
+
+    // 为收割两指间距输入框添加变化监听
+    ui.distance.on("text_change", () => autoSaveConfig());
+
+    // 为悬浮窗坐标输入框添加变化监听
+    ui.showTextX.on("text_change", () => autoSaveConfig());
+    ui.showTextY.on("text_change", () => autoSaveConfig());
+
+    // 为照片路径输入框添加变化监听
+    ui.photoPath.on("text_change", () => autoSaveConfig());
+
+    // 设置随机颜色开关
+    ui.randomColor.setChecked(config.randomColor);
+    
+    // 设置主题颜色
+    if (config.themeColor.code >= 0) {
+        ui.themeColor.setSelection(config.themeColor.code);
+        
+        // 如果randomColor为false，则使用配置中的颜色
+        if (!config.randomColor) {
+            color = colorLibrary[config.themeColor.code];
+            ui.statusBarColor(color);
+            ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
+        }
+    }
+
+    // 更新权限状态
+    updateSwitchStatus();
+}
+
+// 设置寻找土地方法按钮状态
+function setLandMethod(method) {
+    if (method === "商店") {
+        ui.methodShop.attr("bg", color);
+        ui.methodShop.attr("textColor", "#FFFFFF");
+        ui.methodBakery.attr("bg", "#E0E0E0");
+        ui.methodBakery.attr("textColor", "#000000");
+    } else {
+        ui.methodShop.attr("bg", "#E0E0E0");
+        ui.methodShop.attr("textColor", "#000000");
+        ui.methodBakery.attr("bg", color);
+        ui.methodBakery.attr("textColor", "#FFFFFF");
+    }
+
+    // 强制刷新UI
+    ui.methodShop.attr("bg", ui.methodShop.attr("bg"));
+    ui.methodBakery.attr("bg", ui.methodBakery.attr("bg"));
+}
+
+function stopOtherEngines(includeMain = false) {
+    let allEngines = engines.all();
+    log("开始停止" + (includeMain ? "所有" : "其他") + "引擎，当前活动引擎列表：" + allEngines.map(e => e.id).join(", "));
+
+    // 遍历所有引擎ID
+    let stoppedAny = false;
+    for (let key in engineIds) {
+        let engineId = engineIds[key];
+        if (engineId && (includeMain || key !== 'main')) {  // 根据includeMain决定是否跳过主引擎
+            let engine = allEngines.find(e => e.id === engineId);
+            try {
+                engine.forceStop();
+                toastLog(`已停止${key}引擎(ID: ${engineId})`);
+                engineIds[key] = null;  // 清除已停止的引擎ID
+                stoppedAny = true;
+            } catch (e) {
+                log(`停止${key}引擎失败: ${e}`);
+            }
+        }
+    }
+
+    if (!stoppedAny) {
+        toast("没有需要停止的引擎");
+    }
+
+    // 如果包含主引擎且成功停止了所有引擎，可以退出程序
+    if (includeMain) {
+        log("所有引擎已停止，退出程序");
+        engines.myEngine().forceStop();
+    }
+}
+
+
+
+// 使用须知内容
+const instructions = [
+    "使用说明：",
+    "",
+    "在线文档",
+    "• 腾讯文档: https://docs.qq.com/doc/DWEtDUXB0U0dISGxo",
+    "",
+    "配置文件位置：",
+    configPath,
+    "日志文件位置：",
+    logDir,
+    ""
+
+].join("\n");
+
+// ==================== 事件绑定 ====================
+
+// 使用须知按钮点击事件
+ui.btnInstructions.click(() => {
+    dialogs.build({
+        title: "使用说明",
+        content: instructions,
+        contentTextSize: 14,
+        positive: "关闭",
+        neutral: "复制文档链接",
+        negative: "打开文档"
+    }).on("neutral", () => {
+        setClip("https://docs.qq.com/doc/DWEtDUXB0U0dISGxo");
+        toast("文档链接已复制");
+    }).on("negative", () => {
+        app.openUrl("https://docs.qq.com/doc/DWEtDUXB0U0dISGxo");
+    }).show();
+});
+// 自动保存配置函数（无提示）
+function autoSaveConfig() {
+    console.log("开始自动保存配置");
+    const config = getConfig();
+    console.log("获取配置:", JSON.stringify(config.selectedTree));
+    if (saveConfig(config)) {
+        console.log("配置自动保存成功");
+    } else {
+        console.error("配置自动保存失败");
+    }
+}
+
+// 保存按钮点击事件（保留手动保存功能）
+ui.btnSave.click(() => {
+    const config = getConfig();
+    if (saveConfig(config)) {
+        toast("配置保存成功");
+    }
+});
+
+// 加载配置按钮点击事件
+ui.btnLoadConfig.click(() => {
+    loadConfigToUI();
+    toast("配置已加载");
+});
+
+
+
+// 账号输入框文本变化监听
+ui.accountNamesInput.on("text_change", (text) => {
+    const accounts = parseAccountNames(text);
+    updateAccountListDisplay(accounts);
+    autoSaveConfig();
+});
+
+ui.btnStop.click(() => {
+    stopOtherEngines();
+});
+
+function startButton() {
+    const config = getConfig();
+    saveConfig(config);
+
+    if (!auto.service) {
+        toast("请先开启无障碍服务");
+        app.startActivity({
+            action: "android.settings.ACCESSIBILITY_SETTINGS"
+        });
+        return;
+    }
+
+    // 记录用户是否希望打开浮动按钮
+    const shouldOpenFloatWindow = ui.win_switch.checked;
+
+    // 检查用户是否打开了浮动按钮开关
+    if (shouldOpenFloatWindow) {
+        // 关闭浮动按钮
+        float_win.close();
+        log("已关闭浮动按钮");
+    }
+
+    switch (config.selectedFunction.code) {
+        case 0: // 刷地
+            stopOtherEngines(); // 先清理所有任务
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(1000);
+                let newEngine = engines.execScriptFile("./shuadi.js");
+                engineIds.shuadi = newEngine.id;  // 保存新引擎ID
+                log("启动刷地引擎，ID: " + newEngine.id);
+
+                // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
+                if (shouldOpenFloatWindow) {
+                    // 启动应用后打开浮动按钮
+                    sleep(1000);
+                    float_win.open();
+                    log("已启动浮动按钮");
+                }
+            });
+            break;
+
+        case 1: // 种树
+            stopOtherEngines();
+            // threads.start(() => {
+            //     let newEngine = engines.execScriptFile("./种树.js");
+            //     engineIds.zhongshu = newEngine.id;  // 保存新引擎ID
+            //     log("启动种树引擎，ID: " + newEngine.id);
+            //     
+            //     // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
+            //     if (shouldOpenFloatWindow) {
+            //         // 启动应用后打开浮动按钮
+            //         sleep(1000);
+            //         float_win.open();
+            //         log("已启动浮动按钮");
+            //     }
+            // });
+            toast("功能开发中");
+            break;
+
+        case 2: // 枯树上牌
+            stopOtherEngines();
+            // threads.start(() => {
+            //     let newEngine = engines.execScriptFile("./枯树挂牌.js");
+            //     engineIds.guapai = newEngine.id;  // 保存新引擎ID
+            //     log("启动挂牌引擎，ID: " + newEngine.id);
+            //     
+            //     // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
+            //     if (shouldOpenFloatWindow) {
+            //         // 启动应用后打开浮动按钮
+            //         sleep(1000);
+            //         float_win.open();
+            //         log("已启动浮动按钮");
+            //     }
+            // });
+            toast("功能开发中");
+            break;
+
+        default:
+            toast("未知功能", "long");
+    }
+}
+
+ui.btnStart.click(startButton);
+
+//监听引擎变化
+events.broadcast.on("engine1", function (e) {
+    engine1 = e
+})
+events.broadcast.on("engine2", function (e) {
+    engine2 = e
+})
+events.broadcast.on("engine3", function (e) {
+    engine3 = e
+})
+
+//监听引擎重启事件
+events.broadcast.on("engine_r", function (type) {
+    log("监听到引擎重启事件: " + type);
+
+    if (type == "刷地引擎") {
+        stopOtherEngines();
+        log("重启刷地引擎");
+        let newEngine = engines.execScriptFile("./shuadi.js");
+        engineIds.shuadi = newEngine.id;
+        log("新刷地引擎ID: " + newEngine.id);
+
+    }
+    else if (type == "种树引擎") {
+        stopOtherEngines();
+        let newEngine = engines.execScriptFile("./种树.js");
+        engineIds.zhongshu = newEngine.id;
+        log("新种树引擎ID: " + newEngine.id);
+
+    }
+});
+
+/**
+ * 初始化界面
+ */
+function initUI() {
+    // 尝试加载配置（如果配置文件存在）
+    if (files.exists(configPath)) {
+        try {
+            loadConfigToUI();
+        } catch (e) {
+            console.error("加载配置失败:", e);
+            toast("加载配置失败: " + e.message, "long");
+        }
+    }
+
+    // 初始化权限开关状态
+    updateSwitchStatus();
+
+    // 绑定土地方法按钮事件
+    ui.methodShop.click(() => {
+        setLandMethod("商店");
+        autoSaveConfig();
+    });
+    ui.methodBakery.click(() => {
+        setLandMethod("面包房");
+        autoSaveConfig();
+    });
+    
+    // 绑定选项变化监听器
+    ui.functionSelect.on("item_selected", () => {
+        console.log("功能选择发生变化");
+        autoSaveConfig();
+    });
+    
+    ui.cropSelect.on("item_selected", () => {
+        console.log("作物选择发生变化");
+        autoSaveConfig();
+    });
+    
+    ui.treeSelect.on("item_selected", () => {
+        console.log("树木选择发生变化，当前选择:", ui.treeSelect.getSelectedItem());
+        autoSaveConfig();
+    });
+    
+    ui.shopPrice.on("item_selected", () => {
+        console.log("商店售价选择发生变化");
+        autoSaveConfig();
+    });
+    
+    ui.themeColor.on("item_selected", () => {
+        console.log("主题颜色选择发生变化");
+        autoSaveConfig();
+    });
+    
+    ui.randomColor.on("check", (checked) => {
+        console.log("随机颜色开关状态变化:", checked);
+        autoSaveConfig();
+    });
+    
+    ui.accountSwitch.on("check", (checked) => {
+        console.log("账号开关状态变化:", checked);
+        autoSaveConfig();
+    });
+}
+
+/**
+ * 更新权限开关状态
+ */
+function updateSwitchStatus() {
+    // 无障碍服务状态
+    ui.autoService.checked = (auto.service != null);
+    //浮动按钮状态
+    ui.win_switch.checked = float_win.isCreated();
+
+}
+// 初始化界面
+initUI();
