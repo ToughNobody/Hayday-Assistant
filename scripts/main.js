@@ -276,7 +276,7 @@ ui.layout(
                                     <text text="主题颜色" textSize="16" textStyle="bold" marginBottom="8" />
 
                                     {/* 主题颜色 */}
-                                                            <horizontal gravity="center_vertical" marginBottom="8">
+                                    <horizontal gravity="center_vertical" marginBottom="8">
                                         <text text="随机颜色：" textSize="14" w="100" marginRight="8" />
                                         <Switch id="randomColor" checked="{{false}}" w="*" />
                                     </horizontal>
@@ -286,7 +286,7 @@ ui.layout(
                                             w="*" textSize="14" textColor="{{color}}" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
-                                    
+
                                 </vertical>
                             </card>
 
@@ -355,12 +355,7 @@ ui.emitter.on("options_item_selected", (e, item) => {
             startButton()
             break;
         case "关于":
-            alert("关于",
-                "脚本名称：卡通农场小助手\n" +
-                "版本：" + getAppVersion() + "\n" +
-                "作者：ToughNobody\n\n" +
-                "希望对你有帮助！",
-                "确定");
+            showAboutDialog();
             break;
         case "日志":
             showLogDialog();
@@ -369,6 +364,137 @@ ui.emitter.on("options_item_selected", (e, item) => {
     }
     e.consumed = true;
 });
+// 显示关于对话框函数
+function showAboutDialog() {
+    dialogs.build({
+        title: "关于",
+        content: "脚本名称：卡通农场小助手\n" +
+            "版本：" + getAppVersion() + "\n" +
+            "作者：ToughNobody\n\n" +
+            "希望对你有帮助！",
+        positive: "确定",
+        neutral: "检查更新"
+    }).on("neutral", () => {
+        checkForUpdates();
+    }).show();
+}
+
+// 检查更新函数
+function checkForUpdates() {
+    log("=== 开始检查更新 ===");
+    toast("正在检查更新...");
+    threads.start(() => {
+        try {
+            // 获取当前版本号
+            let currentVersion = getAppVersion();
+            log("当前版本: " + currentVersion);
+            // toast("当前版本: " + currentVersion);
+
+            // 发送HTTP请求获取最新版本号
+            let apiUrl = "https://gitee.com/ToughNobody/Hayday-Assistant/raw/main/version.json";
+            log("请求API地址: " + apiUrl);
+            let response = http.get(apiUrl, {
+                headers: {
+                    "Accept": "application/vnd.github.v3+json"
+                }
+            });
+            log("HTTP响应状态码: " + response.statusCode);
+            log("HTTP响应内容: " + response.body.string());
+
+            if (response.statusCode == 200) {
+                let result = response.body.json();
+
+                // 检查result对象和version字段是否存在
+                if (!result || !result.version) {
+                    log("错误: 无法获取版本信息，result对象或version为空");
+                    ui.run(() => {
+                        toast("检查更新失败: 无法获取版本信息");
+                    });
+                    return;
+                }
+
+                let latestVersion = result.version;
+                log("最新版本: " + latestVersion);
+
+                ui.run(() => {
+                    log("关闭更新检查对话框");
+
+                    // 比较版本号
+                    let compareResult = compareVersions(currentVersion, latestVersion);
+                    log("版本比较结果: " + compareResult + " (0=相同, <0=旧版本, >0=新版本)");
+
+                    if (compareResult < 0) {
+                        // 有新版本
+                        dialogs.build({
+                            title: "发现新版本",
+                            content: "当前版本: " + currentVersion + "\n" +
+                                "最新版本: " + latestVersion + "\n\n" +
+                                "更新内容: " + (result.description || "无更新说明").substring(0, 200) + "...\n\n" +
+                                "是否更新？",
+                            positive: "立即更新",
+                            negative: "稍后再说"
+                        }).on("positive", () => {
+                            // 调用热更新模块
+                            threads.start(() => {
+                                try {
+                                    // 加载热更新模块
+                                    let hotUpdate = require("./hot_update.js");
+
+                                    // 初始化热更新
+                                    hotUpdate.init({
+                                        version: result.version,
+                                        files: result.files,
+                                        description: result.description
+                                    });
+
+                                    // 执行增量更新
+                                    let success = hotUpdate.doIncrementalUpdate();
+
+                                    if (success) {
+                                        toastLog("更新成功，即将重启应用...");
+                                    } else {
+                                        toastLog("更新失败，请重试");
+                                    }
+                                } catch (e) {
+                                    toastLog("热更新失败: " + e.message);
+                                }
+                            });
+                        }).show();
+                    } else if (compareResult > 0) {
+                        // 当前版本更新（开发中）
+                        toastLog("你的版本超过了全球100%的用户！" + currentVersion + " > " + latestVersion);
+                    } else {
+                        // 没有新版本
+                        toastLog("当前已是最新版本: " + currentVersion);
+                    }
+                });
+            } else {
+                toastLog("检查更新失败: HTTP状态码 " + response.statusCode);
+            }
+        } catch (e) {
+            toastLog("检查更新失败: " + e.message);
+        }
+    });
+}
+
+// 版本号比较函数
+function compareVersions(version1, version2) {
+    // 将版本号拆分为数组
+    let v1Parts = version1.split(".").map(Number);
+    let v2Parts = version2.split(".").map(Number);
+
+    // 比较每个部分
+    for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+        let v1Part = v1Parts[i] || 0;
+        let v2Part = v2Parts[i] || 0;
+
+        if (v1Part > v2Part) return 1;
+        if (v1Part < v2Part) return -1;
+    }
+
+    return 0; // 版本号相同
+}
+
 activity.setSupportActionBar(ui.toolbar);
 //监听主题颜色
 ui.themeColor.on("item_selected", (item) => {
@@ -395,7 +521,7 @@ ui.randomColor.on("check", (checked) => {
         // 如果关闭随机颜色，则使用当前选择的颜色
         // 使用getSelectedItem方法获取当前选择的文本
         const selectedItem = ui.themeColor.getSelectedItem();
-        const colorNames = ["碧玉青","落日橙","翠竹绿","晴空蓝","胭脂粉","朱砂红","湖水蓝","柠檬黄","咖啡棕","烟雨灰"];
+        const colorNames = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"];
         const selectedIndex = colorNames.indexOf(selectedItem);
         if (selectedIndex >= 0) {
             color = colorLibrary[selectedIndex];
@@ -703,7 +829,7 @@ function getConfig() {
         randomColor: ui.randomColor.isChecked(),
         themeColor: {
             text: ui.themeColor.getSelectedItem(),
-            code: ["碧玉青","落日橙","翠竹绿","晴空蓝","胭脂粉","朱砂红","湖水蓝","柠檬黄","咖啡棕","烟雨灰"].indexOf(ui.themeColor.getSelectedItem())
+            code: ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"].indexOf(ui.themeColor.getSelectedItem())
         },
     };
 }
@@ -713,7 +839,6 @@ function getConfig() {
  */
 function saveConfig(config) {
     try {
-        console.log("开始保存配置，树木选择:", config.selectedTree);
         // 创建配置目录（如果不存在）
         if (!files.exists(configPath)) {
             files.createWithDirs(configPath);
@@ -777,13 +902,13 @@ function validateConfig(config) {
         config.selectedTree.code = defaultConfig.selectedTree.code;
     }
     config.selectedTree.text = treeOptions[config.selectedTree.code];
-    
+
     // 验证主题颜色
     if (!config.themeColor) config.themeColor = defaultConfig.themeColor;
     if (config.themeColor.code < 0 || config.themeColor.code >= colorLibrary.length) {
         config.themeColor.code = defaultConfig.themeColor.code;
     }
-    config.themeColor.text = ["碧玉青","落日橙","翠竹绿","晴空蓝","胭脂粉","朱砂红","湖水蓝","柠檬黄","咖啡棕","烟雨灰"][config.themeColor.code];
+    config.themeColor.text = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"][config.themeColor.code];
 
     // 其他验证...
     if (!Array.isArray(config.accountNames)) config.accountNames = [];
@@ -888,7 +1013,7 @@ function loadConfigToUI() {
     ui.treeSelect.setSelection(config.selectedTree.code);
 
 
-    
+
 
 
     // 设置账号相关
@@ -954,11 +1079,11 @@ function loadConfigToUI() {
 
     // 设置随机颜色开关
     ui.randomColor.setChecked(config.randomColor);
-    
+
     // 设置主题颜色
     if (config.themeColor.code >= 0) {
         ui.themeColor.setSelection(config.themeColor.code);
-        
+
         // 如果randomColor为false，则使用配置中的颜色
         if (!config.randomColor) {
             color = colorLibrary[config.themeColor.code];
@@ -1239,38 +1364,38 @@ function initUI() {
         setLandMethod("面包房");
         autoSaveConfig();
     });
-    
+
     // 绑定选项变化监听器
     ui.functionSelect.on("item_selected", () => {
         console.log("功能选择发生变化");
         autoSaveConfig();
     });
-    
+
     ui.cropSelect.on("item_selected", () => {
         console.log("作物选择发生变化");
         autoSaveConfig();
     });
-    
+
     ui.treeSelect.on("item_selected", () => {
         console.log("树木选择发生变化，当前选择:", ui.treeSelect.getSelectedItem());
         autoSaveConfig();
     });
-    
+
     ui.shopPrice.on("item_selected", () => {
         console.log("商店售价选择发生变化");
         autoSaveConfig();
     });
-    
+
     ui.themeColor.on("item_selected", () => {
         console.log("主题颜色选择发生变化");
         autoSaveConfig();
     });
-    
+
     ui.randomColor.on("check", (checked) => {
         console.log("随机颜色开关状态变化:", checked);
         autoSaveConfig();
     });
-    
+
     ui.accountSwitch.on("check", (checked) => {
         console.log("账号开关状态变化:", checked);
         autoSaveConfig();

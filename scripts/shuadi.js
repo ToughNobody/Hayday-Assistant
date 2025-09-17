@@ -885,14 +885,14 @@ function shop() {
     let attempts = 0; // 当前尝试次数
 
     // 检查是否还在商店界面
-    if (!matchColor([{ x: 119, y: 65, color: "#fb4d32" }, { x: 192, y: 74, color: "#fdfdfc" }, { x: 386, y: 56, color: "#dfb579" }, { x: 280, y: 169, color: "#c89376" }])) {
+    if (!matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
         console.log("未检测到商店界面，可能已关闭");
         return;
     }
 
     while (!shopEnd && attempts < maxAttempts) {
         // 每次循环开始时检查是否还在商店界面
-        if (!matchColor([{ x: 119, y: 65, color: "#fb4d32" }, { x: 192, y: 74, color: "#fdfdfc" }, { x: 386, y: 56, color: "#dfb579" }, { x: 280, y: 169, color: "#c89376" }])) {
+        if (!matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
             console.log("商店界面已关闭，退出循环");
             return;
         }
@@ -1153,7 +1153,7 @@ function switch_account(Account, num = 0) {
 
     let sc = captureScreen();
     find_close(sc);
-    sc.recycle;
+    sc.recycle();
     sleep(300);
 
     if (huanhao1) {
@@ -1170,7 +1170,32 @@ function switch_account(Account, num = 0) {
     if (huanhao3) {
 
         click(750 + ran(), 175 + ran());
-        sleep(700);
+        let findAccountMenuNum = 0;    //寻找账号菜单次数
+        while (true) {
+            findAccountMenuNum++;
+            if (findAccountMenuNum > 5 && num < 3) {
+                num++
+                console.log(`未识别到切换账号界面，重试第${num}次`)
+                showTip(`未识别到切换账号界面，重试第${num}次`)
+                sleep(3000);
+                find_close();
+                sleep(200);
+                find_close();
+                let nums = num
+                num = switch_account(Account, nums);
+            } else if (findAccountMenuNum > 5 && num >= 3) {
+                console.log("重试次数过多，重进游戏");
+                showTip("重试次数过多，重进游戏");
+                restartgame();
+            }
+            if (matchColor([{ x: 56, y: 63, color: "#ffffff" },
+            { x: 530, y: 70, color: "#041d51" },
+            { x: 38, y: 687, color: "#52b4dd" },
+            { x: 550, y: 697, color: "#0e3683" }])) {
+                break;
+            }
+            sleep(1000);
+        }
 
         const MAX_SCROLL_DOWN = 3; // 最多下滑3次
         const MAX_SCROLL_UP = 2; // 最多上滑2次
@@ -1180,12 +1205,13 @@ function switch_account(Account, num = 0) {
         let scrollUpCount = 0; // 当前上滑次数
         let AccountIma = files.join(config.photoPath, Account + ".png");
         while (!found) {
-            let is_find_Account = findimage(AccountIma, 0.8);
+
+            let is_find_Account = findimage(AccountIma, 0.7);
 
             if (is_find_Account) { //如果找到账号名称，则点击
                 log(`找到账号${Account}`);
                 showTip(`找到账号${Account}`);
-                sleep(300);
+                sleep(500);
                 click(is_find_Account.x + ran(), is_find_Account.y + ran());
                 sleep(500);
                 found = true;
@@ -1236,7 +1262,7 @@ function switch_account(Account, num = 0) {
             sleep(200);
             find_close();
             let nums = num
-            switch_account(num = nums);
+            num = switch_account(Account, nums);
         } else {
             console.log("超过最大尝试次数，重进游戏")
             restartgame();
@@ -1244,6 +1270,7 @@ function switch_account(Account, num = 0) {
     }
     sleep(2000);
     checkmenu();
+    return num;
 }
 
 
