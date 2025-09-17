@@ -1,5 +1,26 @@
 {
   "version": "1.1.0",
   "description": "初始版本",
-  "script_url": "https://cdn.jsdelivr.net/gh/ToughNobody/Hayday-Assistant@main/scripts/business_logic.js"
+  "files": [
+    {
+      "name": "floatyBtn",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js"
+    },
+    {
+      "name": "main",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
+    },
+    {
+      "name": "shuadi",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
+    },
+    {
+      "name": "project",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
+    },
+    {
+      "name": "zhongshu",
+      "url": "scripts/zhongshu.js"
+    }
+  ]
 }
