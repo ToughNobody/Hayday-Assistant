@@ -893,10 +893,10 @@ function shop() {
 
     while (!shopEnd && attempts < maxAttempts) {
         // 每次循环开始时检查是否还在商店界面
-        if (!matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
-            console.log("商店界面已关闭，退出循环");
-            return;
-        }
+        // if (!matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
+        //     console.log("商店界面已关闭，退出循环");
+        //     return;
+        // }
         if (shopisswipe) {
             shopEnd = matchColor([{ x: 990, y: 292, color: "#cccccc" }]);
             if (shopEnd) {
@@ -1456,9 +1456,8 @@ function main() {
     sleep(1000);
     checkmenu();
     sleep(500);
-
-    if (!config.switchAccount) { //不切换账号
-        //找耕地
+    if (!config.switchAccount || config.accountNames.length == 0) { //不切换账号
+        log("不切换账号，找耕地");
         huadong();
 
         sleep(1100);
@@ -1481,7 +1480,7 @@ function main() {
             }
         }
     } else {
-        //切换账号
+        log("切换账号");
         while (true) {
             config.accountNames.forEach(Account => {
                 switch_account(Account);

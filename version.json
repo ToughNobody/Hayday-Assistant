@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
-  "description": "新增热更新功能，修复若干bug",
+  "version": "1.2.1",
+  "description": "修复切换账号按钮bug",
   "files": [
     {
       "name": "floatyBtn.js",
