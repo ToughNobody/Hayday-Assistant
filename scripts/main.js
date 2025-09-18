@@ -77,6 +77,7 @@ function initColor() {
 // 初始化颜色
 initColor();
 
+
 // 从project.json中读取版本号
 function getAppVersion() {
     try {
@@ -382,7 +383,7 @@ function showAboutDialog() {
 // 检查更新函数
 function checkForUpdates() {
     log("=== 开始检查更新 ===");
-    toast("正在检查更新...");
+    // toast("正在检查更新...");
     threads.start(() => {
         try {
             // 获取当前版本号
@@ -452,6 +453,10 @@ function checkForUpdates() {
 
                                     if (success) {
                                         toastLog("更新成功，即将重启应用...");
+                                        engines.stopAll();
+                                        events.on("exit", function () {
+                                            engines.execScriptFile(engines.myEngine().cwd() + "/main.js");
+                                        });
                                     } else {
                                         toastLog("更新失败，请重试");
                                     }
@@ -462,7 +467,7 @@ function checkForUpdates() {
                         }).show();
                     } else if (compareResult > 0) {
                         // 当前版本更新（开发中）
-                        toastLog("你的版本超过了全球100%的用户！" + currentVersion + " > " + latestVersion);
+                        toastLog("你的版本超过了全球100%的用户！作者得在你这更新版本" + currentVersion + " > " + latestVersion, "long");
                     } else {
                         // 没有新版本
                         toastLog("当前已是最新版本: " + currentVersion);
@@ -1127,7 +1132,7 @@ function stopOtherEngines(includeMain = false) {
             let engine = allEngines.find(e => e.id === engineId);
             try {
                 engine.forceStop();
-                toastLog(`已停止${key}引擎(ID: ${engineId})`);
+                // toastLog(`已停止${key}引擎(ID: ${engineId})`);
                 engineIds[key] = null;  // 清除已停止的引擎ID
                 stoppedAny = true;
             } catch (e) {
@@ -1137,7 +1142,7 @@ function stopOtherEngines(includeMain = false) {
     }
 
     if (!stoppedAny) {
-        toast("没有需要停止的引擎");
+        // toast("没有需要停止的引擎");
     }
 
     // 如果包含主引擎且成功停止了所有引擎，可以退出程序
@@ -1242,6 +1247,24 @@ function startButton() {
         float_win.close();
         log("已关闭浮动按钮");
     }
+
+    // 输出当前配置
+    console.log("===== 当前配置 =====");
+    console.log("应用版本: " + getAppVersion());
+    console.log("选择功能: " + config.selectedFunction.text);
+    console.log("种植作物: " + config.selectedCrop.text);
+    console.log("种植树木: " + config.selectedTree.text);
+    console.log("商店价格: " + config.shopPrice.text);
+    console.log("地块查找方法: " + config.landFindMethod);
+    console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
+    console.log("账号数量: " + config.accountNames.length);
+    console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
+    console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
+    console.log("收割偏移: ((" + config.harvestOffset.x + ", " + config.harvestOffset.y + "), (" + config.harvestOffset.x2 + ", " + config.harvestOffset.y2 + "))");
+    console.log("浮动按钮: " + (shouldOpenFloatWindow ? "是" : "否"));
+    // console.log("主题颜色: " + config.themeColor.text);config
+    // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
+    console.log("==================");
 
     switch (config.selectedFunction.code) {
         case 0: // 刷地

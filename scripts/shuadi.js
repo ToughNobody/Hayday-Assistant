@@ -102,8 +102,9 @@ threads.start(autorequestScreenCapture);
 if (!requestScreenCapture()) {
     toast("请求截图失败");
     exit();
-} else toastLog("已获得截图权限");
-
+} else {
+    // toastLog("已获得截图权限");
+}
 
 
 
@@ -905,7 +906,7 @@ function shop() {
         }
         sleep(300);
         //找空闲货架
-        let kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130]);
+        let kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130], 20);
 
         if (kongxian) { //有空闲货架点击上架
             console.log("找到空闲货架");
@@ -984,6 +985,8 @@ function shop() {
                 break;
             }
         } else {    //没有空闲货架
+            console.log("未找到空闲货架");
+            showTip("未找到空闲货架");
             attempts++;
             sleep(200)
             const [x1, y1] = adapt(2000, 650);
@@ -1437,7 +1440,7 @@ function operation(Account) {
     openshop();
 
     //开始售卖
-    console.log("开始售卖系列操作")
+    console.log("===开始售卖系列操作===")
     shop();
 }
 
@@ -1482,7 +1485,7 @@ function main() {
         while (true) {
             config.accountNames.forEach(Account => {
                 switch_account(Account);
-                log("当前账号: " + Account);
+                log("===当前账号: " + Account + "===");
                 huadong();
                 log("等待作物成熟");
 

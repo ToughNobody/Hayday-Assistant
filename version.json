@@ -1,6 +1,6 @@
 {
-  "version": "1.1.0",
-  "description": "初始版本",
+  "version": "1.2.0",
+  "description": "新增热更新功能，修复若干bug",
   "files": [
     {
       "name": "floatyBtn.js",
@@ -21,6 +21,9 @@
     {
       "name": "zhongshu.js",
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js"
+    }, {
+      "name": "hot_update.js",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js"
     }
   ]
 }
