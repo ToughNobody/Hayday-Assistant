@@ -384,7 +384,7 @@ function close() {
 
 function find_close(screenshot1) {
     let sc = screenshot1 || captureScreen();
-    let close_button = findimage(files.join(config.photoPath, "close.png"), 0.5, sc);
+    let close_button = findimage(files.join(config.photoPath, "close.png"), 0.5, sc); //识别叉叉
     if (close_button) {
         click(close_button.x + ran(), close_button.y + ran());
         console.log("点击叉叉");
@@ -392,12 +392,12 @@ function find_close(screenshot1) {
         return true;
     }
 
-    let homebtn1 = matchColor([{ x: 161, y: 39, color: "#f4323a" },
+    let homebtn1 = matchColor([{ x: 161, y: 39, color: "#f4323a" }, //进入小镇
     { x: 213, y: 40, color: "#f63540" },
     { x: 235, y: 629, color: "#c686dc" },
     { x: 248, y: 649, color: "#5ed261" }],
         screenshot = sc);
-    if (homebtn1) {
+    if (homebtn1) {                 
         click(200 + ran(), 645 + ran());
         console.log("回到主界面");
         showTip("回到主界面");
@@ -417,7 +417,7 @@ function find_close(screenshot1) {
         return true;
     }
 
-    let levelup = matchColor([{ x: 292, y: 98, color: "#ffffff" },
+    let levelup = matchColor([{ x: 292, y: 98, color: "#ffffff" },  //升级
     { x: 520, y: 93, color: "#88e435" },
     { x: 754, y: 89, color: "#89e534" },
     { x: 861, y: 654, color: "#f6bc3a" },
@@ -430,8 +430,7 @@ function find_close(screenshot1) {
         return true;
     }
 
-    // let disconnect = findimage(files.join(config.photoPath, "disconnected.png"), 0.8, sc);
-    let disconnect = matchColor([{ x: 279, y: 222, color: "#fff9db" },
+    let disconnect = matchColor([{ x: 279, y: 222, color: "#fff9db" },  //断开连接
     { x: 435, y: 62, color: "#deb476" },
     { x: 630, y: 202, color: "#ffe9d6" },
     { x: 647, y: 632, color: "#fada75" }],
@@ -439,15 +438,13 @@ function find_close(screenshot1) {
     if (disconnect) {
         console.log("断开连接，重试");
         showTip("断开连接，重试");
-        if (SizeCode == 0) {
-            click(640 + ran(), 660 + ran())
-        } else { click(adapt(1300 + ran(), 1100 + ran())) };
+        click(640 + ran(), 660 + ran())
         sleep(1000);
         checkmenu();
         return true;
     }
 
-    let switchAccount = matchColor([{ x: 56, y: 63, color: "#ffffff" },
+    let switchAccount = matchColor([{ x: 56, y: 63, color: "#ffffff" }, //切换账号页面
     { x: 530, y: 70, color: "#041d51" },
     { x: 38, y: 687, color: "#52b4dd" },
     { x: 550, y: 697, color: "#0e3683" }],
@@ -461,10 +458,22 @@ function find_close(screenshot1) {
         return true;
     }
 
-    return false;
+    let buy_button = matchColor([{ x: 679, y: 578, color: "#7bbfe4" },  //进入购买界面
+    { x: 648, y: 612, color: "#f0d98a" },
+    { x: 682, y: 683, color: "#f4bd3f" }])
+    if (buy_button) {
+        console.log("进入购买界面，返回主菜单");
+        showTip("进入购买界面，返回主菜单");
+        click(650 + ran(), 620 + ran());
+        return true;
+    }
+        return false;
 }
 
-//点击购买按钮，如果点开了购买界面返回true，没找到返回false
+/** 
+ * 点击购买按钮，如果点开了购买界面返回true，没找到返回false
+*/
+
 function buy_button() {
     let buy_button = matchColor([{ x: 42, y: 177, color: "#ffffff" }, { x: 76, y: 575, color: "#7abee4" }, { x: 110, y: 641, color: "#f9bd32" }, { x: 50, y: 611, color: "#f0da8b" }])
     if (buy_button) {

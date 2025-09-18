@@ -22,9 +22,7 @@ const designWidth = 2664, designHeight = 1200;
 // 目标设备参数
 const targetWidth = Size[0];
 const targetHeight = Size[1];
-if (Size[0] == 1280 || Size[1] == 720) {
-    const SizeCode = 0;
-}
+
 
 let crop;
 let crop_sail;
@@ -454,7 +452,7 @@ function checkmenu() {
                 checkPoints = [
                     // { x: adapt(84, 344)[0], y: adapt(84, 344)[1], color: "#f3bb00" },
                     // { x: adapt(86, 1092)[0], y: adapt(86, 1092)[1], color: "#3377b7" },
-                    { x: Math.min(adapt(2622, 1112)[0], screenWidth - 1), y: Math.min(adapt(2622, 1112)[1], screenHeight - 1), color: "#a24700" }
+                    { x: Math.min(1258, screenWidth - 1), y: Math.min(664, screenHeight - 1), color: "#a24700" }
                 ];
             }
 
@@ -589,6 +587,12 @@ function findland(isclick = true) {
 }
 //找商店，只寻找
 
+/**
+ * 
+ * @returns {object|boolean} 返回商店中心坐标对象{x,y}，若未找到商店则返回false
+ * @description 该函数根据配置的查找方式（商店或面包房）定位对应位置
+ *              主要用于辅助定位耕地位置
+ */
 function findshop() {
     console.log("找" + config.landFindMethod);
     let center;
@@ -823,12 +827,12 @@ function coin() {
     allcenters.sort((a, b) => a.x - b.x);
     allcenters = centers1
     console.log("有" + allcenters.length + "个金币可以收");
-    console.log(allcenters)
+    // console.log(allcenters)
     if (allcenters.length > 0) {
         showTip("有" + allcenters.length + "个金币可以收")
     }
     allcenters.forEach(target => {
-        let pos = adapt(100, 100);
+        let pos = [48, 60];
         click(target.x + pos[0] + ran(), target.y + pos[1] + ran());
         sleep(100);
     });
@@ -839,30 +843,18 @@ function coin() {
 function find_ad() {
     let shop_coin = findimage(files.join(config.photoPath, "shop_coin.png"), 0.4);
     if (shop_coin) {
-        //如果找到货架上的小麦
-        let [x1, y1] = adapt(-120, -80);
-        click(shop_coin.x + x1 + ran(), shop_coin.y + y1 + ran()); //点击小麦
+        //如果找到货架上的金币
+        let [x1, y1] = [-58, -23];
+        click(shop_coin.x + x1 + ran(), shop_coin.y + y1 + ran()); //点击金币
         sleep(300);
-        // let ad = findtext("立即发布广告", 800, 450, 2000 - 800, 800 - 450);
         let ad = matchColor([{ x: 765, y: 423, color: "#fbba15" }, { x: 496, y: 499, color: "#cbcbcb" }]);
         if (ad) {
             console.log("可以发布广告");
-            if (SizeCode == 0) {
-                click(800 + ran(), 330 + ran());
-            } else {
-                click(adapt(1600 + ran(), 560 + ran()))
-            }
-
-            sleep(100);
-            if (SizeCode == 0) {
-                click(640 + ran(), 500 + ran());
-            } else {
-                click(adapt(1350 + ran(), 840 + ran()))
-            }
-
+            click(800 + ran(), 330 + ran());
+            sleep(300);
+            click(640 + ran(), 500 + ran());
             return true;
         }
-
     } else {
         console.log("发布广告时未找到可上架物品");
         showTip("发布广告时未找到可上架物品");
@@ -904,7 +896,7 @@ function shop() {
                 showTip("右滑到顶了");
             }
         }
-        sleep(300);
+        sleep(500);
         //找空闲货架
         let kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130], 20);
 
@@ -914,11 +906,8 @@ function shop() {
             click(kongxian.x + ran(), kongxian.y + ran()); //点击空闲货架
             console.log("点击空闲货架")
             sleep(100);
-            if (SizeCode == 0) {
-                click(200 + ran(), 200 + ran());
-            } else {
-                click(adapt(550 + ran(), 370 + ran()))
-            }//点击售卖粮仓按钮
+            click(200 + ran(), 200 + ran());//点击售卖粮仓按钮
+
             console.log("点击粮仓按钮")
             sleep(100);
 
@@ -949,24 +938,14 @@ function shop() {
                     console.log(config.selectedCrop.text + "数量≥20");
                     console.log("修改售价");
                     if (config.shopPrice.code == 0) {
-                        if (SizeCode == 0) {
-                            click(860 + ran(), 360 + ran());
-                        } else {
-                            click(adapt(1728 + ran(), 630 + ran()))
-                        };//修改售价(最低)
+                        click(860 + ran(), 360 + ran());//修改售价(最低)
+
                     } else if (config.shopPrice.code == 2) {
-                        if (SizeCode == 0) {
-                            click(1020 + ran(), 370 + ran());
-                        } else {
-                            click(adapt(1960 + ran(), 620 + ran()))
-                        }
+                        click(1020 + ran(), 370 + ran());//修改售价(最高)
                     }
                     sleep(100);
-                    if (SizeCode == 0) {
-                        click(940 + ran(), 660 + ran());
-                    } else {
-                        click(adapt(1850 + ran(), 1120 + ran()))
-                    };//上架
+                    click(940 + ran(), 660 + ran());
+                    //上架
                     console.log("上架");
                     sleep(100);
                     kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130]);
@@ -974,7 +953,7 @@ function shop() {
                     console.log(config.selectedCrop.text + "数量不足20,结束售卖");
                     showTip(config.selectedCrop.text + "数量不足20,结束售卖");
                     close();
-                    log(config.selectedCrop.text + "数量不足，退出售卖")
+                    log(config.selectedCrop.text + "数量不足，退出售卖");
                     break;
                 }
             } else {   //没找到售卖货架上的作物
@@ -989,8 +968,8 @@ function shop() {
             showTip("未找到空闲货架");
             attempts++;
             sleep(200)
-            const [x1, y1] = adapt(2000, 650);
-            const [x2, y2] = adapt(600, 650);
+            const [x1, y1] = [960, 390];
+            const [x2, y2] = [288, 390];
             swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), 600);
             console.log("商店右滑")
             sleep(400);
@@ -1014,18 +993,9 @@ function shop() {
         let ad = matchColor([{ x: 750, y: 420, color: "#fff9db" }]);
         if (!ad) {
             console.log("可以发布广告");
-            if (SizeCode == 0) {
-                click(800 + ran(), 330 + ran());
-            } else {
-                click(adapt(1600 + ran(), 560 + ran()))
-            }
-
+            click(800 + ran(), 330 + ran());
             sleep(100);
-            if (SizeCode == 0) {
-                click(640 + ran(), 500 + ran());
-            } else {
-                click(adapt(1350 + ran(), 840 + ran()))
-            }
+            click(640 + ran(), 500 + ran());
             sleep(200);
             close();
         } else {
@@ -1041,8 +1011,8 @@ function shop() {
         let is_find_ad = find_ad();
         log("发布广告：没找到货架上的物品");
         if (!is_find_ad) {
-            const [x3, y3] = adapt(600, 650);
-            const [x4, y4] = adapt(2250, 650);
+            const [x3, y3] = [288, 390];
+            const [x4, y4] = [1080, 390];
             swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), 600);
             sleep(400);
             is_find_ad = find_ad();
@@ -1059,16 +1029,19 @@ function shop() {
             close();
         }
     }
-    sleep(500);
+    sleep(200);
     find_close();
-    sleep(500);
+    sleep(300);
     find_close();
 }
 
-//寻找是否有关闭按钮或者在其他页面
-function find_close(screenshot1) {
+/**
+ * @returns 如果找到并处理了关闭按钮或返回主界面，返回 `true`；否则返回 `false`
+ * 寻找是否有关闭按钮或者在其他页面
+ */
+function find_close(screenshot1, action = null) {
     let sc = screenshot1 || captureScreen();
-    let close_button = findimage(files.join(config.photoPath, "close.png"), 0.5, sc);
+    let close_button = findimage(files.join(config.photoPath, "close.png"), 0.5, sc); //识别叉叉
     if (close_button) {
         click(close_button.x + ran(), close_button.y + ran());
         console.log("点击叉叉");
@@ -1076,7 +1049,7 @@ function find_close(screenshot1) {
         return true;
     }
 
-    let homebtn1 = matchColor([{ x: 161, y: 39, color: "#f4323a" },
+    let homebtn1 = matchColor([{ x: 161, y: 39, color: "#f4323a" }, //进入小镇
     { x: 213, y: 40, color: "#f63540" },
     { x: 235, y: 629, color: "#c686dc" },
     { x: 248, y: 649, color: "#5ed261" }],
@@ -1101,7 +1074,7 @@ function find_close(screenshot1) {
         return true;
     }
 
-    let levelup = matchColor([{ x: 292, y: 98, color: "#ffffff" },
+    let levelup = matchColor([{ x: 292, y: 98, color: "#ffffff" },  //升级
     { x: 520, y: 93, color: "#88e435" },
     { x: 754, y: 89, color: "#89e534" },
     { x: 861, y: 654, color: "#f6bc3a" },
@@ -1114,8 +1087,7 @@ function find_close(screenshot1) {
         return true;
     }
 
-    // let disconnect = findimage(files.join(config.photoPath, "disconnected.png"), 0.8, sc);
-    let disconnect = matchColor([{ x: 279, y: 222, color: "#fff9db" },
+    let disconnect = matchColor([{ x: 279, y: 222, color: "#fff9db" },  //断开连接
     { x: 435, y: 62, color: "#deb476" },
     { x: 630, y: 202, color: "#ffe9d6" },
     { x: 647, y: 632, color: "#fada75" }],
@@ -1123,15 +1095,13 @@ function find_close(screenshot1) {
     if (disconnect) {
         console.log("断开连接，重试");
         showTip("断开连接，重试");
-        if (SizeCode == 0) {
-            click(640 + ran(), 660 + ran())
-        } else { click(adapt(1300 + ran(), 1100 + ran())) };
+        click(640 + ran(), 660 + ran())
         sleep(1000);
         checkmenu();
         return true;
     }
 
-    let switchAccount = matchColor([{ x: 56, y: 63, color: "#ffffff" },
+    let switchAccount = matchColor([{ x: 56, y: 63, color: "#ffffff" }, //切换账号页面
     { x: 530, y: 70, color: "#041d51" },
     { x: 38, y: 687, color: "#52b4dd" },
     { x: 550, y: 697, color: "#0e3683" }],
@@ -1145,6 +1115,15 @@ function find_close(screenshot1) {
         return true;
     }
 
+    let buy_button = matchColor([{ x: 679, y: 578, color: "#7bbfe4" },  //进入购买界面
+    { x: 648, y: 612, color: "#f0d98a" },
+    { x: 682, y: 683, color: "#f4bd3f" }])
+    if (buy_button) {
+        console.log("进入购买界面，返回主菜单");
+        showTip("进入购买界面，返回主菜单");
+        click(650 + ran(), 620 + ran());
+        return true;
+    }
     return false;
 }
 
@@ -1221,8 +1200,8 @@ function switch_account(Account, num = 0) {
                 break;
             }
             if (scrollDownCount < MAX_SCROLL_DOWN) {
-                const [x1, y1] = adapt(2000, 1000);
-                const [x2, y2] = adapt(2000, 100);
+                const [x1, y1] = [960, 600];
+                const [x2, y2] = [960, 60];
                 swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), [500]); // 下滑
                 scrollDownCount++;
                 log(`未找到账号，第 ${scrollDownCount} 次下滑...`);
@@ -1239,8 +1218,8 @@ function switch_account(Account, num = 0) {
             else if (scrollDownCount >= MAX_SCROLL_DOWN) {
                 log(`未找到账号，上滑回顶部...`);
                 showTip("未找到账号，上滑回顶部");
-                const [x3, y3] = adapt(2000, 100);
-                const [x4, y4] = adapt(2000, 1000);
+                const [x3, y3] = [960, 60];
+                const [x4, y4] = [960, 600];
                 swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
                 sleep(200);
                 swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
@@ -1276,6 +1255,85 @@ function switch_account(Account, num = 0) {
     return num;
 }
 
+/**
+ * 
+ */
+function shengcang() {
+    console.log("当前操作:升仓");
+    showTip("升级仓库");
+    //升粮仓
+    sleep(500);
+    let isFindShop = findshop();
+    if (isFindShop) {  //判断是否找到商店
+        console.log("点击粮仓");
+        showTip("点击粮仓");
+        click(isFindShop.x + 241 + ran(), isFindShop.y + ran()); //点击粮仓
+        sleep(500);
+        if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入粮仓
+            click(700 + ran(), 625 + ran());
+            sleep(500);
+            if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
+                click(932 + ran(), 408 + ran());//点击升级
+                sleep(500);
+                find_close();
+                sleep(500);
+                find_close();
+            } else {    //建材不够升级
+                console.log("建材不够升级");
+                showTip("建材不够升级");
+                sleep(500);
+                find_close();
+                sleep(500);
+                find_close();
+            }
+        } else {  //未进入粮仓
+            console.log("未进入粮仓");
+            showTip("未进入粮仓");
+            find_close()
+        }
+    } else {  //未找到商店
+        console.log("未找到商店");
+        showTip("未找到商店");
+        find_close();
+    }
+
+    //升货仓
+    sleep(500);
+    isFindShop = findshop();
+    if (isFindShop) {  //判断是否找到商店
+        console.log("点击货仓");
+        showTip("点击货仓");
+        click(isFindShop.x + 343 + ran(), isFindShop.y - 45 + ran()); //点击货仓
+        sleep(500);
+        if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入货仓
+            click(700 + ran(), 625 + ran());
+            sleep(500);
+            if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
+                click(932 + ran(), 408 + ran());//点击升级
+                sleep(500);
+                find_close();
+                sleep(500);
+                find_close();
+            } else {    //建材不够升级
+                console.log("建材不够升级");
+                showTip("建材不够升级");
+                sleep(500);
+                find_close();
+                sleep(500);
+                find_close();
+            }
+        } else {  //未进入粮仓
+            console.log("未进入货仓");
+            showTip("未进入货仓");
+            find_close()
+        }
+    } else {  //未找到商店
+        console.log("未找到商店");
+        showTip("未找到商店");
+        find_close();
+    }
+
+}
 
 // function timer(second = 120) {
 //     for (let i = second; i >= 0; i--) {
@@ -1445,11 +1503,23 @@ function operation(Account) {
 }
 
 
-
+/**
+ *  @description 设置定时器，用于判断是否需要进行升仓
+ */
+function shengcang_setTime() {
+    log("设置升仓时间" + config.shengcangTime);
+    threads.start(() => {
+        setTimeout(() => {
+            global.shengcangTimeout = true;
+        }, config.shengcangTime * 60 * 1000);
+    })
+}
 
 function main() {
 
-    //打开游戏
+    if (config.isShengcang) {
+        shengcang_setTime();
+    }
 
 
     //主界面判断
@@ -1459,14 +1529,20 @@ function main() {
     if (!config.switchAccount || config.accountNames.length == 0) { //不切换账号
         log("不切换账号，找耕地");
         huadong();
-
         sleep(1100);
-
 
         //循环操作
         while (true) {
             operation();
             log("等待作物成熟");
+
+            //升仓
+            if (config.isShengcang && config.shengcangTime >= 0 && global.shengcangTimeout) {
+                shengcang();
+                global.shengcangTimeout = false;
+                shengcang_setTime();
+            }
+
             while (true) {
                 // 获取计时器剩余时间
                 let timerState = getTimerState(global.currentTimerName);
@@ -1479,9 +1555,10 @@ function main() {
                 sleep(1000);
             }
         }
-    } else {
+    } else {  //切换账号
         log("切换账号");
         while (true) {
+
             config.accountNames.forEach(Account => {
                 switch_account(Account);
                 log("===当前账号: " + Account + "===");
@@ -1494,6 +1571,11 @@ function main() {
                 let nextTimerName = nextAccount + config.selectedCrop.text;
 
                 operation(Account); //执行刷地，售卖
+
+                //升仓
+                if (config.isShengcang && config.shengcangTime >= 0 && global.shengcangTimeout) {
+                    shengcang(); //执行升仓
+                }
                 while (true) {
                     // 获取下一个账号的计时器状态
                     let nextTimerState = getTimerState(nextTimerName);
@@ -1513,7 +1595,10 @@ function main() {
                 }
                 sleep(1100);
             });
-
+            if (config.isShengcang && config.shengcangTime >= 0 && global.shengcangTimeout) {
+                global.shengcangTimeout = false;
+                shengcang_setTime();
+            }
         }
 
     }

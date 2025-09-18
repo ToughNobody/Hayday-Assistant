@@ -209,6 +209,23 @@ ui.layout(
                                 </vertical>
                             </card>
 
+                            {/* 仓库升仓时间卡片 */}
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="仓库设置" textSize="16" textStyle="bold" />
+                                    {/* 仓库升仓 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="是否自动升仓" textSize="14"  w="120" marginRight="8" />
+                                        <Switch id="isShengcang"  w="*" h="48" gravity="left|center" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="升仓间隔时间" textSize="14"  w="120" marginRight="8" />
+                                        <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <text text="分钟" textSize="14"  w="120" marginRight="8" />
+                                    </horizontal>
+                                </vertical>
+                            </card>
+
                             {/* 坐标偏移卡片 */}
                             <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
                                 <vertical padding="16">
@@ -836,6 +853,8 @@ function getConfig() {
             text: ui.themeColor.getSelectedItem(),
             code: ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"].indexOf(ui.themeColor.getSelectedItem())
         },
+        isShengcang: ui.isShengcang.isChecked(),
+        shengcangTime: parseFloat(ui.shengcangTime.text()) ?? defaultConfig.shengcangTime,
     };
 }
 
@@ -915,6 +934,16 @@ function validateConfig(config) {
     }
     config.themeColor.text = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"][config.themeColor.code];
 
+    // 验证cangkuTime
+    if (config.shengcangTime == null || isNaN(config.shengcangTime) || config.shengcangTime < 0) {
+        config.shengcangTime = defaultConfig.shengcangTime;
+    }
+    
+    // 验证isShengcang
+    if (config.isShengcang == null || typeof config.isShengcang !== "boolean") {
+        config.isShengcang = defaultConfig.isShengcang;
+    }
+    
     // 其他验证...
     if (!Array.isArray(config.accountNames)) config.accountNames = [];
     if (config.photoPath.length == 0) config.photoPath = "./res/pictures.1280_720"
@@ -974,6 +1003,8 @@ function getDefaultConfig() {
             text: "碧玉青",
             code: 0
         },
+        isShengcang: false,
+        shengcangTime: 60,
     };
 }
 
@@ -1085,6 +1116,28 @@ function loadConfigToUI() {
     // 设置随机颜色开关
     ui.randomColor.setChecked(config.randomColor);
 
+    // 设置cangkuTime
+    ui.shengcangTime.setText(String(config.shengcangTime));
+    
+    // 为cangkuTime输入框添加变化监听
+    ui.shengcangTime.on("text_change", () => {
+        let value = parseFloat(ui.shengcangTime.text());
+        if (isNaN(value) || value < 0) {
+            toast("升仓间隔时间必须大于等于0");
+            ui.shengcangTime.setText(String(config.shengcangTime));
+        } else {
+            autoSaveConfig();
+        }
+    });
+    
+    // 设置是否自动升仓
+    ui.isShengcang.setChecked(config.isShengcang);
+    
+    // 为是否自动升仓开关添加变化监听
+    ui.isShengcang.on("check", (checked) => {
+        autoSaveConfig();
+    });
+    
     // 设置主题颜色
     if (config.themeColor.code >= 0) {
         ui.themeColor.setSelection(config.themeColor.code);
@@ -1191,7 +1244,7 @@ ui.btnInstructions.click(() => {
 function autoSaveConfig() {
     console.log("开始自动保存配置");
     const config = getConfig();
-    console.log("获取配置:", JSON.stringify(config.selectedTree));
+    // console.log("获取配置:", JSON.stringify(config.selectedTree));
     if (saveConfig(config)) {
         console.log("配置自动保存成功");
     } else {

@@ -1,6 +1,6 @@
 {
-  "version": "1.2.1",
-  "description": "修复切换账号按钮bug",
+  "version": "1.2.2",
+  "description": "添加自动升级仓库功能，可自定义时间间隔",
   "files": [
     {
       "name": "floatyBtn.js",
