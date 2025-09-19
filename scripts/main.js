@@ -134,15 +134,15 @@ ui.layout(
                                             w="*" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
-                                    {/* 作物选择 */}
-                                    <horizontal gravity="center_vertical">
+                                    {/* 作物选择 - 仅在刷地时显示 */}
+                                    <horizontal id="cropSelectContainer" gravity="center_vertical">
                                         <text text="种植作物：" textSize="14" w="100" marginRight="8" />
                                         <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆"
                                             w="*" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
-                                    {/* 树木选择 */}
-                                    <horizontal gravity="center_vertical">
+                                    {/* 树木选择 - 仅在种树时显示 */}
+                                    <horizontal id="treeSelectContainer" gravity="center_vertical">
                                         <text text="种植树木：" textSize="14" w="100" marginRight="8" />
                                         <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
                                             w="*" textSize="14" h="48" bg="#FFFFFF" />
@@ -152,6 +152,36 @@ ui.layout(
                                     <horizontal gravity="center_vertical">
                                         <text text="商店售价：" textSize="14" w="100" marginRight="8" />
                                         <spinner id="shopPrice" entries="最低|平价|最高" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+                                </vertical>
+                            </card>
+
+                            {/* 操作按钮区 */}
+                            <horizontal gravity="center" marginTop="8">
+                                <button id="btnInstructions" text="使用须知" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
+                                <button id="btnLoadConfig" text="加载配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
+                                <button id="btnSave" text="保存配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" />
+                            </horizontal>
+
+                            <horizontal gravity="center" marginTop="16">
+                                <button id="btnStop" text="停止" w="100" h="48" textSize="16" color="#FFFFFF" backgroundTint="#FF9AA2" />
+                                <space w="16" />
+                                <button id="btnStart" text="开始" w="216" h="48" textSize="16" color="#FFFFFF" backgroundTint="#4ECDC4" />
+                            </horizontal>
+                        </vertical>
+                    </scroll>
+                </frame>
+                <frame>
+                    <scroll>
+                        <vertical w="*" h="*" padding="16">
+
+                            {/* 寻找土地方法卡片 - 使用按钮模拟单选 */}
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="寻找土地方法" textSize="16" textStyle="bold" marginBottom="16" />
+                                    <horizontal gravity="center_vertical">
+                                        <button id="methodShop" text="商店" w="120" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="16" />
+                                        <button id="methodBakery" text="面包房" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
                                     </horizontal>
                                 </vertical>
                             </card>
@@ -180,50 +210,21 @@ ui.layout(
                                 </vertical>
                             </card>
 
-                            {/* 操作按钮区 */}
-                            <horizontal gravity="center" marginTop="8">
-                                <button id="btnInstructions" text="使用须知" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
-                                <button id="btnLoadConfig" text="加载配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
-                                <button id="btnSave" text="保存配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" />
-                            </horizontal>
-
-                            <horizontal gravity="center" marginTop="16">
-                                <button id="btnStop" text="停止" w="100" h="48" textSize="16" color="#FFFFFF" backgroundTint="#FF9AA2" />
-                                <space w="16" />
-                                <button id="btnStart" text="开始" w="216" h="48" textSize="16" color="#FFFFFF" backgroundTint="#4ECDC4" />
-                            </horizontal>
-                        </vertical>
-                    </scroll>
-                </frame>
-                <frame>
-                    <scroll>
-                        <vertical w="*" h="*" padding="16">
-                            {/* 寻找土地方法卡片 - 使用按钮模拟单选 */}
-                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="寻找土地方法" textSize="16" textStyle="bold" marginBottom="16" />
-                                    <horizontal gravity="center_vertical">
-                                        <button id="methodShop" text="商店" w="120" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="16" />
-                                        <button id="methodBakery" text="面包房" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
-                                    </horizontal>
-                                </vertical>
-                            </card>
-
                             {/* 仓库升仓时间卡片 */}
                             <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
                                 <vertical padding="16">
                                     <text text="仓库设置" textSize="16" textStyle="bold" />
                                     {/* 仓库升仓 */}
                                     <horizontal gravity="center_vertical">
-                                        <text text="是否自动升仓" textSize="14"  w="120" marginRight="8" />
-                                        <Switch id="isShengcang"  w="*" h="48" gravity="left|center" />
+                                        <text text="是否自动升仓" textSize="14" w="120" marginRight="8" />
+                                        <Switch id="isShengcang" w="*" h="48" gravity="left|center" />
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
-                                        <text text="升仓间隔时间" textSize="14"  w="120" marginRight="8" />
+                                        <text text="升仓间隔时间" textSize="14" w="120" marginRight="8" />
                                         <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                        <text text="分钟" textSize="14"  w="120" marginRight="8" />
+                                        <text text="分钟" textSize="14" w="120" marginRight="8" />
                                     </horizontal>
-                                    
+
                                 </vertical>
                             </card>
 
@@ -392,10 +393,10 @@ ui.emitter.on("options_item_selected", (e, item) => {
         case "日志":
             showLogDialog();
             break;
-
     }
     e.consumed = true;
 });
+
 // 显示关于对话框函数
 function showAboutDialog() {
     dialogs.build({
@@ -409,6 +410,99 @@ function showAboutDialog() {
     }).on("neutral", () => {
         checkForUpdates();
     }).show();
+}
+
+function checkForUpdatesOnce() {
+    log("=== 执行自动更新检查 ===");
+    threads.start(() => {
+        try {
+            // 获取当前版本号
+            let currentVersion = getAppVersion();
+            log("当前版本: " + currentVersion);
+
+            // 发送HTTP请求获取最新版本号
+            let apiUrl = "https://gitee.com/ToughNobody/Hayday-Assistant/raw/main/version.json";
+            log("请求API地址: " + apiUrl);
+
+            let response = http.get(apiUrl, {
+                headers: {
+                    "Accept": "application/vnd.github.v3+json"
+                }
+            });
+
+            log("HTTP响应状态码: " + response.statusCode);
+
+            if (response.statusCode == 200) {
+                let result = response.body.json();
+
+                // 检查result对象和version字段是否存在
+                if (!result || !result.version) {
+                    log("错误: 无法获取版本信息，result对象或version为空");
+                    return;
+                }
+
+                let latestVersion = result.version;
+                log("最新版本: " + latestVersion);
+
+                // 比较版本号
+                let compareResult = compareVersions(currentVersion, latestVersion);
+                log("版本比较结果: " + compareResult + " (0=相同, <0=旧版本, >0=新版本)");
+
+                // 只有在当前版本低于最新版本时才显示通知
+                if (compareResult < 0) {
+                    ui.run(() => {
+                        log("发现新版本，显示更新通知");
+
+                        dialogs.build({
+                            title: "发现新版本",
+                            content: "当前版本: " + currentVersion + "\n" +
+                                "最新版本: " + latestVersion + "\n\n" +
+                                "更新内容: " + (result.description || "无更新说明").substring(0, 200) + "...\n\n" +
+                                "是否更新？",
+                            positive: "立即更新",
+                            negative: "稍后再说"
+                        }).on("positive", () => {
+                            // 调用热更新模块
+                            threads.start(() => {
+                                try {
+                                    // 加载热更新模块
+                                    let hotUpdate = require("./hot_update.js");
+
+                                    // 初始化热更新
+                                    hotUpdate.init({
+                                        version: result.version,
+                                        files: result.files,
+                                        description: result.description
+                                    });
+
+                                    // 执行增量更新
+                                    let success = hotUpdate.doIncrementalUpdate();
+
+                                    if (success) {
+                                        toastLog("更新成功，即将重启应用...");
+                                        engines.stopAll();
+                                        events.on("exit", function () {
+                                            engines.execScriptFile(engines.myEngine().cwd() + "/main.js");
+                                        });
+                                    } else {
+                                        toastLog("更新失败，请重试");
+                                    }
+                                } catch (e) {
+                                    toastLog("热更新失败: " + e.message);
+                                }
+                            });
+                        }).show();
+                    });
+                } else {
+                    log("当前版本已是最新或更高，不显示通知");
+                }
+            } else {
+                log("自动更新检查失败: HTTP状态码 " + response.statusCode);
+            }
+        } catch (e) {
+            log("自动更新检查失败: " + e.message);
+        }
+    });
 }
 
 // 检查更新函数
@@ -892,7 +986,7 @@ function saveConfig(config) {
 
         // 格式化并保存配置
         files.write(configPath, JSON.stringify(config, null, 2));
-        console.log("配置保存成功");
+        // console.log("配置保存成功");
         return true;
     } catch (e) {
         console.error("保存配置失败:", e);
@@ -960,17 +1054,17 @@ function validateConfig(config) {
     if (config.shengcangTime == null || isNaN(config.shengcangTime) || config.shengcangTime < 0) {
         config.shengcangTime = defaultConfig.shengcangTime;
     }
-    
+
     // 验证isShengcang
     if (config.isShengcang == null || typeof config.isShengcang !== "boolean") {
         config.isShengcang = defaultConfig.isShengcang;
     }
-    
+
     // 验证粮仓坐标偏移
     if (!config.liangcangOffset) config.liangcangOffset = defaultConfig.liangcangOffset;
     config.liangcangOffset.x = config.liangcangOffset.x != null ? Number(config.liangcangOffset.x) : defaultConfig.liangcangOffset.x;
     config.liangcangOffset.y = config.liangcangOffset.y != null ? Number(config.liangcangOffset.y) : defaultConfig.liangcangOffset.y;
-    
+
     // 验证货仓坐标偏移
     if (!config.huocangOffset) config.huocangOffset = defaultConfig.huocangOffset;
     config.huocangOffset.x = config.huocangOffset.x != null ? Number(config.huocangOffset.x) : defaultConfig.huocangOffset.x;
@@ -1088,6 +1182,22 @@ function loadConfigToUI() {
     // 设置树木选择
     ui.treeSelect.setSelection(config.selectedTree.code);
 
+    // 根据选择的功能设置初始显示状态
+    const selectedFunction = config.selectedFunction.text;
+    if (selectedFunction === "刷地") {
+        // 显示作物选择，隐藏树木选择
+        ui.cropSelectContainer.setVisibility(0); // 0表示可见
+        ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+    } else if (selectedFunction === "种树") {
+        // 隐藏作物选择，显示树木选择
+        ui.cropSelectContainer.setVisibility(8); // 8表示不可见
+        ui.treeSelectContainer.setVisibility(0); // 0表示可见
+    } else {
+        // 其他功能（如枯树上牌）隐藏两个选项
+        ui.cropSelectContainer.setVisibility(8); // 8表示不可见
+        ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+    }
+
 
 
 
@@ -1112,10 +1222,37 @@ function loadConfigToUI() {
     ui.shopOffsetY.setText(String(config.shopOffset.y));
 
     // 为坐标偏移输入框添加变化监听
-    ui.landOffsetX.on("text_change", () => autoSaveConfig());
-    ui.landOffsetY.on("text_change", () => autoSaveConfig());
-    ui.shopOffsetX.on("text_change", () => autoSaveConfig());
-    ui.shopOffsetY.on("text_change", () => autoSaveConfig());
+    ui.landOffsetX.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.landOffsetY.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.shopOffsetX.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.shopOffsetY.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
 
     // 设置收割偏移
     ui.harvestOffsetXX.setText(String(config.harvestOffset.x));
@@ -1134,66 +1271,161 @@ function loadConfigToUI() {
     ui.photoPath.setText(config.photoPath);
 
     // 为收割偏移输入框添加变化监听
-    ui.harvestOffsetXX.on("text_change", () => autoSaveConfig());
-    ui.harvestOffsetXY.on("text_change", () => autoSaveConfig());
-    ui.harvestOffsetYX.on("text_change", () => autoSaveConfig());
-    ui.harvestOffsetYY.on("text_change", () => autoSaveConfig());
+    ui.harvestOffsetXX.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.harvestOffsetXY.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.harvestOffsetYX.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.harvestOffsetYY.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
 
     // 为初始土地偏移输入框添加变化监听
-    ui.firstlandX.on("text_change", () => autoSaveConfig());
-    ui.firstlandY.on("text_change", () => autoSaveConfig());
+    ui.firstlandX.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.firstlandY.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
 
     // 为收割两指间距输入框添加变化监听
-    ui.distance.on("text_change", () => autoSaveConfig());
+    ui.distance.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
 
     // 为悬浮窗坐标输入框添加变化监听
-    ui.showTextX.on("text_change", () => autoSaveConfig());
-    ui.showTextY.on("text_change", () => autoSaveConfig());
+    ui.showTextX.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.showTextY.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
 
     // 为照片路径输入框添加变化监听
-    ui.photoPath.on("text_change", () => autoSaveConfig());
+    ui.photoPath.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
 
     // 设置粮仓坐标偏移
     ui.liangcangOffsetX.setText(String(config.liangcangOffset.x));
     ui.liangcangOffsetY.setText(String(config.liangcangOffset.y));
-    
+
     // 为粮仓坐标偏移输入框添加变化监听
-    ui.liangcangOffsetX.on("text_change", () => autoSaveConfig());
-    ui.liangcangOffsetY.on("text_change", () => autoSaveConfig());
-    
+    ui.liangcangOffsetX.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.liangcangOffsetY.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
     // 设置货仓坐标偏移
     ui.huocangOffsetX.setText(String(config.huocangOffset.x));
     ui.huocangOffsetY.setText(String(config.huocangOffset.y));
-    
+
     // 为货仓坐标偏移输入框添加变化监听
-    ui.huocangOffsetX.on("text_change", () => autoSaveConfig());
-    ui.huocangOffsetY.on("text_change", () => autoSaveConfig());
+    ui.huocangOffsetX.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
+
+    ui.huocangOffsetY.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
 
     // 设置随机颜色开关
     ui.randomColor.setChecked(config.randomColor);
 
     // 设置cangkuTime
     ui.shengcangTime.setText(String(config.shengcangTime));
-    
+
     // 为cangkuTime输入框添加变化监听
-    ui.shengcangTime.on("text_change", () => {
-        let value = parseFloat(ui.shengcangTime.text());
+    ui.shengcangTime.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        let value = parseFloat(s.toString());
         if (isNaN(value) || value < 0) {
             toast("升仓间隔时间必须大于等于0");
             ui.shengcangTime.setText(String(config.shengcangTime));
         } else {
             autoSaveConfig();
         }
-    });
-    
+    },
+    afterTextChanged: function (s) { }
+}));
+
     // 设置是否自动升仓
     ui.isShengcang.setChecked(config.isShengcang);
-    
+
     // 为是否自动升仓开关添加变化监听
     ui.isShengcang.on("check", (checked) => {
         autoSaveConfig();
     });
-    
+
     // 设置主题颜色
     if (config.themeColor.code >= 0) {
         ui.themeColor.setSelection(config.themeColor.code);
@@ -1227,6 +1459,12 @@ function setLandMethod(method) {
     // 强制刷新UI
     ui.methodShop.attr("bg", ui.methodShop.attr("bg"));
     ui.methodBakery.attr("bg", ui.methodBakery.attr("bg"));
+    
+    // 确保配置正确保存
+    const config = getConfig();
+    if (config.landFindMethod !== method) {
+        autoSaveConfig();
+    }
 }
 
 function stopOtherEngines(includeMain = false) {
@@ -1298,11 +1536,11 @@ ui.btnInstructions.click(() => {
 });
 // 自动保存配置函数（无提示）
 function autoSaveConfig() {
-    console.log("开始自动保存配置");
+    // console.log("开始自动保存配置");
     const config = getConfig();
     // console.log("获取配置:", JSON.stringify(config.selectedTree));
     if (saveConfig(config)) {
-        console.log("配置自动保存成功");
+        // console.log("配置自动保存成功");
     } else {
         console.error("配置自动保存失败");
     }
@@ -1312,7 +1550,7 @@ function autoSaveConfig() {
 ui.btnSave.click(() => {
     const config = getConfig();
     if (saveConfig(config)) {
-        toast("配置保存成功");
+        toastLog("配置保存成功");
     }
 });
 
@@ -1325,11 +1563,15 @@ ui.btnLoadConfig.click(() => {
 
 
 // 账号输入框文本变化监听
-ui.accountNamesInput.on("text_change", (text) => {
-    const accounts = parseAccountNames(text);
-    updateAccountListDisplay(accounts);
-    autoSaveConfig();
-});
+ui.accountNamesInput.addTextChangedListener(new android.text.TextWatcher({
+    beforeTextChanged: function (s, start, count, after) { },
+    onTextChanged: function (s, start, before, count) {
+        const accounts = parseAccountNames(s.toString());
+        updateAccountListDisplay(accounts);
+        autoSaveConfig();
+    },
+    afterTextChanged: function (s) { }
+}));
 
 ui.btnStop.click(() => {
     stopOtherEngines();
@@ -1347,7 +1589,7 @@ function startButton() {
         return;
     }
 
-    // 记录用户是否希望打开浮动按钮
+    // 记录用户是否打开浮动按钮
     const shouldOpenFloatWindow = ui.win_switch.checked;
 
     // 检查用户是否打开了浮动按钮开关
@@ -1370,6 +1612,7 @@ function startButton() {
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
     console.log("收割偏移: ((" + config.harvestOffset.x + ", " + config.harvestOffset.y + "), (" + config.harvestOffset.x2 + ", " + config.harvestOffset.y2 + "))");
+    console.log("粮仓偏移: (" + config.liangcangOffset.x + ", " + config.liangcangOffset.y + "), 货仓偏移 (" + config.huocangOffset.x + ", " + config.huocangOffset.y + ")");
     console.log("浮动按钮: " + (shouldOpenFloatWindow ? "是" : "否"));
     // console.log("主题颜色: " + config.themeColor.text);config
     // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
@@ -1474,6 +1717,8 @@ events.broadcast.on("engine_r", function (type) {
  * 初始化界面
  */
 function initUI() {
+    // 检查更新
+    checkForUpdatesOnce();
     // 尝试加载配置（如果配置文件存在）
     if (files.exists(configPath)) {
         try {
@@ -1497,34 +1742,112 @@ function initUI() {
         autoSaveConfig();
     });
 
-    // 绑定选项变化监听器
-    ui.functionSelect.on("item_selected", () => {
-        console.log("功能选择发生变化");
-        autoSaveConfig();
-    });
+    ui.functionSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            const item = parent.getItemAtPosition(position).toString();
+            // console.log("功能选择发生变化: " + item);
 
-    ui.cropSelect.on("item_selected", () => {
-        console.log("作物选择发生变化");
-        autoSaveConfig();
-    });
+            // 获取当前选择的功能
+            const selectedFunction = item;
 
-    ui.treeSelect.on("item_selected", () => {
-        console.log("树木选择发生变化，当前选择:", ui.treeSelect.getSelectedItem());
-        autoSaveConfig();
-    });
+            // 根据选择的功能显示/隐藏相应的选项
+            if (selectedFunction === "刷地") {
+                // 显示作物选择，隐藏树木选择
+                ui.cropSelectContainer.setVisibility(0); // 0表示可见
+                ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+            } else if (selectedFunction === "种树") {
+                // 隐藏作物选择，显示树木选择
+                ui.cropSelectContainer.setVisibility(8); // 8表示不可见
+                ui.treeSelectContainer.setVisibility(0); // 0表示可见
+            } else {
+                // 其他功能（如枯树上牌）隐藏两个选项
+                ui.cropSelectContainer.setVisibility(8); // 8表示不可见
+                ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+            }
 
-    ui.shopPrice.on("item_selected", () => {
-        console.log("商店售价选择发生变化");
-        autoSaveConfig();
-    });
+            autoSaveConfig();
+        }
+    }))
 
-    ui.themeColor.on("item_selected", () => {
-        console.log("主题颜色选择发生变化");
-        autoSaveConfig();
-    });
+    ui.cropSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            const item = parent.getItemAtPosition(position).toString();
+            // console.log("作物选择发生变化: " + item);
+            autoSaveConfig();
+        },
+        onNothingSelected: function (parent) { }
+    }));
+
+    ui.treeSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            const item = parent.getItemAtPosition(position).toString();
+            // console.log("树木选择发生变化: " + item);
+            autoSaveConfig();
+        },
+        onNothingSelected: function (parent) { }
+    }));
+
+    ui.shopPrice.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            const item = parent.getItemAtPosition(position).toString();
+            // console.log("商店售价选择发生变化: " + item);
+            autoSaveConfig();
+        },
+        onNothingSelected: function (parent) { }
+    }));
+
+    ui.themeColor.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            const item = parent.getItemAtPosition(position).toString();
+            // console.log("主题颜色选择发生变化: " + item);
+            
+            // 更新颜色
+            const colorNames = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"];
+            const selectedIndex = colorNames.indexOf(item);
+            if (selectedIndex >= 0) {
+                color = colorLibrary[selectedIndex];
+                
+                // 更新UI颜色
+                ui.statusBarColor(color);
+                ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
+                
+                // 更新商店按钮颜色（如果当前选中的是商店方法）
+                const config = loadConfig();
+                if (config.landFindMethod === "商店") {
+                    ui.methodShop.attr("bg", color);
+                    ui.methodShop.attr("textColor", "#FFFFFF");
+                }
+                
+                // 更新spinner文字颜色
+                ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
+            }
+            
+            autoSaveConfig();
+            loadConfigToUI();
+        },
+        onNothingSelected: function (parent) { }
+    }));
 
     ui.randomColor.on("check", (checked) => {
         console.log("随机颜色开关状态变化:", checked);
+        
+        if (checked) {
+            // 如果打开随机颜色，则随机选择一个颜色
+            color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)];
+            ui.statusBarColor(color);
+            ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
+            
+            // 更新商店按钮颜色（如果当前选中的是商店方法）
+            const config = loadConfig();
+            if (config.landFindMethod === "商店") {
+                ui.methodShop.attr("bg", color);
+                ui.methodShop.attr("textColor", "#FFFFFF");
+            }
+            
+            // 更新spinner文字颜色
+            ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
+        }
+        
         autoSaveConfig();
     });
 
