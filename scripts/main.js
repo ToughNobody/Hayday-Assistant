@@ -223,6 +223,7 @@ ui.layout(
                                         <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
                                         <text text="分钟" textSize="14"  w="120" marginRight="8" />
                                     </horizontal>
+                                    
                                 </vertical>
                             </card>
 
@@ -244,6 +245,7 @@ ui.layout(
                                         <input id="shopOffsetX" hint="X:-60" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
                                         <input id="shopOffsetY" hint="Y:-50" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
                                     </horizontal>
+                                    {/* 收割坐标偏移 */}
                                     <horizontal gravity="center_vertical">
                                         <text text="收割横向偏移：" textSize="14" w="120" marginRight="8" />
                                         <input id="harvestOffsetXX" hint="X:-480" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
@@ -254,6 +256,7 @@ ui.layout(
                                         <input id="harvestOffsetYX" hint="X:100" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
                                         <input id="harvestOffsetYY" hint="Y:-50" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
                                     </horizontal>
+                                    {/* 初始土地偏移 */}
                                     <horizontal gravity="center_vertical">
                                         <text text="初始土地偏移：" textSize="14" w="120" marginRight="8" />
                                         <input id="firstlandX" hint="X:20" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
@@ -262,6 +265,17 @@ ui.layout(
                                     <horizontal gravity="center_vertical">
                                         <text text="收割两指间距：" textSize="14" w="120" marginRight="8" />
                                         <input id="distance" hint="75" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                    </horizontal>
+                                    {/* 仓库坐标偏移 */}
+                                    <horizontal gravity="center_vertical">
+                                        <text text="粮仓坐标偏移：" textSize="14" w="120" marginRight="8" />
+                                        <input id="liangcangOffsetX" hint="X:240" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <input id="liangcangOffsetY" hint="Y:0" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="货仓坐标偏移：" textSize="14" w="120" marginRight="8" />
+                                        <input id="huocangOffsetX" hint="X:340" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <input id="huocangOffsetY" hint="Y:-45" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
                                         <text text="悬浮窗坐标：" textSize="14" w="120" marginRight="8" />
@@ -855,6 +869,14 @@ function getConfig() {
         },
         isShengcang: ui.isShengcang.isChecked(),
         shengcangTime: parseFloat(ui.shengcangTime.text()) ?? defaultConfig.shengcangTime,
+        liangcangOffset: {
+            x: parseInt(ui.liangcangOffsetX.text()) ?? defaultConfig.liangcangOffset.x,
+            y: parseInt(ui.liangcangOffsetY.text()) ?? defaultConfig.liangcangOffset.y
+        },
+        huocangOffset: {
+            x: parseInt(ui.huocangOffsetX.text()) ?? defaultConfig.huocangOffset.x,
+            y: parseInt(ui.huocangOffsetY.text()) ?? defaultConfig.huocangOffset.y
+        },
     };
 }
 
@@ -944,6 +966,16 @@ function validateConfig(config) {
         config.isShengcang = defaultConfig.isShengcang;
     }
     
+    // 验证粮仓坐标偏移
+    if (!config.liangcangOffset) config.liangcangOffset = defaultConfig.liangcangOffset;
+    config.liangcangOffset.x = config.liangcangOffset.x != null ? Number(config.liangcangOffset.x) : defaultConfig.liangcangOffset.x;
+    config.liangcangOffset.y = config.liangcangOffset.y != null ? Number(config.liangcangOffset.y) : defaultConfig.liangcangOffset.y;
+    
+    // 验证货仓坐标偏移
+    if (!config.huocangOffset) config.huocangOffset = defaultConfig.huocangOffset;
+    config.huocangOffset.x = config.huocangOffset.x != null ? Number(config.huocangOffset.x) : defaultConfig.huocangOffset.x;
+    config.huocangOffset.y = config.huocangOffset.y != null ? Number(config.huocangOffset.y) : defaultConfig.huocangOffset.y;
+
     // 其他验证...
     if (!Array.isArray(config.accountNames)) config.accountNames = [];
     if (config.photoPath.length == 0) config.photoPath = "./res/pictures.1280_720"
@@ -1005,6 +1037,14 @@ function getDefaultConfig() {
         },
         isShengcang: false,
         shengcangTime: 60,
+        liangcangOffset: {
+            x: 240,
+            y: 0
+        },
+        huocangOffset: {
+            x: 340,
+            y: -45
+        },
     };
 }
 
@@ -1112,6 +1152,22 @@ function loadConfigToUI() {
 
     // 为照片路径输入框添加变化监听
     ui.photoPath.on("text_change", () => autoSaveConfig());
+
+    // 设置粮仓坐标偏移
+    ui.liangcangOffsetX.setText(String(config.liangcangOffset.x));
+    ui.liangcangOffsetY.setText(String(config.liangcangOffset.y));
+    
+    // 为粮仓坐标偏移输入框添加变化监听
+    ui.liangcangOffsetX.on("text_change", () => autoSaveConfig());
+    ui.liangcangOffsetY.on("text_change", () => autoSaveConfig());
+    
+    // 设置货仓坐标偏移
+    ui.huocangOffsetX.setText(String(config.huocangOffset.x));
+    ui.huocangOffsetY.setText(String(config.huocangOffset.y));
+    
+    // 为货仓坐标偏移输入框添加变化监听
+    ui.huocangOffsetX.on("text_change", () => autoSaveConfig());
+    ui.huocangOffsetY.on("text_change", () => autoSaveConfig());
 
     // 设置随机颜色开关
     ui.randomColor.setChecked(config.randomColor);

@@ -1187,7 +1187,7 @@ function switch_account(Account, num = 0) {
         let scrollUpCount = 0; // 当前上滑次数
         let AccountIma = files.join(config.photoPath, Account + ".png");
         while (!found) {
-
+            sleep(500);
             let is_find_Account = findimage(AccountIma, 0.7);
 
             if (is_find_Account) { //如果找到账号名称，则点击
@@ -1267,7 +1267,7 @@ function shengcang() {
     if (isFindShop) {  //判断是否找到商店
         console.log("点击粮仓");
         showTip("点击粮仓");
-        click(isFindShop.x + 241 + ran(), isFindShop.y + ran()); //点击粮仓
+        click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y+ ran()); //点击粮仓
         sleep(500);
         if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入粮仓
             click(700 + ran(), 625 + ran());
@@ -1303,7 +1303,7 @@ function shengcang() {
     if (isFindShop) {  //判断是否找到商店
         console.log("点击货仓");
         showTip("点击货仓");
-        click(isFindShop.x + 343 + ran(), isFindShop.y - 45 + ran()); //点击货仓
+        click(isFindShop.x + config.huocangOffset.x + ran(), isFindShop.y + config.huocangOffset.y + ran()); //点击货仓
         sleep(500);
         if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入货仓
             click(700 + ran(), 625 + ran());
