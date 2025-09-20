@@ -8,9 +8,9 @@ let currentScript = files.path("./hot_update.js");
 
 const updateConfig = {
     version: "",
+    versionCode: 0, // 版本代码，用于比较文件版本
     description: "",
     files: [], // 存储多个文件的更新信息
-    downloadDir: "",
     tempDir: ""
 };
 
@@ -18,6 +18,7 @@ const updateConfig = {
  * 初始化热更新模块
  * @param {Object} config 更新配置
  * @param {string} config.version 最新版本号
+ * @param {number} config.versionCode 版本代码，用于比较文件版本
  * @param {Array} config.files 文件更新配置数组，每个元素包含name, url, path等属性
  * @param {string} config.description 更新说明
  */
@@ -27,25 +28,23 @@ function init(config) {
     }
 
     updateConfig.version = config.version;
+    updateConfig.versionCode = config.versionCode || 0;
     updateConfig.description = config.description || "";
     updateConfig.files = config.files;
 
     // 设置下载和临时目录路径
     let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
-    
+
     // 使用应用专用目录，避免权限问题
-    updateConfig.downloadDir = files.join(appExternalDir, "updates");
     updateConfig.tempDir = files.join(appExternalDir, "update_temp");
-    
-    // 使用shell命令创建目录
+
+    // 创建目录
     try {
-        shell("mkdir -p " + updateConfig.downloadDir);
-        shell("mkdir -p " + updateConfig.tempDir);
-        console.log("目录创建成功: " + updateConfig.downloadDir + ", " + updateConfig.tempDir);
+        files.ensureDir(updateConfig.tempDir + "/1");
     } catch (e) {
-        console.error("使用shell命令创建目录失败: " + e.message);
+        console.error("创建目录失败: " + e.message);
         throw new Error("无法创建必要的目录: " + e.message);
-    } 
+    }
     console.log("热更新模块已初始化");
     console.log("最新版本: " + updateConfig.version);
     console.log("需要更新的文件数量: " + updateConfig.files.length);
@@ -58,6 +57,21 @@ function init(config) {
 function doIncrementalUpdate() {
     try {
         console.log("开始执行增量更新...");
+        console.log("当前版本代码: " + updateConfig.versionCode);
+
+        // 统计需要下载的文件数量
+        let filesToDownloadCount = 0;
+        for (let i = 0; i < updateConfig.files.length; i++) {
+            if (shouldDownloadFile(updateConfig.files[i])) {
+                filesToDownloadCount++;
+            }
+        }
+        console.log("需要下载的文件数量: " + filesToDownloadCount);
+
+        if (filesToDownloadCount === 0) {
+            console.log("没有需要更新的文件，跳过更新过程");
+            return true;
+        }
 
         // 下载所有需要更新的文件
         console.log("正在下载更新文件...");
@@ -67,6 +81,7 @@ function doIncrementalUpdate() {
         }
 
         // 验证下载的文件
+        console.log("验证下载的文件...");
         if (!validateDownloadedFiles()) {
             console.error("下载的文件验证失败");
             return false;
@@ -92,6 +107,34 @@ function doIncrementalUpdate() {
 }
 
 /**
+ * 检查文件是否需要下载
+ * @param {Object} fileConfig 文件配置
+ * @returns {boolean} 是否需要下载
+ */
+function shouldDownloadFile(fileConfig) {
+    // 如果没有提供versionCode，则默认需要下载
+    if (fileConfig.versionCode === undefined) {
+        console.log(`文件 ${fileConfig.name} 没有提供versionCode，将下载更新`);
+        return true;
+    }
+
+    // 如果配置中没有versionCode，则默认需要下载
+    if (updateConfig.versionCode === undefined) {
+        console.log(`配置中没有提供versionCode，将下载文件 ${fileConfig.name}`);
+        return true;
+    }
+
+    // 比较版本代码，只有当文件的versionCode大于配置的versionCode时才下载
+    if (fileConfig.versionCode > updateConfig.versionCode) {
+        console.log(`文件 ${fileConfig.name} versionCode(${fileConfig.versionCode}) > 配置versionCode(${updateConfig.versionCode})，需要下载`);
+        return true;
+    } else {
+        console.log(`文件 ${fileConfig.name} versionCode(${fileConfig.versionCode}) <= 配置versionCode(${updateConfig.versionCode})，无需下载`);
+        return false;
+    }
+}
+
+/**
  * 下载所有需要更新的文件
  * @returns {boolean} 下载是否全部成功
  */
@@ -101,6 +144,14 @@ function downloadAllFiles() {
     // 遍历所有需要更新的文件
     for (let i = 0; i < updateConfig.files.length; i++) {
         let fileConfig = updateConfig.files[i];
+        console.log(`正在检查文件: ${fileConfig.name}`);
+
+        // 检查文件是否需要下载
+        if (!shouldDownloadFile(fileConfig)) {
+            console.log(`跳过下载文件: ${fileConfig.name}`);
+            continue;
+        }
+
         console.log(`正在下载文件: ${fileConfig.name} (URL: ${fileConfig.url})`);
 
         try {
@@ -118,21 +169,40 @@ function downloadAllFiles() {
 
             // 创建临时文件路径，确保文件名与实际文件匹配
             let tempFileName = fileConfig.name;
-            
-            // 如果文件名没有后缀，尝试添加.js后缀
-            if (!fileConfig.name.endsWith(".js") && !fileConfig.name.endsWith(".json")) {
+
+            // 只为JavaScript文件添加.js后缀，保留原始文件名
+            // 不为图片等二进制文件添加后缀
+            if (!fileConfig.name.endsWith(".js") && !fileConfig.name.endsWith(".json") &&
+                !fileConfig.name.match(/\.(png|jpg|jpeg|gif|bmp|webp|ico|svg)$/i)) {
                 tempFileName = fileConfig.name + ".js";
             }
-            
+
             let tempFilePath = files.join(updateConfig.tempDir, tempFileName);
-            
+
             // 保存临时文件名，用于后续验证和替换
             fileConfig.tempFileName = tempFileName;
-            
+
             // 将下载的内容写入临时文件
             try {
-                files.write(tempFilePath, response.body.string());
-                console.log(`文件已写入临时路径: ${tempFilePath}`);
+                // 对于图片等二进制文件，使用二进制模式写入
+                if (fileConfig.name.match(/\.(png|jpg|jpeg|gif|bmp|webp|ico|svg)$/i)) {
+                    let content = response.body.bytes();
+                    if (!content || content.length === 0) {
+                        console.error(`下载的内容为空: ${fileConfig.name}`);
+                        continue;
+                    }
+
+                    // 确保目录存在
+                    files.ensureDir(updateConfig.tempDir);
+
+                    // 使用二进制模式写入文件
+                    files.writeBytes(tempFilePath, content);
+                    console.log(`图片文件已写入临时路径: ${tempFilePath}, 大小: ${content.length}字节`);
+                } else {
+                    // 对于文本文件，使用字符串模式写入
+                    files.write(tempFilePath, response.body.string());
+                    console.log(`文本文件已写入临时路径: ${tempFilePath}`);
+                }
             } catch (writeError) {
                 console.error(`写入临时文件失败: ${tempFilePath}, 错误: ${writeError.message}`);
                 continue;
@@ -163,14 +233,34 @@ function downloadAllFiles() {
  */
 function validateDownloadedFiles() {
     let validCount = 0;
+    let hasFilesToValidate = false;
 
-    // 遍历所有需要更新的文件
+    // 首先检查是否有需要下载的文件
     for (let i = 0; i < updateConfig.files.length; i++) {
+        if (shouldDownloadFile(updateConfig.files[i])) {
+            hasFilesToValidate = true;
+            break;
+        }
+    }
+
+    // 如果没有需要下载的文件，直接返回成功
+    if (!hasFilesToValidate) {
+        console.log("没有需要下载的文件，跳过验证操作");
+        return true;
+    }
+
+    // 遍历所有需要更新的文件，只验证需要下载的文件
+    for (let i = 0; i < updateConfig.files.length; i++) {
+        // 检查文件是否需要下载
+        if (!shouldDownloadFile(updateConfig.files[i])) {
+            console.log(`跳过验证不需要更新的文件: ${updateConfig.files[i].name}`);
+            continue;
+        }
         let fileConfig = updateConfig.files[i];
 
         // 检查临时文件是否存在
         let tempFilePath = fileConfig.tempPath;
-        
+
         // 如果临时文件不存在，尝试使用原始文件名
         if (!tempFilePath || !files.exists(tempFilePath)) {
             tempFilePath = files.join(updateConfig.tempDir, fileConfig.name);
@@ -179,7 +269,7 @@ function validateDownloadedFiles() {
                 continue;
             }
         }
-        
+
         // 使用找到的临时文件路径
         fileConfig.tempPath = tempFilePath;
 
@@ -198,10 +288,10 @@ function validateDownloadedFiles() {
                     // 只检查括号、引号等基本语法是否匹配
                     let bracketCount = 0;
                     let quoteChar = null;
-                    
+
                     for (let i = 0; i < content.length; i++) {
                         let char = content[i];
-                        
+
                         if (char === '"' || char === "'") {
                             if (quoteChar === null) {
                                 quoteChar = char;
@@ -224,12 +314,12 @@ function validateDownloadedFiles() {
                             }
                         }
                     }
-                    
+
                     // 检查括号是否匹配
                     if (bracketCount !== 0) {
                         throw new Error("括号不匹配");
                     }
-                    
+
                     // 检查是否有明显的语法错误
                     if (content.includes("ui.layout") || content.includes("ui.widget") || content.includes("ui.button")) {
                         console.warn(`文件包含UI相关代码: ${fileConfig.name}`);
@@ -263,9 +353,9 @@ function backupCurrentFiles() {
     // 创建备份目录
     let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
     let backupDir = files.join(appExternalDir, "backups");
-    
+
     try {
-        shell("mkdir -p " + backupDir);
+        files.ensureDir(backupDir + "/1");
         console.log("备份目录创建成功: " + backupDir);
     } catch (e) {
         console.error("创建备份目录失败: " + e.message);
@@ -277,7 +367,7 @@ function backupCurrentFiles() {
     let formatDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
     let backupSubDir = files.join(backupDir, `backup_${formatDate}`);
     try {
-        shell("mkdir -p " + backupSubDir);
+        files.ensureDir(backupSubDir + "/1");
         console.log("备份子目录创建成功: " + backupSubDir);
     } catch (e) {
         console.error("创建备份子目录失败: " + e.message);
@@ -286,8 +376,13 @@ function backupCurrentFiles() {
 
     let successCount = 0;
 
-    // 遍历所有需要更新的文件
+    // 遍历所有需要更新的文件，只备份需要下载的文件
     for (let i = 0; i < updateConfig.files.length; i++) {
+        // 检查文件是否需要下载
+        if (!shouldDownloadFile(updateConfig.files[i])) {
+            console.log(`跳过备份不需要更新的文件: ${updateConfig.files[i].name}`);
+            continue;
+        }
         let fileConfig = updateConfig.files[i];
 
         try {
@@ -299,9 +394,13 @@ function backupCurrentFiles() {
                 // 如果没有指定路径，假设文件与脚本在同一目录
                 // 使用当前脚本的路径代替__FILE__
                 let scriptDir = files.path(currentScript || "./").split("/").slice(0, -1).join("/");
-                
-                // 直接使用配置的文件名
-                filePath = files.join(scriptDir, fileConfig.name);
+
+                // 确保目标文件路径保持正确的扩展名
+                // 在备份函数中，我们直接使用配置的文件名
+                // 不需要sourcePath变量，因为我们是备份原始文件
+                let sourceFileName = fileConfig.name;
+
+                filePath = files.join(scriptDir, sourceFileName);
             }
 
             // 检查文件是否存在
@@ -313,11 +412,35 @@ function backupCurrentFiles() {
             // 构建备份文件路径
             let backupFilePath = files.join(backupSubDir, fileConfig.name);
 
-            // 复制文件到备份位置
-            files.copy(filePath, backupFilePath);
+            // 确保备份目录存在
+            files.ensureDir(backupSubDir);
 
-            successCount++;
-            console.log(`文件已备份: ${fileConfig.name} -> ${backupFilePath}`);
+            // 对于图片等二进制文件，使用二进制模式复制
+            if (fileConfig.name.match(/\.(png|jpg|jpeg|gif|bmp|webp|ico|svg)$/i)) {
+                // 读取为二进制数据
+                let fileContent = files.readBytes(filePath);
+                // 写入为二进制数据
+                files.writeBytes(backupFilePath, fileContent);
+
+                // 验证备份是否成功
+                if (files.exists(backupFilePath)) {
+                    successCount++;
+                    console.log(`图片文件已备份: ${fileConfig.name} -> ${backupFilePath}`);
+                } else {
+                    console.error(`备份失败: 备份文件不存在 ${backupFilePath}`);
+                }
+            } else {
+                // 对于文本文件，使用普通方式复制
+                files.copy(filePath, backupFilePath);
+
+                // 验证备份是否成功
+                if (files.exists(backupFilePath)) {
+                    successCount++;
+                    console.log(`文本文件已备份: ${fileConfig.name} -> ${backupFilePath}`);
+                } else {
+                    console.error(`备份失败: 备份文件不存在 ${backupFilePath}`);
+                }
+            }
         } catch (e) {
             console.error(`备份文件失败: ${fileConfig.name}, 错误: ${e.message}`);
         }
@@ -332,27 +455,41 @@ function backupCurrentFiles() {
  */
 function replaceFiles() {
     let successCount = 0;
-    
+
     // 创建目标目录（如果不存在）
     let fileDir;
     try {
         // 确定文件的完整路径
         let filePath;
         if (updateConfig.files.length > 0) {
-            let fileConfig = updateConfig.files[0];
-            if (fileConfig.path) {
-                filePath = fileConfig.path;
-            } else {
-                // 如果没有指定路径，假设文件与脚本在同一目录
-                let scriptDir = files.path(currentScript || "./").split("/").slice(0, -1).join("/");
-                
-                // 直接使用配置的文件名
-                filePath = files.join(scriptDir, fileConfig.name);
+            // 找出第一个需要下载的文件，用于创建目标目录
+            let firstFileToDownload = null;
+            for (let i = 0; i < updateConfig.files.length; i++) {
+                if (shouldDownloadFile(updateConfig.files[i])) {
+                    firstFileToDownload = updateConfig.files[i];
+                    break;
+                }
             }
-            
+
+            // 如果没有需要下载的文件，直接返回成功
+            if (!firstFileToDownload) {
+                console.log("没有需要下载的文件，跳过替换操作");
+                return true;
+            }
+
+            if (firstFileToDownload.path) {
+                filePath = firstFileToDownload.path;
+            } else {
+                // 如果没有指定路径，默认文件与脚本在同一目录
+                let scriptDir = files.path(currentScript || "./").split("/").slice(0, -1).join("/");
+
+                // 直接使用配置的文件名
+                filePath = files.join(scriptDir, firstFileToDownload.name);
+            }
+
             // 创建目录
             fileDir = filePath.split("/").slice(0, -1).join("/");
-            shell("mkdir -p " + fileDir);
+            files.ensureDir(fileDir + "/");
             console.log("目标目录创建成功: " + fileDir);
         }
     } catch (e) {
@@ -360,8 +497,13 @@ function replaceFiles() {
         throw new Error("无法创建目标目录: " + e.message);
     }
 
-    // 遍历所有需要更新的文件
+    // 遍历所有需要更新的文件，只替换需要下载的文件
     for (let i = 0; i < updateConfig.files.length; i++) {
+        // 检查文件是否需要下载
+        if (!shouldDownloadFile(updateConfig.files[i])) {
+            console.log(`跳过替换不需要更新的文件: ${updateConfig.files[i].name}`);
+            continue;
+        }
         let fileConfig = updateConfig.files[i];
 
         try {
@@ -372,9 +514,13 @@ function replaceFiles() {
             } else {
                 // 如果没有指定路径，假设文件与脚本在同一目录
                 let scriptDir = files.path(currentScript || "./").split("/").slice(0, -1).join("/");
-                
-                // 直接使用配置的文件名
-                filePath = files.join(scriptDir, fileConfig.name);
+
+                // 确保目标文件路径保持正确的扩展名
+                // 在备份函数中，我们直接使用配置的文件名
+                // 不需要sourcePath变量，因为我们是备份原始文件
+                let sourceFileName = fileConfig.name;
+
+                filePath = files.join(scriptDir, sourceFileName);
             }
 
             // 删除当前文件（如果存在）
@@ -385,33 +531,66 @@ function replaceFiles() {
             // 将下载的文件复制到目标位置
             // 先尝试使用保存的临时文件路径
             let sourcePath = fileConfig.tempPath;
-            
+
             // 如果临时文件不存在，尝试使用原始文件名
             if (!sourcePath || !files.exists(sourcePath)) {
                 sourcePath = files.join(updateConfig.tempDir, fileConfig.name);
             }
-            
+
             // 如果仍然找不到，尝试查找所有可能的文件名
             if (!files.exists(sourcePath)) {
-                // 尝试添加.js后缀
-                let jsPath = files.join(updateConfig.tempDir, fileConfig.name + ".js");
-                if (files.exists(jsPath)) {
-                    sourcePath = jsPath;
+                // 根据文件类型尝试不同的后缀
+                let possiblePaths = [];
+
+                // 如果是图片等二进制文件，只尝试原始文件名和常见图片后缀
+                if (fileConfig.name.match(/\.(png|jpg|jpeg|gif|bmp|webp|ico|svg)$/i)) {
+                    // 尝试常见图片后缀变体
+                    let extensions = ["", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".ico", ".svg"];
+                    for (let ext of extensions) {
+                        possiblePaths.push(files.join(updateConfig.tempDir, fileConfig.name + ext));
+                    }
+                } else {
+                    // 对于其他文件，尝试.js和.json后缀
+                    possiblePaths.push(files.join(updateConfig.tempDir, fileConfig.name + ".js"));
+                    possiblePaths.push(files.join(updateConfig.tempDir, fileConfig.name + ".json"));
                 }
-                // 尝试添加.json后缀
-                else {
-                    let jsonPath = files.join(updateConfig.tempDir, fileConfig.name + ".json");
-                    if (files.exists(jsonPath)) {
-                        sourcePath = jsonPath;
+
+                // 查找存在的文件
+                for (let path of possiblePaths) {
+                    if (files.exists(path)) {
+                        sourcePath = path;
+                        console.log(`找到匹配文件: ${path}`);
+                        break;
                     }
                 }
             }
-            
-            // 复制文件到目标位置
-            files.copy(sourcePath, filePath);
 
-            successCount++;
-            console.log(`文件已替换: ${fileConfig.name} -> ${filePath}`);
+            // 复制文件到目标位置
+            // 对于图片等二进制文件，使用二进制模式复制
+            if (fileConfig.name.match(/\.(png|jpg|jpeg|gif|bmp|webp|ico|svg)$/i)) {
+                // 确保目录存在
+                files.ensureDir(fileDir);
+
+                // 读取为二进制数据
+                let fileContent = files.readBytes(sourcePath);
+
+                // 写入为二进制数据
+                files.writeBytes(filePath, fileContent);
+
+                // 验证文件是否成功写入
+                if (!files.exists(filePath)) {
+                    throw new Error("替换文件后不存在");
+                }
+
+                successCount++;
+                console.log(`图片文件已替换: ${fileConfig.name} -> ${filePath}`);
+            } else {
+                // 对于文本文件，使用普通方式复制
+                files.copy(sourcePath, filePath);
+
+                successCount++;
+                console.log(`文本文件已替换: ${fileConfig.name} -> ${filePath}`);
+            }
         } catch (e) {
             console.error(`替换文件失败: ${fileConfig.name}, 错误: ${e.message}`);
 
@@ -419,7 +598,7 @@ function replaceFiles() {
             try {
                 let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
                 let backupDir = files.join(appExternalDir, "backups");
-                
+
                 files.ensureDir(backupDir);
 
                 // 查找最新的备份目录
@@ -435,14 +614,14 @@ function replaceFiles() {
                             filePath = fileConfig.path;
                         } else {
                             let scriptDir = files.path(currentScript || "./").split("/").slice(0, -1).join("/");
-                            
+
                             // 直接使用配置的文件名
                             filePath = files.join(scriptDir, fileConfig.name);
                         }
 
                         // 目录已在循环前面创建
                         let targetDir = filePath.split("/").slice(0, -1).join("/");
-                        
+
                         // 复制备份文件到目标位置
                         files.copy(backupFilePath, filePath);
                         console.log(`已从备份恢复文件: ${fileConfig.name}`);
@@ -456,8 +635,8 @@ function replaceFiles() {
 
     // 清理临时文件
     try {
-        files.remove(updateConfig.tempDir);
-        console.log("临时文件已清理");
+        // files.remove(updateConfig.tempDir);
+        // console.log("临时文件已清理");
     } catch (e) {
         console.error("清理临时文件失败: " + e.message);
     }
@@ -496,5 +675,6 @@ module.exports = {
     init: init,
     doIncrementalUpdate: doIncrementalUpdate,
     getUpdateInfo: getUpdateInfo,
-    isUpdateAvailable: isUpdateAvailable
+    isUpdateAvailable: isUpdateAvailable,
+    shouldDownloadFile: shouldDownloadFile
 };

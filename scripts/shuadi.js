@@ -746,20 +746,50 @@ function harvest(center) {
         ]);
 }
 
-//多图识别
-function findimages(imagepath, xiangsidu, max_number) {
-    let sc = captureScreen();
-    //let sc = images.read("/storage/emulated/0/脚本/卡通农场/pictures/coin.png")
+/**
+ * 在屏幕上查找图片
+ * @param {string|images.Image} imagepath 图片路径或图片对象
+ * @param {number} xiangsidu 相似度阈值，0-1之间
+ * @param {number} max_number 最大匹配数量
+ * @param {images.Image} [screenImage] 可选，自定义传入的屏幕截图，如果不传入则自动截图
+ * @returns {Array} 匹配到的坐标点数组
+ */
+function findimages(imagepath, xiangsidu, max_number, screenImage) {
+    // 如果没有传入屏幕截图，则使用默认截图功能
+    let sc;
+    if (screenImage) {
+        sc = screenImage;
+        // console.log("使用传入的屏幕截图");
+    } else {
+        sc = captureScreen();
+        // console.log("使用自动截图");
+    }
+    
     if (!sc) {
         console.log("截图失败");
         return [];
     }
-    let picture = images.read(imagepath);
-    if (!picture) {
-        sc.recycle();
-        console.log("图片读取出错，请检查路径");
-        return [];
+    
+    // 判断传入的是路径还是图片对象
+    let picture;
+    if (typeof imagepath === "string") {
+        // 如果是字符串，当作文件路径处理
+        picture = images.read(imagepath);
+        if (!picture) {
+            if (!screenImage) sc.recycle(); // 只有不是传入的截图才回收
+            console.log("图片读取出错，请检查路径");
+            return [];
+        }
+    } else {
+        // 如果是图片对象，直接使用
+        picture = imagepath;
+        if (!picture) {
+            if (!screenImage) sc.recycle(); // 只有不是传入的截图才回收
+            console.log("图片对象无效");
+            return [];
+        }
     }
+    
     let results = images.matchTemplate(sc, picture, {
         max: max_number,
         threshold: xiangsidu
@@ -784,8 +814,16 @@ function findimages(imagepath, xiangsidu, max_number) {
         console.log("多图识别调用：未找到目标");
     }
 
-    sc.recycle();
-    picture.recycle();
+    // 如果是通过路径读取的图片，才需要回收
+    if (typeof imagepath === "string") {
+        picture.recycle();
+    }
+    
+    // 如果不是传入的截图，才需要回收
+    if (!screenImage) {
+        sc.recycle();
+    }
+    
     return results1;
 
 }
@@ -819,11 +857,13 @@ function coin() {
     console.log("收金币");
     // showTip("收金币");
     let allcenters = [];
-    let centers1 = findimages(files.join(config.photoPath, "shopsold1.png"), 0.8, 10);
+    let sc = captureScreen();
+    let centers1 = findimages(files.join(config.photoPath, "shopsold1.png"), 0.8, 10, sc);
     allcenters.push(centers1);
-    sleep(100);
-    let centers2 = findimages(files.join(config.photoPath, "shopSold1.png"), 0.8, 10);
-    allcenters = centers1.concat(centers2);
+    let centers2 = findimages(files.join(config.photoPath, "shopsold2.png"), 0.8, 10, sc);
+    allcenters.push(centers2);
+    let centers3 = findimages(files.join(config.photoPath, "shopSold3.png"), 0.8, 10, sc);
+    allcenters.push(centers3);
     allcenters.sort((a, b) => a.x - b.x);
     allcenters = centers1
     console.log("有" + allcenters.length + "个金币可以收");
@@ -1188,7 +1228,7 @@ function switch_account(Account, num = 0) {
         let AccountIma = files.join(config.photoPath, Account + ".png");
         while (!found) {
             sleep(500);
-            let is_find_Account = findimage(AccountIma, 0.7);
+            let is_find_Account = findimage(AccountIma, 0.9);
 
             if (is_find_Account) { //如果找到账号名称，则点击
                 log(`找到账号${Account}`);

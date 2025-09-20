@@ -416,9 +416,11 @@ function checkForUpdatesOnce() {
     log("=== 执行自动更新检查 ===");
     threads.start(() => {
         try {
-            // 获取当前版本号
-            let currentVersion = getAppVersion();
-            log("当前版本: " + currentVersion);
+            // 读取project.json文件获取版本信息
+            let projectConfig = files.read('./project.json');
+            let projectData = JSON.parse(projectConfig);
+            log("当前版本: " + projectData.versionName);
+            log("当前版本代码: " + projectData.versionCode);
 
             // 发送HTTP请求获取最新版本号
             let apiUrl = "https://gitee.com/ToughNobody/Hayday-Assistant/raw/main/version.json";
@@ -445,7 +447,7 @@ function checkForUpdatesOnce() {
                 log("最新版本: " + latestVersion);
 
                 // 比较版本号
-                let compareResult = compareVersions(currentVersion, latestVersion);
+                let compareResult = compareVersions(projectData.versionName, latestVersion);
                 log("版本比较结果: " + compareResult + " (0=相同, <0=旧版本, >0=新版本)");
 
                 // 只有在当前版本低于最新版本时才显示通知
@@ -455,7 +457,7 @@ function checkForUpdatesOnce() {
 
                         dialogs.build({
                             title: "发现新版本",
-                            content: "当前版本: " + currentVersion + "\n" +
+                            content: "当前版本: " + projectData.versionName + "\n" +
                                 "最新版本: " + latestVersion + "\n\n" +
                                 "更新内容: " + (result.description || "无更新说明").substring(0, 200) + "...\n\n" +
                                 "是否更新？",
@@ -467,10 +469,11 @@ function checkForUpdatesOnce() {
                                 try {
                                     // 加载热更新模块
                                     let hotUpdate = require("./hot_update.js");
-
+                                    
                                     // 初始化热更新
                                     hotUpdate.init({
                                         version: result.version,
+                                        versionCode: projectData.versionCode,
                                         files: result.files,
                                         description: result.description
                                     });
@@ -511,9 +514,11 @@ function checkForUpdates() {
     // toast("正在检查更新...");
     threads.start(() => {
         try {
-            // 获取当前版本号
-            let currentVersion = getAppVersion();
-            log("当前版本: " + currentVersion);
+            // 读取project.json文件获取版本信息
+            let projectConfig = files.read('./project.json');
+            let projectData = JSON.parse(projectConfig);
+            log("当前版本: " + projectData.versionName);
+            log("当前版本代码: " + projectData.versionCode);
             // toast("当前版本: " + currentVersion);
 
             // 发送HTTP请求获取最新版本号
@@ -546,14 +551,14 @@ function checkForUpdates() {
                     log("关闭更新检查对话框");
 
                     // 比较版本号
-                    let compareResult = compareVersions(currentVersion, latestVersion);
+                    let compareResult = compareVersions(projectData.versionName, latestVersion);
                     log("版本比较结果: " + compareResult + " (0=相同, <0=旧版本, >0=新版本)");
 
                     if (compareResult < 0) {
                         // 有新版本
                         dialogs.build({
                             title: "发现新版本",
-                            content: "当前版本: " + currentVersion + "\n" +
+                            content: "当前版本: " + projectData.versionName + "\n" +
                                 "最新版本: " + latestVersion + "\n\n" +
                                 "更新内容: " + (result.description || "无更新说明").substring(0, 200) + "...\n\n" +
                                 "是否更新？",
@@ -569,6 +574,7 @@ function checkForUpdates() {
                                     // 初始化热更新
                                     hotUpdate.init({
                                         version: result.version,
+                                        versionCode: projectData.versionCode,
                                         files: result.files,
                                         description: result.description
                                     });
@@ -592,10 +598,10 @@ function checkForUpdates() {
                         }).show();
                     } else if (compareResult > 0) {
                         // 当前版本更新（开发中）
-                        toastLog("你的版本超过了全球100%的用户！作者得在你这更新版本" + currentVersion + " > " + latestVersion, "long");
+                        toastLog("你的版本超过了全球100%的用户！作者得在你这更新版本" + projectData.versionName + " > " + latestVersion, "long");
                     } else {
                         // 没有新版本
-                        toastLog("当前已是最新版本: " + currentVersion);
+                        toastLog("当前已是最新版本: " + projectData.versionName);
                     }
                 });
             } else {

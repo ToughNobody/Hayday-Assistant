@@ -1,6 +1,5 @@
 {
-  "version": "1.2.4",
-  "versionCode": 6,
+  "version": "1.2.5",
   "description": "添加自动升级仓库功能，可自定义时间间隔",
   "files": [
     {
@@ -10,17 +9,17 @@
     },
     {
       "name": "main.js",
-      "versionCode": 6,
+      "versionCode": 7,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 6,
+      "versionCode": 7,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {
       "name": "project.json",
-      "versionCode": 6,
+      "versionCode": 7,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -30,13 +29,17 @@
     },
     {
       "name": "hot_update.js",
-      "versionCode": 6,
+      "versionCode": 7,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js"
     },{
       "name": "shopSold3.png",
       "versionCode": 6,
       "path": "./res/pictures.1280_720/shopSold3.png",
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold3.png"
+    },{
+      "name": "删除删不掉的文件夹.js",
+      "versionCode": 6,
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/删除删不掉的文件夹.js"
     }
   ]
 }
