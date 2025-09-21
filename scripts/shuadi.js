@@ -764,12 +764,12 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
         sc = captureScreen();
         // console.log("使用自动截图");
     }
-    
+
     if (!sc) {
         console.log("截图失败");
         return [];
     }
-    
+
     // 判断传入的是路径还是图片对象
     let picture;
     if (typeof imagepath === "string") {
@@ -789,7 +789,7 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
             return [];
         }
     }
-    
+
     let results = images.matchTemplate(sc, picture, {
         max: max_number,
         threshold: xiangsidu
@@ -818,12 +818,12 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
     if (typeof imagepath === "string") {
         picture.recycle();
     }
-    
+
     // 如果不是传入的截图，才需要回收
     if (!screenImage) {
         sc.recycle();
     }
-    
+
     return results1;
 
 }
@@ -1307,7 +1307,7 @@ function shengcang() {
     if (isFindShop) {  //判断是否找到商店
         console.log("点击粮仓");
         showTip("点击粮仓");
-        click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y+ ran()); //点击粮仓
+        click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
         sleep(500);
         if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入粮仓
             click(700 + ran(), 625 + ran());
@@ -1520,10 +1520,10 @@ function operation(Account) {
     }
     //设定计时器
     let timerName = config.switchAccount ? Account + config.selectedCrop.text : config.selectedCrop.text;
-    if (config.selectedCrop.code == 0) timer(timerName, 117);
-    else if (config.selectedCrop.code == 1) timer(timerName, 294);
-    else if (config.selectedCrop.code == 2) timer(timerName, 590);
-    else if (config.selectedCrop.code == 3) timer(timerName, 1170);
+    if (config.selectedCrop.code == 0) timer(timerName, 115);
+    else if (config.selectedCrop.code == 1) timer(timerName, 295);
+    else if (config.selectedCrop.code == 2) timer(timerName, 595);
+    else if (config.selectedCrop.code == 3) timer(timerName, 1193);
 
     // 保存当前计时器名称，以便在其他地方使用
     global.currentTimerName = timerName;
@@ -1587,8 +1587,16 @@ function main() {
                 // 获取计时器剩余时间
                 let timerState = getTimerState(global.currentTimerName);
                 if (timerState) {
-                    showTip(`${config.selectedCrop.text}成熟剩余${timerState.remainingTime}秒`);
+                    // 将秒数转换为分钟和秒
+                    let minutes = Math.floor(timerState.remainingTime / 60);
+                    let seconds = timerState.remainingTime % 60;
+                    let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                    showTip(`${config.selectedCrop.text}成熟剩余${timeText}`);
                 }
+                // let timerState = getTimerState(global.currentTimerName);
+                // if (timerState) {
+                //     showTip(`${config.selectedCrop.text}成熟剩余${timerState.remainingTime}秒`);
+                // }
                 if (!timerThread.isAlive()) {
                     break;
                 }
@@ -1626,7 +1634,10 @@ function main() {
                     }
 
                     // 显示下一个计时器的状态
-                    showTip(`账号:${nextAccount} ${config.selectedCrop.text}成熟剩余${nextTimerState.remainingTime}秒`);
+                    let minutes = Math.floor(nextTimerState.remainingTime / 60);
+                    let seconds = timerState.remainingTime % 60;
+                    let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                    showTip(`账号:${nextAccount} ${config.selectedCrop.text}成熟剩余${timeText}`);
 
                     if (!timerThread.isAlive()) {
                         break;
