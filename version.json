@@ -1,6 +1,6 @@
 {
   "version": "1.2.6",
-  "description": "添加自动升级仓库功能，可自定义时间间隔",
+  "description": "修复计时器时间问题，改进剩余时间显示方法",
   "files": [
     {
       "name": "floatyBtn.js",
