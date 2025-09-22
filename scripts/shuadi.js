@@ -436,47 +436,9 @@ function checkmenu() {
         let sc = null;
 
         try {
-            let sc = captureScreen();
-            let screenWidth = sc.width;
-            let screenHeight = sc.height;
-
-            // 动态调整检测坐标
-            let checkPoints = [];
-            if (Size[0] == 1280 && Size[1] == 720) {
-                checkPoints = [
-                    { x: 50, y: 206, color: "#f3bb00" },  // 菜单按钮
-                    { x: 52, y: 652, color: "#3377b7" },  // 购买按钮
-                    { x: Math.min(1255, screenWidth - 1), y: Math.min(665, screenHeight - 1), color: "#a24700" }  // 好友按钮
-                ];
-            } else {
-                checkPoints = [
-                    // { x: adapt(84, 344)[0], y: adapt(84, 344)[1], color: "#f3bb00" },
-                    // { x: adapt(86, 1092)[0], y: adapt(86, 1092)[1], color: "#3377b7" },
-                    { x: Math.min(1258, screenWidth - 1), y: Math.min(664, screenHeight - 1), color: "#a24700" }
-                ];
-            }
-
-            let allMatch = true;
-            for (let point of checkPoints) {
-                if (point.x >= screenWidth || point.y >= screenHeight) {
-                    console.warn(`坐标(${point.x},${point.y})超出屏幕范围(${screenWidth}x${screenHeight})`);
-                    allMatch = false;
-                    break;
-                }
-
-                try {
-                    if (!images.detectsColor(sc, point.color, point.x, point.y, 32)) {
-                        allMatch = false;
-                        break;
-                    }
-                } catch (e) {
-                    console.error(`颜色检测出错:`, e);
-                    allMatch = false;
-                    break;
-                }
-            }
-
-            sc.recycle();
+            let allMatch = matchColor([{x:47,y:206,color:"#f3bd00"},
+                {x:97,y:638,color:"#2662a8"},
+                {x:1245,y:658,color:"#a54a00"}])
 
             if (allMatch) {
                 log(`第 ${i + 1} 次检测: 已进入主界面`);
@@ -487,14 +449,12 @@ function checkmenu() {
             console.error("检测过程中出错:", e);
             // return false;
         } finally {
-            // 确保资源回收（即使发生异常）
-            if (menu) menu.recycle();
-            if (sc) sc.recycle();
+
         }
 
         //未找到则等待
         sleep(RETRY_INTERVAL);
-
+        log("3")
         log(`第 ${i + 1} 次检测: 未找到菜单，继续等待...`);
         showTip(`第 ${i + 1} 次检测: 未找到菜单，继续等待...`);
         sc = captureScreen();

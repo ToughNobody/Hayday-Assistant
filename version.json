@@ -1,31 +1,31 @@
 {
-  "version": "1.2.6",
-  "description": "修复计时器时间问题，改进剩余时间显示方法",
+  "version": "1.2.7",
+  "description": "适配新版界面",
   "files": [
-    {
-      "name": "floatyBtn.js",
-      "versionCode": 6,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js"
+     {
+      "name": "project.json",
+      "versionCode": 9,
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
       "versionCode": 7,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
-    {
+      {
       "name": "shuadi.js",
-      "versionCode": 8,
+      "versionCode": 9,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
-    {
-      "name": "project.json",
-      "versionCode": 8,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
-    },
-    {
+      {
       "name": "zhongshu.js",
       "versionCode": 6,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js"
+    },
+    {
+      "name": "floatyBtn.js",
+      "versionCode": 6,
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js"
     },
     {
       "name": "hot_update.js",
