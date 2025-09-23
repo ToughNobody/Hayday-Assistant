@@ -1,10 +1,10 @@
 {
-  "version": "1.2.9",
-  "description": "适配新界面（真的）",
+  "version": "1.2.10",
+  "description": "老板界面和新版界面都能识别,小镇界面，鱼塘界面识别更新",
   "files": [
      {
       "name": "project.json",
-      "versionCode": 11,
+      "versionCode": 12,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -14,7 +14,7 @@
     },
       {
       "name": "shuadi.js",
-      "versionCode": 11,
+      "versionCode": 12,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
       {

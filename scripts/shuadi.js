@@ -432,15 +432,20 @@ function checkmenu() {
     const RETRY_INTERVAL = 1000; // 每次检测间隔（毫秒）
 
     for (let i = 0; i < MAX_RETRY; i++) {
-        let menu = null;
         let sc = null;
 
         try {
-            let allMatch = matchColor([{x:49,y:205,color:"#f4bd00"},
-                {x:95,y:629,color:"#2c6cb0"},
-                {x:1246,y:657,color:"#a54b00"}])
+            //新版界面
+            let allMatch = matchColor([{ x: 47, y: 177, color: "#ffffff" },
+            { x: 70, y: 662, color: "#2664aa" },
+            { x: 1213, y: 661, color: "#f2ded3" }]);
 
-            if (allMatch) {
+            //老板界面
+            let allMatch2 = matchColor([{x:39,y:177,color:"#ffffff"},
+                {x:68,y:654,color:"#2662a9"},
+                {x:1208,y:659,color:"#f0e0d6"}]);
+
+            if (allMatch || allMatch2) {
                 log(`第 ${i + 1} 次检测: 已进入主界面`);
                 showTip(`第 ${i + 1} 次检测: 已进入主界面`);
                 return true;
@@ -1040,7 +1045,9 @@ function shop() {
  */
 function find_close(screenshot1, action = null) {
     let sc = screenshot1 || captureScreen();
-    let close_button = findimage(files.join(config.photoPath, "close.png"), 0.5, sc); //识别叉叉
+
+    //识别叉叉
+    let close_button = findimage(files.join(config.photoPath, "close.png"), 0.5, sc);
     if (close_button) {
         click(close_button.x + ran(), close_button.y + ran());
         console.log("点击叉叉");
@@ -1048,32 +1055,34 @@ function find_close(screenshot1, action = null) {
         return true;
     }
 
-    let homebtn1 = matchColor([{ x: 161, y: 39, color: "#f4323a" }, //进入小镇
-    { x: 213, y: 40, color: "#f63540" },
-    { x: 235, y: 629, color: "#c686dc" },
-    { x: 248, y: 649, color: "#5ed261" }],
+    //进入小镇
+    let homebtn1 = matchColor([{ x: 212, y: 36, color: "#f73d46" },
+    { x: 188, y: 615, color: "#cf9be6" },
+    { x: 220, y: 662, color: "#55cf58" }],
         screenshot = sc);
     if (homebtn1) {
         click(200 + ran(), 645 + ran());
-        console.log("回到主界面");
-        showTip("回到主界面");
+        console.log("进入小镇，回到主界面");
+        showTip("进入小镇，回到主界面");
         checkmenu();
         return true;
     }
 
-    let homebtn2 = matchColor([{ x: 113, y: 642, color: "#5cd260" }, //进入鱼塘
-    { x: 80, y: 645, color: "#a563c7" },
-    { x: 91, y: 596, color: "#e9c900" }],
+    //进入鱼塘
+    let homebtn2 = matchColor([{ x: 44, y: 177, color: "#ffffff" },
+    { x: 88, y: 637, color: "#c687de" },
+    { x: 101, y: 657, color: "#5ad05c" }],
         screenshot = sc);
     if (homebtn2) {
         click(60 + ran(), 630 + ran());
-        console.log("回到主界面");
-        showTip("回到主界面");
+        console.log("进入鱼塘，回到主界面");
+        showTip("进入鱼塘，回到主界面");
         checkmenu();
         return true;
     }
 
-    let levelup = matchColor([{ x: 292, y: 98, color: "#ffffff" },  //升级
+    //升级
+    let levelup = matchColor([{ x: 292, y: 98, color: "#ffffff" },
     { x: 520, y: 93, color: "#88e435" },
     { x: 754, y: 89, color: "#89e534" },
     { x: 861, y: 654, color: "#f6bc3a" },
@@ -1086,7 +1095,8 @@ function find_close(screenshot1, action = null) {
         return true;
     }
 
-    let disconnect = matchColor([{ x: 279, y: 222, color: "#fff9db" },  //断开连接
+    //断开连接
+    let disconnect = matchColor([{ x: 279, y: 222, color: "#fff9db" },
     { x: 435, y: 62, color: "#deb476" },
     { x: 630, y: 202, color: "#ffe9d6" },
     { x: 647, y: 632, color: "#fada75" }],
@@ -1100,7 +1110,8 @@ function find_close(screenshot1, action = null) {
         return true;
     }
 
-    let switchAccount = matchColor([{ x: 56, y: 63, color: "#ffffff" }, //切换账号页面
+    //切换账号页面
+    let switchAccount = matchColor([{ x: 56, y: 63, color: "#ffffff" },
     { x: 530, y: 70, color: "#041d51" },
     { x: 38, y: 687, color: "#52b4dd" },
     { x: 550, y: 697, color: "#0e3683" }],
@@ -1114,7 +1125,8 @@ function find_close(screenshot1, action = null) {
         return true;
     }
 
-    let buy_button = matchColor([{ x: 679, y: 578, color: "#7bbfe4" },  //进入购买界面
+    //进入购买界面
+    let buy_button = matchColor([{ x: 679, y: 578, color: "#7bbfe4" },
     { x: 648, y: 612, color: "#f0d98a" },
     { x: 682, y: 683, color: "#f4bd3f" }],
         screenshot = sc)
@@ -1125,7 +1137,8 @@ function find_close(screenshot1, action = null) {
         return true;
     }
 
-    let daocaoren = matchColor([{ x: 92, y: 405, color: "#b6b0e4" },    //识别稻草人
+    //识别稻草人
+    let daocaoren = matchColor([{ x: 92, y: 405, color: "#b6b0e4" },
     { x: 232, y: 429, color: "#a298dc" },
     { x: 341, y: 441, color: "#a39adc" },
     { x: 152, y: 373, color: "#36394d" }],
@@ -1137,9 +1150,11 @@ function find_close(screenshot1, action = null) {
     return false;
 }
 
-//需要点击的教程
-//11级农场勋章
-//20级礼券
+/*需要点击的教程
+11级农场勋章
+14级汤姆有动画
+20级礼券
+*/
 /**
  * 
  * @param {*} 
