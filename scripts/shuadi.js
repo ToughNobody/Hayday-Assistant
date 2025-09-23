@@ -436,9 +436,9 @@ function checkmenu() {
         let sc = null;
 
         try {
-            let allMatch = matchColor([{ x: 47, y: 206, color: "#f3bd00" },
-            { x: 97, y: 638, color: "#2662a8" },
-            { x: 1245, y: 658, color: "#a54a00" }])
+            let allMatch = matchColor([{x:49,y:205,color:"#f4bd00"},
+                {x:95,y:629,color:"#2c6cb0"},
+                {x:1246,y:657,color:"#a54b00"}])
 
             if (allMatch) {
                 log(`第 ${i + 1} 次检测: 已进入主界面`);
