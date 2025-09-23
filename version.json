@@ -1,10 +1,10 @@
 {
-  "version": "1.2.7",
-  "description": "适配新版界面",
+  "version": "1.2.8",
+  "description": "简单写了一个新手教程点击",
   "files": [
      {
       "name": "project.json",
-      "versionCode": 9,
+      "versionCode": 10,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -14,7 +14,7 @@
     },
       {
       "name": "shuadi.js",
-      "versionCode": 9,
+      "versionCode": 10,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
       {

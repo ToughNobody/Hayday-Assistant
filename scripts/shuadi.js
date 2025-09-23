@@ -436,9 +436,9 @@ function checkmenu() {
         let sc = null;
 
         try {
-            let allMatch = matchColor([{x:47,y:206,color:"#f3bd00"},
-                {x:97,y:638,color:"#2662a8"},
-                {x:1245,y:658,color:"#a54a00"}])
+            let allMatch = matchColor([{ x: 47, y: 206, color: "#f3bd00" },
+            { x: 97, y: 638, color: "#2662a8" },
+            { x: 1245, y: 658, color: "#a54a00" }])
 
             if (allMatch) {
                 log(`第 ${i + 1} 次检测: 已进入主界面`);
@@ -454,7 +454,6 @@ function checkmenu() {
 
         //未找到则等待
         sleep(RETRY_INTERVAL);
-        log("3")
         log(`第 ${i + 1} 次检测: 未找到菜单，继续等待...`);
         showTip(`第 ${i + 1} 次检测: 未找到菜单，继续等待...`);
         sc = captureScreen();
@@ -1117,14 +1116,49 @@ function find_close(screenshot1, action = null) {
 
     let buy_button = matchColor([{ x: 679, y: 578, color: "#7bbfe4" },  //进入购买界面
     { x: 648, y: 612, color: "#f0d98a" },
-    { x: 682, y: 683, color: "#f4bd3f" }])
+    { x: 682, y: 683, color: "#f4bd3f" }],
+        screenshot = sc)
     if (buy_button) {
         console.log("进入购买界面，返回主菜单");
         showTip("进入购买界面，返回主菜单");
         click(650 + ran(), 620 + ran());
         return true;
     }
+
+    let daocaoren = matchColor([{ x: 92, y: 405, color: "#b6b0e4" },    //识别稻草人
+    { x: 232, y: 429, color: "#a298dc" },
+    { x: 341, y: 441, color: "#a39adc" },
+    { x: 152, y: 373, color: "#36394d" }],
+        screenshot = sc);
+    if (daocaoren) {
+        jiaocheng();
+        return true;
+    }
     return false;
+}
+
+//需要点击的教程
+//11级农场勋章
+//20级礼券
+/**
+ * 
+ * @param {*} 
+ */
+function jiaocheng() {
+    while (true) {
+        let sc = captureScreen();
+        //识别稻草人
+        let jiaocheng20 = matchColor([{ x: 92, y: 405, color: "#b6b0e4" },
+        { x: 232, y: 429, color: "#a298dc" },
+        { x: 341, y: 441, color: "#a39adc" },
+        { x: 152, y: 373, color: "#36394d" }], sc);
+        if (jiaocheng20) {
+            click(1055 + ran(), 600 + ran());
+        } else {
+            break;
+        }
+        sleep(1000);
+    }
 }
 
 function switch_account(Account, num = 0) {
