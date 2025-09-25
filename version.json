@@ -1,10 +1,10 @@
 {
-  "version": "1.2.11",
-  "description": "1.修复多账号计时器bug\n2.汤姆和格雷格来商店买的东西，也可以收金币了",
+  "version": "1.2.12",
+  "description": "\n1.修复上架问题\n2.发布广告时不会点击已发布广告的物品了\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 13,
+      "versionCode": 14,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -14,7 +14,7 @@
     },
     {
       "name": "shuadi.js",
-      "versionCode": 13,
+      "versionCode": 14,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {

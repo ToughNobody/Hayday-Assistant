@@ -842,7 +842,8 @@ function coin() {
 
 //商店货架寻找小麦，发布广告
 function find_ad() {
-    let shop_coin = findimage(files.join(config.photoPath, "shop_coin.png"), 0.4);
+    let shop_coin = findMC(["#fffabb",[83,-17,"#fff27d"],[80,-3,"#ffe718"],[-73,22,"#f7cd88"]],
+null,null,16);
     if (shop_coin) {
         //如果找到货架上的金币
         let [x1, y1] = [-58, -23];
@@ -975,15 +976,17 @@ function shop() {
             console.log("商店右滑")
             sleep(400);
             coin();
+            shopisswipe = true;
         }
-        shopisswipe = true;
+        
     }
     console.log("发布广告");
     showTip("发布广告");
     sleep(300);
     coin();
     sleep(500);
-    let shop_coin = findimage(files.join(config.photoPath, "shop_coin.png"), 0.6);
+    let shop_coin = findMC(["#fffabb",[83,-17,"#fff27d"],[80,-3,"#ffe718"],[-73,22,"#f7cd88"]],
+null,null,16);
     if (shop_coin) {
         //如果找到货架上的金币
 
