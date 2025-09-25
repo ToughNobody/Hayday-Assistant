@@ -823,13 +823,10 @@ function coin() {
     let allcenters = [];
     let sc = captureScreen();
     let centers1 = findimages(files.join(config.photoPath, "shopsold1.png"), 0.8, 10, sc);
-    allcenters.push(centers1);
     let centers2 = findimages(files.join(config.photoPath, "shopsold2.png"), 0.8, 10, sc);
-    allcenters.push(centers2);
     let centers3 = findimages(files.join(config.photoPath, "shopSold3.png"), 0.8, 10, sc);
-    allcenters.push(centers3);
+    allcenters = allcenters.concat(centers1, centers2, centers3);
     allcenters.sort((a, b) => a.x - b.x);
-    allcenters = centers1
     console.log("有" + allcenters.length + "个金币可以收");
     // console.log(allcenters)
     if (allcenters.length > 0) {
@@ -1092,6 +1089,8 @@ function find_close(screenshot1, action = null) {
         log("升级了！")
         showTip("升级了！")
         click(637 + ran(), 642 + ran());
+        sleep(2000);
+        checkmenu();
         return true;
     }
 
@@ -1137,13 +1136,14 @@ function find_close(screenshot1, action = null) {
         return true;
     }
 
-    //识别稻草人
-    let daocaoren = matchColor([{ x: 92, y: 405, color: "#b6b0e4" },
-    { x: 232, y: 429, color: "#a298dc" },
-    { x: 341, y: 441, color: "#a39adc" },
-    { x: 152, y: 373, color: "#36394d" }],
+    //识别稻草人，左边肩膀，乌鸦身子，脚
+    let daocaoren = matchColor([{x:86,y:406,color:"#bbb2e7"},
+        {x:166,y:372,color:"#282b38"},
+        {x:162,y:394,color:"#ce9b00"}],
         screenshot = sc);
     if (daocaoren) {
+        log("识别到稻草人");
+        showTip("识别到稻草人");
         jiaocheng();
         return true;
     }
@@ -1163,11 +1163,14 @@ function jiaocheng() {
     while (true) {
         let sc = captureScreen();
         //识别稻草人
-        let jiaocheng20 = matchColor([{ x: 92, y: 405, color: "#b6b0e4" },
-        { x: 232, y: 429, color: "#a298dc" },
-        { x: 341, y: 441, color: "#a39adc" },
-        { x: 152, y: 373, color: "#36394d" }], sc);
+        let jiaocheng20 = matchColor([{x:86,y:406,color:"#bbb2e7"},
+            {x:166,y:372,color:"#282b38"},
+            {x:162,y:394,color:"#ce9b00"}], sc);
         if (jiaocheng20) {
+            log("识别到稻草人，点击");
+            showTip("识别到稻草人，点击");
+            click(1055 + ran(), 600 + ran());
+            sleep(300);
             click(1055 + ran(), 600 + ran());
         } else {
             break;
@@ -1477,13 +1480,22 @@ function operation(Account) {
 
     //找耕地
     sleep(1500);
-    find_close();
-    sleep(500);
+    if(find_close()) {
+        sleep(500);
+        find_close();
+        sleep(500);
+    }
+    
     center_land = findland();
     console.log("寻找耕地");
     //找不到重新找耕地
     if (!center_land) {
         console.log("未找到，重新寻找耕地");
+        if (find_close()) {
+            sleep(500);
+            find_close();
+            sleep(500);
+        }
         findland_click();
     }
 
@@ -1644,7 +1656,7 @@ function main() {
 
                     // 显示下一个计时器的状态
                     let minutes = Math.floor(nextTimerState.remainingTime / 60);
-                    let seconds = timerState.remainingTime % 60;
+                    let seconds = nextTimerState.remainingTime % 60;
                     let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
                     showTip(`账号:${nextAccount} ${config.selectedCrop.text}成熟剩余${timeText}`);
 

@@ -1,10 +1,10 @@
 {
-  "version": "1.2.10",
-  "description": "老板界面和新版界面都能识别,小镇界面，鱼塘界面识别更新",
+  "version": "1.2.11",
+  "description": "1.修复多账号计时器bug\n2.汤姆和格雷格来商店买的东西，也可以收金币了",
   "files": [
-     {
+    {
       "name": "project.json",
-      "versionCode": 12,
+      "versionCode": 13,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -12,12 +12,12 @@
       "versionCode": 7,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
-      {
+    {
       "name": "shuadi.js",
-      "versionCode": 12,
+      "versionCode": 13,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
-      {
+    {
       "name": "zhongshu.js",
       "versionCode": 6,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js"
@@ -31,12 +31,20 @@
       "name": "hot_update.js",
       "versionCode": 7,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js"
-    },{
+    },
+    {
       "name": "shopSold3.png",
       "versionCode": 8,
       "path": "./res/pictures.1280_720/shopSold3.png",
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold3.png"
-    },{
+    },
+    {
+      "name": "shopSold2.png",
+      "versionCode": 13,
+      "path": "./res/pictures.1280_720/shopSold2.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold2.png"
+    },
+    {
       "name": "删除删不掉的文件夹.js",
       "versionCode": 8,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/删除删不掉的文件夹.js"
