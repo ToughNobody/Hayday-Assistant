@@ -280,7 +280,7 @@ ui.layout(
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
                                         <text text="收割纵向偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="harvestY" hint="2" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
+                                        <input id="harvestY" hint="1.5" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
                                         <text text="格" textSize="14" w="120" marginRight="8" />
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
@@ -1608,13 +1608,7 @@ function loadConfigToUI() {
     ui.shengcangTime.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            let value = parseFloat(s.toString());
-            if (isNaN(value) || value < 0) {
-                toast("升仓间隔时间必须大于等于0");
-                ui.shengcangTime.setText(String(config.shengcangTime));
-            } else {
                 autoSaveConfig();
-            }
         },
         afterTextChanged: function (s) { }
     }));
