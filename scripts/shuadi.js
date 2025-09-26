@@ -1099,7 +1099,7 @@ function find_close(screenshot1, action = null) {
         click(637 + ran(), 642 + ran());
         sleep(2000);
         checkmenu();
-        return true;
+        return "levelup";
     }
 
     //断开连接
@@ -1511,7 +1511,50 @@ function stopTimer(timer_Name) {
 }
 
 
+function plantCrop() {
+    //种小麦
+    console.log("准备种" + config.selectedCrop.text);
+    showTip(`准备种${config.selectedCrop.text}`);
+    sleep(500)
+    let center_wheat = findMC(crop);
+    if (center_wheat) {
+        console.log("找到" + config.selectedCrop.text + "，坐标: " +
+            center_wheat.x + "," + center_wheat.y);
+    } else {
+        console.log("未找到小麦");
+        showTip("未找到" + config.selectedCrop.text);
+        let next_button = findMC(["#ffffff",
+            [-30, 12, "#ffffff"], [-17, 28, "#f5bd00"],
+            [-242, 28, "#f5bd00"], [-257, 0, "#ffffff"]]);
 
+        if (next_button) {
+            let maxTries = 10;
+            let tries = 0;
+            while (tries < maxTries && next_button) {
+                next_button = findMC(["#ffffff",
+                    [-30, 12, "#ffffff"], [-17, 28, "#f5bd00"],
+                    [-242, 28, "#f5bd00"], [-257, 0, "#ffffff"]]);
+                click(next_button.x + ran(), next_button.y + ran());
+                sleep(1000);
+                center_wheat = findMC(crop);
+                if (center_wheat) {
+                    break;
+                }
+            }
+            if (tries >= maxTries) {
+                log("种植时未能找到作物，退出操作");
+                return false;
+            }
+            if (!next_button) {
+                log("未找到下一个按钮，检查界面");
+                let close = find_close();
+                if (close == "levelup") {
+                    plantCrop();
+                }
+            }
+        }
+    }
+}
 
 //循环操作
 function operation(Account) {
@@ -1560,13 +1603,17 @@ function operation(Account) {
     } else {
         console.log("未找到小麦");
         showTip("未找到" + config.selectedCrop.text);
-        let next_button = findimage(files.join(config.photoPath, "next.png"), 0.8);
+        let next_button = findMC(["#ffffff",
+            [-30, 12, "#ffffff"], [-17, 28, "#f5bd00"],
+            [-242, 28, "#f5bd00"], [-257, 0, "#ffffff"]]);
 
         if (next_button) {
-
-            let maxTries = 50;
+            let maxTries = 10;
             let tries = 0;
-            while (tries < maxTries) {
+            while (tries < maxTries && next_button) {
+                next_button = findMC(["#ffffff",
+                    [-30, 12, "#ffffff"], [-17, 28, "#f5bd00"],
+                    [-242, 28, "#f5bd00"], [-257, 0, "#ffffff"]]);
                 click(next_button.x + ran(), next_button.y + ran());
                 sleep(1000);
                 center_wheat = findMC(crop);
@@ -1574,9 +1621,17 @@ function operation(Account) {
                     break;
                 }
             }
-            if (tries > maxTries) {
+            if (tries >= maxTries) {
                 log("种植时未能找到作物，退出操作");
                 return false;
+            }
+            if (!next_button) {
+                log("未找到下一个按钮，检查界面");
+                let close = find_close();
+                if (close == "levelup") {
+                    log("因为升级，重新种植");
+                    plantCrop();
+                }
             }
         }
     }

@@ -1295,7 +1295,7 @@ function getDefaultConfig() {
         distance: 75,
         harvestTime: 5,
         harvestX: 8,
-        harvestY: 2,
+        harvestY: 1.5,
         harvestRepeat: 3,
         showText: {
             x: 0,
