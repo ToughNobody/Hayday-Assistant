@@ -1279,11 +1279,23 @@ function switch_account(Account) {
         let found = false; // 是否找到目标
         let scrollDownCount = 0; // 当前下滑次数
         let scrollUpCount = 0; // 当前上滑次数
-        let AccountIma = files.join(config.photoPath, Account + ".png");
         let isEnd = false;
+        let AccountIma = null;
+        let AccountText = null;
+        if (config.findAccountMethod == "image") {
+            AccountIma = files.join(config.photoPath, Account + ".png");
+        } else if (config.findAccountMethod == "text") {
+            AccountText = Account;
+        }
         while (!found) {
             sleep(500);
-            let is_find_Account = findimage(AccountIma, 0.9);
+            let is_find_Account = null;
+            if (config.findAccountMethod == "image") {
+                is_find_Account = findimage(AccountIma, 0.9);
+            };
+            if (config.findAccountMethod == "text") {
+                is_find_Account = findtext(Account, 1300, 0);
+            }
 
             if (is_find_Account) { //如果找到账号名称，则点击
                 log(`找到账号${Account}`);
@@ -1624,7 +1636,7 @@ function main() {
     sleep(1000);
     checkmenu();
     sleep(500);
-    if (!config.switchAccount || config.accountNames.length == 0) { //不切换账号
+    if (!config.switchAccount || config.accountList.length == 0) { //不切换账号
         log("不切换账号，找耕地");
         huadong();
         sleep(1100);
@@ -1665,18 +1677,24 @@ function main() {
         log("切换账号");
         while (true) {
 
-            config.accountNames.forEach(Account => {
-                switch_account(Account);
-                log("===当前账号: " + Account + "===");
+            config.accountList.forEach(account => {
+                // 检查账号是否启用
+                if (!account.done) {
+                    log("账号 " + account.title + " 已禁用，跳过");
+                    return;
+                }
+
+                switch_account(account.title);
+                log("=========当前账号: " + account.title + "=========");
                 huadong();
                 log("等待作物成熟");
 
                 // 计算下一个账号的信息（在循环外计算一次）
-                let nextAccountIndex = (config.accountNames.indexOf(Account) + 1) % config.accountNames.length;
-                let nextAccount = config.accountNames[nextAccountIndex];
-                let nextTimerName = nextAccount + config.selectedCrop.text;
+                let nextAccountIndex = (config.accountList.indexOf(account) + 1) % config.accountList.length;
+                let nextAccount = config.accountList[nextAccountIndex];
+                let nextTimerName = nextAccount.title + config.selectedCrop.text;
 
-                operation(Account); //执行刷地，售卖
+                operation(account.title); //执行刷地，售卖
 
                 //升仓
                 if (config.isShengcang && config.shengcangTime >= 0 && global.shengcangTimeout) {

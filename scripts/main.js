@@ -203,18 +203,36 @@ ui.layout(
                                         <switch id="accountSwitch" w="*" h="48"
                                             gravity="left|center" />
                                     </horizontal>
-
-                                    {/* 账号输入框 */}
-                                    <horizontal gravity="center_vertical" marginBottom="12">
-                                        <text text="账号名称：" textSize="14" w="100" marginRight="8" />
-                                        <input id="accountNamesInput" hint="多个账号用英文逗号分隔" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    <horizontal gravity="center_vertical" >
+                                        <text text="识别方式：" textSize="14" w="100" marginRight="8" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical" marginTop="8">
+                                        <button id="findAccountImage" text="图片识别" w="120" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="8" />
+                                        <button id="findAccountText" text="文字识别" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
                                     </horizontal>
 
                                     {/* 账号列表显示 */}
                                     <vertical id="accountListDisplay" marginTop="8">
                                         <text text="账号列表：" textSize="14" textStyle="bold" />
-                                        <text id="accountNamesText" text="未输入账号" textSize="14" marginTop="4" />
                                     </vertical>
+                                    {/* 账号输入框 */}
+                                    <list id="AccountList">
+                                        <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
+                                            cardElevation="1dp" foreground="?selectableItemBackground">
+                                            <horizontal gravity="center_vertical">
+                                                <view h="*" w="10" bg="#f27272" />
+                                                <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                                                    <text id="title" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                                                </vertical>
+                                                <checkbox id="done" marginLeft="4" marginRight="6" checked="{{this.done}}" />
+                                            </horizontal>
+                                        </card>
+                                    </list>
+                                    <horizontal gravity="right|center" marginBottom="12">
+                                        <card id="addAccountCard" w="30" h="30" marginRight="8" cardCornerRadius="15"  cardElevation="1" gravity="center" backgroundTint="#7fffd4">
+                                        <img id="addAccount" src="@drawable/ic_add_black_48dp" w="*" h="*" scaleType="fitXY" />
+                                    </card>
+                                    </horizontal>
                                 </vertical>
                             </card>
 
@@ -875,6 +893,110 @@ function showLogDialog() {
     }).show();
 }
 
+// 初始化账号列表
+let AccountList = [];
+
+// 从配置加载账号列表
+function loadAccountListFromConfig() {
+    const config = loadConfig();
+    if (config && config.accountList && Array.isArray(config.accountList)) {
+        AccountList = config.accountList;
+    } else {
+        AccountList = [];
+    }
+    return AccountList;
+}
+
+// 保存账号列表到配置
+function saveAccountListToConfig() {
+    const config = loadConfig();
+    config.accountList = AccountList;
+    return saveConfig(config);
+}
+
+// 初始化账号列表UI
+function initAccountListUI() {
+    loadAccountListFromConfig();
+    ui['AccountList'].setDataSource(AccountList);
+
+}
+
+// 点击复选框勾选
+ui['AccountList'].on('item_bind', function (itemView, itemHolder) {
+    // 绑定勾选框事件
+    itemView.done.on('check', function (checked) {
+        let item = itemHolder.item;
+        item.done = checked;
+        // 更新标题样式（完成时添加删除线）
+        // if (checked) {
+        //     itemView.title.setTextColor(android.graphics.Color.parseColor('#999999'));
+        //     itemView.title.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG);
+        // } else {
+        //     itemView.title.setTextColor(android.graphics.Color.parseColor('#000000'));
+        //     itemView.title.getPaint().setFlags(0);
+        // }
+        itemView.title.invalidate();
+
+        // 保存到配置文件
+        saveAccountListToConfig();
+    });
+});
+
+// 点击列表项修改内容
+ui['AccountList'].on('item_click', function (item, i, itemView) {
+    dialogs.rawInput('修改账号', item.title)
+        .then((newTitle) => {
+            if (newTitle && newTitle.trim() !== '') {
+                item.title = newTitle.trim();
+                ui['AccountList'].adapter.notifyDataSetChanged();
+
+                // 保存到配置文件
+                saveAccountListToConfig();
+
+                // 自动保存配置
+                autoSaveConfig();
+            }
+        });
+});
+
+// 长按删除
+ui['AccountList'].on('item_long_click', function (e, item, i) {
+    confirm(`确定要删除 "${item.title}" 吗?`)
+        .then(ok => {
+            if (ok) {
+                AccountList.splice(i, 1);
+                ui['AccountList'].adapter.notifyDataSetChanged();
+
+                // 保存到配置文件
+                saveAccountListToConfig();
+
+                // 自动保存配置
+                autoSaveConfig();
+            }
+        });
+    e.consumed = true;
+});
+
+// 添加新账号
+ui['addAccount'].on('click', () => {
+    dialogs.rawInput('请输入新的账号名称')
+        .then((title) => {
+            if (title && title.trim() !== '') {
+                AccountList.push({
+                    title: title.trim(),
+                    done: true
+                });
+                ui['AccountList'].adapter.notifyDataSetChanged();
+
+                // 保存到配置文件
+                saveAccountListToConfig();
+
+                // 自动保存配置
+                autoSaveConfig();
+            }
+        });
+});
+
 // 开启无障碍服务监听
 ui.autoService.on("check", function (checked) {
     if (checked && auto.service == null) {
@@ -932,7 +1054,8 @@ ui.emitter.on("resume", function () {
  * 获取当前配置
  */
 function getConfig() {
-    const accountNames = parseAccountNames(ui.accountNamesInput.text());
+    // 从AccountList生成accountNames数组，确保一致性
+    const accountNamesFromList = AccountList.map(item => item.title);
 
     return {
         selectedFunction: {
@@ -949,7 +1072,8 @@ function getConfig() {
             code: ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "咖啡丛", "橄榄树", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"].indexOf(ui.treeSelect.getSelectedItem())
         },
         switchAccount: ui.accountSwitch.isChecked(),
-        accountNames: accountNames,
+        findAccountMethod: ui.findAccountImage.attr("bg") === color ? "image" : "text",
+        accountList: AccountList, // 添加账号列表到配置
         shopPrice: {
             text: ui.shopPrice.getSelectedItem(),
             code: ["最低", "平价", "最高"].indexOf(ui.shopPrice.getSelectedItem())
@@ -1031,7 +1155,7 @@ function loadConfig() {
         }
     } catch (e) {
         console.error("加载配置失败:", e);
-        toast("配置文件损坏，使用默认配置", "long");
+        // toast("配置文件损坏，使用默认配置", "long");
     }
     return getDefaultConfig();
 }
@@ -1117,8 +1241,15 @@ function validateConfig(config) {
     config.huocangOffset.x = config.huocangOffset.x != null ? Number(config.huocangOffset.x) : defaultConfig.huocangOffset.x;
     config.huocangOffset.y = config.huocangOffset.y != null ? Number(config.huocangOffset.y) : defaultConfig.huocangOffset.y;
 
+    // 验证账号识别方式
+    if (!config.findAccountMethod || (config.findAccountMethod !== "image" && config.findAccountMethod !== "text")) {
+        config.findAccountMethod = "image"; // 默认为图片识别
+    }
+
+    // 验证账号列表
+    if (!Array.isArray(config.accountList)) config.accountList = [];
+
     // 其他验证...
-    if (!Array.isArray(config.accountNames)) config.accountNames = [];
     if (config.photoPath.length == 0) config.photoPath = "./res/pictures.1280_720"
     return config;
 }
@@ -1141,7 +1272,8 @@ function getDefaultConfig() {
             code: 0
         },
         switchAccount: false,
-        accountNames: [],
+        findAccountMethod: "image", // 账号识别方式，默认为图片识别
+        accountList: [], // 新增账号列表配置
         shopPrice: {
             text: "最低",
             code: 0
@@ -1200,25 +1332,39 @@ function parseAccountNames(text) {
         .filter(name => name.length > 0);
 }
 
-// 更新账号列表显示
-function updateAccountListDisplay(accounts) {
-    if (accounts.length === 0) {
-        ui.accountNamesText.setText("未输入账号");
-        return;
-    }
-
-    let displayText = "";
-    accounts.forEach((account, index) => {
-        displayText += `${index + 1}. ${account}\n`;
-    });
-    ui.accountNamesText.setText(displayText.trim());
-}
-
 /**
  * 加载配置到界面
  */
+// 设置账号识别方式按钮状态
+function setFindAccountMethod(method) {
+    if (method === "image") {
+        ui.findAccountImage.attr("bg", color);
+        ui.findAccountImage.attr("textColor", "#FFFFFF");
+        ui.findAccountText.attr("bg", "#E0E0E0");
+        ui.findAccountText.attr("textColor", "#000000");
+    } else {
+        ui.findAccountImage.attr("bg", "#E0E0E0");
+        ui.findAccountImage.attr("textColor", "#000000");
+        ui.findAccountText.attr("bg", color);
+        ui.findAccountText.attr("textColor", "#FFFFFF");
+    }
+
+    // 强制刷新UI
+    ui.findAccountImage.attr("bg", ui.findAccountImage.attr("bg"));
+    ui.findAccountText.attr("bg", ui.findAccountText.attr("bg"));
+
+    // 确保配置正确保存
+    const config = getConfig();
+    if (config.findAccountMethod !== method) {
+        autoSaveConfig();
+    }
+}
+
 function loadConfigToUI() {
     const config = loadConfig();
+
+    // 设置账号识别方式
+    setFindAccountMethod(config.findAccountMethod);
 
     // 设置功能选择
     ui.functionSelect.setSelection(config.selectedFunction.code);
@@ -1257,10 +1403,6 @@ function loadConfigToUI() {
 
     // 设置账号相关
     ui.accountSwitch.setChecked(config.switchAccount);
-    if (config.accountNames.length > 0) {
-        ui.accountNamesInput.setText(config.accountNames.join(", "));
-        updateAccountListDisplay(config.accountNames);
-    }
 
     // 设置商店售价
     ui.shopPrice.setSelection(config.shopPrice.code);
@@ -1627,19 +1769,6 @@ ui.btnLoadConfig.click(() => {
     toast("配置已加载");
 });
 
-
-
-// 账号输入框文本变化监听
-ui.accountNamesInput.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        const accounts = parseAccountNames(s.toString());
-        updateAccountListDisplay(accounts);
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
-
 ui.btnStop.click(() => {
     stopOtherEngines();
 });
@@ -1675,7 +1804,7 @@ function startButton() {
     console.log("商店价格: " + config.shopPrice.text);
     console.log("地块查找方法: " + config.landFindMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
-    console.log("账号数量: " + config.accountNames.length);
+    // console.log("账号数量: " + config.accountNames.length);
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
     console.log("收割横向偏移: " + config.harvestX + "格");
@@ -1712,7 +1841,7 @@ function startButton() {
             stopOtherEngines();
 
             launch("com.supercell.hayday");
-            setTimeout(()=>{},1000);
+            setTimeout(() => { }, 1000);
             if (!ui.win_switch.checked) {
                 float_win.open();
                 log("启动浮动按钮");
@@ -1775,7 +1904,7 @@ function winStartButton() {
     console.log("商店价格: " + config.shopPrice.text);
     console.log("地块查找方法: " + config.landFindMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
-    console.log("账号数量: " + config.accountNames.length);
+    // console.log("账号数量: " + config.accountNames.length);
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
     console.log("收割横向偏移: " + config.harvestX + "格");
@@ -1810,7 +1939,7 @@ function winStartButton() {
 
         case 1: // 种树
             stopOtherEngines();
-            setTimeout(()=>{},1000);
+            setTimeout(() => { }, 1000);
             threads.start(() => {
                 let newEngine = engines.execScriptFile("./zhongshu.js");
                 engineIds.zhongshu = newEngine.id;  // 保存新引擎ID
@@ -1891,6 +2020,9 @@ function initUI() {
             toast("加载配置失败: " + e.message, "long");
         }
     }
+
+    // 初始化账号列表UI
+    initAccountListUI();
 
     // 初始化权限开关状态
     updateSwitchStatus();
@@ -2024,6 +2156,16 @@ function initUI() {
         console.log("账号开关状态变化:", checked);
         autoSaveConfig();
     });
+
+    // 绑定账号识别方式按钮事件
+    ui.findAccountImage.click(() => {
+        setFindAccountMethod("image");
+        autoSaveConfig();
+    });
+    ui.findAccountText.click(() => {
+        setFindAccountMethod("text");
+        autoSaveConfig();
+    });
 }
 
 /**
@@ -2038,3 +2180,5 @@ function updateSwitchStatus() {
 }
 // 初始化界面
 initUI();
+
+

@@ -1,20 +1,20 @@
 {
-  "version": "1.3.0",
-  "description": "\n1.添加种树功能，比较拉，凑活用\n2.优化切换账号逻辑\n",
+  "version": "1.3.1",
+  "description": "\n1.添加文字识别账号功能，mumu模拟器不能用\n2.优化账号添加操作\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 16,
+      "versionCode": 17,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 16,
+      "versionCode": 17,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 16,
+      "versionCode": 17,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {
