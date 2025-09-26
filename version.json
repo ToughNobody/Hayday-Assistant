@@ -1,20 +1,20 @@
 {
-  "version": "1.2.12",
-  "description": "\n1.修复上架问题\n2.发布广告时不会点击已发布广告的物品了\n",
+  "version": "1.2.13",
+  "description": "\n1.刷地手势重写，加入手势时间参数\n2.收割参数简化，从坐标偏移改为格子\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 14,
+      "versionCode": 15,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 7,
+      "versionCode": 15,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 14,
+      "versionCode": 15,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {

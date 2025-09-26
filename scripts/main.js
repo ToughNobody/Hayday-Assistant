@@ -141,6 +141,12 @@ ui.layout(
                                             w="*" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
+                                    {/* 商店售价 - 仅在刷地时显示*/}
+                                    <horizontal id="shopPriceContainer" gravity="center_vertical">
+                                        <text text="商店售价：" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="shopPrice" entries="最低|平价|最高" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+
                                     {/* 树木选择 - 仅在种树时显示 */}
                                     <horizontal id="treeSelectContainer" gravity="center_vertical">
                                         <text text="种植树木：" textSize="14" w="100" marginRight="8" />
@@ -148,11 +154,13 @@ ui.layout(
                                             w="*" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
-                                    {/* 商店售价 */}
-                                    <horizontal gravity="center_vertical">
-                                        <text text="商店售价：" textSize="14" w="100" marginRight="8" />
-                                        <spinner id="shopPrice" entries="最低|平价|最高" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    {/* 是否滑动 - 仅在种树时显示 */}
+                                    <horizontal id="treeShouldSwipe" gravity="center_vertical">
+                                        <text text="是否自动滑动：" textSize="14" w="100" marginRight="8" />
+                                        <switch id="treeShouldSwipeSwitch" w="*" h="48"
+                                            gravity="left|center" />
                                     </horizontal>
+
                                 </vertical>
                             </card>
 
@@ -221,7 +229,7 @@ ui.layout(
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
                                         <text text="升仓间隔时间" textSize="14" w="120" marginRight="8" />
-                                        <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                        <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
                                         <text text="分钟" textSize="14" w="120" marginRight="8" />
                                     </horizontal>
 
@@ -249,13 +257,23 @@ ui.layout(
                                     {/* 收割坐标偏移 */}
                                     <horizontal gravity="center_vertical">
                                         <text text="收割横向偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="harvestOffsetXX" hint="X:-480" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                        <input id="harvestOffsetXY" hint="Y:-225" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                        <input id="harvestX" hint="8" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
+                                        <text text="格" textSize="14" w="120" marginRight="8" />
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
                                         <text text="收割纵向偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="harvestOffsetYX" hint="X:100" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                        <input id="harvestOffsetYY" hint="Y:-50" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                        <input id="harvestY" hint="2" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
+                                        <text text="格" textSize="14" w="120" marginRight="8" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="收割重复次数：" textSize="14" w="120" marginRight="8" />
+                                        <input id="harvestRepeat" hint="3" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                        <text text="次" textSize="14" w="120" marginRight="8" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="收割操作用时：" textSize="14" w="120" marginRight="8" />
+                                        <input id="harvestTime" hint="5" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                        <text text="秒" textSize="14" w="120" marginRight="8" />
                                     </horizontal>
                                     {/* 初始土地偏移 */}
                                     <horizontal gravity="center_vertical">
@@ -266,6 +284,7 @@ ui.layout(
                                     <horizontal gravity="center_vertical">
                                         <text text="收割两指间距：" textSize="14" w="120" marginRight="8" />
                                         <input id="distance" hint="75" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+
                                     </horizontal>
                                     {/* 仓库坐标偏移 */}
                                     <horizontal gravity="center_vertical">
@@ -413,7 +432,7 @@ function showAboutDialog() {
 }
 
 function checkForUpdatesOnce() {
-    log("=== 执行自动更新检查 ===");
+    log("============= 执行自动更新检查 =============");
     threads.start(() => {
         try {
             // 读取project.json文件获取版本信息
@@ -469,7 +488,7 @@ function checkForUpdatesOnce() {
                                 try {
                                     // 加载热更新模块
                                     let hotUpdate = require("./hot_update.js");
-                                    
+
                                     // 初始化热更新
                                     hotUpdate.init({
                                         version: result.version,
@@ -510,7 +529,7 @@ function checkForUpdatesOnce() {
 
 // 检查更新函数
 function checkForUpdates() {
-    log("=== 开始检查更新 ===");
+    log("============= 开始检查更新 =============");
     // toast("正在检查更新...");
     threads.start(() => {
         try {
@@ -944,17 +963,16 @@ function getConfig() {
             x: parseInt(ui.shopOffsetX.text()) ?? defaultConfig.shopOffset.x,
             y: parseInt(ui.shopOffsetY.text()) ?? defaultConfig.shopOffset.y
         },
-        harvestOffset: {
-            x: parseInt(ui.harvestOffsetXX.text()) ?? defaultConfig.harvestOffset.x,
-            y: parseInt(ui.harvestOffsetXY.text()) ?? defaultConfig.harvestOffset.y,
-            x2: parseInt(ui.harvestOffsetYX.text()) ?? defaultConfig.harvestOffset.x2,
-            y2: parseInt(ui.harvestOffsetYY.text()) ?? defaultConfig.harvestOffset.y2
-        },
+
         firstland: {
             x: parseInt(ui.firstlandX.text()) ?? defaultConfig.firstland.x,
             y: parseInt(ui.firstlandY.text()) ?? defaultConfig.firstland.y,
         },
         distance: parseInt(ui.distance.text()) ?? defaultConfig.distance,
+        harvestTime: parseInt(ui.harvestTime.text()) ?? defaultConfig.harvestTime,
+        harvestX: parseFloat(ui.harvestX.text()) ?? defaultConfig.harvestX,
+        harvestY: parseFloat(ui.harvestY.text()) ?? defaultConfig.harvestY,
+        harvestRepeat: parseInt(ui.harvestRepeat.text()) ?? defaultConfig.harvestRepeat,
         showText: {
             x: parseFloat(ui.showTextX.text()) ?? defaultConfig.showText.x,
             y: parseFloat(ui.showTextY.text()) ?? defaultConfig.showText.y
@@ -969,6 +987,7 @@ function getConfig() {
         },
         isShengcang: ui.isShengcang.isChecked(),
         shengcangTime: parseFloat(ui.shengcangTime.text()) ?? defaultConfig.shengcangTime,
+        treeShouldSwipe: ui.treeShouldSwipeSwitch.isChecked(),
         liangcangOffset: {
             x: parseInt(ui.liangcangOffsetX.text()) ?? defaultConfig.liangcangOffset.x,
             y: parseInt(ui.liangcangOffsetY.text()) ?? defaultConfig.liangcangOffset.y
@@ -1023,18 +1042,35 @@ function loadConfig() {
 function validateConfig(config) {
     const defaultConfig = getDefaultConfig();
     // 验证偏移值
-    if (!config.harvestOffset) config.harvestOffset = defaultConfig.harvestOffset;
+
     config.landOffset.x = config.landOffset.x != null ? Number(config.landOffset.x) : defaultConfig.landOffset.x;
     config.landOffset.y = config.landOffset.y != null ? Number(config.landOffset.y) : defaultConfig.landOffset.y;
     config.shopOffset.x = config.shopOffset.x != null ? Number(config.shopOffset.x) : defaultConfig.shopOffset.x;
     config.shopOffset.y = config.shopOffset.y != null ? Number(config.shopOffset.y) : defaultConfig.shopOffset.y;
-    config.harvestOffset.x = config.harvestOffset.x != null ? Number(config.harvestOffset.x) : defaultConfig.harvestOffset.x;
-    config.harvestOffset.y = config.harvestOffset.y != null ? Number(config.harvestOffset.y) : defaultConfig.harvestOffset.y;
-    config.harvestOffset.x2 = config.harvestOffset.x2 != null ? Number(config.harvestOffset.x2) : defaultConfig.harvestOffset.x2;
-    config.harvestOffset.y2 = config.harvestOffset.y2 != null ? Number(config.harvestOffset.y2) : defaultConfig.harvestOffset.y2;
+
     config.firstland.x = config.firstland.x != null ? Number(config.firstland.x) : defaultConfig.firstland.x;
     config.firstland.y = config.firstland.y != null ? Number(config.firstland.y) : defaultConfig.firstland.y;
     config.distance = config.distance != null ? Number(config.distance) : defaultConfig.distance;
+
+    // 验证harvestTime
+    if (config.harvestTime == null || isNaN(config.harvestTime) || config.harvestTime < 0) {
+        config.harvestTime = defaultConfig.harvestTime;
+    }
+
+    // 验证harvestX
+    if (config.harvestX == null || isNaN(config.harvestX)) {
+        config.harvestX = defaultConfig.harvestX;
+    }
+
+    // 验证harvestY
+    if (config.harvestY == null || isNaN(config.harvestY)) {
+        config.harvestY = defaultConfig.harvestY;
+    }
+
+    // 验证harvestRepeat
+    if (config.harvestRepeat == null || isNaN(config.harvestRepeat) || config.harvestRepeat < 0) {
+        config.harvestRepeat = defaultConfig.harvestRepeat;
+    }
 
     //验证悬浮窗坐标
     if (!config.showText) config.showText = defaultConfig.showText;
@@ -1064,6 +1100,11 @@ function validateConfig(config) {
     // 验证isShengcang
     if (config.isShengcang == null || typeof config.isShengcang !== "boolean") {
         config.isShengcang = defaultConfig.isShengcang;
+    }
+
+    // 验证treeShouldSwipe
+    if (config.treeShouldSwipe == null || typeof config.treeShouldSwipe !== "boolean") {
+        config.treeShouldSwipe = defaultConfig.treeShouldSwipe;
     }
 
     // 验证粮仓坐标偏移
@@ -1114,17 +1155,16 @@ function getDefaultConfig() {
             x: -60,
             y: -50
         },
-        harvestOffset: {
-            x: -480,
-            y: -225,
-            x2: 100,
-            y2: -50
-        },
+
         firstland: {
             x: 20,
             y: 40
         },
         distance: 75,
+        harvestTime: 5,
+        harvestX: 8,
+        harvestY: 2,
+        harvestRepeat: 3,
         showText: {
             x: 0,
             y: 0.65
@@ -1137,6 +1177,7 @@ function getDefaultConfig() {
         },
         isShengcang: false,
         shengcangTime: 60,
+        treeShouldSwipe: true,
         liangcangOffset: {
             x: 240,
             y: 0
@@ -1193,15 +1234,21 @@ function loadConfigToUI() {
     if (selectedFunction === "刷地") {
         // 显示作物选择，隐藏树木选择
         ui.cropSelectContainer.setVisibility(0); // 0表示可见
+        ui.shopPriceContainer.setVisibility(0); // 0表示可见
         ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+        ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
     } else if (selectedFunction === "种树") {
         // 隐藏作物选择，显示树木选择
         ui.cropSelectContainer.setVisibility(8); // 8表示不可见
+        ui.shopPriceContainer.setVisibility(8); // 8表示不可见
         ui.treeSelectContainer.setVisibility(0); // 0表示可见
+        ui.treeShouldSwipe.setVisibility(0); // 0表示可见
     } else {
         // 其他功能（如枯树上牌）隐藏两个选项
         ui.cropSelectContainer.setVisibility(8); // 8表示不可见
+        ui.shopPriceContainer.setVisibility(8); // 8表示不可见
         ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+        ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
     }
 
 
@@ -1229,46 +1276,46 @@ function loadConfigToUI() {
 
     // 为坐标偏移输入框添加变化监听
     ui.landOffsetX.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     ui.landOffsetY.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     ui.shopOffsetX.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     ui.shopOffsetY.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 设置收割偏移
-    ui.harvestOffsetXX.setText(String(config.harvestOffset.x));
-    ui.harvestOffsetXY.setText(String(config.harvestOffset.y));
-    ui.harvestOffsetYX.setText(String(config.harvestOffset.x2));
-    ui.harvestOffsetYY.setText(String(config.harvestOffset.y2));
 
     ui.firstlandX.setText(String(config.firstland.x));
     ui.firstlandY.setText(String(config.firstland.y));
     ui.distance.setText(String(config.distance));
+    ui.harvestTime.setText(String(config.harvestTime));
+    ui.harvestX.setText(String(config.harvestX));
+    ui.harvestY.setText(String(config.harvestY));
+    ui.harvestRepeat.setText(String(config.harvestRepeat));
 
     //设置悬浮窗坐标
     ui.showTextX.setText(String(config.showText.x));
@@ -1277,89 +1324,95 @@ function loadConfigToUI() {
     ui.photoPath.setText(config.photoPath);
 
     // 为收割偏移输入框添加变化监听
-    ui.harvestOffsetXX.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
 
-    ui.harvestOffsetXY.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
-
-    ui.harvestOffsetYX.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
-
-    ui.harvestOffsetYY.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
 
     // 为初始土地偏移输入框添加变化监听
     ui.firstlandX.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     ui.firstlandY.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 为收割两指间距输入框添加变化监听
     ui.distance.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    // 为收割操作时用时输入框添加变化监听
+    ui.harvestTime.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    // 为收割横向偏移输入框添加变化监听
+    ui.harvestX.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    // 为收割纵向偏移输入框添加变化监听
+    ui.harvestY.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    // 为收割重复次数输入框添加变化监听
+    ui.harvestRepeat.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 为悬浮窗坐标输入框添加变化监听
     ui.showTextX.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     ui.showTextY.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 为照片路径输入框添加变化监听
     ui.photoPath.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 设置粮仓坐标偏移
     ui.liangcangOffsetX.setText(String(config.liangcangOffset.x));
@@ -1367,20 +1420,20 @@ function loadConfigToUI() {
 
     // 为粮仓坐标偏移输入框添加变化监听
     ui.liangcangOffsetX.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     ui.liangcangOffsetY.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 设置货仓坐标偏移
     ui.huocangOffsetX.setText(String(config.huocangOffset.x));
@@ -1388,20 +1441,20 @@ function loadConfigToUI() {
 
     // 为货仓坐标偏移输入框添加变化监听
     ui.huocangOffsetX.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     ui.huocangOffsetY.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        autoSaveConfig();
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 设置随机颜色开关
     ui.randomColor.setChecked(config.randomColor);
@@ -1411,24 +1464,32 @@ function loadConfigToUI() {
 
     // 为cangkuTime输入框添加变化监听
     ui.shengcangTime.addTextChangedListener(new android.text.TextWatcher({
-    beforeTextChanged: function (s, start, count, after) { },
-    onTextChanged: function (s, start, before, count) {
-        let value = parseFloat(s.toString());
-        if (isNaN(value) || value < 0) {
-            toast("升仓间隔时间必须大于等于0");
-            ui.shengcangTime.setText(String(config.shengcangTime));
-        } else {
-            autoSaveConfig();
-        }
-    },
-    afterTextChanged: function (s) { }
-}));
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            let value = parseFloat(s.toString());
+            if (isNaN(value) || value < 0) {
+                toast("升仓间隔时间必须大于等于0");
+                ui.shengcangTime.setText(String(config.shengcangTime));
+            } else {
+                autoSaveConfig();
+            }
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 设置是否自动升仓
     ui.isShengcang.setChecked(config.isShengcang);
 
     // 为是否自动升仓开关添加变化监听
     ui.isShengcang.on("check", (checked) => {
+        autoSaveConfig();
+    });
+
+    // 设置是否自动滑动
+    ui.treeShouldSwipeSwitch.setChecked(config.treeShouldSwipe);
+
+    // 为是否自动滑动开关添加变化监听
+    ui.treeShouldSwipeSwitch.on("check", (checked) => {
         autoSaveConfig();
     });
 
@@ -1465,7 +1526,7 @@ function setLandMethod(method) {
     // 强制刷新UI
     ui.methodShop.attr("bg", ui.methodShop.attr("bg"));
     ui.methodBakery.attr("bg", ui.methodBakery.attr("bg"));
-    
+
     // 确保配置正确保存
     const config = getConfig();
     if (config.landFindMethod !== method) {
@@ -1606,7 +1667,7 @@ function startButton() {
     }
 
     // 输出当前配置
-    console.log("===== 当前配置 =====");
+    console.log("=============== 当前配置 ===============");
     console.log("应用版本: " + getAppVersion());
     console.log("选择功能: " + config.selectedFunction.text);
     console.log("种植作物: " + config.selectedCrop.text);
@@ -1617,12 +1678,15 @@ function startButton() {
     console.log("账号数量: " + config.accountNames.length);
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
-    console.log("收割偏移: ((" + config.harvestOffset.x + ", " + config.harvestOffset.y + "), (" + config.harvestOffset.x2 + ", " + config.harvestOffset.y2 + "))");
+    console.log("收割横向偏移: " + config.harvestX + "格");
+    console.log("收割纵向偏移: " + config.harvestY + "格");
+    console.log("收割重复次数: " + config.harvestRepeat + "次");
+    console.log("收割操作用时: " + config.harvestTime + "秒");
     console.log("粮仓偏移: (" + config.liangcangOffset.x + ", " + config.liangcangOffset.y + "), 货仓偏移 (" + config.huocangOffset.x + ", " + config.huocangOffset.y + ")");
     console.log("浮动按钮: " + (shouldOpenFloatWindow ? "是" : "否"));
     // console.log("主题颜色: " + config.themeColor.text);config
     // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
-    console.log("==================");
+    console.log("============================");
 
     switch (config.selectedFunction.code) {
         case 0: // 刷地
@@ -1760,15 +1824,21 @@ function initUI() {
             if (selectedFunction === "刷地") {
                 // 显示作物选择，隐藏树木选择
                 ui.cropSelectContainer.setVisibility(0); // 0表示可见
+                ui.shopPriceContainer.setVisibility(0); // 0表示可见
                 ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+                ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
             } else if (selectedFunction === "种树") {
                 // 隐藏作物选择，显示树木选择
                 ui.cropSelectContainer.setVisibility(8); // 8表示不可见
+                ui.shopPriceContainer.setVisibility(8); // 8表示不可见
                 ui.treeSelectContainer.setVisibility(0); // 0表示可见
+                ui.treeShouldSwipe.setVisibility(0); // 0表示可见
             } else {
                 // 其他功能（如枯树上牌）隐藏两个选项
                 ui.cropSelectContainer.setVisibility(8); // 8表示不可见
+                ui.shopPriceContainer.setVisibility(8); // 8表示不可见
                 ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+                ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
             }
 
             autoSaveConfig();
@@ -1806,28 +1876,28 @@ function initUI() {
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
             // console.log("主题颜色选择发生变化: " + item);
-            
+
             // 更新颜色
             const colorNames = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"];
             const selectedIndex = colorNames.indexOf(item);
             if (selectedIndex >= 0) {
                 color = colorLibrary[selectedIndex];
-                
+
                 // 更新UI颜色
                 ui.statusBarColor(color);
                 ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
-                
+
                 // 更新商店按钮颜色（如果当前选中的是商店方法）
                 const config = loadConfig();
                 if (config.landFindMethod === "商店") {
                     ui.methodShop.attr("bg", color);
                     ui.methodShop.attr("textColor", "#FFFFFF");
                 }
-                
+
                 // 更新spinner文字颜色
                 ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
             }
-            
+
             autoSaveConfig();
             loadConfigToUI();
         },
@@ -1836,24 +1906,24 @@ function initUI() {
 
     ui.randomColor.on("check", (checked) => {
         console.log("随机颜色开关状态变化:", checked);
-        
+
         if (checked) {
             // 如果打开随机颜色，则随机选择一个颜色
             color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)];
             ui.statusBarColor(color);
             ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
-            
+
             // 更新商店按钮颜色（如果当前选中的是商店方法）
             const config = loadConfig();
             if (config.landFindMethod === "商店") {
                 ui.methodShop.attr("bg", color);
                 ui.methodShop.attr("textColor", "#FFFFFF");
             }
-            
+
             // 更新spinner文字颜色
             ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
         }
-        
+
         autoSaveConfig();
     });
 

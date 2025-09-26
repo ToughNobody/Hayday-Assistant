@@ -441,9 +441,9 @@ function checkmenu() {
             { x: 1213, y: 661, color: "#f2ded3" }]);
 
             //老板界面
-            let allMatch2 = matchColor([{x:39,y:177,color:"#ffffff"},
-                {x:68,y:654,color:"#2662a9"},
-                {x:1208,y:659,color:"#f0e0d6"}]);
+            let allMatch2 = matchColor([{ x: 39, y: 177, color: "#ffffff" },
+            { x: 68, y: 654, color: "#2662a9" },
+            { x: 1208, y: 659, color: "#f0e0d6" }]);
 
             if (allMatch || allMatch2) {
                 log(`第 ${i + 1} 次检测: 已进入主界面`);
@@ -636,27 +636,38 @@ function findland_click() {
     }
 }
 
-//收割，播种
+/**
+ * 收割作物
+ * @param {Object} center - 收割中心点坐标 {x: number, y: number}
+ * @param {number} [rows=6] - 收割行数
+ */
 function harvest(center) {
     // 参数检查
     if (!center) {
         console.log("错误：center坐标无效");
         return;
     }
+
+    //重复次数
+    let rows = config.harvestRepeat;
+
     let center_land = findland(false);
     // 定义偏移量
+    // 左移
     const L = {
-        x: config.harvestOffset.x,
-        y: config.harvestOffset.y
-    }; // 左移
+        x: (config.harvestX + 2) * -36,
+        y: (config.harvestX + 2) * -18
+    };
+    // 右移
     const R = {
         x: -L.x,
         y: -L.y
-    }; // 右移
+    };
+    // 换行
     const S = {
-        x: config.harvestOffset.x2,
-        y: config.harvestOffset.y2
-    }; // 换行
+        x: (config.harvestY + 2) * 36,
+        y: (config.harvestY + 2) * -18
+    };
 
     let pos1 = [config.firstland.x, config.firstland.y]
     let pos2 = config.distance
@@ -670,44 +681,38 @@ function harvest(center) {
         Math.max(0, Math.min(y, device.height - 1))
     ];
 
-    gestures([0, 5000,
-        safe(center.x, center.y),
-        safe(pos_land.x, pos_land.y),
-        safe(pos_land.x + L.x, pos_land.y + L.y),
-        safe(pos_land.x + L.x + S.x, pos_land.y + L.y + S.y),
-        safe(pos_land.x + L.x + S.x + R.x, pos_land.y + L.y + S.y + R.y),
-        safe(pos_land.x + 2 * L.x + S.x + R.x, pos_land.y + 2 * L.y + S.y + R.y),
-        safe(pos_land.x + 2 * L.x + 2 * S.x + R.x, pos_land.y + 2 * L.y + 2 * S.y + R.y),
-        safe(pos_land.x + 2 * L.x + 2 * S.x + 2 * R.x, pos_land.y + 2 * L.y + 2 * S.y + 2 * R.y),
-        safe(pos_land.x + 3 * L.x + 2 * S.x + 2 * R.x, pos_land.y + 3 * L.y + 2 * S.y + 2 * R.y),
-        safe(pos_land.x + 3 * L.x + 3 * S.x + 2 * R.x, pos_land.y + 3 * L.y + 3 * S.y + 2 * R.y),
-        safe(pos_land.x + 3 * L.x + 3 * S.x + 3 * R.x, pos_land.y + 3 * L.y + 3 * S.y + 3 * R.y),
-        safe(pos_land.x + 4 * L.x + 3 * S.x + 3 * R.x, pos_land.y + 4 * L.y + 3 * S.y + 3 * R.y),
-        safe(pos_land.x + 4 * L.x + 4 * S.x + 3 * R.x, pos_land.y + 4 * L.y + 4 * S.y + 3 * R.y),
-        safe(pos_land.x + 4 * L.x + 4 * S.x + 4 * R.x, pos_land.y + 4 * L.y + 4 * S.y + 4 * R.y),
-        safe(pos_land.x + 5 * L.x + 4 * S.x + 4 * R.x, pos_land.y + 5 * L.y + 4 * S.y + 4 * R.y),
-        safe(pos_land.x + 5 * L.x + 5 * S.x + 4 * R.x, pos_land.y + 5 * L.y + 5 * S.y + 4 * R.y)
-    ],
+    let harvestTime = config.harvestTime * 1000;
 
-        // 第二组手势路径（Y-100）
-        [0, 5000,
-            safe(center.x, center.y),
-            safe(pos_land.x, pos_land.y + pos2),
-            safe(pos_land.x + L.x, pos_land.y + L.y + pos2),
-            safe(pos_land.x + L.x + S.x, pos_land.y + L.y + S.y + pos2),
-            safe(pos_land.x + L.x + S.x + R.x, pos_land.y + L.y + S.y + R.y + pos2),
-            safe(pos_land.x + 2 * L.x + S.x + R.x, pos_land.y + 2 * L.y + S.y + R.y + pos2),
-            safe(pos_land.x + 2 * L.x + 2 * S.x + R.x, pos_land.y + 2 * L.y + 2 * S.y + R.y + pos2),
-            safe(pos_land.x + 2 * L.x + 2 * S.x + 2 * R.x, pos_land.y + 2 * L.y + 2 * S.y + 2 * R.y + pos2),
-            safe(pos_land.x + 3 * L.x + 2 * S.x + 2 * R.x, pos_land.y + 3 * L.y + 2 * S.y + 2 * R.y + pos2),
-            safe(pos_land.x + 3 * L.x + 3 * S.x + 2 * R.x, pos_land.y + 3 * L.y + 3 * S.y + 2 * R.y + pos2),
-            safe(pos_land.x + 3 * L.x + 3 * S.x + 3 * R.x, pos_land.y + 3 * L.y + 3 * S.y + 3 * R.y + pos2),
-            safe(pos_land.x + 4 * L.x + 3 * S.x + 3 * R.x, pos_land.y + 4 * L.y + 3 * S.y + 3 * R.y + pos2),
-            safe(pos_land.x + 4 * L.x + 4 * S.x + 3 * R.x, pos_land.y + 4 * L.y + 4 * S.y + 3 * R.y + pos2),
-            safe(pos_land.x + 4 * L.x + 4 * S.x + 4 * R.x, pos_land.y + 4 * L.y + 4 * S.y + 4 * R.y + pos2),
-            safe(pos_land.x + 5 * L.x + 4 * S.x + 4 * R.x, pos_land.y + 5 * L.y + 4 * S.y + 4 * R.y + pos2),
-            safe(pos_land.x + 5 * L.x + 5 * S.x + 4 * R.x, pos_land.y + 5 * L.y + 5 * S.y + 4 * R.y + pos2)
-        ]);
+    // 构建第一组手势路径
+    let firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x, pos_land.y)];
+
+    // 构建第二组手势路径（Y偏移）
+    let secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x, pos_land.y + pos2)];
+
+
+
+    // 生成手势路径点
+    for (let row = 1; row <= rows; row++) {
+
+        // 第一组手势路径点
+        firstGroup.push(
+            safe(pos_land.x + row * L.x + (row - 1) * S.x + (row - 1) * R.x, pos_land.y + row * L.y + (row - 1) * R.y + (row - 1) * S.y),
+            safe(pos_land.x + row * L.x + row * S.x + (row - 1) * R.x, pos_land.y + row * L.y + (row - 1) * R.y + row * S.y),
+            safe(pos_land.x + row * L.x + row * S.x + row * R.x, pos_land.y + row * L.y + row * R.y + row * S.y)
+        );
+
+        // 第二组手势路径点（Y偏移）
+        secondGroup.push(
+            safe(pos_land.x + row * L.x + (row - 1) * S.x + (row - 1) * R.x, pos_land.y + row * L.y + (row - 1) * R.y + (row - 1) * S.y + pos2),
+            safe(pos_land.x + row * L.x + row * S.x + (row - 1) * R.x, pos_land.y + row * L.y + (row - 1) * R.y + row * S.y + pos2),
+            safe(pos_land.x + row * L.x + row * S.x + row * R.x, pos_land.y + row * L.y + row * R.y + row * S.y + pos2)
+        );
+    }
+
+    // 执行手势
+    log(firstGroup, secondGroup)
+    log(config.harvestRepeat, config.harvestX, config.harvestY)
+    gestures(firstGroup, secondGroup);
 }
 
 /**
@@ -842,8 +847,8 @@ function coin() {
 
 //商店货架寻找小麦，发布广告
 function find_ad() {
-    let shop_coin = findMC(["#fffabb",[83,-17,"#fff27d"],[80,-3,"#ffe718"],[-73,22,"#f7cd88"]],
-null,null,16);
+    let shop_coin = findMC(["#fffabb", [83, -17, "#fff27d"], [80, -3, "#ffe718"], [-73, 22, "#f7cd88"]],
+        null, null, 16);
     if (shop_coin) {
         //如果找到货架上的金币
         let [x1, y1] = [-58, -23];
@@ -978,15 +983,15 @@ function shop() {
             coin();
             shopisswipe = true;
         }
-        
+
     }
     console.log("发布广告");
     showTip("发布广告");
     sleep(300);
     coin();
     sleep(500);
-    let shop_coin = findMC(["#fffabb",[83,-17,"#fff27d"],[80,-3,"#ffe718"],[-73,22,"#f7cd88"]],
-null,null,16);
+    let shop_coin = findMC(["#fffabb", [83, -17, "#fff27d"], [80, -3, "#ffe718"], [-73, 22, "#f7cd88"]],
+        null, null, 16);
     if (shop_coin) {
         //如果找到货架上的金币
 
@@ -1140,9 +1145,9 @@ function find_close(screenshot1, action = null) {
     }
 
     //识别稻草人，左边肩膀，乌鸦身子，脚
-    let daocaoren = matchColor([{x:86,y:406,color:"#bbb2e7"},
-        {x:166,y:372,color:"#282b38"},
-        {x:162,y:394,color:"#ce9b00"}],
+    let daocaoren = matchColor([{ x: 86, y: 406, color: "#bbb2e7" },
+    { x: 166, y: 372, color: "#282b38" },
+    { x: 162, y: 394, color: "#ce9b00" }],
         screenshot = sc);
     if (daocaoren) {
         log("识别到稻草人");
@@ -1166,9 +1171,9 @@ function jiaocheng() {
     while (true) {
         let sc = captureScreen();
         //识别稻草人
-        let jiaocheng20 = matchColor([{x:86,y:406,color:"#bbb2e7"},
-            {x:166,y:372,color:"#282b38"},
-            {x:162,y:394,color:"#ce9b00"}], sc);
+        let jiaocheng20 = matchColor([{ x: 86, y: 406, color: "#bbb2e7" },
+        { x: 166, y: 372, color: "#282b38" },
+        { x: 162, y: 394, color: "#ce9b00" }], sc);
         if (jiaocheng20) {
             log("识别到稻草人，点击");
             showTip("识别到稻草人，点击");
@@ -1483,12 +1488,12 @@ function operation(Account) {
 
     //找耕地
     sleep(1500);
-    if(find_close()) {
+    if (find_close()) {
         sleep(500);
         find_close();
         sleep(500);
     }
-    
+
     center_land = findland();
     console.log("寻找耕地");
     //找不到重新找耕地
