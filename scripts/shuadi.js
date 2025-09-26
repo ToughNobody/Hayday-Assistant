@@ -1118,18 +1118,20 @@ function find_close(screenshot1, action = null) {
     }
 
     //切换账号页面
-    let switchAccount = matchColor([{ x: 56, y: 63, color: "#ffffff" },
-    { x: 530, y: 70, color: "#041d51" },
-    { x: 38, y: 687, color: "#52b4dd" },
-    { x: 550, y: 697, color: "#0e3683" }],
-        screenshot = sc);
-    if (switchAccount) {
-        console.log("切换账号界面，返回主菜单");
-        showTip("切换账号界面，返回主菜单");
-        click(56 + ran(), 63 + ran());
-        sleep(800);
-        click(1150 + ran(), 70 + ran());
-        return true;
+    if (!action || !action.includes("except_switchAccount")) {
+        let switchAccount = matchColor([{ x: 56, y: 63, color: "#ffffff" },
+        { x: 530, y: 70, color: "#041d51" },
+        { x: 38, y: 687, color: "#52b4dd" },
+        { x: 550, y: 697, color: "#0e3683" }],
+            screenshot = sc);
+        if (switchAccount) {
+            console.log("切换账号界面，返回主菜单");
+            showTip("切换账号界面，返回主菜单");
+            click(56 + ran(), 63 + ran());
+            sleep(800);
+            click(1150 + ran(), 70 + ran());
+            return true;
+        }
     }
 
     //进入购买界面
@@ -1187,30 +1189,62 @@ function jiaocheng() {
     }
 }
 
-function switch_account(Account, num = 0) {
-    console.log("切换账号" + Account);
-    showTip("切换账号" + Account);
-    sleep(700)
-    let huanhao1 = matchColor([{ x: 44, y: 189, color: "#ffffff" }, { x: 40, y: 166, color: "#ffffff" }, { x: 51, y: 206, color: "#f3bb00" }]);
+function switch_account(Account) {
+    let num = 0;
+    while (true) {
+        console.log("切换账号" + Account);
+        showTip("切换账号" + Account);
+        sleep(700)
 
-    let sc = captureScreen();
-    find_close(sc);
-    sc.recycle();
-    sleep(300);
+        let huanhao1 = matchColor([{ x: 44, y: 189, color: "#ffffff" }, { x: 40, y: 166, color: "#ffffff" }, { x: 51, y: 206, color: "#f3bb00" }]);
 
-    if (huanhao1) {
-        click(41 + ran(), 184 + ran());
-    }
-    sleep(700);
-    let huanhao2 = matchColor([{ x: 112, y: 402, color: "#fefbfa" }, { x: 133, y: 396, color: "#f7c045" }, { x: 340, y: 409, color: "#f6b42f" }]);
-    if (huanhao2) {
+        let sc = captureScreen();
+        find_close(sc);
+        sc.recycle();
+        sleep(300);
 
+        if (huanhao1) {
+            click(41 + ran(), 184 + ran());
+        }
+        sleep(700);
+        let huanhao2 = matchColor([{ x: 112, y: 402, color: "#fefbfa" }, { x: 133, y: 396, color: "#f7c045" }, { x: 340, y: 409, color: "#f6b42f" }]);
+
+        if (!huanhao2) {
+            if (num < 3) {
+                num++
+                console.log(`未识别到切换账号按钮，重试第${num}次`)
+                sleep(3000);
+                find_close();
+                sleep(200);
+                find_close();
+                // 继续循环而不是递归调用
+                continue;
+            } else {
+                console.log("超过最大尝试次数，重进游戏")
+                restartgame();
+                return num; // 重启游戏后返回
+            }
+        }
         click(225 + ran(), 404 + ran());
-    }
-    sleep(800);
-    let huanhao3 = matchColor([{ x: 455, y: 66, color: "#dfb577" }, { x: 615, y: 162, color: "#2660a9" }, { x: 729, y: 186, color: "#ffffff" }]);
-    if (huanhao3) {
+        sleep(800);
+        let huanhao3 = matchColor([{ x: 455, y: 66, color: "#dfb577" }, { x: 615, y: 162, color: "#2660a9" }, { x: 729, y: 186, color: "#ffffff" }]);
 
+        if (!huanhao3) {
+            if (num < 3) {
+                num++
+                console.log(`未识别到切换账号按钮，重试第${num}次`)
+                sleep(3000);
+                find_close();
+                sleep(200);
+                find_close();
+                // 继续循环而不是递归调用
+                continue;
+            } else {
+                console.log("超过最大尝试次数，重进游戏")
+                restartgame();
+                return num; // 重启游戏后返回
+            }
+        }
         click(750 + ran(), 175 + ran());
         let findAccountMenuNum = 0;    //寻找账号菜单次数
         while (true) {
@@ -1220,15 +1254,15 @@ function switch_account(Account, num = 0) {
                 console.log(`未识别到切换账号界面，重试第${num}次`)
                 showTip(`未识别到切换账号界面，重试第${num}次`)
                 sleep(3000);
-                find_close();
+                find_close(null, ["except_switchAccount"]);
                 sleep(200);
-                find_close();
-                let nums = num
-                num = switch_account(Account, nums);
+                find_close(null, ["except_switchAccount"]);
+                continue;
             } else if (findAccountMenuNum > 5 && num >= 3) {
                 console.log("重试次数过多，重进游戏");
                 showTip("重试次数过多，重进游戏");
                 restartgame();
+                return num; // 重启游戏后返回
             }
             if (matchColor([{ x: 56, y: 63, color: "#ffffff" },
             { x: 530, y: 70, color: "#041d51" },
@@ -1239,13 +1273,14 @@ function switch_account(Account, num = 0) {
             sleep(1000);
         }
 
-        const MAX_SCROLL_DOWN = 3; // 最多下滑3次
+        const MAX_SCROLL_DOWN = 15; // 最多下滑3次
         const MAX_SCROLL_UP = 2; // 最多上滑2次
 
         let found = false; // 是否找到目标
         let scrollDownCount = 0; // 当前下滑次数
         let scrollUpCount = 0; // 当前上滑次数
         let AccountIma = files.join(config.photoPath, Account + ".png");
+        let isEnd = false;
         while (!found) {
             sleep(500);
             let is_find_Account = findimage(AccountIma, 0.9);
@@ -1259,57 +1294,51 @@ function switch_account(Account, num = 0) {
                 found = true;
                 break;
             }
-            if (scrollDownCount < MAX_SCROLL_DOWN) {
+            if (scrollDownCount < MAX_SCROLL_DOWN && !isEnd) {
                 const [x1, y1] = [960, 600];
-                const [x2, y2] = [960, 60];
+                const [x2, y2] = [960, 300];//原960,60
                 swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), [500]); // 下滑
                 scrollDownCount++;
                 log(`未找到账号，第 ${scrollDownCount} 次下滑...`);
                 showTip(`未找到账号，第 ${scrollDownCount} 次下滑...`);
                 sleep(1500);
+                if (findMC(["#000000", [-16, -8, "#ffffff"], [1, -40, "#2d85f3"], [-55, -6, "#ffffff"]])) {
+                    log("滑到底了");
+                    showTip("滑到底了");
+                    isEnd = true;
+                }
                 continue;
             }
             else if (scrollUpCount > MAX_SCROLL_UP) {
                 log("未找到目标账号，重启游戏");
                 show("未找到目标账号，重启游戏");
                 restartgame();
+                return num; // 重启游戏后返回
             }
             // 1270,0
-            else if (scrollDownCount >= MAX_SCROLL_DOWN) {
+            else if (scrollDownCount >= MAX_SCROLL_DOWN || isEnd) {
                 log(`未找到账号，上滑回顶部...`);
                 showTip("未找到账号，上滑回顶部");
                 const [x3, y3] = [960, 60];
                 const [x4, y4] = [960, 600];
-                swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
-                sleep(200);
-                swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
-                sleep(200);
-                swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
-                sleep(200);
-                swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
-                sleep(200);
+                let scrollup = 0; //上滑次数
+                while (!findMC(["#000000", [-221, -1, "#f2f2f2"], [-384, -1, "#041e54"], [315, 5, "#2d85f3"]], null, [0, 0, 1270, 150]) || scrollup < 10) {
+                    swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
+                    sleep(200);
+                    scrollup++;
+                }
                 scrollDownCount = 0;
                 scrollUpCount++;
+                isEnd = false;
             } else {
-
 
             }
         }
-    } else {
-        if (num < 3) {
-            num++
-            console.log(`未识别到切换账号按钮，重试第${num}次`)
-            sleep(3000);
-            find_close();
-            sleep(200);
-            find_close();
-            let nums = num
-            num = switch_account(Account, nums);
-        } else {
-            console.log("超过最大尝试次数，重进游戏")
-            restartgame();
-        }
+        break; // 找到账号并成功切换后退出外层循环
+
+
     }
+
     sleep(2000);
     checkmenu();
     return num;

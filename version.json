@@ -1,30 +1,30 @@
 {
-  "version": "1.2.13",
-  "description": "\n1.刷地手势重写，加入手势时间参数\n2.收割参数简化，从坐标偏移改为格子\n",
+  "version": "1.2.14",
+  "description": "\n1.添加种树功能，比较拉，凑活用\n2.优化切换账号逻辑\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 15,
+      "versionCode": 16,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 15,
+      "versionCode": 16,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 15,
+      "versionCode": 16,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {
       "name": "zhongshu.js",
-      "versionCode": 6,
+      "versionCode": 16,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js"
     },
     {
       "name": "floatyBtn.js",
-      "versionCode": 6,
+      "versionCode": 16,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js"
     },
     {

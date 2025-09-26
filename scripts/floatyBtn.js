@@ -46,7 +46,7 @@ var 动画;
 
 module.exports = {
     open: function () {
-        toast("浮动按钮目前有bug，先不要使用");
+        toast("浮动按钮目前有bug,种树才可以用");
         if (!this.isCreated() && !logo_buys) {
             this._main();
             // 使用非阻塞方式等待初始化完成

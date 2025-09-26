@@ -905,7 +905,7 @@ ui.win_switch.on("check", function (checked) {
 //
 
 events.broadcast.on("win_showLogDialog", showLogDialog);
-events.broadcast.on("win_startButton", startButton);
+events.broadcast.on("win_startButton", winStartButton);
 events.broadcast.on("win_stopOtherEngines", stopOtherEngines);
 events.broadcast.on("win_stopAll", () => stopOtherEngines(true));
 // 监听浮动按钮状态变化
@@ -1710,10 +1710,23 @@ function startButton() {
 
         case 1: // 种树
             stopOtherEngines();
+
+            launch("com.supercell.hayday");
+            setTimeout(()=>{},1000);
+            if (!ui.win_switch.checked) {
+                float_win.open();
+                log("启动浮动按钮");
+            } else log("已启动浮动按钮");
+
+            // toast("功能开发中");
+            break;
+
+        case 2: // 枯树上牌
+            stopOtherEngines();
             // threads.start(() => {
-            //     let newEngine = engines.execScriptFile("./种树.js");
-            //     engineIds.zhongshu = newEngine.id;  // 保存新引擎ID
-            //     log("启动种树引擎，ID: " + newEngine.id);
+            //     let newEngine = engines.execScriptFile("./枯树挂牌.js");
+            //     engineIds.guapai = newEngine.id;  // 保存新引擎ID
+            //     log("启动挂牌引擎，ID: " + newEngine.id);
             //     
             //     // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
             //     if (shouldOpenFloatWindow) {
@@ -1724,6 +1737,86 @@ function startButton() {
             //     }
             // });
             toast("功能开发中");
+            break;
+
+        default:
+            toast("未知功能", "long");
+    }
+}
+
+function winStartButton() {
+    const config = getConfig();
+    saveConfig(config);
+
+    if (!auto.service) {
+        toast("请先开启无障碍服务");
+        app.startActivity({
+            action: "android.settings.ACCESSIBILITY_SETTINGS"
+        });
+        return;
+    }
+
+    // 记录用户是否打开浮动按钮
+    const shouldOpenFloatWindow = ui.win_switch.checked;
+
+    // 检查用户是否打开了浮动按钮开关
+    if (shouldOpenFloatWindow) {
+        // 关闭浮动按钮
+        float_win.close();
+        log("已关闭浮动按钮");
+    }
+
+    // 输出当前配置
+    console.log("=============== 当前配置 ===============");
+    console.log("应用版本: " + getAppVersion());
+    console.log("选择功能: " + config.selectedFunction.text);
+    console.log("种植作物: " + config.selectedCrop.text);
+    console.log("种植树木: " + config.selectedTree.text);
+    console.log("商店价格: " + config.shopPrice.text);
+    console.log("地块查找方法: " + config.landFindMethod);
+    console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
+    console.log("账号数量: " + config.accountNames.length);
+    console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
+    console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
+    console.log("收割横向偏移: " + config.harvestX + "格");
+    console.log("收割纵向偏移: " + config.harvestY + "格");
+    console.log("收割重复次数: " + config.harvestRepeat + "次");
+    console.log("收割操作用时: " + config.harvestTime + "秒");
+    console.log("粮仓偏移: (" + config.liangcangOffset.x + ", " + config.liangcangOffset.y + "), 货仓偏移 (" + config.huocangOffset.x + ", " + config.huocangOffset.y + ")");
+    console.log("浮动按钮: " + (shouldOpenFloatWindow ? "是" : "否"));
+    // console.log("主题颜色: " + config.themeColor.text);config
+    // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
+    console.log("============================");
+
+    switch (config.selectedFunction.code) {
+        case 0: // 刷地
+            stopOtherEngines(); // 先清理所有任务
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(1000);
+                let newEngine = engines.execScriptFile("./shuadi.js");
+                engineIds.shuadi = newEngine.id;  // 保存新引擎ID
+                log("启动刷地引擎，ID: " + newEngine.id);
+
+                // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
+                if (shouldOpenFloatWindow) {
+                    // 启动应用后打开浮动按钮
+                    sleep(1000);
+                    float_win.open();
+                    log("已启动浮动按钮");
+                }
+            });
+            break;
+
+        case 1: // 种树
+            stopOtherEngines();
+            setTimeout(()=>{},1000);
+            threads.start(() => {
+                let newEngine = engines.execScriptFile("./zhongshu.js");
+                engineIds.zhongshu = newEngine.id;  // 保存新引擎ID
+                log("启动种树引擎，ID: " + newEngine.id);
+            });
+            float_win.close();
             break;
 
         case 2: // 枯树上牌
