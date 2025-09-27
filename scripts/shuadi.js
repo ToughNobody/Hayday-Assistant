@@ -830,7 +830,30 @@ function coin() {
     let centers1 = findimages(files.join(config.photoPath, "shopsold1.png"), 0.8, 10, sc);
     let centers2 = findimages(files.join(config.photoPath, "shopsold2.png"), 0.8, 10, sc);
     let centers3 = findimages(files.join(config.photoPath, "shopSold3.png"), 0.8, 10, sc);
-    allcenters = allcenters.concat(centers1, centers2, centers3);
+
+    // 合并所有点并过滤距离过近的点
+    let allPoints = centers1.concat(centers2, centers3);
+    let filteredPoints = [];
+
+    for (let i = 0; i < allPoints.length; i++) {
+        let shouldKeep = true;
+        // 检查当前点是否与已保留的点距离过近
+        for (let j = 0; j < filteredPoints.length; j++) {
+            let dx = Math.abs(allPoints[i].x - filteredPoints[j].x);
+            let dy = Math.abs(allPoints[i].y - filteredPoints[j].y);
+            // 如果x和y坐标差值都小于20，则排除当前点
+            if (dx < 20 && dy < 20) {
+                shouldKeep = false;
+                break;
+            }
+        }
+        // 如果没有距离过近的点，则保留当前点
+        if (shouldKeep) {
+            filteredPoints.push(allPoints[i]);
+        }
+    }
+
+    allcenters = allcenters.concat(filteredPoints);
     allcenters.sort((a, b) => a.x - b.x);
     console.log("有" + allcenters.length + "个金币可以收");
     // console.log(allcenters)
@@ -1052,7 +1075,13 @@ function find_close(screenshot1, action = null) {
     let sc = screenshot1 || captureScreen();
 
     //识别叉叉
-    let close_button = findimage(files.join(config.photoPath, "close.png"), 0.5, sc);
+    let close_button = findimage(files.join(config.photoPath, "close.png"), 0.8, sc);//大×
+    if (!close_button) {
+        close_button = findimage(files.join(config.photoPath, "close1.png"), 0.8, sc);//小×
+    }
+    if (!close_button) {
+        close_button = findimage(files.join(config.photoPath, "close2.png"), 0.8, sc);//中×
+    }
     if (close_button) {
         click(close_button.x + ran(), close_button.y + ran());
         console.log("点击叉叉");
