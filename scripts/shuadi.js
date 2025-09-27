@@ -1294,7 +1294,7 @@ function switch_account(Account) {
                 is_find_Account = findimage(AccountIma, 0.9);
             };
             if (config.findAccountMethod == "text") {
-                is_find_Account = findtext(Account, 1300, 0);
+                is_find_Account = findtext(AccountText, 1300, 0);
             }
 
             if (is_find_Account) { //如果找到账号名称，则点击
