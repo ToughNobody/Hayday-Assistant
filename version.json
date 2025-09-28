@@ -1,25 +1,30 @@
 {
-  "version": "1.3.4",
-  "description": "\n1.优化叉号识别\n2.优化金币收取\n",
+  "version": "1.3.5",
+  "description": "\n1.Mumu也能用文字识别账号了\n2.主界面改动，将账号信息单列一栏\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 20,
+      "versionCode": 21,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 18,
+      "versionCode": 21,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
+      "name": "module.js",
+      "versionCode": 21,
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
+    },
+    {
       "name": "shuadi.js",
-      "versionCode": 20,
+      "versionCode": 21,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {
       "name": "zhongshu.js",
-      "versionCode": 16,
+      "versionCode": 21,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js"
     },
     {

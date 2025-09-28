@@ -103,6 +103,7 @@ ui.layout(
                 <tabs id="tabs" />
             </appbar>
             <viewpager id="viewpager">
+                {/* 首页 */}
                 <frame>
                     <scroll>
                         <vertical w="*" h="*" padding="16">
@@ -179,21 +180,10 @@ ui.layout(
                         </vertical>
                     </scroll>
                 </frame>
+                {/* 账号信息 */}
                 <frame>
                     <scroll>
                         <vertical w="*" h="*" padding="16">
-
-                            {/* 寻找土地方法卡片 - 使用按钮模拟单选 */}
-                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="寻找土地方法" textSize="16" textStyle="bold" marginBottom="16" />
-                                    <horizontal gravity="center_vertical">
-                                        <button id="methodShop" text="商店" w="120" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="16" />
-                                        <button id="methodBakery" text="面包房" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
-                                    </horizontal>
-                                </vertical>
-                            </card>
-
                             {/* 账号设置卡片 */}
                             <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
                                 <vertical padding="16">
@@ -216,7 +206,7 @@ ui.layout(
                                         <text text="账号列表：" textSize="14" textStyle="bold" />
                                     </vertical>
                                     {/* 账号输入框 */}
-                                    <list id="AccountList">
+                                    <list id="AccountList" h="auto">
                                         <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
                                             cardElevation="1dp" foreground="?selectableItemBackground">
                                             <horizontal gravity="center_vertical">
@@ -228,13 +218,30 @@ ui.layout(
                                             </horizontal>
                                         </card>
                                     </list>
-                                    <horizontal gravity="right|center" marginBottom="12">
-                                        <card id="addAccountCard" w="30" h="30" marginRight="8" cardCornerRadius="15"  cardElevation="1" gravity="center" backgroundTint="#7fffd4">
-                                        <img id="addAccount" src="@drawable/ic_add_black_48dp" w="*" h="*" scaleType="fitXY" />
-                                    </card>
+                                </vertical>
+                            </card>
+                        </vertical>
+                    </scroll>
+                    <fab id="addAccount" w="auto" h="auto" src="@drawable/ic_add_black_48dp"
+                        margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
+                </frame>
+                {/* 参数配置 */}
+                <frame>
+                    <scroll>
+                        <vertical w="*" h="*" padding="16">
+
+                            {/* 寻找土地方法卡片 - 使用按钮模拟单选 */}
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="寻找土地方法" textSize="16" textStyle="bold" marginBottom="16" />
+                                    <horizontal gravity="center_vertical">
+                                        <button id="methodShop" text="商店" w="120" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="16" />
+                                        <button id="methodBakery" text="面包房" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
                                     </horizontal>
                                 </vertical>
                             </card>
+
+
 
                             {/* 仓库升仓时间卡片 */}
                             <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
@@ -336,6 +343,7 @@ ui.layout(
                         </vertical>
                     </scroll>
                 </frame>
+                {/* 更多 */}
                 <frame>
                     <scroll>
                         <vertical w="*" h="*" padding="16">
@@ -410,6 +418,11 @@ ui.layout(
         </vertical>
     </drawer>
 );
+
+//设置滑动页面的标题
+ui.viewpager.setTitles(["首页", "账号信息", "参数配置", "更多"]);
+//让滑动页面和标签栏联动
+ui.tabs.setupWithViewPager(ui.viewpager);
 
 
 //创建选项菜单(右上角)
@@ -714,10 +727,6 @@ function updateButtonColors() {
 }
 //
 ui.statusBarColor(color)
-//设置滑动页面的标题
-ui.viewpager.setTitles(["首页", "参数配置", "更多"]);
-//让滑动页面和标签栏联动
-ui.tabs.setupWithViewPager(ui.viewpager);
 
 //让工具栏左上角可以打开侧拉菜单
 ui.toolbar.setupWithDrawer(ui.drawer);
@@ -1072,7 +1081,7 @@ function getConfig() {
             code: ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "咖啡丛", "橄榄树", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"].indexOf(ui.treeSelect.getSelectedItem())
         },
         switchAccount: ui.accountSwitch.isChecked(),
-        findAccountMethod: ui.findAccountImage.attr("bg") === color ? "image" : "text",
+        findAccountMethod: ui.findAccountImage.attr("bg") === color ? "image" : "ocr",
         accountList: AccountList, // 添加账号列表到配置
         shopPrice: {
             text: ui.shopPrice.getSelectedItem(),
@@ -1242,8 +1251,8 @@ function validateConfig(config) {
     config.huocangOffset.y = config.huocangOffset.y != null ? Number(config.huocangOffset.y) : defaultConfig.huocangOffset.y;
 
     // 验证账号识别方式
-    if (!config.findAccountMethod || (config.findAccountMethod !== "image" && config.findAccountMethod !== "text")) {
-        config.findAccountMethod = "image"; // 默认为图片识别
+    if (!config.findAccountMethod || (config.findAccountMethod !== "image" && config.findAccountMethod !== "ocr")) {
+        config.findAccountMethod = "ocr"; // 默认为文字识别
     }
 
     // 验证账号列表
@@ -1272,7 +1281,7 @@ function getDefaultConfig() {
             code: 0
         },
         switchAccount: false,
-        findAccountMethod: "image", // 账号识别方式，默认为图片识别
+        findAccountMethod: "ocr", // 账号识别方式，默认为文字识别
         accountList: [], // 新增账号列表配置
         shopPrice: {
             text: "最低",
@@ -1608,7 +1617,7 @@ function loadConfigToUI() {
     ui.shengcangTime.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-                autoSaveConfig();
+            autoSaveConfig();
         },
         afterTextChanged: function (s) { }
     }));
@@ -1792,12 +1801,14 @@ function startButton() {
     // 输出当前配置
     console.log("=============== 当前配置 ===============");
     console.log("应用版本: " + getAppVersion());
+    console.log("设备分辨率：" + config.deviceScreenSize);
     console.log("选择功能: " + config.selectedFunction.text);
     console.log("种植作物: " + config.selectedCrop.text);
     console.log("种植树木: " + config.selectedTree.text);
     console.log("商店价格: " + config.shopPrice.text);
     console.log("地块查找方法: " + config.landFindMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
+    console.log("账号识别方式: " + config.findAccountMethod);
     // console.log("账号数量: " + config.accountNames.length);
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
@@ -1892,12 +1903,14 @@ function winStartButton() {
     // 输出当前配置
     console.log("=============== 当前配置 ===============");
     console.log("应用版本: " + getAppVersion());
+    console.log("设备分辨率：" + config.deviceScreenSize);
     console.log("选择功能: " + config.selectedFunction.text);
     console.log("种植作物: " + config.selectedCrop.text);
     console.log("种植树木: " + config.selectedTree.text);
     console.log("商店价格: " + config.shopPrice.text);
     console.log("地块查找方法: " + config.landFindMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
+    console.log("账号识别方式: " + config.findAccountMethod);
     // console.log("账号数量: " + config.accountNames.length);
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
@@ -2157,7 +2170,7 @@ function initUI() {
         autoSaveConfig();
     });
     ui.findAccountText.click(() => {
-        setFindAccountMethod("text");
+        setFindAccountMethod("ocr");
         autoSaveConfig();
     });
 }
