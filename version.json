@@ -1,25 +1,25 @@
 {
-  "version": "1.3.5",
-  "description": "\n1.Mumu也能用文字识别账号了\n2.主界面改动，将账号信息单列一栏\n",
+  "version": "1.4.0",
+  "description": "\n新增功能：\n仓库统计功能:\n目前支持pushplus推送加，server酱，wxpusher\n\n修复Bug：\n修复检测切换账号页面Bug\n修复升仓时机Bug\n修复在账号信息UI界面删除时账号的账号显示错误\n修复在切换账号的模式下计时器失效问题\n\n功能优化：\n加快收金币速度\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 21,
+      "versionCode": 22,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 21,
+      "versionCode": 22,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 21,
+      "versionCode": 22,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 21,
+      "versionCode": 22,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {
@@ -31,6 +31,11 @@
       "name": "floatyBtn.js",
       "versionCode": 16,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js"
+    },
+    {
+      "name": "icon_Base64.js",
+      "versionCode": 22,
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/icon_Base64.js"
     },
     {
       "name": "hot_update.js",

@@ -76,6 +76,10 @@ function main() {
 
     if (config.isShengcang) {
         module.shengcang_setTime();
+        log(global.shengcangTimeout)
+    }
+    if (config.isCangkuStatistics) {
+        module.cangkuStatistics_setTime();
     }
 
 
@@ -83,7 +87,7 @@ function main() {
     sleep(1000);
     module.checkmenu();
     sleep(500);
-    if (!config.switchAccount || config.accountList.length == 0) { //不切换账号
+    if (!config.switchAccount || config.accountList.filter(account => account.done).length <= 1) { //不切换账号
         log("不切换账号，找耕地");
         module.huadong();
         sleep(1100);
@@ -93,11 +97,24 @@ function main() {
             module.operation();
             log("等待作物成熟");
 
-            //升仓
+            //执行升仓
             if (config.isShengcang && config.shengcangTime >= 0 && global.shengcangTimeout) {
                 module.shengcang();
                 global.shengcangTimeout = false;
                 module.shengcang_setTime();
+            }
+            //执行仓库统计
+            if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0 && global.cangkuStatisticsTimeout) {
+                //进行仓库统计
+                let rowData = module.cangkuStatistics();
+                //将仓库统计结果转换为表格数据
+                let rowContentData = module.creatContentData("账号", rowData);
+                //在表格前后加入标题，合计列
+                let contentData = module.rowContentData2(rowContentData);
+                //推送
+                module.pushTo(contentData);
+                global.cangkuStatisticsTimeout = false;
+                module.cangkuStatistics_setTime();
             }
 
             while (true) {
@@ -116,11 +133,36 @@ function main() {
                 sleep(1000);
             }
         }
-    } else {  //切换账号
+    }
+
+    //切换账号
+    else {
         log("切换账号");
         while (true) {
 
-            config.accountList.forEach(account => {
+            //新建账号列表
+            const doneAccountsList = config.accountList.filter(account => account.done === true);
+
+            //是否升仓，是否仓库统计
+            let shengcangForEach = false;
+            let cangkuStatisticsForEach = false;
+
+            //设定初始仓库数据
+            let rowContentData = null;
+
+            //判断是否需要升仓
+            if (config.isShengcang && config.shengcangTime >= 0 && global.shengcangTimeout) {
+                shengcangForEach = true;
+                global.shengcangTimeout = false;
+                module.shengcang_setTime();
+            }
+            //判断是否需要仓库统计
+            if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0 && global.cangkuStatisticsTimeout) {
+                cangkuStatisticsForEach = true;
+                global.cangkuStatisticsTimeout = false;
+                module.cangkuStatistics_setTime();
+            }
+            doneAccountsList.forEach(account => {
                 // 检查账号是否启用
                 if (!account.done) {
                     log("账号 " + account.title + " 已禁用，跳过");
@@ -130,18 +172,25 @@ function main() {
                 module.switch_account(account.title);
                 log("============当前账号: " + account.title + "============");
                 module.huadong();
-                log("等待作物成熟");
+                // log("等待作物成熟");
 
-                // 计算下一个账号的信息（在循环外计算一次）
-                let nextAccountIndex = (config.accountList.indexOf(account) + 1) % config.accountList.length;
-                let nextAccount = config.accountList[nextAccountIndex];
+                // 计算下一个账号的信息
+                let nextAccountIndex = (doneAccountsList.indexOf(account) + 1) % doneAccountsList.length;
+                let nextAccount = doneAccountsList[nextAccountIndex];
                 let nextTimerName = nextAccount.title + config.selectedCrop.text;
 
                 module.operation(account.title); //执行刷地，售卖
 
                 //升仓
-                if (config.isShengcang && config.shengcangTime >= 0 && global.shengcangTimeout) {
+                if (shengcangForEach) {
                     module.shengcang(); //执行升仓
+                }
+                //仓库统计
+                if (cangkuStatisticsForEach) {
+                    //执行仓库统计
+                    let rowData = module.cangkuStatistics();
+                    //将仓库统计结果转换为表格数据
+                    rowContentData = module.creatContentData(`账号${account.title}`, rowData, rowContentData);
                 }
                 while (true) {
                     // 获取下一个账号的计时器状态
@@ -156,7 +205,7 @@ function main() {
                     let minutes = Math.floor(nextTimerState.remainingTime / 60);
                     let seconds = nextTimerState.remainingTime % 60;
                     let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
-                    module.showTip(`账号:${nextAccount} ${config.selectedCrop.text}成熟剩余${timeText}`);
+                    module.showTip(`账号:${nextAccount.title} ${config.selectedCrop.text}成熟剩余${timeText}`);
 
                     if (!timerThread.isAlive()) {
                         break;
@@ -165,9 +214,11 @@ function main() {
                 }
                 sleep(1100);
             });
-            if (config.isShengcang && config.shengcangTime >= 0 && global.shengcangTimeout) {
-                global.shengcangTimeout = false;
-                module.shengcang_setTime();
+            if (cangkuStatisticsForEach && rowContentData) {
+                //在表格前后加入标题，合计列
+                let contentData = module.rowContentData2(rowContentData);
+                //推送
+                module.pushTo(contentData);
             }
         }
 

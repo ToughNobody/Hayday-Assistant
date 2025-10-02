@@ -1,5 +1,9 @@
 "ui";
 
+const icon = require("./icon_Base64.js");
+
+// 创建存储对象
+let token_storage = storages.create("token_storage");
 
 
 let engine0 = engines.myEngine();
@@ -37,7 +41,7 @@ files.ensureDir(logDir);
 
 console.setGlobalLogConfig({
     file: logPath, // 日志路径
-    maxFileSize: 1024 * 1024,          // 1MB 后分割
+    maxFileSize: 1024 * 1024 *10,          // 10MB 后分割
     maxBackupSize: 10,                 // 最多保留 10 个备份
     rootLevel: "all",                  // 记录所有级别日志
     filePattern: "%d [%p] %m%n",      // 格式：时间 + 日志级别 + 消息
@@ -249,7 +253,7 @@ ui.layout(
                                     <text text="仓库设置" textSize="16" textStyle="bold" />
                                     {/* 仓库升仓 */}
                                     <horizontal gravity="center_vertical">
-                                        <text text="是否自动升仓" textSize="14" w="120" marginRight="8" />
+                                        <text text="自动升仓" textSize="14" w="120" marginRight="8" />
                                         <Switch id="isShengcang" w="*" h="48" gravity="left|center" />
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
@@ -257,7 +261,26 @@ ui.layout(
                                         <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
                                         <text text="分钟" textSize="14" w="120" marginRight="8" />
                                     </horizontal>
-
+                                    <horizontal gravity="center_vertical">
+                                        <text text="仓库统计" textSize="14" w="120" marginRight="8" />
+                                        <Switch id="isCangkuStatistics" w="*" h="48" gravity="left|center" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="仓库统计间隔时间" textSize="14" w="120" marginRight="8" />
+                                        <input id="cangkuStatisticsTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                        <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="推送方式" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="serverPlatform" entries="Pushplus推送加|Server酱|WxPusher"
+                                            w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical" padding="8">
+                                        <text text="token" textSize="14" w="60" marginRight="12" textColor="#333333" />
+                                        <img id="eyeIcon" w="20dp" h="20dp" src="data:image/png;base64,{{icon.visibility_off}}" />
+                                        <input id="tokenInput" password="true" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" marginRight="8" gravity="center_vertical" />
+                                        <input id="tokenInputPlain" password="false" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" visibility="gone" />
+                                    </horizontal>
                                 </vertical>
                             </card>
 
@@ -973,7 +996,11 @@ ui['AccountList'].on('item_long_click', function (e, item, i) {
     confirm(`确定要删除 "${item.title}" 吗?`)
         .then(ok => {
             if (ok) {
+                // 先从数据中删除
                 AccountList.splice(i, 1);
+
+                // 重新设置数据源并刷新UI
+                ui['AccountList'].setDataSource(AccountList);
                 ui['AccountList'].adapter.notifyDataSetChanged();
 
                 // 保存到配置文件
@@ -1120,6 +1147,8 @@ function getConfig() {
         },
         isShengcang: ui.isShengcang.isChecked(),
         shengcangTime: parseFloat(ui.shengcangTime.text()) ?? defaultConfig.shengcangTime,
+        isCangkuStatistics: ui.isCangkuStatistics.isChecked(),
+        cangkuStatisticsTime: parseFloat(ui.cangkuStatisticsTime.text()) ?? defaultConfig.cangkuStatisticsTime,
         treeShouldSwipe: ui.treeShouldSwipeSwitch.isChecked(),
         liangcangOffset: {
             x: parseInt(ui.liangcangOffsetX.text()) ?? defaultConfig.liangcangOffset.x,
@@ -1128,6 +1157,11 @@ function getConfig() {
         huocangOffset: {
             x: parseInt(ui.huocangOffsetX.text()) ?? defaultConfig.huocangOffset.x,
             y: parseInt(ui.huocangOffsetY.text()) ?? defaultConfig.huocangOffset.y
+        },
+        token: token_storage.get("token", ui.tokenInput.text().toString()),
+        serverPlatform: {
+            text: ui.serverPlatform.getSelectedItem(),
+            code: ["Pushplus推送加", "Server酱","WxPusher"].indexOf(ui.serverPlatform.getSelectedItem())
         },
     };
 }
@@ -1235,6 +1269,16 @@ function validateConfig(config) {
         config.isShengcang = defaultConfig.isShengcang;
     }
 
+    // 验证isCangkuStatistics
+    if (config.isCangkuStatistics == null || typeof config.isCangkuStatistics !== "boolean") {
+        config.isCangkuStatistics = defaultConfig.isCangkuStatistics;
+    }
+
+    // 验证cangkuStatisticsTime
+    if (config.cangkuStatisticsTime == null || isNaN(config.cangkuStatisticsTime) || config.cangkuStatisticsTime < 0) {
+        config.cangkuStatisticsTime = defaultConfig.cangkuStatisticsTime;
+    }
+
     // 验证treeShouldSwipe
     if (config.treeShouldSwipe == null || typeof config.treeShouldSwipe !== "boolean") {
         config.treeShouldSwipe = defaultConfig.treeShouldSwipe;
@@ -1257,6 +1301,14 @@ function validateConfig(config) {
 
     // 验证账号列表
     if (!Array.isArray(config.accountList)) config.accountList = [];
+
+    // 验证token
+    if (config.token == null) config.token = defaultConfig.token;
+
+    // 验证推送方式
+    if (!config.serverPlatform) config.serverPlatform = defaultConfig.serverPlatform;
+
+    config.serverPlatform.text = ["Pushplus推送加", "Server酱","WxPusher"][config.serverPlatform.code];
 
     // 其他验证...
     if (config.photoPath.length == 0) config.photoPath = "./res/pictures.1280_720"
@@ -1318,6 +1370,8 @@ function getDefaultConfig() {
         },
         isShengcang: false,
         shengcangTime: 60,
+        isCangkuStatistics: false,
+        cangkuStatisticsTime: 300,
         treeShouldSwipe: true,
         liangcangOffset: {
             x: 240,
@@ -1326,6 +1380,11 @@ function getDefaultConfig() {
         huocangOffset: {
             x: 340,
             y: -45
+        },
+        token: "",
+        serverPlatform: {
+            text: "Pushplus推送加",
+            code: 0
         },
     };
 }
@@ -1607,6 +1666,14 @@ function loadConfigToUI() {
         afterTextChanged: function (s) { }
     }));
 
+    // 设置token
+    const savedToken = token_storage.get("token", "");
+    ui.tokenInput.setText(savedToken);
+    ui.tokenInputPlain.setText(savedToken);
+
+    // 设置推送方式
+    ui.serverPlatform.setSelection(config.serverPlatform.code);
+
     // 设置随机颜色开关
     ui.randomColor.setChecked(config.randomColor);
 
@@ -1625,10 +1692,30 @@ function loadConfigToUI() {
     // 设置是否自动升仓
     ui.isShengcang.setChecked(config.isShengcang);
 
-    // 为是否自动升仓开关添加变化监听
+    // 为自动升仓开关添加变化监听
     ui.isShengcang.on("check", (checked) => {
         autoSaveConfig();
     });
+
+    // 设置仓库统计开关
+    ui.isCangkuStatistics.setChecked(config.isCangkuStatistics);
+
+    // 为仓库统计开关添加变化监听
+    ui.isCangkuStatistics.on("check", (checked) => {
+        autoSaveConfig();
+    });
+
+    // 设置仓库统计间隔时间
+    ui.cangkuStatisticsTime.setText(String(config.cangkuStatisticsTime));
+
+    // 为仓库统计间隔时间输入框添加变化监听
+    ui.cangkuStatisticsTime.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
 
     // 设置是否自动滑动
     ui.treeShouldSwipeSwitch.setChecked(config.treeShouldSwipe);
@@ -1776,6 +1863,36 @@ ui.btnStop.click(() => {
     stopOtherEngines();
 });
 
+// 输出当前配置日志
+function logCurrentConfig(config, shouldOpenFloatWindow) {
+    console.log("=============== 当前配置 ===============");
+    console.log("应用版本: " + getAppVersion());
+    console.log("设备分辨率：" + config.deviceScreenSize);
+    console.log("选择功能: " + config.selectedFunction.text);
+    console.log("种植作物: " + config.selectedCrop.text);
+    console.log("种植树木: " + config.selectedTree.text);
+    console.log("商店价格: " + config.shopPrice.text);
+    console.log("地块查找方法: " + config.landFindMethod);
+    console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
+    console.log("账号识别方式: " + config.findAccountMethod);
+    // console.log("账号数量: " + config.accountNames.length);
+    console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
+    console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
+    console.log("收割横向偏移: " + config.harvestX + "格");
+    console.log("收割纵向偏移: " + config.harvestY + "格");
+    console.log("收割重复次数: " + config.harvestRepeat + "次");
+    console.log("收割操作用时: " + config.harvestTime + "秒");
+    console.log("粮仓偏移: (" + config.liangcangOffset.x + ", " + config.liangcangOffset.y + "), 货仓偏移 (" + config.huocangOffset.x + ", " + config.huocangOffset.y + ")");
+    console.log("是否升仓: " + (config.isShengcang ? "是" : "否") + ", 升仓间隔时间: " + config.shengcangTime + "分钟");
+    console.log("是否仓库统计: " + (config.isCangkuStatistics ? "是" : "否") + ", 仓库统计间隔时间: " + config.cangkuStatisticsTime + "分钟");
+    console.log("推送方式: " + config.serverPlatform.text);
+    console.log("token: " + "骗你的,不会把token输出到日志,切勿泄漏个人token!!!");
+    console.log("浮动按钮: " + (shouldOpenFloatWindow ? "是" : "否"));
+    // console.log("主题颜色: " + config.themeColor.text);config
+    // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
+    console.log("============================");
+}
+
 function startButton() {
     const config = getConfig();
     saveConfig(config);
@@ -1799,28 +1916,7 @@ function startButton() {
     }
 
     // 输出当前配置
-    console.log("=============== 当前配置 ===============");
-    console.log("应用版本: " + getAppVersion());
-    console.log("设备分辨率：" + config.deviceScreenSize);
-    console.log("选择功能: " + config.selectedFunction.text);
-    console.log("种植作物: " + config.selectedCrop.text);
-    console.log("种植树木: " + config.selectedTree.text);
-    console.log("商店价格: " + config.shopPrice.text);
-    console.log("地块查找方法: " + config.landFindMethod);
-    console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
-    console.log("账号识别方式: " + config.findAccountMethod);
-    // console.log("账号数量: " + config.accountNames.length);
-    console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
-    console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
-    console.log("收割横向偏移: " + config.harvestX + "格");
-    console.log("收割纵向偏移: " + config.harvestY + "格");
-    console.log("收割重复次数: " + config.harvestRepeat + "次");
-    console.log("收割操作用时: " + config.harvestTime + "秒");
-    console.log("粮仓偏移: (" + config.liangcangOffset.x + ", " + config.liangcangOffset.y + "), 货仓偏移 (" + config.huocangOffset.x + ", " + config.huocangOffset.y + ")");
-    console.log("浮动按钮: " + (shouldOpenFloatWindow ? "是" : "否"));
-    // console.log("主题颜色: " + config.themeColor.text);config
-    // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
-    console.log("============================");
+    logCurrentConfig(config, shouldOpenFloatWindow);
 
     switch (config.selectedFunction.code) {
         case 0: // 刷地
@@ -1901,28 +1997,7 @@ function winStartButton() {
     }
 
     // 输出当前配置
-    console.log("=============== 当前配置 ===============");
-    console.log("应用版本: " + getAppVersion());
-    console.log("设备分辨率：" + config.deviceScreenSize);
-    console.log("选择功能: " + config.selectedFunction.text);
-    console.log("种植作物: " + config.selectedCrop.text);
-    console.log("种植树木: " + config.selectedTree.text);
-    console.log("商店价格: " + config.shopPrice.text);
-    console.log("地块查找方法: " + config.landFindMethod);
-    console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
-    console.log("账号识别方式: " + config.findAccountMethod);
-    // console.log("账号数量: " + config.accountNames.length);
-    console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
-    console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
-    console.log("收割横向偏移: " + config.harvestX + "格");
-    console.log("收割纵向偏移: " + config.harvestY + "格");
-    console.log("收割重复次数: " + config.harvestRepeat + "次");
-    console.log("收割操作用时: " + config.harvestTime + "秒");
-    console.log("粮仓偏移: (" + config.liangcangOffset.x + ", " + config.liangcangOffset.y + "), 货仓偏移 (" + config.huocangOffset.x + ", " + config.huocangOffset.y + ")");
-    console.log("浮动按钮: " + (shouldOpenFloatWindow ? "是" : "否"));
-    // console.log("主题颜色: " + config.themeColor.text);config
-    // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
-    console.log("============================");
+    logCurrentConfig(config, shouldOpenFloatWindow);
 
     switch (config.selectedFunction.code) {
         case 0: // 刷地
@@ -2173,6 +2248,64 @@ function initUI() {
         setFindAccountMethod("ocr");
         autoSaveConfig();
     });
+
+    // 为token输入框添加变化监听
+    ui.tokenInput.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            token_storage.put("token", s.toString());
+        },
+        afterTextChanged: function (s) { }
+    }));
+    
+    // 为普通token输入框添加变化监听
+    ui.tokenInputPlain.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            token_storage.put("token", s.toString());
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    // 为eyeIcon添加点击事件
+    ui.eyeIcon.click(() => {
+        // 获取当前token的值
+        const currentToken = ui.tokenInput.getText();
+        
+        // 检查当前输入框是否是密码模式
+        const isPassword = ui.tokenInput.attr("password") === "true";
+        
+        if (isPassword) {
+            // 如果是密码模式，则切换为显示模式
+            ui.tokenInput.attr("password", "false");
+            ui.tokenInputPlain.setText(token_storage.get("token", ""));
+            ui.tokenInputPlain.setVisibility(0); // 显示普通输入框
+            ui.tokenInput.setVisibility(8); // 隐藏密码输入框
+            ui.eyeIcon.attr("src", "data:image/png;base64," + icon.visibility);
+            // toast("Token已显示");
+        } else {
+            // 如果是显示模式，则切换为密码模式
+            ui.tokenInput.attr("password", "true");
+            ui.tokenInput.setText(token_storage.get("token", ""));
+            ui.tokenInputPlain.setVisibility(8); // 隐藏普通输入框
+            ui.tokenInput.setVisibility(0); // 显示密码输入框
+            ui.eyeIcon.attr("src", "data:image/png;base64," + icon.visibility_off);
+            // toast("Token已隐藏");
+        }
+    });
+
+    
+    
+
+    // 为推送方式选择器添加监听
+    ui.serverPlatform.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            const item = parent.getItemAtPosition(position).toString();
+            console.log("推送方式选择发生变化: " + item);
+            autoSaveConfig();
+        },
+        onNothingSelected: function (parent) { }
+    }));
 }
 
 /**
