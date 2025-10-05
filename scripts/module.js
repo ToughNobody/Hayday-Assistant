@@ -11,6 +11,7 @@ let content = files.read(configPath);
 let config = JSON.parse(content);
 
 let token_storage = storages.create("token_storage");
+let timeStorage = storages.create("times");
 
 const cropItemColor = {
     "小麦": {
@@ -209,95 +210,191 @@ function restartgame() {
     }
     sleep(1000);
     launch("com.supercell.hayday");
-    events.broadcast.emit("engine_r", "刷地引擎");
+
+    // 确保旧引擎资源已清理后再触发重启
+    try {
+        // 检查是否有旧引擎存在
+        if (typeof engineIds !== "undefined" && engineIds.shuadi) {
+            console.log("等待旧引擎资源清理...");
+            sleep(500); // 给旧引擎一些时间清理资源
+        }
+
+        // 触发引擎重启事件
+        events.broadcast.emit("engine_r", "刷地引擎");
+        console.log("已发送引擎重启事件");
+    } catch (e) {
+        console.error("触发引擎重启事件失败:", e);
+    }
 
 }
 
 //悬浮窗
-function showTip(text, duration = 3000) {
+
+function createWindow(position) {
     try {
-        // 检查text参数
-        if (text === null || text === undefined) {
-            console.error("showTip: text参数不能为null或undefined");
-            return;
+        // 创建悬浮窗
+        window = floaty.rawWindow(
+            <frame gravity="right|bottom" bg="#00000000" margin="0">
+                <card
+                    w="*"
+                    h="auto"
+                    cardCornerRadius="26"
+                    cardElevation="4dp"
+                    cardBackgroundColor="#60000000"
+                    foreground="?selectableItemBackground"
+                    layout_gravity="center"
+                >
+                    <vertical w="auto" h="auto" padding="0 0">
+                        <text
+                            id="text"
+                            singleLine="false"
+                            minWidth="100"
+                            w="auto"
+                            maxWidth="500"
+                            textSize="12"
+                            textColor="#FFFFFF"
+                            padding="10 6"
+                            text=""
+                            gravity="center"
+                        />
+                    </vertical>
+                </card>
+            </frame>
+        );
+        // 确保window和window.text对象存在
+        if (!window || !window.text) {
+            throw new Error("悬浮窗创建失败");
         }
 
         // 预先计算位置
-        const targetX = device.width * config.showText.x;
-        const targetY = device.height * config.showText.y;
+        let targetX, targetY;
+        if (position) {
+            // 使用传入的坐标
+            targetX = device.width * position.x;
+            targetY = device.height * position.y;
+        } else {
+            // 使用默认配置
+            targetX = device.width * config.showText.x;
+            targetY = device.height * config.showText.x;
+        }
+        // 设置位置和不可触摸，退出时关闭
+        window.setPosition(targetX, targetY);
+        window.setTouchable(false);
 
-        // 移除旧悬浮窗（避免重复创建）
-        const oldTip = ui["__tip_window"];
-        if (oldTip) {
-            try {
-                oldTip.close();
-            } catch (e) {
-                console.error("关闭旧悬浮窗失败:", e);
-            }
+        // 保存引用以便后续使用
+        ui["tip_window"] = window;
+
+    } catch (e) {
+        console.error("createTipWindow函数执行失败:", e);
+    }
+}
+
+function showTip(text) {
+
+    if (ui["tip_window"]) {
+        ui.run(function () {
+            window.text.setText(text);
+        })
+    }
+}
+
+function showDetails(text, position, duration) {
+    try {
+        // 创建悬浮窗
+        window_details = floaty.rawWindow(
+            <frame gravity="right|bottom" bg="#00000000" margin="0">
+                <card
+                    w="*"
+                    h="auto"
+                    cardCornerRadius="26"
+                    cardElevation="4dp"
+                    cardBackgroundColor="#60000000"
+                    foreground="?selectableItemBackground"
+                    layout_gravity="center"
+                >
+                    <vertical w="auto" h="auto" padding="0 0">
+                        <text
+                            id="text"
+                            singleLine="false"
+                            minWidth="100"
+                            w="auto"
+                            maxWidth="500"
+                            textSize="12"
+                            textColor="#FFFFFF"
+                            padding="10 6"
+                            text=""
+                            gravity="center"
+                        />
+                    </vertical>
+                </card>
+            </frame>
+        );
+        // 确保window_details和window_details.text对象存在
+        if (!window_details || !window_details.text) {
+            throw new Error("悬浮窗创建失败");
         }
 
-        // 使用UI线程创建悬浮窗
-        ui.run(() => {
-            try {
-                // 创建新悬浮窗
-                const window = floaty.rawWindow(
-                    <frame gravity="right|bottom" bg="#00000000" margin="0">
-                        <card
-                            w="*"
-                            h="auto"
-                            cardCornerRadius="26"
-                            cardElevation="4dp"
-                            cardBackgroundColor="#60000000"
-                            foreground="?selectableItemBackground"
-                            layout_gravity="center"
-                        >
-                            <horizontal w="auto" h="auto" padding="0 0">
-                                <text
-                                    id="text"
-                                    singleLine="false"
-                                    minWidth="100"
-                                    w="auto"
-                                    maxWidth="500"
-                                    textSize="12"
-                                    textColor="#FFFFFF"
-                                    padding="10 6"
-                                    text={String(text)}
-                                    gravity="center"
-                                />
-                            </horizontal>
-                        </card>
-                    </frame>
-                );
+        // 预先计算位置
+        let targetX, targetY;
+        if (position) {
+            // 使用传入的坐标
+            targetX = device.width * position.x;
+            targetY = device.height * position.y;
+        } else {
+            // 使用默认配置
+            targetX = device.width * config.showText.x;
+            targetY = device.height * config.showText.x;
+        }
+        // 设置位置和不可触摸，退出时关闭
+        window_details.setPosition(targetX, targetY);
+        window_details.setTouchable(false);
 
-                // 确保window和window.text对象存在
-                if (!window || !window.text) {
-                    throw new Error("悬浮窗创建失败");
-                }
-
-                // 先设置位置，再设置可见性
-                window.setPosition(targetX, targetY);
-                window.setTouchable(false);
-
-                // 保存引用以便后续关闭
-                ui["__tip_window"] = window;
-
-                // 自动关闭（如果设置了duration）
-                if (duration > 0) {
-                    setTimeout(() => {
-                        try {
-                            if (window) window.close();
-                        } catch (e) {
-                            console.error("关闭悬浮窗失败:", e);
-                        }
-                    }, duration);
-                }
-            } catch (e) {
-                console.error("UI线程中创建悬浮窗失败:", e);
-            }
-        });
     } catch (e) {
-        console.error("showTip函数执行失败:", e);
+        console.error("createTipWindow函数执行失败:", e);
     }
+
+    ui.run(function () {
+        window_details.text.setText(text);
+    })
+
+    ui.run(() => {
+        if (duration > 0) {
+            setTimeout(() => {
+                try {
+                    if (window_details) window_details.close();
+                } catch (e) {
+                    console.error("关闭悬浮窗失败:", e);
+                }
+            }, duration);
+        }
+    })
+
+
+}
+
+function getDetails() {
+    let details = "";
+    if (config.isShengcang && config.shengcangTime >= 0) {
+        let shengcangTimeState = getTimerState("shengcangTime");
+        if (shengcangTimeState) {
+            let minutes = Math.floor(shengcangTimeState / 60);
+            let seconds = shengcangTimeState % 60;
+            let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+            details += `升仓剩余时间: ${timeText}\n`;
+        }
+    }
+
+    if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0) {
+        let cangkuStatisticsTimeState = getTimerState("cangkuStatisticsTime");
+        if (cangkuStatisticsTimeState) {
+            let minutes = Math.floor(cangkuStatisticsTimeState / 60);
+            let seconds = cangkuStatisticsTimeState % 60;
+            let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+            details += `仓库统计剩余时间: ${timeText}\n`;
+        }
+    }
+
+    return details;
 }
 
 
@@ -441,161 +538,181 @@ function findMC(checkPoints, screenshot, region, threshold = 16) {
 }
 
 function findNum(sc, region, xiangsidu = 32, mode = 1) {
+    // 参数验证
+    if (!sc || typeof sc.getWidth !== "function") {
+        console.warn("findNum: 无效的截图参数");
+        return [];
+    }
+
     if (mode == 1) {
         itemColor = numColor;
     } else if (mode == 2) {
         itemColor = ckNumColor;
     }
+
     // 查找所有匹配的坐标
     let matches1 = [];
-    let sc = sc ? sc : captureScreen();
-    let region = region ? region : [0, 0, sc.getWidth(), sc.getHeight()];  // 搜索区域
-    let xiangsidu = xiangsidu ? xiangsidu : 32; // 相似度
 
-    // console.log("findNum函数开始执行，搜索区域:", region, "相似度:", xiangsidu);
+    // 使用try-finally确保截图资源被回收
+    try {
+        // 确定搜索区域
+        region = region ? region : [0, 0, sc.getWidth(), sc.getHeight()];
+        xiangsidu = xiangsidu ? xiangsidu : 32;
 
-    // 首先遍历所有可能的数字/符号，查找最左侧的数字
-    Object.keys(itemColor).forEach((key) => {
-        let color = itemColor[key];
-        // console.log("正在查找数字/符号:", key);
-        let result = findMC(color, sc, region, xiangsidu);
-        if (result) {
-            // console.log(`找到数字/符号: ${key} 坐标: (${result.x}, ${result.y})`);
-            matches1.push({
-                key: key,
-                x: result.x,
-                y: result.y
-            });
-        }
-    });
+        // console.log("findNum函数开始执行，搜索区域:", region, "相似度:", xiangsidu);
 
-    // 如果没有找到任何匹配，返回空数组
-    if (matches1.length === 0) {
-        // console.log("未找到任何匹配，返回空数组");
-        return [];
-    }
-
-    // 按X坐标从小到大排序，找到最左侧的数字
-    matches1.sort((a, b) => a.x - b.x);
-    let firstDigit = matches1[0];
-
-    // 用于存储最终结果的数组
-    let finalResults = [firstDigit];
-
-    // 设置初始搜索区域为第一个数字的右侧到区域最右侧
-    let startX = firstDigit.x + 1;
-    let regionWidth = region[2] - (startX - region[0]);
-    // console.log(`第一个数字的X坐标: ${firstDigit.x}，新搜索区域起点X: ${startX}，剩余宽度: ${regionWidth}`);
-
-    // 如果剩余区域宽度小于30，直接返回第一个数字
-    if (regionWidth < 30) {
-        // console.log("剩余区域宽度小于30，直接返回第一个数字");
-        return [firstDigit.key];
-    }
-
-    // 设置新的搜索区域
-    let currentRegion = [
-        startX,
-        region[1],
-        regionWidth,
-        region[3]
-    ];
-    // console.log("设置新的搜索区域:", currentRegion);
-
-    // 循环查找直到没有更多匹配或区域宽度小于30
-    let iterationCount = 0;
-    let lastFoundX = firstDigit.x; // 记录上次找到的X坐标，用于防止死循环
-
-    while (true) {
-        iterationCount++;
-        // console.log(`开始第${iterationCount}次循环，当前搜索区域:`, currentRegion);
-
-        let foundInThisIteration = false;
-        let currentMatches = [];
-
-        // 在当前区域内查找所有匹配
+        // 首先遍历所有可能的数字/符号，查找最左侧的数字
         Object.keys(itemColor).forEach((key) => {
             let color = itemColor[key];
-            let result = findMC(color, sc, currentRegion, xiangsidu);
+            // console.log("正在查找数字/符号:", key);
+            let result = findMC(color, sc, region, xiangsidu);
             if (result) {
-                currentMatches.push({
+                // console.log(`找到数字/符号: ${key} 坐标: (${result.x}, ${result.y})`);
+                matches1.push({
                     key: key,
                     x: result.x,
                     y: result.y
                 });
-                foundInThisIteration = true;
             }
         });
 
-        // 如果当前区域没有找到匹配，结束循环
-        if (!foundInThisIteration) {
-            // console.log(`第${iterationCount}次循环未找到匹配，结束循环`);
-            break;
+        // 如果没有找到任何匹配，返回空数组
+        if (matches1.length === 0) {
+            // console.log("未找到任何匹配，返回空数组");
+            return [];
         }
 
-        // console.log(`第${iterationCount}次循环找到${currentMatches.length}个匹配`);
+        // 按X坐标从小到大排序，找到最左侧的数字
+        matches1.sort((a, b) => a.x - b.x);
+        let firstDigit = matches1[0];
 
-        // 找到X坐标最小的匹配
-        currentMatches.sort((a, b) => a.x - b.x);
-        let leftmostMatch = currentMatches[0];
-        // console.log(`第${iterationCount}次循环找到最左侧的数字: ${leftmostMatch.key} 坐标: (${leftmostMatch.x}, ${leftmostMatch.y})`);
+        // 用于存储最终结果的数组
+        let finalResults = [firstDigit];
 
-        // 检查是否与上次找到的数字位置相同，或者坐标超出当前搜索区域
-        if (leftmostMatch.x === lastFoundX ||
-            leftmostMatch.x - lastFoundX <= 5 ||
-            leftmostMatch.x < currentRegion[0] ||
-            leftmostMatch.x >= currentRegion[0] + currentRegion[2]) {
-            // console.log(`检测到问题坐标 (${leftmostMatch.x})，将搜索区域向右移动1像素`);
+        // 设置初始搜索区域为第一个数字的右侧到区域最右侧
+        let startX = firstDigit.x + 1;
+        let regionWidth = region[2] - (startX - region[0]);
+        // console.log(`第一个数字的X坐标: ${firstDigit.x}，新搜索区域起点X: ${startX}，剩余宽度: ${regionWidth}`);
 
-            // 检查搜索区域宽度是否已经小于等于0
-            if (currentRegion[2] <= 0) {
-                // console.log("搜索区域宽度已经小于等于0，结束循环");
+        // 如果剩余区域宽度小于30，直接返回第一个数字
+        if (regionWidth < 30) {
+            // console.log("剩余区域宽度小于30，直接返回第一个数字");
+            return [firstDigit.key];
+        }
+
+        // 设置新的搜索区域
+        let currentRegion = [
+            startX,
+            region[1],
+            regionWidth,
+            region[3]
+        ];
+        // console.log("设置新的搜索区域:", currentRegion);
+
+        // 循环查找直到没有更多匹配或区域宽度小于30
+        let iterationCount = 0;
+        let lastFoundX = firstDigit.x; // 记录上次找到的X坐标，用于防止死循环
+
+        while (true) {
+            iterationCount++;
+            // console.log(`开始第${iterationCount}次循环，当前搜索区域:`, currentRegion);
+
+            let foundInThisIteration = false;
+            let currentMatches = [];
+
+            // 在当前区域内查找所有匹配
+            Object.keys(itemColor).forEach((key) => {
+                let color = itemColor[key];
+                let result = findMC(color, sc, currentRegion, xiangsidu);
+                if (result) {
+                    currentMatches.push({
+                        key: key,
+                        x: result.x,
+                        y: result.y
+                    });
+                    foundInThisIteration = true;
+                }
+            });
+
+            // 如果当前区域没有找到匹配，结束循环
+            if (!foundInThisIteration) {
+                // console.log(`第${iterationCount}次循环未找到匹配，结束循环`);
                 break;
             }
 
-            // 将搜索区域向右移动1像素
-            currentRegion[0] += 1;
-            currentRegion[2] -= 1;
-            // console.log(`调整后的搜索区域:`, currentRegion);
+            // console.log(`第${iterationCount}次循环找到${currentMatches.length}个匹配`);
+
+            // 找到X坐标最小的匹配
+            currentMatches.sort((a, b) => a.x - b.x);
+            let leftmostMatch = currentMatches[0];
+            // console.log(`第${iterationCount}次循环找到最左侧的数字: ${leftmostMatch.key} 坐标: (${leftmostMatch.x}, ${leftmostMatch.y})`);
+
+            // 检查是否与上次找到的数字位置相同，或者坐标超出当前搜索区域
+            if (leftmostMatch.x === lastFoundX ||
+                leftmostMatch.x - lastFoundX <= 5 ||
+                leftmostMatch.x < currentRegion[0] ||
+                leftmostMatch.x >= currentRegion[0] + currentRegion[2]) {
+                // console.log(`检测到问题坐标 (${leftmostMatch.x})，将搜索区域向右移动1像素`);
+
+                // 检查搜索区域宽度是否已经小于等于0
+                if (currentRegion[2] <= 0) {
+                    // console.log("搜索区域宽度已经小于等于0，结束循环");
+                    break;
+                }
+
+                // 将搜索区域向右移动1像素
+                currentRegion[0] += 1;
+                currentRegion[2] -= 1;
+                // console.log(`调整后的搜索区域:`, currentRegion);
+
+                // 更新上次找到的X坐标
+                lastFoundX = leftmostMatch.x;
+                continue; // 跳过本次循环，重新查找
+            }
 
             // 更新上次找到的X坐标
             lastFoundX = leftmostMatch.x;
-            continue; // 跳过本次循环，重新查找
+
+            // 添加到最终结果
+            finalResults.push(leftmostMatch);
+
+            // 更新搜索区域，排除已找到的部分
+            let foundX = leftmostMatch.x;
+            regionWidth = currentRegion[2] - (foundX + 1 - currentRegion[0]);
+            // console.log(`找到数字的X坐标: ${foundX}，新剩余宽度: ${regionWidth}`);
+
+            // 如果剩余区域宽度小于30，结束循环
+            if (regionWidth < 30) {
+                // console.log("剩余区域宽度小于30，结束循环");
+                break;
+            }
+
+            // 更新搜索区域为已找到位置的右侧
+            currentRegion = [
+                foundX + 1,
+                currentRegion[1],
+                regionWidth,
+                currentRegion[3]
+            ];
+            // console.log("更新后的搜索区域:", currentRegion);
         }
 
-        // 更新上次找到的X坐标
-        lastFoundX = leftmostMatch.x;
+        // 按X坐标对最终结果进行排序
+        finalResults.sort((a, b) => a.x - b.x);
+        // console.log("最终识别结果:", finalResults.map(item => item.key).join(''));
 
-        // 添加到最终结果
-        finalResults.push(leftmostMatch);
-
-        // 更新搜索区域，排除已找到的部分
-        let foundX = leftmostMatch.x;
-        regionWidth = currentRegion[2] - (foundX + 1 - currentRegion[0]);
-        // console.log(`找到数字的X坐标: ${foundX}，新剩余宽度: ${regionWidth}`);
-
-        // 如果剩余区域宽度小于30，结束循环
-        if (regionWidth < 30) {
-            // console.log("剩余区域宽度小于30，结束循环");
-            break;
+        // 返回识别到的数字/符号的键值
+        return finalResults.map(item => item.key).join('');
+    } finally {
+        // 如果是内部创建的截图，确保回收
+        if (sc && typeof sc.recycle === "function") {
+            try {
+                sc.recycle();
+            } catch (e) {
+                console.error("回收截图资源失败:", e);
+            }
         }
-
-        // 更新搜索区域为已找到位置的右侧
-        currentRegion = [
-            foundX + 1,
-            currentRegion[1],
-            regionWidth,
-            currentRegion[3]
-        ];
-        // console.log("更新后的搜索区域:", currentRegion);
     }
-
-    // 按X坐标对最终结果进行排序
-    finalResults.sort((a, b) => a.x - b.x);
-    // console.log("最终识别结果:", finalResults.map(item => item.key).join(''));
-
-    // 返回识别到的数字/符号的键值
-    return finalResults.map(item => item.key).join('');
 }
 
 //checkmenu 检查主菜单
@@ -613,7 +730,6 @@ function findNum(sc, region, xiangsidu = 32, mode = 1) {
  * }
  */
 function checkmenu() {
-
     const MAX_RETRY = 30; // 最大尝试次数（30秒）
     const RETRY_INTERVAL = 1000; // 每次检测间隔（毫秒）
 
@@ -621,15 +737,18 @@ function checkmenu() {
         let sc = null;
 
         try {
+            // 获取截图
+            sc = captureScreen();
+
             //新版界面
             let allMatch = matchColor([{ x: 47, y: 177, color: "#ffffff" },
             { x: 70, y: 662, color: "#2664aa" },
-            { x: 1213, y: 661, color: "#f2ded3" }]);
+            { x: 1213, y: 661, color: "#f2ded3" }], sc);
 
             //老板界面
             let allMatch2 = matchColor([{ x: 39, y: 177, color: "#ffffff" },
             { x: 68, y: 654, color: "#2662a9" },
-            { x: 1208, y: 659, color: "#f0e0d6" }]);
+            { x: 1208, y: 659, color: "#f0e0d6" }], sc);
 
             if (allMatch || allMatch2) {
                 log(`第 ${i + 1} 次检测: 已进入主界面`);
@@ -638,18 +757,36 @@ function checkmenu() {
             }
         } catch (e) {
             console.error("检测过程中出错:", e);
-            // return false;
         } finally {
-
+            // 确保截图资源被回收
+            if (sc && typeof sc.recycle === "function") {
+                try {
+                    sc.recycle();
+                } catch (e) {
+                    console.error("回收截图资源失败:", e);
+                }
+                sc = null;
+            }
         }
 
         //未找到则等待
         sleep(RETRY_INTERVAL);
         log(`第 ${i + 1} 次检测: 未找到菜单，继续等待...`);
         showTip(`第 ${i + 1} 次检测: 未找到菜单，继续等待...`);
+
+        // 再次获取截图并处理
         sc = captureScreen();
         find_close(sc);
-        sc.recycle();
+
+        // 确保截图资源被回收
+        if (sc && typeof sc.recycle === "function") {
+            try {
+                sc.recycle();
+            } catch (e) {
+                console.error("回收截图资源失败:", e);
+            }
+            sc = null;
+        }
     }
 
     // 超过最大重试次数
@@ -1261,7 +1398,7 @@ function shop() {
  */
 function find_close(screenshot1, action = null) {
     let sc = screenshot1 || captureScreen();
-    // log("寻找关闭按钮")
+
     //识别叉叉
     let close_button = findimage(files.join(config.photoPath, "close.png"), 0.8, sc);//大×
     if (!close_button) {
@@ -1315,7 +1452,7 @@ function find_close(screenshot1, action = null) {
         showTip("升级了！")
         click(637 + ran(), 642 + ran());
         sleep(2000);
-        checkmenu();
+        find_close();
         return "levelup";
     }
 
@@ -1371,9 +1508,21 @@ function find_close(screenshot1, action = null) {
     if (daocaoren) {
         log("识别到稻草人");
         showTip("识别到稻草人");
+        click(1055 + ran(), 600 + ran());
         jiaocheng();
         return true;
     }
+
+    let tiaoguo = matchColor([{ x: 1044, y: 624, color: "#f6cd4f" }, { x: 994, y: 608, color: "#ffffff" }, { x: 1002, y: 624, color: "#ffffff" },
+    { x: 994, y: 638, color: "#ffffff" }, { x: 984, y: 626, color: "#f7b430" }, { x: 1218, y: 626, color: "#f6b22c" }],
+        screenshot = sc);
+    if (tiaoguo) {
+        log("加载界面:跳过");
+        showTip("加载界面:跳过");
+        click(1100 + ran(), 630 + ran());
+        return true;
+    }
+
     return false;
 }
 
@@ -1387,20 +1536,63 @@ function find_close(screenshot1, action = null) {
  * @param {*} 
  */
 function jiaocheng() {
+    sleep(1000);
+    let tryNum = 0;
     while (true) {
+        for (let i = 0; i < 5; i++) {
+            let sc = captureScreen();
+            //识别稻草人
+            let daocaoren = matchColor([{ x: 86, y: 406, color: "#bbb2e7" },
+            { x: 166, y: 372, color: "#282b38" },
+            { x: 162, y: 394, color: "#ce9b00" }], sc);
+            //识别到绿色按钮
+            let greenButton = matchColor([{ x: 1075, y: 571, color: "#70bb55" },
+            { x: 1096, y: 599, color: "#6ab952" }, { x: 1123, y: 559, color: "#73be52" },
+            { x: 1097, y: 541, color: "#f7e160" }, { x: 1149, y: 597, color: "#f7c439" },
+            { x: 1065, y: 624, color: "#f7c13c" }], sc);
+            if (daocaoren) {
+                log("识别到稻草人，点击");
+                showTip("识别到稻草人，点击");
+                click(1055 + ran(), 600 + ran());
+                i = 0; //重置i
+            } else if (greenButton) {
+                log("点击绿色按钮");
+                showTip("点击绿色按钮");
+                click(1100 + ran(), 600 + ran());
+                i = 0; //重置i
+            } else {
+                log(`第${i}次未识别到教程界面`);
+                showTip(`第${i}次未识别到教程界面`)
+            }
+            find_close(sc);
+            sleep(1000);
+
+        }
+        //识别主界面
+        sleep(1000);
         let sc = captureScreen();
-        //识别稻草人
-        let jiaocheng20 = matchColor([{ x: 86, y: 406, color: "#bbb2e7" },
-        { x: 166, y: 372, color: "#282b38" },
-        { x: 162, y: 394, color: "#ce9b00" }], sc);
-        if (jiaocheng20) {
-            log("识别到稻草人，点击");
-            showTip("识别到稻草人，点击");
-            click(1055 + ran(), 600 + ran());
-            sleep(300);
-            click(1055 + ran(), 600 + ran());
+        //新版界面
+        let allMatch = matchColor([{ x: 47, y: 177, color: "#ffffff" },
+        { x: 70, y: 662, color: "#2664aa" },
+        { x: 1213, y: 661, color: "#f2ded3" }], sc);
+
+        //老板界面
+        let allMatch2 = matchColor([{ x: 39, y: 177, color: "#ffffff" },
+        { x: 68, y: 654, color: "#2662a9" },
+        { x: 1208, y: 659, color: "#f0e0d6" }], sc);
+
+        if (allMatch || allMatch2) {
+            log(`教程：已进入主界面`);
+            showTip(`教程：已进入主界面`);
         } else {
-            break;
+            log(`教程：未进入主界面`);
+            showTip(`教程：未进入主界面`);
+            tryNum++;
+        }
+        if (tryNum > 3) {
+            log(`教程：超过最大尝试次数，重进游戏`);
+            showTip(`教程：超过最大尝试次数，重进游戏`);
+            restartgame();
         }
         sleep(1000);
     }
@@ -1413,14 +1605,21 @@ function switch_account(Account) {
         showTip("切换账号" + Account);
         sleep(700)
 
-        let huanhao1 = matchColor([{ x: 44, y: 189, color: "#ffffff" }, { x: 40, y: 166, color: "#ffffff" }, { x: 51, y: 206, color: "#f3bb00" }]);
-
-        let sc = captureScreen();
-        find_close(sc);
-        sc.recycle();
+        find_close();
         sleep(300);
 
-        if (huanhao1) {
+        let sc = captureScreen();
+        //新版界面
+        let allMatch = matchColor([{ x: 47, y: 177, color: "#ffffff" },
+        { x: 70, y: 662, color: "#2664aa" },
+        { x: 1213, y: 661, color: "#f2ded3" }], sc);
+
+        //老板界面
+        let allMatch2 = matchColor([{ x: 39, y: 177, color: "#ffffff" },
+        { x: 68, y: 654, color: "#2662a9" },
+        { x: 1208, y: 659, color: "#f0e0d6" }], sc);
+
+        if (allMatch || allMatch2) {
             click(41 + ran(), 184 + ran());
         }
         sleep(700);
@@ -1434,7 +1633,6 @@ function switch_account(Account) {
                 find_close();
                 sleep(200);
                 find_close();
-                // 继续循环而不是递归调用
                 continue;
             } else {
                 console.log("超过最大尝试次数，重进游戏")
@@ -1657,56 +1855,48 @@ function shengcang() {
  * 启动一个新的计时器
  * @param {string} timer_Name - 计时器的唯一标识名称（用于区分不同计时器）
  * @param {number} [seconds=120] - 计时时长（单位：秒，默认120秒）
- * @example
- * // 启动一个90秒的计时器
- * timer("任务倒计时", 90);
  */
 function timer(timer_Name, seconds = 120) {
-    // 停止已有同名计时器
-    if (timerMap.has(timer_Name)) {
-        timerMap.get(timer_Name).interrupt();
-    }
 
-    // 创建一个对象来存储每个计时器的状态
-    if (!global.timerStates) {
-        global.timerStates = {};
-    }
+    // 计算结束时间（当前时间 + 需要计时的时间）
+    let currentTime = new Date().getTime();
+    let startTime = currentTime;
+    let duration = seconds;
+    let endTime = currentTime + seconds * 1000;
 
-    global.timerThread = threads.start(function () {
-        for (let i = seconds; i >= 0; i--) {
-            // log(`${timer_Name} 剩余时间: ${i}秒`);
-            // 将剩余时间存储在计时器特定的状态对象中
-            global.timerStates[timer_Name] = {
-                remainingTime: i,
-                name: timer_Name
-            };
-
-            sleep(1000);
-        }
-
-        timerMap.delete(timer_Name);
-        // 清理计时器状态
-        if (global.timerStates && global.timerStates[timer_Name]) {
-            delete global.timerStates[timer_Name];
-        }
+    // 保存计时器信息到存储中
+    timeStorage.put(timer_Name, {
+        startTime: startTime,
+        duration: duration,
+        endTime: endTime
     });
-
-    timerMap.set(timer_Name, timerThread);
 }
 
 // 获取特定计时器的状态
 function getTimerState(timer_Name) {
-    if (global.timerStates && global.timerStates[timer_Name]) {
-        return global.timerStates[timer_Name];
+
+    // 从存储中获取计时器信息
+    const timerInfo = timeStorage.get(timer_Name);
+    if (!timerInfo) {
+        return null;
     }
-    return null;
+
+    // 获取当前时间
+    const currentTime = new Date().getTime();
+
+    // 计算剩余时间
+    const remainingTime = Math.max(0, Math.ceil((timerInfo.endTime - currentTime) / 1000));
+
+    return remainingTime;
 }
 
+// 停止计时器
 function stopTimer(timer_Name) {
-    if (timerMap.has(timer_Name)) {
-        timerMap.get(timer_Name).interrupt();
-        timerMap.delete(timer_Name);
 
+    // 从存储中删除计时器信息
+    if (timeStorage.contains(timer_Name)) {
+        timeStorage.remove(timer_Name);
+        log(`已停止计时器: ${timer_Name}`);
     } else {
         log(`未找到计时器: ${timer_Name}`);
     }
@@ -1725,17 +1915,17 @@ function plantCrop() {
     } else {
         console.log("未找到小麦");
         showTip("未找到" + config.selectedCrop.text);
-        let next_button = findMC(["#ffffff",
-            [-30, 12, "#ffffff"], [-17, 28, "#f5bd00"],
-            [-242, 28, "#f5bd00"], [-257, 0, "#ffffff"]]);
+        let next_button = findMC(["#ffffff", [17, -1, "#ffffff"], [31, 0, "#fdbe00"], [10, 12, "#ffffff"],
+            [-13, 12, "#ffffff"], [-11, -15, "#ffffff"], [-3, -17, "#f5dd38"], [-2, 23, "#f5c200"],
+            [31, 4, "#fdbb00"], [32, 30, "#fffcf0"], [-18, 1, "#fac400"], [-25, 3, "#fcbb00"]]);
 
         if (next_button) {
             let maxTries = 10;
             let tries = 0;
             while (tries < maxTries && next_button) {
-                next_button = findMC(["#ffffff",
-                    [-30, 12, "#ffffff"], [-17, 28, "#f5bd00"],
-                    [-242, 28, "#f5bd00"], [-257, 0, "#ffffff"]]);
+                next_button = findMC(["#ffffff", [17, -1, "#ffffff"], [31, 0, "#fdbe00"], [10, 12, "#ffffff"],
+                    [-13, 12, "#ffffff"], [-11, -15, "#ffffff"], [-3, -17, "#f5dd38"], [-2, 23, "#f5c200"],
+                    [31, 4, "#fdbb00"], [32, 30, "#fffcf0"], [-18, 1, "#fac400"], [-25, 3, "#fcbb00"]]);
                 click(next_button.x + ran(), next_button.y + ran());
                 sleep(1000);
                 center_wheat = findMC(crop);
@@ -1751,6 +1941,13 @@ function plantCrop() {
                 log("未找到下一个按钮，检查界面");
                 let close = find_close();
                 if (close == "levelup") {
+                    sleep(500);
+                    plantCrop();
+                }
+            } else {
+                let close = find_close();
+                if (close == "levelup") {
+                    log("因为升级，重新种植");
                     plantCrop();
                 }
             }
@@ -1840,6 +2037,12 @@ function operation(Account) {
                     plantCrop();
                 }
             }
+        } else {
+            let close = find_close();
+            if (close == "levelup") {
+                log("因为升级，重新种植");
+                plantCrop();
+            }
         }
     }
     // sleep(500);
@@ -1851,14 +2054,12 @@ function operation(Account) {
         console.error("种植harvest出错:", e);
     }
     //设定计时器
-    let timerName = config.switchAccount ? Account + config.selectedCrop.text : config.selectedCrop.text;
+    let timerName = config.switchAccount ? Account + "计时器" : config.selectedCrop.text;
     if (config.selectedCrop.code == 0) timer(timerName, 115);
     else if (config.selectedCrop.code == 1) timer(timerName, 295);
     else if (config.selectedCrop.code == 2) timer(timerName, 595);
-    else if (config.selectedCrop.code == 3) timer(timerName, 1193);
+    else if (config.selectedCrop.code == 3) timer(timerName, 1195);
 
-    // 保存当前计时器名称，以便在其他地方使用
-    global.currentTimerName = timerName;
     //打开路边小店
     sleep(500);
     //缩放
@@ -1874,30 +2075,6 @@ function operation(Account) {
     shop();
 }
 
-
-/**
- *  @description 设置定时器，用于判断是否需要进行升仓
- */
-function shengcang_setTime() {
-    log("设置升仓时间" + config.shengcangTime);
-    threads.start(() => {
-        setTimeout(() => {
-            global.shengcangTimeout = true;
-        }, config.shengcangTime * 60 * 1000);
-    })
-}
-
-/**
- *  @description 设置定时器，用于判断是否需要进行仓库统计
- */
-function cangkuStatistics_setTime() {
-    log("设置仓库统计时间" + config.cangkuStatisticsTime);
-    threads.start(() => {
-        setTimeout(() => {
-            global.cangkuStatisticsTimeout = true;
-        }, config.cangkuStatisticsTime * 60 * 1000);
-    })
-}
 
 
 /**
@@ -2173,7 +2350,7 @@ function rowContentData2(rowContentData) {
 function pushTo(contentData) {
     let title = "卡通农场小助手仓库统计"; //推送标题
     let response = null;
-    log(config.serverPlatform.text,title, contentData)
+    log(config.serverPlatform.text, title, contentData)
     //pushplus推送加
     if (config.serverPlatform.code == 0) {
         let url = "http://www.pushplus.plus/send"
@@ -2220,7 +2397,10 @@ module.exports = {
     findMC: findMC,
     findNum: findNum,
     huadong: huadong,
+    createWindow: createWindow,
     showTip: showTip,
+    showDetails: showDetails,
+    getDetails: getDetails,
 
     // 游戏界面检查
     checkmenu: checkmenu,
@@ -2248,9 +2428,7 @@ module.exports = {
 
     // 仓库相关
     shengcang: shengcang,
-    shengcang_setTime: shengcang_setTime,
     cangkuStatistics: cangkuStatistics,
-    cangkuStatistics_setTime: cangkuStatistics_setTime,
 
     //推送相关
     creatContentData: creatContentData,

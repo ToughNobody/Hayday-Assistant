@@ -41,7 +41,7 @@ files.ensureDir(logDir);
 
 console.setGlobalLogConfig({
     file: logPath, // 日志路径
-    maxFileSize: 1024 * 1024 *10,          // 10MB 后分割
+    maxFileSize: 1024 * 1024 * 10,          // 10MB 后分割
     maxBackupSize: 10,                 // 最多保留 10 个备份
     rootLevel: "all",                  // 记录所有级别日志
     filePattern: "%d [%p] %m%n",      // 格式：时间 + 日志级别 + 消息
@@ -267,8 +267,13 @@ ui.layout(
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
                                         <text text="仓库统计间隔时间" textSize="14" w="120" marginRight="8" />
-                                        <input id="cangkuStatisticsTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                        <input id="cangkuStatisticsTime" hint="300" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
                                         <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="仓库统计页数" textSize="14" w="120" marginRight="8" />
+                                        <input id="cangkuStatisticsPage" hint="2" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                        <text text="页" textSize="14" w="120" marginRight="8" />
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
                                         <text text="推送方式" textSize="14" w="100" marginRight="8" />
@@ -1149,6 +1154,7 @@ function getConfig() {
         shengcangTime: parseFloat(ui.shengcangTime.text()) ?? defaultConfig.shengcangTime,
         isCangkuStatistics: ui.isCangkuStatistics.isChecked(),
         cangkuStatisticsTime: parseFloat(ui.cangkuStatisticsTime.text()) ?? defaultConfig.cangkuStatisticsTime,
+        cangkuStatisticsPage: parseInt(ui.cangkuStatisticsPage.text()) ?? defaultConfig.cangkuStatisticsPage,
         treeShouldSwipe: ui.treeShouldSwipeSwitch.isChecked(),
         liangcangOffset: {
             x: parseInt(ui.liangcangOffsetX.text()) ?? defaultConfig.liangcangOffset.x,
@@ -1161,7 +1167,7 @@ function getConfig() {
         token: token_storage.get("token", ui.tokenInput.text().toString()),
         serverPlatform: {
             text: ui.serverPlatform.getSelectedItem(),
-            code: ["Pushplus推送加", "Server酱","WxPusher"].indexOf(ui.serverPlatform.getSelectedItem())
+            code: ["Pushplus推送加", "Server酱", "WxPusher"].indexOf(ui.serverPlatform.getSelectedItem())
         },
     };
 }
@@ -1279,6 +1285,11 @@ function validateConfig(config) {
         config.cangkuStatisticsTime = defaultConfig.cangkuStatisticsTime;
     }
 
+    // 验证cangkuStatisticsPage
+    if (config.cangkuStatisticsPage == null || isNaN(config.cangkuStatisticsPage) || config.cangkuStatisticsPage <= 0) {
+        config.cangkuStatisticsPage = defaultConfig.cangkuStatisticsPage;
+    }
+
     // 验证treeShouldSwipe
     if (config.treeShouldSwipe == null || typeof config.treeShouldSwipe !== "boolean") {
         config.treeShouldSwipe = defaultConfig.treeShouldSwipe;
@@ -1308,7 +1319,7 @@ function validateConfig(config) {
     // 验证推送方式
     if (!config.serverPlatform) config.serverPlatform = defaultConfig.serverPlatform;
 
-    config.serverPlatform.text = ["Pushplus推送加", "Server酱","WxPusher"][config.serverPlatform.code];
+    config.serverPlatform.text = ["Pushplus推送加", "Server酱", "WxPusher"][config.serverPlatform.code];
 
     // 其他验证...
     if (config.photoPath.length == 0) config.photoPath = "./res/pictures.1280_720"
@@ -1372,6 +1383,7 @@ function getDefaultConfig() {
         shengcangTime: 60,
         isCangkuStatistics: false,
         cangkuStatisticsTime: 300,
+        cangkuStatisticsPage: 2,
         treeShouldSwipe: true,
         liangcangOffset: {
             x: 240,
@@ -1717,6 +1729,18 @@ function loadConfigToUI() {
         afterTextChanged: function (s) { }
     }));
 
+    // 设置仓库统计页数
+    ui.cangkuStatisticsPage.setText(String(config.cangkuStatisticsPage));
+
+    // 为仓库统计页数输入框添加变化监听
+    ui.cangkuStatisticsPage.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
     // 设置是否自动滑动
     ui.treeShouldSwipeSwitch.setChecked(config.treeShouldSwipe);
 
@@ -1896,6 +1920,12 @@ function logCurrentConfig(config, shouldOpenFloatWindow) {
 function startButton() {
     const config = getConfig();
     saveConfig(config);
+    storages.remove("times");
+
+
+    if (device.width != 720 || device.height != 1280) {
+        toastLog("当前分辨率不正确，请使用720*1280分辨率,1")
+    }
 
     if (!auto.service) {
         toast("请先开启无障碍服务");
@@ -1977,6 +2007,11 @@ function startButton() {
 function winStartButton() {
     const config = getConfig();
     saveConfig(config);
+    storages.remove("times");
+
+    if (device.width != 720 || device.height != 1280) {
+        toastLog("当前分辨率不正确，请使用720*1280分辨率,1")
+    }
 
     if (!auto.service) {
         toast("请先开启无障碍服务");
@@ -2257,7 +2292,7 @@ function initUI() {
         },
         afterTextChanged: function (s) { }
     }));
-    
+
     // 为普通token输入框添加变化监听
     ui.tokenInputPlain.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
@@ -2271,10 +2306,10 @@ function initUI() {
     ui.eyeIcon.click(() => {
         // 获取当前token的值
         const currentToken = ui.tokenInput.getText();
-        
+
         // 检查当前输入框是否是密码模式
         const isPassword = ui.tokenInput.attr("password") === "true";
-        
+
         if (isPassword) {
             // 如果是密码模式，则切换为显示模式
             ui.tokenInput.attr("password", "false");
@@ -2294,8 +2329,8 @@ function initUI() {
         }
     });
 
-    
-    
+
+
 
     // 为推送方式选择器添加监听
     ui.serverPlatform.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({

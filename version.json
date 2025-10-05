@@ -1,30 +1,30 @@
 {
-  "version": "1.4.0",
-  "description": "\n新增功能：\n仓库统计功能:\n目前支持pushplus推送加，server酱，wxpusher\n\n修复Bug：\n修复检测切换账号页面Bug\n修复升仓时机Bug\n修复在账号信息UI界面删除时账号的账号显示错误\n修复在切换账号的模式下计时器失效问题\n\n功能优化：\n加快收金币速度\n",
+  "version": "1.4.1",
+  "description": "\n新增功能：\n添加仓库检测页数:\n刷完一轮后会显示升级仓库和仓库统计剩余时间\n\n修复Bug：\n修复种植时点击下一页时识别错误\n\n功能优化：\n在开启切换账号功能时，因未检测到相应画面内容导致的游戏重启，可以从打断的账号开始刷\n优化计时器计时方式，不会因为游戏重启而中断\n优化教程点击\n优化当前操作显示悬浮窗\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 22,
+      "versionCode": 23,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 22,
+      "versionCode": 23,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 22,
+      "versionCode": 23,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 22,
+      "versionCode": 23,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {
       "name": "zhongshu.js",
-      "versionCode": 21,
+      "versionCode": 23,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js"
     },
     {
