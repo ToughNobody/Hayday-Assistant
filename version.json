@@ -1,10 +1,10 @@
 {
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "\n新增功能：\n添加仓库检测页数:\n刷完一轮后会显示升级仓库和仓库统计剩余时间\n\n修复Bug：\n修复种植时点击下一页时识别错误\n\n功能优化：\n在开启切换账号功能时，因未检测到相应画面内容导致的游戏重启，可以从打断的账号开始刷\n优化计时器计时方式，不会因为游戏重启而中断\n优化教程点击\n优化当前操作显示悬浮窗\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 24,
+      "versionCode": 25,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -14,7 +14,7 @@
     },
     {
       "name": "module.js",
-      "versionCode": 24,
+      "versionCode": 25,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
     },
     {

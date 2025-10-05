@@ -1584,6 +1584,7 @@ function jiaocheng() {
         if (allMatch || allMatch2) {
             log(`教程：已进入主界面`);
             showTip(`教程：已进入主界面`);
+            break;
         } else {
             log(`教程：未进入主界面`);
             showTip(`教程：未进入主界面`);
