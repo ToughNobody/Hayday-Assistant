@@ -221,7 +221,12 @@ function plantTrees(pos) {
 //     // sleep(2000)
 // }
 function main() {
-    module.createWindow();
+    try {
+        module.createWindow();
+    } catch (error) {
+        console.error(error);
+    }
+    
     while (true) {
         if (setTreeText()) {
             break;

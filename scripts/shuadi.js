@@ -103,7 +103,12 @@ function main() {
         module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
     }
 
-    module.createWindow(config.showText);
+    try {
+        module.createWindow(config.showText);
+    } catch (error) {
+        console.error("创建窗口失败:", error);
+    }
+
     //主界面判断
     sleep(1000);
     module.checkmenu();
@@ -233,7 +238,12 @@ function main() {
                 sleep(1100);
             });
 
-            module.showDetails(module.getDetails(), { x: 0.4, y: 0.8 }, 3000);
+            try {
+                module.showDetails(module.getDetails(), { x: 0.4, y: 0.8 }, 3000)
+            } catch (error) {
+                console.error("showDetails error:", error);
+            }
+            ;
             if (cangkuStatisticsForEach && rowContentData) {
                 //在表格前后加入标题，合计列
                 let contentData = module.rowContentData2(rowContentData);
