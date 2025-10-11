@@ -4,6 +4,10 @@ const icon = require("./icon_Base64.js");
 
 // 创建存储对象
 let token_storage = storages.create("token_storage");
+let addFriends = storages.create("addFriends");
+
+// 初始化创新号账号列表
+let AddFriendsList = [];
 
 
 let engine0 = engines.myEngine();
@@ -11,7 +15,7 @@ const engineIds = {
     main: engine0.id,
     shuadi: null,
     zhongshu: null,
-    guapai: null
+    createNewAccount: null
 };
 
 
@@ -135,7 +139,7 @@ ui.layout(
                                     {/* 主功能选择 */}
                                     <horizontal gravity="center_vertical">
                                         <text text="选择功能：" textSize="14" w="100" marginRight="8" />
-                                        <spinner id="functionSelect" entries="刷地|种树|枯树上牌"
+                                        <spinner id="functionSelect" entries="刷地|种树|创新号"
                                             w="*" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
@@ -162,9 +166,33 @@ ui.layout(
                                     {/* 是否滑动 - 仅在种树时显示 */}
                                     <horizontal id="treeShouldSwipe" gravity="center_vertical">
                                         <text text="是否自动滑动：" textSize="14" w="100" marginRight="8" />
-                                        <switch id="treeShouldSwipeSwitch" w="*" h="48"
+                                        <Switch id="treeShouldSwipeSwitch" w="*" h="48"
                                             gravity="left|center" />
                                     </horizontal>
+
+                                    <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                        <vertical padding="16">
+                                            {/* 账号标签列表显示 */}
+                                            <vertical id="addFriendsListDisplay" marginTop="8">
+                                                <text text="账号标签：" textSize="14" textStyle="bold" />
+                                            </vertical>
+                                            {/* 账号标签输入框 */}
+                                            <list id="addFriendsList" h="auto">
+                                                <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
+                                                    cardElevation="1dp" foreground="?selectableItemBackground">
+                                                    <horizontal gravity="center_vertical">
+                                                        <view h="*" w="10" bg="#f27272" />
+                                                        <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                                                            <text id="addFriendstitle" text="{{this.addFriendstitle}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                                                        </vertical>
+                                                        <checkbox id="addFriendsdone" marginLeft="4" marginRight="40" checked="{{this.addFriendsdone}}" />
+                                                    </horizontal>
+                                                </card>
+                                            </list>
+                                        </vertical>
+                                        <fab id="addFriend" w="50" h="50" src="@drawable/ic_add_black_48dp" scaleType="fitCenter"
+                                            margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
+                                    </card>
 
                                 </vertical>
                             </card>
@@ -944,10 +972,28 @@ function loadAccountListFromConfig() {
     return AccountList;
 }
 
+// 从配置加载addFriends列表
+function loadAddFriendsListFromConfig() {
+    const config = loadConfig();
+    if (config && config.addFriendsList && Array.isArray(config.addFriendsList)) {
+        AddFriendsList = config.addFriendsList;
+    } else {
+        AddFriendsList = [];
+    }
+    return AddFriendsList;
+}
+
 // 保存账号列表到配置
 function saveAccountListToConfig() {
     const config = loadConfig();
     config.accountList = AccountList;
+    return saveConfig(config);
+}
+
+// 保存addFriends列表到配置
+function saveAddFriendsListToConfig() {
+    const config = loadConfig();
+    config.addFriendsList = AddFriendsList;
     return saveConfig(config);
 }
 
@@ -956,6 +1002,12 @@ function initAccountListUI() {
     loadAccountListFromConfig();
     ui['AccountList'].setDataSource(AccountList);
 
+}
+
+// 初始化addFriends列表UI
+function initAddFriendsListUI() {
+    loadAddFriendsListFromConfig();
+    ui['addFriendsList'].setDataSource(AddFriendsList);
 }
 
 // 点击复选框勾选
@@ -979,6 +1031,19 @@ ui['AccountList'].on('item_bind', function (itemView, itemHolder) {
     });
 });
 
+// addFriends列表的复选框勾选事件
+ui['addFriendsList'].on('item_bind', function (itemView, itemHolder) {
+    // 绑定勾选框事件
+    itemView.addFriendsdone.on('check', function (checked) {
+        let item = itemHolder.item;
+        item.addFriendsdone = checked;
+        itemView.addFriendstitle.invalidate();
+
+        // 保存到配置文件
+        saveAddFriendsListToConfig();
+    });
+});
+
 // 点击列表项修改内容
 ui['AccountList'].on('item_click', function (item, i, itemView) {
     dialogs.rawInput('修改账号', item.title)
@@ -994,6 +1059,45 @@ ui['AccountList'].on('item_click', function (item, i, itemView) {
                 autoSaveConfig();
             }
         });
+});
+
+// 点击addFriends列表项修改内容
+ui['addFriendsList'].on('item_click', function (item, i, itemView) {
+    dialogs.rawInput('修改账号标签', item.addFriendstitle)
+        .then((newTitle) => {
+            if (newTitle && newTitle.trim() !== '') {
+                item.addFriendstitle = newTitle.trim();
+                ui['addFriendsList'].adapter.notifyDataSetChanged();
+
+                // 保存到配置文件
+                saveAddFriendsListToConfig();
+
+                // 自动保存配置
+                autoSaveConfig();
+            }
+        });
+});
+
+// 长按删除addFriends标签
+ui['addFriendsList'].on('item_long_click', function (e, item, i) {
+    confirm(`确定要删除 "${item.addFriendstitle}" 吗?`)
+        .then(ok => {
+            if (ok) {
+                // 先从数据中删除
+                AddFriendsList.splice(i, 1);
+
+                // 重新设置数据源并刷新UI
+                ui['addFriendsList'].setDataSource(AddFriendsList);
+                ui['addFriendsList'].adapter.notifyDataSetChanged();
+
+                // 保存到配置文件
+                saveAddFriendsListToConfig();
+
+                // 自动保存配置
+                autoSaveConfig();
+            }
+        });
+    e.consumed = true;
 });
 
 // 长按删除
@@ -1016,6 +1120,26 @@ ui['AccountList'].on('item_long_click', function (e, item, i) {
             }
         });
     e.consumed = true;
+});
+
+// 添加新addFriends标签
+ui['addFriend'].on('click', () => {
+    dialogs.rawInput('请输入新的账号标签')
+        .then((title) => {
+            if (title && title.trim() !== '') {
+                AddFriendsList.push({
+                    addFriendstitle: title.trim(),
+                    addFriendsdone: true
+                });
+                ui['addFriendsList'].adapter.notifyDataSetChanged();
+
+                // 保存到配置文件
+                saveAddFriendsListToConfig();
+
+                // 自动保存配置
+                autoSaveConfig();
+            }
+        });
 });
 
 // 添加新账号
@@ -1101,7 +1225,7 @@ function getConfig() {
     return {
         selectedFunction: {
             text: ui.functionSelect.getSelectedItem(),
-            code: ["刷地", "种树", "枯树上牌"].indexOf(ui.functionSelect.getSelectedItem())
+            code: ["刷地", "种树", "创新号"].indexOf(ui.functionSelect.getSelectedItem())
         },
 
         selectedCrop: {
@@ -1115,6 +1239,7 @@ function getConfig() {
         switchAccount: ui.accountSwitch.isChecked(),
         findAccountMethod: ui.findAccountImage.attr("bg") === color ? "image" : "ocr",
         accountList: AccountList, // 添加账号列表到配置
+        addFriendsList: AddFriendsList, // 添加创新号账号列表到配置
         shopPrice: {
             text: ui.shopPrice.getSelectedItem(),
             code: ["最低", "平价", "最高"].indexOf(ui.shopPrice.getSelectedItem())
@@ -1313,6 +1438,9 @@ function validateConfig(config) {
     // 验证账号列表
     if (!Array.isArray(config.accountList)) config.accountList = [];
 
+    // 验证创新号账号列表
+    if (!Array.isArray(config.addFriendsList)) config.addFriendsList = [];
+
     // 验证token
     if (config.token == null) config.token = defaultConfig.token;
 
@@ -1346,6 +1474,7 @@ function getDefaultConfig() {
         switchAccount: false,
         findAccountMethod: "ocr", // 账号识别方式，默认为文字识别
         accountList: [], // 新增账号列表配置
+        addFriendsList: [], // 新增创新号账号列表配置
         shopPrice: {
             text: "最低",
             code: 0
@@ -1463,18 +1592,21 @@ function loadConfigToUI() {
         ui.shopPriceContainer.setVisibility(0); // 0表示可见
         ui.treeSelectContainer.setVisibility(8); // 8表示不可见
         ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
+        ui.addFriendsCard.setVisibility(8); // 8表示不可见
     } else if (selectedFunction === "种树") {
         // 隐藏作物选择，显示树木选择
         ui.cropSelectContainer.setVisibility(8); // 8表示不可见
         ui.shopPriceContainer.setVisibility(8); // 8表示不可见
         ui.treeSelectContainer.setVisibility(0); // 0表示可见
         ui.treeShouldSwipe.setVisibility(0); // 0表示可见
-    } else {
-        // 其他功能（如枯树上牌）隐藏两个选项
+        ui.addFriendsCard.setVisibility(8); // 8表示不可见
+    } else if (selectedFunction === "创新号") {
+        // 创新号
         ui.cropSelectContainer.setVisibility(8); // 8表示不可见
         ui.shopPriceContainer.setVisibility(8); // 8表示不可见
         ui.treeSelectContainer.setVisibility(8); // 8表示不可见
         ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
+        ui.addFriendsCard.setVisibility(0); // 0表示可见
     }
 
 
@@ -1981,22 +2113,23 @@ function startButton() {
             // toast("功能开发中");
             break;
 
-        case 2: // 枯树上牌
+        case 2: // 创新号
             stopOtherEngines();
-            // threads.start(() => {
-            //     let newEngine = engines.execScriptFile("./枯树挂牌.js");
-            //     engineIds.guapai = newEngine.id;  // 保存新引擎ID
-            //     log("启动挂牌引擎，ID: " + newEngine.id);
-            //     
-            //     // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-            //     if (shouldOpenFloatWindow) {
-            //         // 启动应用后打开浮动按钮
-            //         sleep(1000);
-            //         float_win.open();
-            //         log("已启动浮动按钮");
-            //     }
-            // });
-            toast("功能开发中");
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(1000);
+                let newEngine = engines.execScriptFile("./createNewAccount.js");
+                engineIds.createNewAccount = newEngine.id;  // 保存新引擎ID
+                log("启动建号引擎，ID: " + newEngine.id);
+
+                // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
+                if (shouldOpenFloatWindow) {
+                    // 启动应用后打开浮动按钮
+                    sleep(1000);
+                    float_win.open();
+                    log("已启动浮动按钮");
+                }
+            });
             break;
 
         default:
@@ -2065,22 +2198,23 @@ function winStartButton() {
             float_win.close();
             break;
 
-        case 2: // 枯树上牌
+        case 2: // 创新号
             stopOtherEngines();
-            // threads.start(() => {
-            //     let newEngine = engines.execScriptFile("./枯树挂牌.js");
-            //     engineIds.guapai = newEngine.id;  // 保存新引擎ID
-            //     log("启动挂牌引擎，ID: " + newEngine.id);
-            //     
-            //     // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-            //     if (shouldOpenFloatWindow) {
-            //         // 启动应用后打开浮动按钮
-            //         sleep(1000);
-            //         float_win.open();
-            //         log("已启动浮动按钮");
-            //     }
-            // });
-            toast("功能开发中");
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(1000);
+                let newEngine = engines.execScriptFile("./createNewAccount.js");
+                engineIds.createNewAccount = newEngine.id;  // 保存新引擎ID
+                log("启动建号引擎，ID: " + newEngine.id);
+
+                // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
+                if (shouldOpenFloatWindow) {
+                    // 启动应用后打开浮动按钮
+                    sleep(1000);
+                    float_win.open();
+                    log("已启动浮动按钮");
+                }
+            });
             break;
 
         default:
@@ -2115,7 +2249,7 @@ events.broadcast.on("engine_r", function (type) {
     }
     else if (type == "种树引擎") {
         stopOtherEngines();
-        let newEngine = engines.execScriptFile("./种树.js");
+        let newEngine = engines.execScriptFile("./zhongshu.js");
         engineIds.zhongshu = newEngine.id;
         log("新种树引擎ID: " + newEngine.id);
 
@@ -2140,6 +2274,8 @@ function initUI() {
 
     // 初始化账号列表UI
     initAccountListUI();
+    // 初始化addFriends列表UI
+    initAddFriendsListUI();
 
     // 初始化权限开关状态
     updateSwitchStatus();
@@ -2167,20 +2303,23 @@ function initUI() {
                 // 显示作物选择，隐藏树木选择
                 ui.cropSelectContainer.setVisibility(0); // 0表示可见
                 ui.shopPriceContainer.setVisibility(0); // 0表示可见
-                ui.treeSelectContainer.setVisibility(8); // 8表示不可见
+                ui.treeSelectContainer.setVisibility(8); // addFriendsCard不可见
                 ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
+                ui.addFriendsCard.setVisibility(8); // 8表示不可见
             } else if (selectedFunction === "种树") {
                 // 隐藏作物选择，显示树木选择
                 ui.cropSelectContainer.setVisibility(8); // 8表示不可见
                 ui.shopPriceContainer.setVisibility(8); // 8表示不可见
                 ui.treeSelectContainer.setVisibility(0); // 0表示可见
                 ui.treeShouldSwipe.setVisibility(0); // 0表示可见
-            } else {
-                // 其他功能（如枯树上牌）隐藏两个选项
+                ui.addFriendsCard.setVisibility(8); // 8表示不可见
+            } else if (selectedFunction === "创新号") {
+                // 创新号
                 ui.cropSelectContainer.setVisibility(8); // 8表示不可见
                 ui.shopPriceContainer.setVisibility(8); // 8表示不可见
                 ui.treeSelectContainer.setVisibility(8); // 8表示不可见
                 ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
+                ui.addFriendsCard.setVisibility(0); // 0表示可见
             }
 
             autoSaveConfig();

@@ -8,14 +8,7 @@ const module = require("./module.js");
 let config = module.config;
 
 // 启动自动点击权限请求
-threads.start(module.autorequestScreenCapture);
-//获取截图权限
-if (!requestScreenCapture()) {
-    toast("请求截图失败");
-    exit();
-} else {
-    // toastLog("已获得截图权限");
-}
+module.autoSc();
 
 // /** 
 //  * 点击购买按钮，如果点开了购买界面返回true，没找到返回false

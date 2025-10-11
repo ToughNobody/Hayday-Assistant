@@ -58,38 +58,7 @@ if (config.selectedCrop.code == 3) {
 }
 
 // 启动自动点击权限请求
-let autorequestScreenCapture = threads.start(module.autorequestScreenCapture);
-
-//获取截图权限
-if (!requestScreenCapture()) {
-    toast("请求截图失败");
-    // 确保线程被正确终止
-    if (autorequestScreenCapture && autorequestScreenCapture.isAlive()) {
-        autorequestScreenCapture.interrupt();
-        autorequestScreenCapture.join(); // 等待线程完全结束
-    }
-    exit();
-} else {
-    // toastLog("已获得截图权限");
-}
-
-// 确保线程被正确终止
-if (autorequestScreenCapture && autorequestScreenCapture.isAlive()) {
-    try {
-        autorequestScreenCapture.interrupt();
-        autorequestScreenCapture.join(1000); // 等待最多1秒
-
-        // 如果线程仍然存活，强制终止
-        if (autorequestScreenCapture.isAlive()) {
-            console.warn("线程未能正常终止，尝试强制结束");
-        }
-    } catch (e) {
-        console.error("终止线程失败:", e);
-    }
-}
-
-// 清理线程引用
-autorequestScreenCapture = null;
+module.autoSc();
 
 
 
