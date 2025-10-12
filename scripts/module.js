@@ -489,7 +489,6 @@ function findtext(text, x = null, y = null, w = null, h = null) {
     } catch (error) {
         log(error);
     }
-    sc.recycle();
     return null;
 }
 

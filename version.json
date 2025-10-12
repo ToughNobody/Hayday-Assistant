@@ -1,10 +1,10 @@
 {
-  "version": "1.4.7",
-  "description": "\n为模块导入添加判断\n\n",
+  "version": "1.4.8",
+  "description": "\n修复文字识别时账号切换bug\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 29,
+      "versionCode": 30,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -14,7 +14,7 @@
     },
     {
       "name": "module.js",
-      "versionCode": 27,
+      "versionCode": 30,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
     },
     {
