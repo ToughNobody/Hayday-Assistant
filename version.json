@@ -1,10 +1,10 @@
 {
-  "version": "1.4.6",
-  "description": "\n创新号：延长查找格雷格时间，添加点击格雷格判定\n\n",
+  "version": "1.4.7",
+  "description": "\n为模块导入添加判断\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 28,
+      "versionCode": 29,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -19,7 +19,7 @@
     },
     {
       "name": "shuadi.js",
-      "versionCode": 27,
+      "versionCode": 29,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {
