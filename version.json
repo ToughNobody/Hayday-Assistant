@@ -1,10 +1,10 @@
 {
-  "version": "1.4.5",
-  "description": "\n新增功能：\n添加创建新号功能\n\n修复Bug：\n修复推送时服务器无响应导致的程序崩溃\n其余已知问题（忘记录了）\n\n",
+  "version": "1.4.6",
+  "description": "\n创新号：延长查找格雷格时间，添加点击格雷格判定\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 27,
+      "versionCode": 28,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "name": "createNewAccount.js",
-      "versionCode": 27,
+      "versionCode": 28,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/createNewAccount.js"
     },
     {

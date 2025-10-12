@@ -38,6 +38,7 @@ function clickDuihua() {
         while (num < maxNum) {
             num++;
             module.showTip("检查对话框，第" + num + "次")
+            log("检查对话框，第" + num + "次")
             if (duihuakuang()) {
                 isfind = true;
                 num = 0;
@@ -57,6 +58,7 @@ function inputAge() {
         let ageMenu = null;
         for (let i = 0; i < 5; i++) {
             module.showTip(`检测输入年龄界面，第${i + 1}次`);
+            log(`检测输入年龄界面，第${i + 1}次`);
             ageMenu = module.matchColor([{ x: 515, y: 115, color: "#81481a" },
             { x: 586, y: 221, color: "#fec128" }, { x: 746, y: 515, color: "#6bb852" },
             { x: 530, y: 509, color: "#de4e4e" }])
@@ -65,6 +67,7 @@ function inputAge() {
         }
         if (ageMenu) {
             module.showTip("输入年龄");
+            log("输入年龄");
             click(640, 240);
             sleep(200);
             click(640, 240);
@@ -83,6 +86,7 @@ function findArrow(isClick = true, posY = 35, maxNum = 30) {
         let num = 0;
         let pos = null;
         module.showTip("找箭头");
+        log("找箭头");
         // 尝试查找两种箭头
         const arrowPatterns = [
             ["#ffe903", [-13, -16, "#fff8b1"], [-7, -19, "#fff8b1"], [-3, -24, "#fff8b2"],
@@ -136,6 +140,7 @@ function findSickle() {
 function harvestAll(center) {
     try {
         module.showTip("执行手势");
+        log("执行手势");
         const safe = (x, y) => [
             Math.max(0, Math.min(x, device.width - 1)),
             Math.max(0, Math.min(y, device.height - 1))
@@ -221,6 +226,7 @@ function plantCrop(color) {
 function clickBuy_Menu(color) {
     try {
         module.showTip("检测买鸡界面");
+        log("检测买鸡界面");
         let num = 0;
         while (num < 10) {
             if (module.matchColor(color)) {
@@ -241,6 +247,7 @@ function buyMenu_buy(buyNum, pos, pos0 = [106, 193]) {
         let buy = null;
         let tryNum = 0;
         module.showTip("购买");
+        log("购买");
         for (let i = 0; i < buyNum; i++) {
             while (tryNum < 3) {
                 buy = module.matchColor([{ x: 172, y: 50, color: "#deb473" }, { x: 197, y: 108, color: "#ffc225" },
@@ -277,12 +284,14 @@ function levelup() {
     }
     if (levelup) {
         module.showTip("升级了");
+        log("升级了");
         click(640, 630);
     }
 }
 
 function findJiaSuBtn() {
     module.showTip("寻找加速按钮");
+    log("寻找加速按钮");
     let jiasu = null;
     let num = 0;
     while (num < 15) {
@@ -298,6 +307,7 @@ function findJiaSuBtn() {
             jiasu = module.findMC(pattern, sc);
             if (jiasu) {
                 module.showTip("找到加速按钮")
+                log("找到加速按钮")
                 num = 0; // 重置计数器
                 sleep(300);
                 click(jiasu);
@@ -312,6 +322,7 @@ function findJiaSuBtn() {
 
 function zhizuo(color) {
     module.showTip("拖动");
+    log("拖动");
     let zhizuo = null;
     let num = 0;
     while (num < 10) {
@@ -327,6 +338,7 @@ function zhizuo(color) {
 
 function dingdan() {
     module.showTip("卡车订单");
+    log("卡车订单");
     let dingdan = null;
     let num = 0;
     while (num < 10) {
@@ -343,6 +355,7 @@ function dingdan() {
 
 function fangke() {
     module.showTip("访客");
+    log("访客");
     let fangke = null;
     let num = 0;
     while (num < 10) {
@@ -383,6 +396,7 @@ function shopMenu() {
         { x: 1176, y: 197, color: "#b14b1e" }])
         if (shopMenu) {
             module.showTip("买买买");
+            log("买买买");
             gestures([0, 100, [450, 260]],
                 [0, 100, [640, 260]],
                 [0, 100, [830, 260]],
@@ -393,6 +407,7 @@ function shopMenu() {
             findArrow()
             sleep(1000);
             module.showTip("买买买");
+            log("买买买");
             gestures([0, 100, [450, 260]],
                 [0, 100, [640, 260]],
                 [0, 100, [830, 260]],
@@ -446,6 +461,7 @@ function addFriends() {
         }
         if (!friendButton) {
             module.showTip("没有找到好友按钮");
+            log("没有找到好友按钮");
             return false;
         }
         click(1200, 640);
@@ -463,6 +479,7 @@ function addFriends() {
         }
         if (!friendMenu) {
             module.showTip("没有找到好友菜单");
+            log("没有找到好友菜单");
             return false;
         }
         click(255, 600);
@@ -480,6 +497,7 @@ function addFriends() {
         }
         if (!addFriendMenu) {
             module.showTip("没有找到添加好友菜单");
+            log("没有找到添加好友菜单");
             return false;
         }
 
@@ -491,6 +509,7 @@ function addFriends() {
 
         for (let name of nameMap) {
             module.showTip("加好友" + name);
+            log("加好友" + name);
             click(500, 260);
             sleep(1000);
             setText(name);
@@ -512,6 +531,7 @@ function jiazai() {
         let jiazai = null;
         let num = 0;
         module.showTip("检测加载页面");
+        log("检测加载页面");
         while (num < 10) {
             jiazai = module.matchColor([{ x: 534, y: 155, color: "#c8f64e" },
             { x: 540, y: 230, color: "#aee851" }, { x: 755, y: 360, color: "#ace64d" },
@@ -532,6 +552,7 @@ function findGLG() {
         let num = 0;
         let pos = null;
         module.showTip("找格雷格");
+        log("找格雷格");
         // 尝试查找两种
         const Patterns = [
             ["#742f34", [-12, -24, "#ca7233"], [-12, -13, "#b3816c"]],
@@ -542,12 +563,13 @@ function findGLG() {
         while (num < 5) {
             glg = module.findMC(Patterns[0]) ||
                 module.findMC(Patterns[1]);
-            sleep(500);
+            sleep(1000);
             num++;
             if (glg) {
                 num = 0;
                 pos = { x: glg.x, y: glg.y };
                 module.showTip("点击格雷格");
+                log("点击格雷格");
                 click(pos.x, pos.y);
                 // log(pos)
                 sleep(2000);
@@ -660,7 +682,15 @@ function main() {
         levelup();
         sleep(9000);
         //格雷格
-        findGLG()
+        if (!findGLG()) {
+            gestures([0, 100, [630,377]],
+                [0, 100, [630,377]],
+                [0, 100, [830, 260]],
+                [0, 100, [838,375]],
+                [0, 100, [735,434]],
+                [0, 100, [712,305]],
+                [0, 100, [818,437]]);
+        }
         clickDuihua();
         findArrow(true, 80);//点击好友按钮
         friendMenu();
@@ -695,6 +725,7 @@ function main() {
             click(1222,466);
         }
         module.showTip("完成");
+        sleep(2000);
     } catch (error) {
         console.error("main函数出错:", error);
     }
@@ -703,7 +734,5 @@ function main() {
 
 main()
 
-
-// findGLG()
 
 
