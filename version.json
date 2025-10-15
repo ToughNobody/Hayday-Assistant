@@ -1,25 +1,25 @@
 {
-  "version": "1.4.8",
-  "description": "\n修复文字识别时账号切换bug\n\n",
+  "version": "1.4.9",
+  "description": "\n功能优化：\n仓库统计不会因为游戏重启而中断\n对root机型的游戏重启进行优化\n\n修复Bug：\n修复仓库统计页数无法更改的bug\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 30,
+      "versionCode": 31,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 27,
+      "versionCode": 31,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 30,
+      "versionCode": 31,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 29,
+      "versionCode": 31,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
     },
     {

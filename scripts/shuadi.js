@@ -29,7 +29,7 @@ try {
 
 let config = module.config;
 let timeStorage = storages.create("times");
-
+let statistics = storages.create("statistics");
 
 //设定分辨率
 let ScreenSize = config.deviceScreenSize;
@@ -118,13 +118,13 @@ function main() {
 
             //执行升仓
             if (config.isShengcang && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
-                module.shengcang(config.cangkuStatisticsPage);
+                module.shengcang();
                 module.timer("shengcangTime", config.shengcangTime * 60);
             }
             //执行仓库统计
             if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0 && !module.getTimerState("cangkuStatisticsTime")) {
                 //进行仓库统计
-                let rowData = module.cangkuStatistics();
+                let rowData = module.cangkuStatistics(config.cangkuStatisticsPage);
                 //将仓库统计结果转换为表格数据
                 let rowContentData = module.creatContentData("账号", rowData);
                 //在表格前后加入标题，合计列
@@ -166,7 +166,7 @@ function main() {
             let cangkuStatisticsForEach = false;
 
             //设定初始仓库数据
-            let rowContentData = null;
+            let rowContentData = statistics.get("rowContentData") || null;
 
             //判断是否需要升仓
             if (config.isShengcang && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
@@ -199,14 +199,15 @@ function main() {
 
                 //升仓
                 if (shengcangForEach) {
-                    module.shengcang(config.cangkuStatisticsPage); //执行升仓
+                    module.shengcang(); //执行升仓
                 }
                 //仓库统计
                 if (cangkuStatisticsForEach) {
                     //执行仓库统计
-                    let rowData = module.cangkuStatistics();
+                    let rowData = module.cangkuStatistics(config.cangkuStatisticsPage);
                     //将仓库统计结果转换为表格数据
                     rowContentData = module.creatContentData(`账号${account.title}`, rowData, rowContentData);
+                    statistics.put("rowContentData", rowContentData);
                 }
                 while (true) {
                     // 获取下一个账号的计时器状态
@@ -242,6 +243,7 @@ function main() {
                 let contentData = module.rowContentData2(rowContentData);
                 //推送
                 module.pushTo(contentData);
+                statistics.remove("rowContentData");
             }
         }
 

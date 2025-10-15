@@ -12,6 +12,7 @@ let config = JSON.parse(content);
 
 let token_storage = storages.create("token_storage");
 let timeStorage = storages.create("times");
+let statistics = storages.create("statistics");
 
 const cropItemColor = {
     "小麦": {
@@ -223,25 +224,57 @@ function findimage(imagepath, xiangsidu, sc = null, region = null) {
         if (picture) picture.recycle();
     }
 }
+
+function checkRoot() {
+    try {
+        // 尝试执行需要root权限的命令
+        let result = shell("su -c id", true);
+        if (result.code === 0) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (e) {
+        console.log("Root检查异常: " + e);
+        return false;
+    }
+}
+
 function restartgame() {
     try {
-        home();
-        sleep(500);
-        launchSettings("com.supercell.hayday");
-        // 循环尝试点击"停止"按钮，直到成功
-        for (let i = 0; i < 5; i++) {
-            if (click("停止")) {
-                break; // 点击成功后退出循环               
+        if (checkRoot()) {
+            let packageName = "com.supercell.hayday";
+
+            try {
+                let result = shell("am force-stop " + packageName, true);
+                if (result.code === 0) {
+                    console.log("使用am force-stop命令成功停止应用");
+                    toast("卡通农场已停止");
+                } else {
+                    console.log("am force-stop命令执行失败: " + result.error);
+                }
+            } catch (e) {
+                console.log("使用am force-stop命令时出错: " + e);
+            }
+        } else {
+            home();
+            sleep(500);
+            launchSettings("com.supercell.hayday");
+            // 循环尝试点击"停止"按钮，直到成功
+            for (let i = 0; i < 5; i++) {
+                if (click("停止")) {
+                    break; // 点击成功后退出循环               
+                }
+                sleep(1000);
             }
             sleep(1000);
-        }
-        sleep(1000);
-        for (let i = 0; i < 3; i++) {
-            if (click("确定") || click("停止")) {
-                toastLog("已停止应用");
-                break;// 点击成功后退出循环
+            for (let i = 0; i < 3; i++) {
+                if (click("确定") || click("停止")) {
+                    toastLog("已停止应用");
+                    break;// 点击成功后退出循环
+                }
+                sleep(1000);
             }
-            sleep(1000);
         }
         sleep(1000);
         launch("com.supercell.hayday");
@@ -2422,6 +2455,13 @@ function cangkuStatistics(maxPages = 2) {
     return processedResult;
 };
 
+/**
+ * 
+ * @param {*} accountName 账号名称
+ * @param {*} data 统计数据
+ * @param {*} rowTable 表头
+ * @returns 加上添加的这一列的表格
+ */
 function creatContentData(accountName, data, rowTable) {
     try {
         // 初始化表格（只有表头和分隔线）
@@ -2447,15 +2487,19 @@ function creatContentData(accountName, data, rowTable) {
         // 更新分隔线行（添加对齐标记）
         lines[1] += ":----:|";
 
-        // 更新数据行（添加物品数量）
-        for (let i = 2; i < lines.length; i++) {
-            if (lines[i].trim() === "") continue; // 跳过空行
-            let itemName = lines[i].match(/\| (.+?)\s+\|/)[1].trim();
-            let itemCount = data[itemName] || 0;
-            lines[i] += `   ${itemCount}   |`;
+        try {
+            // 更新数据行（添加物品数量）
+            for (let i = 2; i < lines.length; i++) {
+                if (lines[i].trim() === "") continue; // 跳过空行
+                let itemName = lines[i].match(/\| (.+?)\s+\|/)[1].trim();
+                let itemCount = data[itemName] || 0;
+                lines[i] += `   ${itemCount}   |`;
+            }
+            // 重新组合表格
+            rowContentData = lines.join("\n");
+        } catch (error) {
+            log(error);
         }
-        // 重新组合表格
-        rowContentData = lines.join("\n");
         return rowContentData;
     } catch (error) {
         log(error);

@@ -4,7 +4,7 @@ const icon = require("./icon_Base64.js");
 
 // 创建存储对象
 let token_storage = storages.create("token_storage");
-let addFriends = storages.create("addFriends");
+let statistics = storages.create("statistics");
 
 // 初始化创新号账号列表
 let AddFriendsList = [];
@@ -2053,7 +2053,7 @@ function startButton() {
     const config = getConfig();
     saveConfig(config);
     storages.remove("times");
-
+    statistics.remove("rowContentData");
 
     if (device.width != 720 || device.height != 1280) {
         toastLog("当前分辨率不正确，请使用720*1280分辨率,1")
@@ -2141,6 +2141,7 @@ function winStartButton() {
     const config = getConfig();
     saveConfig(config);
     storages.remove("times");
+    storages.remove("rowContentData");
 
     if (device.width != 720 || device.height != 1280) {
         toastLog("当前分辨率不正确，请使用720*1280分辨率,1")
