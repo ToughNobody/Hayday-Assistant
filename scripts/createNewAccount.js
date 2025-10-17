@@ -422,21 +422,29 @@ function shopMenu() {
 
 function inputName() {
     try {
+        log("农场起名");
+        module.showTip("查找起名界面");
         let name = null;
         let num = 0;
         while (num < 10) {
-            name = module.matchColor([{ x: 424, y: 209, color: "#dfb579" }, { x: 417, y: 294, color: "#fec128" },
-            { x: 857, y: 220, color: "#d5a469" }, { x: 823, y: 294, color: "#81481a" }, { x: 583, y: 452, color: "#9d9d9d" }])
+            log("第" + num + "次查找起名界面");
+            name = module.findMC(["#81481a", [-87, -80, "#deb578"],
+                [296, -65, "#d5a468"], [339, 84, "#fec128"],
+                [-88, 72, "#fec128"], [33, 168, "#979797"]]);
             if (name) break;
             sleep(500);
             num++;
         }
         if (name) {
-            click(640, 300);
+            module.showTip("起个响亮的名字");
+            log("起个响亮的名字");
+            click(name);
             sleep(500);
             setText("新号");
             sleep(500);
             click(630, 340);
+        } else {
+            log("没有找到起名界面");
         }
     } catch (error) {
         console.error("inputName函数出错:", error);
@@ -529,13 +537,25 @@ function addFriends() {
 function jiazai() {
     try {
         let jiazai = null;
+        let tiaoguo = null;
         let num = 0;
         module.showTip("检测加载页面");
         log("检测加载页面");
         while (num < 10) {
+            let sc = captureScreen();
+            //检测加载界面新手教程动画右下角的跳过按钮
+            tiaoguo = module.matchColor([{ x: 1001, y: 622, color: "#ffffff" },
+            { x: 1025, y: 625, color: "#ffffff" }, { x: 1012, y: 627, color: "#f6be3e" },
+            { x: 1036, y: 623, color: "#f6ca4d" }], sc);
+            if (tiaoguo) {
+                click(1100, 620);
+                num = 0;
+                continue;
+            }
+
             jiazai = module.matchColor([{ x: 534, y: 155, color: "#c8f64e" },
             { x: 540, y: 230, color: "#aee851" }, { x: 755, y: 360, color: "#ace64d" },
-            { x: 869, y: 568, color: "#a6d7ea" }])
+            { x: 869, y: 568, color: "#a6d7ea" }], sc);
             if (!jiazai) break;
             sleep(1000);
             num++;
@@ -683,13 +703,13 @@ function main() {
         sleep(9000);
         //格雷格
         if (!findGLG()) {
-            gestures([0, 100, [630,377]],
-                [0, 100, [630,377]],
+            gestures([0, 100, [630, 377]],
+                [0, 100, [630, 377]],
                 [0, 100, [830, 260]],
-                [0, 100, [838,375]],
-                [0, 100, [735,434]],
-                [0, 100, [712,305]],
-                [0, 100, [818,437]]);
+                [0, 100, [838, 375]],
+                [0, 100, [735, 434]],
+                [0, 100, [712, 305]],
+                [0, 100, [818, 437]]);
         }
         clickDuihua();
         findArrow(true, 80);//点击好友按钮
@@ -704,6 +724,7 @@ function main() {
         shopMenu();
         sleep(500);
         click(1080, 65);
+        //退出商店，一段画面移动
         sleep(2000);
         clickDuihua();
         findArrow();
@@ -711,8 +732,12 @@ function main() {
         click(1000, 420);
         sleep(1000);
         findArrow();
+        //点击home按钮，回到农场
         click(50, 645);
         sleep(1000);
+        //检测加载界面
+        jiazai();
+        //起名
         clickDuihua();
         inputName()
         clickDuihua()
@@ -722,7 +747,7 @@ function main() {
             //点击叉号
             click(1115, 90);
             sleep(1000);
-            click(1222,466);
+            click(1222, 466);
         }
         module.showTip("完成");
         sleep(2000);
