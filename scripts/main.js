@@ -24,10 +24,12 @@ const engineIds = {
 let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
 const configDir = files.join(appExternalDir, "configs");
 const configPath = files.join(configDir, "config.json");
-let logDir = files.join(appExternalDir, "logs");
+const logDir = files.join(appExternalDir, "logs");
+const scPath = "/storage/emulated/0/$MuMu12Shared/Screenshots"
 // 确保目录存在
-files.ensureDir(configDir);  // 创建配置目录
-files.ensureDir(logDir);  // 创建日志目录
+files.ensureDir(configDir + "/1");  // 创建配置目录
+files.ensureDir(logDir + "/1");  // 创建日志目录
+files.ensureDir(scPath + "/1");  // 创建截图目录
 // 确保配置文件存在
 if (!files.exists(configPath)) {
     files.create(configPath);  // 创建配置文件
@@ -41,7 +43,7 @@ let logPath = files.join(logDir, `${formatDate}.txt`);
 
 
 // 确保日志目录存在
-files.ensureDir(logDir);
+files.ensureDir(logDir + "/1");
 
 console.setGlobalLogConfig({
     file: logPath, // 日志路径

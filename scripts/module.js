@@ -825,14 +825,13 @@ function checkmenu() {
             sc = captureScreen();
 
             //新版界面
-            let allMatch = matchColor([{ x: 47, y: 177, color: "#ffffff" },
-            { x: 70, y: 662, color: "#2664aa" },
-            { x: 1213, y: 661, color: "#f2ded3" }], sc);
+            let allMatch = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
+                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
 
             //老板界面
-            let allMatch2 = matchColor([{ x: 39, y: 177, color: "#ffffff" },
-            { x: 68, y: 654, color: "#2662a9" },
-            { x: 1208, y: 659, color: "#f0e0d6" }], sc);
+            let allMatch2 = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
+                [-17, 18, "#a44900"], [11, 54, "#f7c342"],
+                [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
 
             if (allMatch || allMatch2) {
                 log(`第 ${i + 1} 次检测: 已进入主界面`);
@@ -1545,28 +1544,13 @@ function find_close(screenshot1, action = null) {
             return true;
         }
 
-        //进入小镇
-        let homebtn1 = matchColor([{ x: 212, y: 36, color: "#f73d46" },
-        { x: 188, y: 615, color: "#cf9be6" },
-        { x: 220, y: 662, color: "#55cf58" }],
-            screenshot = sc);
+        //进入小镇，鱼塘，其他农场
+        let homebtn1 = findMC(["#62d365", [-5, -12, "#c787db"], [1, 11, "#55cf58"]],
+            screenshot = sc ,[0,600,240,110]);
         if (homebtn1) {
-            click(200 + ran(), 645 + ran());
-            console.log("进入小镇，回到主界面");
-            showTip("进入小镇，回到主界面");
-            checkmenu();
-            return true;
-        }
-
-        //进入鱼塘
-        let homebtn2 = matchColor([{ x: 44, y: 177, color: "#ffffff" },
-        { x: 88, y: 637, color: "#c687de" },
-        { x: 101, y: 657, color: "#5ad05c" }],
-            screenshot = sc);
-        if (homebtn2) {
-            click(60 + ran(), 630 + ran());
-            console.log("进入鱼塘，回到主界面");
-            showTip("进入鱼塘，回到主界面");
+            click(homebtn1.x - 30 + ran(), homebtn1.y + ran());
+            console.log("当前在其他界面，回到主界面");
+            showTip("当前在其他界面，回到主界面");
             checkmenu();
             return true;
         }
@@ -1813,7 +1797,7 @@ function switch_account(Account) {
             let findAccountMenuNum = 0;    //寻找账号菜单次数
             while (true) {
                 findAccountMenuNum++;
-                if (findAccountMenuNum > 5 && num < 3) {
+                if (findAccountMenuNum > 8 && num < 3) {
                     num++
                     console.log(`未识别到切换账号界面，重试第${num}次`)
                     showTip(`未识别到切换账号界面，重试第${num}次`)
@@ -1822,7 +1806,7 @@ function switch_account(Account) {
                     sleep(200);
                     find_close(null, ["except_switchAccount"]);
                     continue;
-                } else if (findAccountMenuNum > 5 && num >= 3) {
+                } else if (findAccountMenuNum > 8 && num >= 3) {
                     console.log("重试次数过多，重进游戏");
                     showTip("重试次数过多，重进游戏");
                     restartgame();
