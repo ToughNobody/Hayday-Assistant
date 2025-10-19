@@ -57,37 +57,22 @@ function adapt(x, y) {
     return [Math.round(xScaled), Math.round(yScaled)];
 }
 
-let crop;
-let crop_sail;
-
-//小麦
-if (config.selectedCrop.code == 0) {
-    crop = ["#ffef14", [9, -32, "#d59b08"], [-8, 20, "#b56000"], [-32, 28, "#f3c107"], [29, 30, "#ffdf7c"]];
-    crop_sail = ["#fff00a", [-4, -2, "#ffffff"], [-20, 28, "#ffde05"], [6, -34, "#fed704"], [-20, 2, "#feef08"]];
-}
-//玉米
-if (config.selectedCrop.code == 1) {
-    crop = ["#f8e605", [49, 31, "#ffdf7c"], [-31, 35, "#8f9504"], [33, -30, "#f8ef02"], [-17, -9, "#a5a905"]];
-    crop_sail = ["#faf350", [7, 23, "#8c9104"], [-24, 1, "#a8ad05"], [-34, 38, "#888d04"], [28, -24, "#fbf115"]];
-}
-//胡萝卜
-if (config.selectedCrop.code == 2) {
-    crop = ["#ffd100", [24, 21, "#ffdf7c"], [33, -29, "#48951b"], [-31, 29, "#ff9700"], [-7, -7, "#ffe000"]];
-    crop_sail = ["#ffba00", [26, -25, "#509b1f"], [-4, 10, "#ff8a00"], [-30, 24, "#ffb300"], [36, -45, "#7bc333"]];
-}
-//大豆
-if (config.selectedCrop.code == 3) {
-    crop = ["#eff083", [13, 32, "#ffdf7c"], [-33, 39, "#dde249"], [-32, -5, "#f1f278"], [19, -31, "#b1ba13"]];
-    crop_sail = ["#dde163", [-29, 26, "#909a0f"], [23, 9, "#eeef72"], [-13, -3, "#ced24e"], [-29, 54, "#dde148"]];
-}
 
 // 启动自动点击权限请求
 module.autoSc();
 
 
 
-
 function main() {
+    if (config.accountMethod == "email") {
+        main_email();
+    } else {
+        main_save();
+    }
+}
+
+
+function main_email() {
 
     if (config.isShengcang && !timeStorage.get("shengcangTime")) {
         module.timer("shengcangTime", config.shengcangTime * 60);
@@ -250,6 +235,202 @@ function main() {
     }
 
 }
+
+function main_save() {
+
+    if (config.isShengcang && !timeStorage.get("shengcangTime")) {
+        module.timer("shengcangTime", config.shengcangTime * 60);
+    }
+    if (config.isCangkuStatistics && !timeStorage.get("cangkuStatisticsTime")) {
+        module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
+    }
+
+    try {
+        module.createWindow(config.showText);
+    } catch (error) {
+        console.error("创建窗口失败:", error);
+    }
+
+    if (!config.switchAccount || config.saveAccountList.filter(account => account.done).length <= 1) { //不切换账号
+
+        //主界面判断
+        sleep(1000);
+        module.checkmenu();
+        sleep(500);
+
+        if (config.isShengcang && !timeStorage.get("shengcangTime")) {
+            module.timer("shengcangTime", config.shengcangTime * 60);
+        }
+        if (config.isCangkuStatistics && !timeStorage.get("cangkuStatisticsTime")) {
+            module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
+        }
+
+        try {
+            module.createWindow(config.showText);
+        } catch (error) {
+            console.error("创建窗口失败:", error);
+        }
+
+        log("不切换账号，找耕地");
+        module.huadong();
+        sleep(1100);
+
+        //循环操作
+        while (true) {
+            module.operation();
+            log("等待作物成熟");
+
+            //执行升仓
+            if (config.isShengcang && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
+                module.shengcang();
+                module.timer("shengcangTime", config.shengcangTime * 60);
+            }
+            //执行仓库统计
+            if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0 && !module.getTimerState("cangkuStatisticsTime")) {
+                //进行仓库统计
+                let rowData = module.cangkuStatistics(config.cangkuStatisticsPage);
+                //将仓库统计结果转换为表格数据
+                let rowContentData = module.creatContentData("账号", rowData);
+                //在表格前后加入标题，合计列
+                let contentData = module.rowContentData2(rowContentData);
+                //推送
+                module.pushTo(contentData);
+                module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
+            }
+
+            while (true) {
+                // 获取计时器剩余时间
+                let timerState = module.getTimerState(config.selectedCrop.text);
+                log(timerState);
+                if (timerState) {
+                    // 将秒数转换为分钟和秒
+                    let minutes = Math.floor(timerState / 60);
+                    let seconds = timerState % 60;
+                    let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                    module.showTip(`${config.selectedCrop.text}成熟剩余${timeText}`);
+                }
+                if (!timerState) {
+                    break;
+                }
+                sleep(1000);
+            }
+        }
+    }
+
+    //切换账号
+    else {
+        log("切换账号");
+
+        // 获取当前账号
+        let account = timeStorage.get("currentAccount");
+        
+        //新建账号列表
+        const doneAccountsList = config.saveAccountList.filter(account => account.done === true);
+        
+        // 计算下一个账号的信息
+        let currentIndex = -1;
+        if (account) {
+            if (typeof account === 'object') {
+                // 处理对象类型的账号
+                currentIndex = doneAccountsList.findIndex(acc => acc.title === account.title);
+            } else {
+                // 处理字符串类型的账号
+                currentIndex = doneAccountsList.findIndex(acc => acc.title === account);
+            }
+        }
+        // 如果没找到当前账号，则默认使用第一个账号
+        if (currentIndex === -1 && doneAccountsList.length > 0) {
+            currentIndex = 0;
+            account = doneAccountsList[0].title; // 更新account为第一个账号的标题
+        }
+        let nextAccountIndex = (currentIndex + 1) % doneAccountsList.length;
+        let nextAccount = doneAccountsList[nextAccountIndex];
+        let nextTimerName = nextAccount.title + "计时器";
+        timeStorage.put("nextAccountToChange", nextAccount.title);
+        log("下一个账号: " + nextAccount.title + ", 计时器名称: " + nextTimerName);
+        log("============当前账号: " + account + "============");
+
+        //是否升仓，是否仓库统计
+        let shengcangForEach = false;
+        let cangkuStatisticsForEach = false;
+
+        //设定初始仓库数据
+        let rowContentData = statistics.get("rowContentData") || null;
+
+        //判断是否需要升仓
+        if (config.isShengcang && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
+            shengcangForEach = true;
+            module.timer("shengcangTime", config.shengcangTime * 60);
+        }
+        //判断是否需要仓库统计
+        if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0 && !module.getTimerState("cangkuStatisticsTime")) {
+            cangkuStatisticsForEach = true;
+            module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
+        }
+
+        //主界面判断
+        sleep(1000);
+        module.checkmenu();
+        sleep(500);
+
+        module.huadong();
+
+        module.operation(account); //执行刷地，售卖
+
+        //升仓
+        if (shengcangForEach) {
+            module.shengcang(); //执行升仓
+        }
+        //仓库统计
+        if (cangkuStatisticsForEach) {
+            //执行仓库统计
+            let rowData = module.cangkuStatistics(config.cangkuStatisticsPage);
+            //将仓库统计结果转换为表格数据
+            rowContentData = module.creatContentData(`账号${account}`, rowData, rowContentData);
+            statistics.put("rowContentData", rowContentData);
+        }
+        while (true) {
+            // 获取下一个账号的计时器状态
+            let nextTimerState = module.getTimerState(nextTimerName);
+
+            if (!nextTimerState) {
+                // 如果下一个计时器不存在，直接跳出循环
+                break;
+            }
+
+            // 显示下一个计时器的状态
+            let minutes = Math.floor(nextTimerState / 60);
+            let seconds = nextTimerState % 60;
+            let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+            module.showTip(`账号:${nextAccount.title} ${config.selectedCrop.text}成熟剩余${timeText}`);
+
+            if (!nextTimerState) {
+                break;
+            }
+            sleep(1000);
+        }
+        sleep(1100);
+
+        try {
+            module.showDetails(module.getDetails(), { x: 0.4, y: 0.8 }, 3000)
+        } catch (error) {
+            console.error("showDetails error:", error);
+        }
+        ;
+        if (cangkuStatisticsForEach && rowContentData) {
+            //在表格前后加入标题，合计列
+            let contentData = module.rowContentData2(rowContentData);
+            //推送
+            module.pushTo(contentData);
+            statistics.remove("rowContentData");
+        }
+        events.broadcast.emit("switchSaveAccount", nextAccount.title); //广播切换账号事件
+    }
+
+}
+
+
+
 
 //
 // threads.start(() => {

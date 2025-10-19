@@ -10,6 +10,11 @@ let statistics = storages.create("statistics");
 let AddFriendsList = [];
 
 
+// 全局状态变量，用于跟踪各种选择状态，避免依赖颜色判断
+let currentAccountMethod = "email"; // 当前账号方式: "email" 或 "save"
+let currentFindAccountMethod = "ocr"; // 当前账号识别方式: "image" 或 "ocr"
+let currentLandFindMethod = "商店"; // 当前寻找土地方法: "商店" 或 "面包房"
+
 let engine0 = engines.myEngine();
 const engineIds = {
     main: engine0.id,
@@ -104,6 +109,107 @@ function getAppVersion() {
     }
 }
 
+function checkRoot() {
+    try {
+        // 尝试执行需要root权限的命令
+        let result = shell("su -c id", true);
+        if (result.code === 0) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (e) {
+        console.log("Root检查异常: " + e);
+        return false;
+    }
+}
+
+/**
+ * 复制应用内的storage.xml和storage_new.xml文件到指定目录
+ * @param {string} name 存档名称，用于创建子目录
+ * @param {string} direction 操作方向，"export"导出或"import"导入，默认"export"
+ * @returns {boolean} 全部文件导入或导出成功返回true，失败返回false
+ */
+function copy_shell(name, direction = "export") {
+    let sourcePath1 = "/data/data/com.supercell.hayday/shared_prefs/storage.xml";
+    let sourcePath2 = "/data/data/com.supercell.hayday/shared_prefs/storage_new.xml";
+    let saveDir = files.join(appExternalDir + "/卡通农场小助手存档", name);
+    let savePath1 = files.join(saveDir, "storage.xml");
+    let savePath2 = files.join(saveDir, "storage_new.xml");
+
+    // 确保目标目录存在
+    files.ensureDir(saveDir + "/1");
+
+    if (direction === "export") {
+        // 导出：从应用目录复制到存档目录
+        console.log("正在导出文件..." + name);
+
+        // 使用cp命令复制第一个文件
+        let command1 = `cp "${sourcePath1}" "${savePath1}"`;
+        let result1 = shell(command1, true);
+
+        if (result1.code === 0) {
+            console.log("storage.xml 文件导出成功");
+        } else {
+            console.log("storage.xml 文件导出失败: " + result1.error);
+        }
+
+        // 使用cp命令复制第二个文件
+        let command2 = `cp "${sourcePath2}" "${savePath2}"`;
+        let result2 = shell(command2, true);
+
+        if (result2.code === 0) {
+            console.log("storage_new.xml 文件导出成功");
+        } else {
+            console.log("storage_new.xml 文件导出失败: " + result2.error);
+        }
+
+        // 检查两个文件是否都复制成功并返回结果
+        if (result1.code === 0 && result2.code === 0) {
+            console.log("所有文件导出成功");
+            return true;
+        } else {
+            toastLog("文件导出失败,详情见日志");
+            return false;
+        }
+    } else if (direction === "import") {
+        // 导入：从存档目录复制到应用目录
+        console.log("正在导入文件..." + name);
+
+        // 使用cp命令复制第一个文件
+        let command1 = `cp "${savePath1}" "${sourcePath1}"`;
+        let result1 = shell(command1, true);
+
+        if (result1.code === 0) {
+            console.log("storage.xml 文件导入成功");
+        } else {
+            console.log("storage.xml 文件导入失败: " + result1.error);
+        }
+
+        // 使用cp命令复制第二个文件
+        let command2 = `cp "${savePath2}" "${sourcePath2}"`;
+        let result2 = shell(command2, true);
+
+        if (result2.code === 0) {
+            console.log("storage_new.xml 文件导入成功");
+        } else {
+            console.log("storage_new.xml 文件导入失败: " + result2.error);
+        }
+
+        // 检查两个文件是否都复制成功并返回结果
+        if (result1.code === 0 && result2.code === 0) {
+            console.log("所有文件导入成功");
+            return true;
+        } else {
+            toastLog("文件导入失败,详情见日志");
+            return false;
+        }
+    } else {
+        console.log("参数错误：direction 参数必须是 'export' 或 'import'");
+        return false;
+    }
+}
+
 ui.layout(
     <drawer id="drawer">
         <vertical>
@@ -187,7 +293,7 @@ ui.layout(
                                                         <vertical padding="10 8" h="auto" w="0" layout_weight="1">
                                                             <text id="addFriendstitle" text="{{this.addFriendstitle}}" textColor="#333333" textSize="16sp" maxLines="1" />
                                                         </vertical>
-                                                        <checkbox id="addFriendsdone" marginLeft="4" marginRight="40" checked="{{this.addFriendsdone}}" />
+                                                        <checkbox id="addFriendsdone" marginLeft="4" marginRight="50" checked="{{this.addFriendsdone}}" />
                                                     </horizontal>
                                                 </card>
                                             </list>
@@ -235,11 +341,18 @@ ui.layout(
                                         <button id="findAccountText" text="文字识别" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
                                     </horizontal>
 
+                                    {/* 账号方式选择 */}
+                                    <horizontal gravity="center_vertical" marginTop="8">
+                                        <text text="切换账号方式：" textSize="14" w="100" marginRight="8" />
+                                        <button id="accountMethodEmail" text="邮箱" w="100" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="8" />
+                                        <button id="accountMethodSave" text="存档" w="100" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
+                                    </horizontal>
+
                                     {/* 账号列表显示 */}
                                     <vertical id="accountListDisplay" marginTop="8">
                                         <text text="账号列表：" textSize="14" textStyle="bold" />
                                     </vertical>
-                                    {/* 账号输入框 */}
+                                    {/* 邮箱账号输入框 */}
                                     <list id="AccountList" h="auto">
                                         <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
                                             cardElevation="1dp" foreground="?selectableItemBackground">
@@ -248,7 +361,21 @@ ui.layout(
                                                 <vertical padding="10 8" h="auto" w="0" layout_weight="1">
                                                     <text id="title" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
                                                 </vertical>
-                                                <checkbox id="done" marginLeft="4" marginRight="6" checked="{{this.done}}" />
+                                                <checkbox id="done" marginLeft="4" marginRight="40" checked="{{this.done}}" />
+                                            </horizontal>
+                                        </card>
+                                    </list>
+                                    {/* 存档账号输入框 */}
+                                    <list id="SaveAccountList" h="auto" visibility="gone">
+                                        <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
+                                            cardElevation="1dp" foreground="?selectableItemBackground">
+                                            <horizontal gravity="center_vertical">
+                                                <view h="*" w="10" bg="#4CAF50" />
+                                                <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                                                    <text id="saveTitle" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                                                </vertical>
+                                                <button id="loadSaveAccount" text="加载" w="40" h="25" textSize="10" bg="#2196F3" textColor="#FFFFFF" marginRight="10" gravity="center" padding="0" />
+                                                <checkbox id="saveDone" marginLeft="4" marginRight="40" checked="{{this.done}}" />
                                             </horizontal>
                                         </card>
                                     </list>
@@ -445,6 +572,13 @@ ui.layout(
                                             textSize="14" w="*" />
                                     </horizontal>
 
+                                    {/* Root权限 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="Root权限：" textSize="14" w="100" marginRight="8" />
+                                        <text id="rootStatus" text="{{checkRoot() ? '已获取' : '未获取'}}"
+                                            textSize="14" w="*" textColor="{{checkRoot() ? '#4CAF50' : '#F44336'}}" />
+                                    </horizontal>
+
                                     {/* 品牌型号 */}
                                     <horizontal gravity="center_vertical" marginBottom="8">
                                         <text text="设备型号：" textSize="14" w="100" marginRight="8" />
@@ -453,11 +587,12 @@ ui.layout(
                                     </horizontal>
 
                                     {/* Android版本 */}
-                                    <horizontal gravity="center_vertical">
+                                    <horizontal gravity="center_vertical" marginBottom="8">
                                         <text text="系统版本：" textSize="14" w="100" marginRight="8" />
                                         <text id="androidVersion" text="Android {{device.release}}"
                                             textSize="14" w="*" />
                                     </horizontal>
+
                                 </vertical>
                             </card>
                         </vertical>
@@ -962,6 +1097,7 @@ function showLogDialog() {
 
 // 初始化账号列表
 let AccountList = [];
+let SaveAccountList = [];
 
 // 从配置加载账号列表
 function loadAccountListFromConfig() {
@@ -972,6 +1108,57 @@ function loadAccountListFromConfig() {
         AccountList = [];
     }
     return AccountList;
+}
+
+// 从文件加载存档账号列表
+function loadSaveAccountListFromConfig() {
+    const saveAccountDir = appExternalDir + "/卡通农场小助手存档";
+
+    // 检查目录是否存在，如果不存在则创建
+    files.ensureDir(saveAccountDir + "/1");
+
+    // 从配置加载存档账号列表
+    const config = loadConfig();
+    let configSaveAccountList = [];
+    if (config && config.saveAccountList && Array.isArray(config.saveAccountList)) {
+        configSaveAccountList = config.saveAccountList;
+    }
+
+    // 列出目录下的所有文件夹
+    const folderNames = files.listDir(saveAccountDir, function (name) {
+        // 只选择文件夹，排除文件
+        return files.isDir(files.join(saveAccountDir, name));
+    });
+
+    // 创建一个映射，用于快速查找文件夹名称
+    const folderNameMap = {};
+    folderNames.forEach(name => {
+        folderNameMap[name] = true;
+    });
+
+    // 首先按照配置中的顺序添加存在的文件夹
+    const orderedSaveAccountList = [];
+    configSaveAccountList.forEach(account => {
+        if (folderNameMap[account.title]) {
+            orderedSaveAccountList.push({
+                title: account.title,
+                done: account.done !== undefined ? account.done : true
+            });
+            // 从映射中移除已处理的文件夹
+            delete folderNameMap[account.title];
+        }
+    });
+
+    // 将剩余的文件夹（配置中没有的）添加到列表末尾
+    Object.keys(folderNameMap).forEach(name => {
+        orderedSaveAccountList.push({
+            title: name,
+            done: true
+        });
+    });
+
+    SaveAccountList = orderedSaveAccountList;
+    return SaveAccountList;
 }
 
 // 从配置加载addFriends列表
@@ -992,6 +1179,13 @@ function saveAccountListToConfig() {
     return saveConfig(config);
 }
 
+// 保存存档账号列表到配置
+function saveSaveAccountListToConfig() {
+    const config = loadConfig();
+    config.saveAccountList = SaveAccountList;
+    return saveConfig(config);
+}
+
 // 保存addFriends列表到配置
 function saveAddFriendsListToConfig() {
     const config = loadConfig();
@@ -1002,8 +1196,38 @@ function saveAddFriendsListToConfig() {
 // 初始化账号列表UI
 function initAccountListUI() {
     loadAccountListFromConfig();
+    loadSaveAccountListFromConfig();
     ui['AccountList'].setDataSource(AccountList);
+    ui['SaveAccountList'].setDataSource(SaveAccountList);
+}
 
+// 设置账号方式
+function setAccountMethod(method) {
+    // 更新全局状态变量
+    currentAccountMethod = method;
+
+    if (method === "email") {
+        ui.accountMethodEmail.attr("bg", color);
+        ui.accountMethodEmail.attr("textColor", "#FFFFFF");
+        ui.accountMethodSave.attr("bg", "#E0E0E0");
+        ui.accountMethodSave.attr("textColor", "#000000");
+        ui['AccountList'].attr("visibility", "visible");
+        ui['SaveAccountList'].attr("visibility", "gone");
+    } else {
+        ui.accountMethodEmail.attr("bg", "#E0E0E0");
+        ui.accountMethodEmail.attr("textColor", "#000000");
+        ui.accountMethodSave.attr("bg", color);
+        ui.accountMethodSave.attr("textColor", "#FFFFFF");
+        ui['AccountList'].attr("visibility", "gone");
+        ui['SaveAccountList'].attr("visibility", "visible");
+    }
+
+    // 强制刷新UI
+    ui.accountMethodEmail.attr("bg", ui.accountMethodEmail.attr("bg"));
+    ui.accountMethodSave.attr("bg", ui.accountMethodSave.attr("bg"));
+
+    // 自动保存配置
+    autoSaveConfig();
 }
 
 // 初始化addFriends列表UI
@@ -1018,18 +1242,52 @@ ui['AccountList'].on('item_bind', function (itemView, itemHolder) {
     itemView.done.on('check', function (checked) {
         let item = itemHolder.item;
         item.done = checked;
-        // 更新标题样式（完成时添加删除线）
-        // if (checked) {
-        //     itemView.title.setTextColor(android.graphics.Color.parseColor('#999999'));
-        //     itemView.title.getPaint().setFlags(Paint.STRIKE_THRU_TEXT_FLAG);
-        // } else {
-        //     itemView.title.setTextColor(android.graphics.Color.parseColor('#000000'));
-        //     itemView.title.getPaint().setFlags(0);
-        // }
         itemView.title.invalidate();
 
         // 保存到配置文件
         saveAccountListToConfig();
+    });
+});
+
+// 存档账号列表复选框勾选
+ui['SaveAccountList'].on('item_bind', function (itemView, itemHolder) {
+    // 绑定勾选框事件
+    itemView.saveDone.on('check', function (checked) {
+        let item = itemHolder.item;
+        item.done = checked;
+        itemView.saveTitle.invalidate();
+
+        // 保存到配置文件
+        saveSaveAccountListToConfig();
+    });
+});
+
+// 存档账号列表加载按钮点击事件
+ui['SaveAccountList'].on('item_bind', function (itemView, itemHolder) {
+    // 绑定加载按钮点击事件
+    itemView.loadSaveAccount.on('click', function () {
+        let item = itemHolder.item;
+        // 这里可以添加实际的加载逻辑
+        let packageName = "com.supercell.hayday";
+
+        try {
+            let result = shell("am force-stop " + packageName, true);
+            if (result.code === 0) {
+                console.log("使用am force-stop命令成功停止应用");
+                toast("正在加载存档: " + item.title);
+            } else {
+                console.log("am force-stop命令执行失败: " + result.error);
+                toast("am force-stop命令执行失败: ")
+            }
+        } catch (e) {
+            console.log("使用am force-stop命令时出错: " + e);
+            toast("使用am force-stop命令时出错: " + e);
+        }
+        
+        copy_shell(item.title, "import");
+        setTimeout(() => {
+            launch("com.supercell.hayday");
+        }, 1000);
     });
 });
 
@@ -1063,6 +1321,28 @@ ui['AccountList'].on('item_click', function (item, i, itemView) {
         });
 });
 
+// 点击存档账号列表项修改内容
+ui['SaveAccountList'].on('item_click', function (item, i, itemView) {
+    let oldTitle = item.title; // 保存旧标题
+    dialogs.rawInput('修改存档账号', oldTitle)
+        .then((newTitle) => {
+            if (newTitle && newTitle.trim() !== '') {
+                item.title = newTitle.trim();
+                ui['SaveAccountList'].adapter.notifyDataSetChanged();
+
+                //更改存档账号的文件名
+                let oldSaveDir = files.join(appExternalDir + "/卡通农场小助手存档", oldTitle);
+                files.rename(oldSaveDir, newTitle.trim());
+
+                // 保存到配置文件
+                saveSaveAccountListToConfig();
+
+                // 自动保存配置
+                autoSaveConfig();
+            }
+        });
+});
+
 // 点击addFriends列表项修改内容
 ui['addFriendsList'].on('item_click', function (item, i, itemView) {
     dialogs.rawInput('修改账号标签', item.addFriendstitle)
@@ -1088,10 +1368,6 @@ ui['addFriendsList'].on('item_long_click', function (e, item, i) {
                 // 先从数据中删除
                 AddFriendsList.splice(i, 1);
 
-                // 重新设置数据源并刷新UI
-                ui['addFriendsList'].setDataSource(AddFriendsList);
-                ui['addFriendsList'].adapter.notifyDataSetChanged();
-
                 // 保存到配置文件
                 saveAddFriendsListToConfig();
 
@@ -1110,12 +1386,30 @@ ui['AccountList'].on('item_long_click', function (e, item, i) {
                 // 先从数据中删除
                 AccountList.splice(i, 1);
 
-                // 重新设置数据源并刷新UI
-                ui['AccountList'].setDataSource(AccountList);
-                ui['AccountList'].adapter.notifyDataSetChanged();
-
                 // 保存到配置文件
                 saveAccountListToConfig();
+
+                // 自动保存配置
+                autoSaveConfig();
+            }
+        });
+    e.consumed = true;
+});
+
+// 长按删除存档账号
+ui['SaveAccountList'].on('item_long_click', function (e, item, i) {
+    confirm(`确定要删除 "${item.title}" 吗?`)
+        .then(ok => {
+            if (ok) {
+                // 先从数据中删除
+                SaveAccountList.splice(i, 1);
+
+                // 删除存档文件
+                let saveDir = files.join(appExternalDir + "/卡通农场小助手存档", item.title);
+                files.removeDir(saveDir);
+
+                // 保存到配置文件
+                saveSaveAccountListToConfig();
 
                 // 自动保存配置
                 autoSaveConfig();
@@ -1146,17 +1440,27 @@ ui['addFriend'].on('click', () => {
 
 // 添加新账号
 ui['addAccount'].on('click', () => {
-    dialogs.rawInput('请输入新的账号名称')
+    const config = getConfig();
+    const method = config.accountMethod || 'email';
+    const listName = method === 'email' ? 'AccountList' : 'SaveAccountList';
+    const dataList = method === 'email' ? AccountList : SaveAccountList;
+    const saveFunction = method === 'email' ? saveAccountListToConfig : saveSaveAccountListToConfig;
+    const dialogTitle = method === 'email' ? '请输入新的账号名称' : '请输入新的存档账号名称';
+
+    dialogs.rawInput(dialogTitle)
         .then((title) => {
             if (title && title.trim() !== '') {
-                AccountList.push({
+                dataList.push({
                     title: title.trim(),
                     done: true
                 });
-                ui['AccountList'].adapter.notifyDataSetChanged();
+                ui[listName].adapter.notifyDataSetChanged();
 
                 // 保存到配置文件
-                saveAccountListToConfig();
+                saveFunction();
+
+                //保存存档
+                if (method === "save") copy_shell(title.trim());
 
                 // 自动保存配置
                 autoSaveConfig();
@@ -1224,6 +1528,7 @@ function getConfig() {
     // 从AccountList生成accountNames数组，确保一致性
     const accountNamesFromList = AccountList.map(item => item.title);
 
+    // 使用全局状态变量获取当前配置，不依赖颜色判断
     return {
         selectedFunction: {
             text: ui.functionSelect.getSelectedItem(),
@@ -1239,14 +1544,16 @@ function getConfig() {
             code: ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "咖啡丛", "橄榄树", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"].indexOf(ui.treeSelect.getSelectedItem())
         },
         switchAccount: ui.accountSwitch.isChecked(),
-        findAccountMethod: ui.findAccountImage.attr("bg") === color ? "image" : "ocr",
+        findAccountMethod: currentFindAccountMethod, // 使用全局变量
+        accountMethod: currentAccountMethod, // 使用全局变量
         accountList: AccountList, // 添加账号列表到配置
+        saveAccountList: SaveAccountList, // 添加存档账号列表到配置
         addFriendsList: AddFriendsList, // 添加创新号账号列表到配置
         shopPrice: {
             text: ui.shopPrice.getSelectedItem(),
             code: ["最低", "平价", "最高"].indexOf(ui.shopPrice.getSelectedItem())
         },
-        landFindMethod: ui.methodShop.attr("bg") === color ? "商店" : "面包房",
+        landFindMethod: currentLandFindMethod, // 使用全局变量
         landOffset: {
             x: parseInt(ui.landOffsetX.text()) ?? defaultConfig.landOffset.x,
             y: parseInt(ui.landOffsetY.text()) ?? defaultConfig.landOffset.y
@@ -1440,9 +1747,16 @@ function validateConfig(config) {
     // 验证账号列表
     if (!Array.isArray(config.accountList)) config.accountList = [];
 
+    // 验证存档账号列表
+    if (!Array.isArray(config.saveAccountList)) config.saveAccountList = [];
+
     // 验证创新号账号列表
     if (!Array.isArray(config.addFriendsList)) config.addFriendsList = [];
 
+    // 验证账号方式
+    if (!config.accountMethod || (config.accountMethod !== "email" && config.accountMethod !== "save")) {
+        config.accountMethod = "email"; // 默认为邮箱账号方式
+    }
     // 验证token
     if (config.token == null) config.token = defaultConfig.token;
 
@@ -1548,6 +1862,9 @@ function parseAccountNames(text) {
  */
 // 设置账号识别方式按钮状态
 function setFindAccountMethod(method) {
+    // 更新全局状态变量
+    currentFindAccountMethod = method;
+
     if (method === "image") {
         ui.findAccountImage.attr("bg", color);
         ui.findAccountImage.attr("textColor", "#FFFFFF");
@@ -1564,18 +1881,23 @@ function setFindAccountMethod(method) {
     ui.findAccountImage.attr("bg", ui.findAccountImage.attr("bg"));
     ui.findAccountText.attr("bg", ui.findAccountText.attr("bg"));
 
-    // 确保配置正确保存
-    const config = getConfig();
-    if (config.findAccountMethod !== method) {
-        autoSaveConfig();
-    }
+    // 自动保存配置
+    autoSaveConfig();
 }
 
 function loadConfigToUI() {
     const config = loadConfig();
 
+    // 初始化全局状态变量
+    currentAccountMethod = config.accountMethod || "email";
+    currentFindAccountMethod = config.findAccountMethod || "ocr";
+    currentLandFindMethod = config.landFindMethod || "商店";
+
     // 设置账号识别方式
     setFindAccountMethod(config.findAccountMethod);
+
+    // 设置账号方式
+    setAccountMethod(config.accountMethod || 'email');
 
     // 设置功能选择
     ui.functionSelect.setSelection(config.selectedFunction.code);
@@ -1901,6 +2223,9 @@ function loadConfigToUI() {
 
 // 设置寻找土地方法按钮状态
 function setLandMethod(method) {
+    // 更新全局状态变量
+    currentLandFindMethod = method;
+
     if (method === "商店") {
         ui.methodShop.attr("bg", color);
         ui.methodShop.attr("textColor", "#FFFFFF");
@@ -1917,11 +2242,8 @@ function setLandMethod(method) {
     ui.methodShop.attr("bg", ui.methodShop.attr("bg"));
     ui.methodBakery.attr("bg", ui.methodBakery.attr("bg"));
 
-    // 确保配置正确保存
-    const config = getConfig();
-    if (config.landFindMethod !== method) {
-        autoSaveConfig();
-    }
+    // 自动保存配置
+    autoSaveConfig();
 }
 
 function stopOtherEngines(includeMain = false) {
@@ -2085,21 +2407,34 @@ function startButton() {
     switch (config.selectedFunction.code) {
         case 0: // 刷地
             stopOtherEngines(); // 先清理所有任务
-            threads.start(() => {
-                launch("com.supercell.hayday");
-                sleep(1000);
-                let newEngine = engines.execScriptFile("./shuadi.js");
-                engineIds.shuadi = newEngine.id;  // 保存新引擎ID
-                log("启动刷地引擎，ID: " + newEngine.id);
-
-                // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-                if (shouldOpenFloatWindow) {
-                    // 启动应用后打开浮动按钮
+            log(config.accountMethod);
+            if (config.accountMethod == "email") {
+                threads.start(() => {
+                    log("开始启动刷地引擎");
+                    launch("com.supercell.hayday");
                     sleep(1000);
-                    float_win.open();
-                    log("已启动浮动按钮");
-                }
-            });
+                    let newEngine = engines.execScriptFile("./shuadi.js");
+                    engineIds.shuadi = newEngine.id;  // 保存新引擎ID
+                    log("启动刷地引擎，ID: " + newEngine.id);
+
+                    // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
+                    if (shouldOpenFloatWindow) {
+                        // 启动应用后打开浮动按钮
+                        sleep(1000);
+                        float_win.open();
+                        log("已启动浮动按钮");
+                    }
+                })
+            }
+            else if (config.accountMethod == "save") {
+                threads.start(() => {
+                    if (!checkRoot()) {
+                        toastLog("请先获取Root权限");
+                        return;
+                    }
+                    let switchSaveAccount = require("./switchSaveAccount.js");
+                })
+            }
             break;
 
         case 1: // 种树
@@ -2250,6 +2585,14 @@ events.broadcast.on("engine_r", function (type) {
         log("新刷地引擎ID: " + newEngine.id);
 
     }
+
+    else if (type == "刷地引擎_存档") {
+        stopOtherEngines();
+        log("发送重启事件");
+        events.broadcast.emit("switchSaveAccount", timeStorage.get("nextAccountToChange"));
+
+    }
+
     else if (type == "种树引擎") {
         stopOtherEngines();
         let newEngine = engines.execScriptFile("./zhongshu.js");
@@ -2265,7 +2608,14 @@ events.broadcast.on("engine_r", function (type) {
 function initUI() {
     // 检查更新
     checkForUpdatesOnce();
+
+    // 先初始化账号列表UI，确保账号列表在配置加载前已准备好
+    initAccountListUI();
+
+    // 初始化addFriends列表UI
+    initAddFriendsListUI();
     // 尝试加载配置（如果配置文件存在）
+
     if (files.exists(configPath)) {
         try {
             loadConfigToUI();
@@ -2274,11 +2624,6 @@ function initUI() {
             toast("加载配置失败: " + e.message, "long");
         }
     }
-
-    // 初始化账号列表UI
-    initAccountListUI();
-    // 初始化addFriends列表UI
-    initAddFriendsListUI();
 
     // 初始化权限开关状态
     updateSwitchStatus();
@@ -2423,6 +2768,16 @@ function initUI() {
     });
     ui.findAccountText.click(() => {
         setFindAccountMethod("ocr");
+        autoSaveConfig();
+    });
+
+    // 绑定账号方式切换按钮事件
+    ui.accountMethodEmail.click(() => {
+        setAccountMethod("email");
+        autoSaveConfig();
+    });
+    ui.accountMethodSave.click(() => {
+        setAccountMethod("save");
         autoSaveConfig();
     });
 

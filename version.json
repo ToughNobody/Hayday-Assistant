@@ -1,26 +1,31 @@
 {
-  "version": "1.4.11",
-  "description": "\n修复Bug：\n修复创新号由于加载时间过长导致起名出错的bug\n\n",
+  "version": "1.4.12",
+  "description": "\n新增功能：\n存档切号功能（需要root）\n\n功能优化：\n优化滑动手势\n账号列表选择框向左微调，防止与添加按钮重合\n在更多选项里添加设备root信息\n添加改善游戏界面的识别，自动点击”全部接受“\n添加进入设计节界面的识别\n添加升级后出现的评价卡通农场弹窗，自动点击“不再询问”\n创新号：优化起名操作，添加点击初始进入游戏时的新手动画跳过按键操作\n\n修复Bug：\n修复账号列表删除账号时的显示错误\n修复异形屏切换账号时找不到切换账号按钮的bug\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 33,
+      "versionCode": 34,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 32,
+      "versionCode": 34,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 32,
+      "versionCode": 34,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 31,
+      "versionCode": 34,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
+    },
+    {
+      "name": "switchSaveAccount.js",
+      "versionCode": 34,
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/switchSaveAccount.js"
     },
     {
       "name": "zhongshu.js",
@@ -29,7 +34,7 @@
     },
     {
       "name": "createNewAccount.js",
-      "versionCode": 33,
+      "versionCode": 34,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/createNewAccount.js"
     },
     {

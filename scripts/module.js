@@ -7,6 +7,7 @@ const timerMap = new Map();
 let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
 const configDir = files.join(appExternalDir, "configs");
 const configPath = files.join(configDir, "config.json");
+
 let content = files.read(configPath);
 let config = JSON.parse(content);
 
@@ -242,42 +243,46 @@ function checkRoot() {
 
 function restartgame() {
     try {
-        if (checkRoot()) {
-            let packageName = "com.supercell.hayday";
+        if (config.accountMethod == "email") {
+            if (checkRoot()) {
+                let packageName = "com.supercell.hayday";
 
-            try {
-                let result = shell("am force-stop " + packageName, true);
-                if (result.code === 0) {
-                    console.log("使用am force-stop命令成功停止应用");
-                    toast("卡通农场已停止");
-                } else {
-                    console.log("am force-stop命令执行失败: " + result.error);
+                try {
+                    let result = shell("am force-stop " + packageName, true);
+                    if (result.code === 0) {
+                        console.log("使用am force-stop命令成功停止应用");
+                        // toast("卡通农场已停止");
+                    } else {
+                        console.log("am force-stop命令执行失败: " + result.error);
+                    }
+                } catch (e) {
+                    console.log("使用am force-stop命令时出错: " + e);
                 }
-            } catch (e) {
-                console.log("使用am force-stop命令时出错: " + e);
-            }
-        } else {
-            home();
-            sleep(500);
-            launchSettings("com.supercell.hayday");
-            // 循环尝试点击"停止"按钮，直到成功
-            for (let i = 0; i < 5; i++) {
-                if (click("停止")) {
-                    break; // 点击成功后退出循环               
+            } else {
+                home();
+                sleep(500);
+                launchSettings("com.supercell.hayday");
+                // 循环尝试点击"停止"按钮，直到成功
+                for (let i = 0; i < 5; i++) {
+                    if (click("停止")) {
+                        break; // 点击成功后退出循环               
+                    }
+                    sleep(1000);
                 }
                 sleep(1000);
+                for (let i = 0; i < 3; i++) {
+                    if (click("确定") || click("停止")) {
+                        toastLog("已停止应用");
+                        break;// 点击成功后退出循环
+                    }
+                    sleep(1000);
+                }
             }
             sleep(1000);
-            for (let i = 0; i < 3; i++) {
-                if (click("确定") || click("停止")) {
-                    toastLog("已停止应用");
-                    break;// 点击成功后退出循环
-                }
-                sleep(1000);
-            }
+            launch("com.supercell.hayday");
+        } else {
+            events.broadcast.emit("engine_r", "刷地引擎_存档");
         }
-        sleep(1000);
-        launch("com.supercell.hayday");
     } catch (error) {
         log(error);
     }
@@ -908,6 +913,7 @@ function close() {
 //滑动
 function huadong() {
     try {
+        showTip("滑动寻找")
         //缩放
         gestures([0, 200, [420 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]],
             [0, 200, [1000 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]
@@ -925,8 +931,8 @@ function huadong() {
         swipe(300 + ran(), 125 + ran(), 980 + ran(), 720, 200);
         sleep(100)
         //下滑
-        gesture(1000, [730 + ran(), 580 + ran()],
-            [710 + ran(), 270 + ran()],
+        gesture(1000, [650 + ran(), 580 + ran()],
+            [630 + ran(), 270 + ran()],
         );
     } catch (error) {
         log(error)
@@ -1546,7 +1552,7 @@ function find_close(screenshot1, action = null) {
 
         //进入小镇，鱼塘，其他农场
         let homebtn1 = findMC(["#62d365", [-5, -12, "#c787db"], [1, 11, "#55cf58"]],
-            screenshot = sc ,[0,600,240,110]);
+            screenshot = sc, [0, 600, 240, 110]);
         if (homebtn1) {
             click(homebtn1.x - 30 + ran(), homebtn1.y + ran());
             console.log("当前在其他界面，回到主界面");
@@ -1567,8 +1573,58 @@ function find_close(screenshot1, action = null) {
             showTip("升级了！")
             click(637 + ran(), 642 + ran());
             sleep(2000);
+            // 添加新线程实现控件点击，点击不再询问
+            threads.start(function () {
+                let count = 0;
+                while (count < 10) {
+                    click("不再询问")
+                    console.log("线程执行中，第" + (count + 1) + "次尝试点击控件");
+                    sleep(1000);
+                    count++;
+                }
+                console.log("线程执行完毕，已达到最大循环次数");
+            });
+
             find_close();
             return "levelup";
+        }
+
+        //改善游戏体验界面
+        let improve = matchColor([{ x: 102, y: 194, color: "#8fda38" },
+        { x: 141, y: 192, color: "#8fda38" }, { x: 162, y: 183, color: "#fae12c" },
+        { x: 316, y: 200, color: "#fff9db" }, { x: 797, y: 572, color: "#f5ba38" }],
+            screenshot = sc);
+        if (improve) {
+            log("改善游戏体验界面");
+            showTip("改善游戏体验界面");
+            click(930 + ran(), 570 + ran());
+        }
+
+        //进入设计节界面
+        let design_1 = matchColor([{ x: 1223, y: 548, color: "#383d40" },
+        { x: 1231, y: 570, color: "#392910" }, { x: 1237, y: 586, color: "#3d2e00" },
+        { x: 1229, y: 599, color: "#40403d" }, { x: 1205, y: 666, color: "#3f2e00" },
+        { x: 1221, y: 685, color: "#403f3a" }],
+            screenshot = sc);
+        let design_2 = matchColor([{ x: 1231, y: 546, color: "#ddf3fe" },
+        { x: 1223, y: 572, color: "#e8a83e" }, { x: 1228, y: 599, color: "#fffff3" },
+        { x: 1207, y: 665, color: "#fabc00" }, { x: 1221, y: 681, color: "#fffbec" }],
+            sccreenshot = sc);
+        if (design_1 || design_2) {
+            log("进入设计节界面");
+            showTip("进入设计节界面");
+            if (matchColor([{ x: 721, y: 530, color: "#f6c445" }, { x: 1028, y: 530, color: "#f6be3e" }])) {
+                click(860 + ran(), 530 + ran());
+                sleep(1000);
+                click(860 + ran(), 530 + ran());
+                sleep(1000);
+                click(860 + ran(), 530 + ran());
+                sleep(1000);
+                click(1080 + ran(), 90 + ran());
+                sleep(1000);
+
+            }
+            click(60, 490 + ran());
         }
 
         //断开连接
@@ -1740,17 +1796,12 @@ function switch_account(Account) {
 
             let sc = captureScreen();
             //新版界面
-            let allMatch = matchColor([{ x: 47, y: 177, color: "#ffffff" },
-            { x: 70, y: 662, color: "#2664aa" },
-            { x: 1213, y: 661, color: "#f2ded3" }], sc);
+            let huanhao1 = findMC(["#ffffff", [-19, -9, "#ffffff"],
+                [23, 6, "#fcbd00"], [3, 26, "#f4c000"], [-16, 16, "#fffbf7"]]
+                , sc, [0, 0, 200, 250])
 
-            //老板界面
-            let allMatch2 = matchColor([{ x: 39, y: 177, color: "#ffffff" },
-            { x: 68, y: 654, color: "#2662a9" },
-            { x: 1208, y: 659, color: "#f0e0d6" }], sc);
-
-            if (allMatch || allMatch2) {
-                click(41 + ran(), 184 + ran());
+            if (huanhao1) {
+                click(huanhao1.x + ran(), huanhao1.y + ran());
             }
             sleep(700);
             let huanhao2 = findMC(["#fefdfc", [4, 17, "#f6bd3c"], [-11, 18, "#fffefe"],
@@ -2587,6 +2638,92 @@ function pushTo(contentData) {
     }
 }
 
+/**
+ * 复制应用内的storage.xml和storage_new.xml文件到指定目录
+ * @param {string} name 存档名称，用于创建子目录
+ * @param {string} direction 操作方向，"export"导出或"import"导入，默认"export"
+ * @returns {boolean} 全部文件导入或导出成功返回true，失败返回false
+ */
+function copy_shell(name, direction = "export") {
+    let sourcePath1 = "/data/data/com.supercell.hayday/shared_prefs/storage.xml";
+    let sourcePath2 = "/data/data/com.supercell.hayday/shared_prefs/storage_new.xml";
+    let saveDir = files.join(appExternalDir + "/卡通农场小助手存档", name);
+    let savePath1 = files.join(saveDir, "storage.xml");
+    let savePath2 = files.join(saveDir, "storage_new.xml");
+
+    // 确保目标目录存在
+    files.ensureDir(saveDir + "/1");
+
+    if (direction === "export") {
+        // 导出：从应用目录复制到存档目录
+        console.log("正在导出文件..." + name);
+
+        // 使用cp命令复制第一个文件
+        let command1 = `cp "${sourcePath1}" "${savePath1}"`;
+        let result1 = shell(command1, true);
+
+        if (result1.code === 0) {
+            console.log("storage.xml 文件导出成功");
+        } else {
+            console.log("storage.xml 文件导出失败: " + result1.error);
+        }
+
+        // 使用cp命令复制第二个文件
+        let command2 = `cp "${sourcePath2}" "${savePath2}"`;
+        let result2 = shell(command2, true);
+
+        if (result2.code === 0) {
+            console.log("storage_new.xml 文件导出成功");
+        } else {
+            console.log("storage_new.xml 文件导出失败: " + result2.error);
+        }
+
+        // 检查两个文件是否都复制成功并返回结果
+        if (result1.code === 0 && result2.code === 0) {
+            console.log("所有文件导出成功");
+            return true;
+        } else {
+            console.log("部分文件导出失败");
+            return false;
+        }
+    } else if (direction === "import") {
+        // 导入：从存档目录复制到应用目录
+        console.log("正在导入文件..." + name);
+
+        // 使用cp命令复制第一个文件
+        let command1 = `cp "${savePath1}" "${sourcePath1}"`;
+        let result1 = shell(command1, true);
+
+        if (result1.code === 0) {
+            console.log("storage.xml 文件导入成功");
+        } else {
+            console.log("storage.xml 文件导入失败: " + result1.error);
+        }
+
+        // 使用cp命令复制第二个文件
+        let command2 = `cp "${savePath2}" "${sourcePath2}"`;
+        let result2 = shell(command2, true);
+
+        if (result2.code === 0) {
+            console.log("storage_new.xml 文件导入成功");
+        } else {
+            console.log("storage_new.xml 文件导入失败: " + result2.error);
+        }
+
+        // 检查两个文件是否都复制成功并返回结果
+        if (result1.code === 0 && result2.code === 0) {
+            console.log("所有文件导入成功");
+            return true;
+        } else {
+            console.log("部分文件导入失败");
+            return false;
+        }
+    } else {
+        console.log("参数错误：direction 参数必须是 'export' 或 'import'");
+        return false;
+    }
+}
+
 // 模块导出
 module.exports = {
     // 工具函数
@@ -2604,6 +2741,7 @@ module.exports = {
     showTip: showTip,
     showDetails: showDetails,
     getDetails: getDetails,
+    copy_shell: copy_shell,
 
     // 游戏界面检查
     checkmenu: checkmenu,
