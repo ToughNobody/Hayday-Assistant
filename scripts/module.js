@@ -355,7 +355,7 @@ function createWindow(position) {
         }
         // 设置位置和不可触摸，退出时关闭
         window.setPosition(targetX, targetY);
-        window.setTouchable(false);
+        // window.setTouchable(false);
 
         // 保存引用以便后续使用
         ui["tip_window"] = window;
@@ -375,6 +375,21 @@ function showTip(text) {
         }
     } catch (error) {
         log(error);
+    }
+}
+
+function closeWindow() {
+    try {
+        if (window) {
+            window.close();
+            window = null;
+        }
+        if (ui["tip_window"]) {
+            ui["tip_window"].close();
+            ui["tip_window"] = null;
+        }
+    } catch (e) {
+        console.error("关闭悬浮窗失败:", e);
     }
 }
 
@@ -1612,7 +1627,6 @@ function find_close(screenshot1, action = null) {
             sccreenshot = sc);
         if (design_1 || design_2) {
             log("进入设计节界面");
-            showTip("进入设计节界面");
             if (matchColor([{ x: 721, y: 530, color: "#f6c445" }, { x: 1028, y: 530, color: "#f6be3e" }])) {
                 click(860 + ran(), 530 + ran());
                 sleep(1000);
@@ -1624,7 +1638,13 @@ function find_close(screenshot1, action = null) {
                 sleep(1000);
 
             }
+            closeWindow();
+            sleep(100);
             click(60, 490 + ran());
+            sleep(100)
+            createWindow(config.showText);
+            sleep(100);
+            showTip("进入设计节界面");
         }
 
         //断开连接

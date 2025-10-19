@@ -702,7 +702,7 @@ function checkForUpdatesOnce() {
                             title: "发现新版本",
                             content: "当前版本: " + projectData.versionName + "\n" +
                                 "最新版本: " + latestVersion + "\n\n" +
-                                "更新内容: " + (result.description || "无更新说明").substring(0, 200) + "...\n\n" +
+                                "更新内容: " + (result.description || "无更新说明") + "\n\n" +
                                 "是否更新？",
                             positive: "立即更新",
                             negative: "稍后再说"
