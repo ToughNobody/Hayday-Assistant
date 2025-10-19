@@ -132,7 +132,7 @@ function autorequestSC() {
     //     sleep(100);
     // }
 
-    // 再尝试点击 "允许"、"确定"、"同意"、"开始" 等按钮（最多 30 秒）
+    // 再尝试点击 "允许"、"确定"、"同意"、"开始" 等按钮（最多 10 秒）
     const MAX_RETRIES = 50; // 最多尝试 50 次（10秒）
     for (let i = 0; i < MAX_RETRIES; i++) {
         if (click("开始") || click("确定") || click("同意") || click("允许")) {
@@ -1768,14 +1768,13 @@ function jiaocheng() {
             sleep(1000);
             let sc = captureScreen();
             //新版界面
-            let allMatch = matchColor([{ x: 47, y: 177, color: "#ffffff" },
-            { x: 70, y: 662, color: "#2664aa" },
-            { x: 1213, y: 661, color: "#f2ded3" }], sc);
+            let allMatch = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
+                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
 
             //老板界面
-            let allMatch2 = matchColor([{ x: 39, y: 177, color: "#ffffff" },
-            { x: 68, y: 654, color: "#2662a9" },
-            { x: 1208, y: 659, color: "#f0e0d6" }], sc);
+            let allMatch2 = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
+                [-17, 18, "#a44900"], [11, 54, "#f7c342"],
+                [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
 
             if (allMatch || allMatch2) {
                 log(`教程：已进入主界面`);
