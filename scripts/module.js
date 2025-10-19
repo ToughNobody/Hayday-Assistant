@@ -1816,8 +1816,8 @@ function switch_account(Account) {
 
             let sc = captureScreen();
             //新版界面
-            let huanhao1 = findMC(["#ffffff", [-19, -9, "#ffffff"],
-                [23, 6, "#fcbd00"], [3, 26, "#f4c000"], [-16, 16, "#fffbf7"]]
+            let huanhao1 = findMC(["#ffffff", [-22, 9, "#fbb700"],
+                [2, 30, "#f3bb00"], [2, -6, "#e1a282"], [-7, 20, "#e0a383"]]
                 , sc, [0, 0, 200, 250])
 
             if (huanhao1) {
