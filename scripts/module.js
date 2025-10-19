@@ -1883,10 +1883,10 @@ function switch_account(Account) {
                     restartgame();
                     return num; // 重启游戏后返回
                 }
-                if (matchColor([{ x: 100, y: 692, color: "#48a1d1" },
-                { x: 100, y: 300, color: "#194a96" },
-                { x: 56, y: 63, color: "#ffffff" },
-                { x: 445, y: 358, color: "#ffffff" }])) {
+                if (findMC(["#ffffff", [22, 0, "#0d327a"],
+                    [-3, 43, "#ffffff"], [-42, 33, "#0f3785"],
+                    [-22, 22, "#ffffff"], [-58, 0, "#ffffff"],
+                    [-43, 9, "#0e3682"]],null, [0, 250, 600, 250])) {
                     break;
                 }
                 sleep(1000);
