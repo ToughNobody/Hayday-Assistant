@@ -111,13 +111,70 @@ function getAppVersion() {
 
 function checkRoot() {
     try {
-        // 尝试执行需要root权限的命令
-        let result = shell("su -c id", true);
-        if (result.code === 0) {
-            return true;
-        } else {
+        // 方法一：通过执行su命令检测Root权限
+        function checkRootByShell() {
+            try {
+                let result = shell("su -c id", true);
+                if (result.code === 0) {
+                    console.log("✅ Root检测(Shell方式): 已Root");
+                    return true;
+                } else {
+                    console.log("❌ Root检测(Shell方式): 未Root");
+                    return false;
+                }
+            } catch (e) {
+                console.log("⚠️ Root检测(Shell方式)异常: " + e);
+                return false;
+            }
+        }
+
+        // 方法二：检查常见路径下是否存在su文件
+        function checkRootBySuPath() {
+            const paths = [
+                "/system/app/Superuser.apk",
+                "/sbin/su",
+                "/system/bin/su",
+                "/system/xbin/su",
+                "/data/local/xbin/su",
+                "/data/local/bin/su",
+                "/system/sd/xbin/su",
+                "/system/bin/failsafe/su",
+                "/data/local/su"
+            ];
+
+            for (let i = 0; i < paths.length; i++) {
+                if (files.exists(paths[i])) {
+                    console.log("✅ Root检测(Path方式): 发现su文件 - " + paths[i]);
+                    return true;
+                }
+            }
+            console.log("❌ Root检测(Path方式): 未发现su文件");
             return false;
         }
+
+        // 方法三：检查Build Tags是否包含test-keys
+        function checkBuildTags() {
+            let buildTags = device.buildTags || "";
+            if (buildTags.includes("test-keys")) {
+                console.log("✅ Root检测(Build Tags方式): 包含test-keys");
+                return true;
+            } else {
+                console.log("❌ Root检测(Build Tags方式): 不包含test-keys");
+                return false;
+            }
+        }
+
+        // 综合判断Root状态
+        function isDeviceRooted() {
+            // 如果任意一种方式检测到Root，则认为设备已Root
+            if (checkRootByShell() || checkRootBySuPath() || checkBuildTags()) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        return isDeviceRooted();
     } catch (e) {
         console.log("Root检查异常: " + e);
         return false;
