@@ -132,14 +132,47 @@ function autorequestSC() {
     //     sleep(100);
     // }
 
-    // 再尝试点击 "允许"、"确定"、"同意"、"开始" 等按钮（最多 10 秒）
-    const MAX_RETRIES = 50; // 最多尝试 50 次（10秒）
-    for (let i = 0; i < MAX_RETRIES; i++) {
-        if (click("开始") || click("确定") || click("同意") || click("允许")) {
-            log("已点击截图确认按钮");
-            return; // 成功点击后直接退出函数
+    isclick = false;
+    // 如果配置了截图坐标，则依次点击填入的坐标
+    if (config.screenshotCoords.coord1.x !== "" &&
+        config.screenshotCoords.coord1.y !== "" &&
+        config.screenshotCoords.coord2.x !== "" &&
+        config.screenshotCoords.coord2.y !== "" &&
+        config.screenshotCoords.coord3.x !== "" &&
+        config.screenshotCoords.coord3.y !== "") {
+        sleep(1000);
+        isclick = true;
+    }
+    // 点击coord1坐标
+    if (config.screenshotCoords.coord1.x !== "" &&
+        config.screenshotCoords.coord1.y !== "") {
+        click(parseInt(config.screenshotCoords.coord1.x), parseInt(config.screenshotCoords.coord1.y));
+        sleep(500); // 等待500毫秒
+    }
+
+    // 点击coord2坐标
+    if (config.screenshotCoords.coord2.x !== "" &&
+        config.screenshotCoords.coord2.y !== "") {
+        click(parseInt(config.screenshotCoords.coord2.x), parseInt(config.screenshotCoords.coord2.y));
+        sleep(500); // 等待500毫秒
+    }
+
+    // 点击coord3坐标
+    if (config.screenshotCoords.coord3.x !== "" &&
+        config.screenshotCoords.coord3.y !== "") {
+        click(parseInt(config.screenshotCoords.coord3.x), parseInt(config.screenshotCoords.coord3.y));
+        sleep(500); // 等待500毫秒
+    }
+
+    if (isclick == false) {    // 再尝试点击 "允许"、"确定"、"同意"、"开始" 等按钮（最多 10 秒）
+        const MAX_RETRIES = 50; // 最多尝试 50 次（10秒）
+        for (let i = 0; i < MAX_RETRIES; i++) {
+            if (click("开始") || click("确定") || click("同意") || click("允许")) {
+                log("已点击截图确认按钮");
+                return; // 成功点击后直接退出函数
+            }
+            sleep(200);
         }
-        sleep(200);
     }
 }
 
@@ -1647,6 +1680,14 @@ function find_close(screenshot1, action = null) {
             showTip("进入设计节界面");
         }
 
+        //进入加载界面
+        let jiazai = matchColor([{ x: 438, y: 565, color: "#fcffa2" },
+        { x: 409, y: 550, color: "#85cbec" }, { x: 418, y: 585, color: "#c4e3e8" },
+        { x: 867, y: 546, color: "#7ec8ed" }, { x: 861, y: 587, color: "#c7e3e8" }], sc);
+        if (jiazai) {
+            checkmenu();
+        }
+
         //断开连接
         let disconnect = matchColor([{ x: 279, y: 222, color: "#fff9db" },
         { x: 435, y: 62, color: "#deb476" },
@@ -1680,11 +1721,15 @@ function find_close(screenshot1, action = null) {
         }
 
         //进入购买界面
-        let buy_button = matchColor([{ x: 679, y: 578, color: "#7bbfe4" },
-        { x: 648, y: 612, color: "#f0d98a" },
-        { x: 682, y: 683, color: "#f4bd3f" }],
-            screenshot = sc)
-        if (buy_button) {
+        let buy_button1 = findMC(["#78bde4", [-9, 34, "#efdb8c"],
+            [-24, 58, "#3477b8"], [-25, 68, "#fffff7"],
+            [-23, 86, "#f5bd3b"]],
+            screenshot = sc, [580, 570, 730 - 580, 700 - 570]);
+        let buy_button2 = findMC(["#3476b7", [18, -29, "#efd88a"],
+            [3, 24, "#f6e8cf"], [39, 8, "#2764aa"],
+            [-15, -15, "#fdc53e"]],
+            screenshot = sc, [580, 570, 730 - 580, 700 - 570]);
+        if (buy_button1 || buy_button2) {
             console.log("进入购买界面，返回主菜单");
             showTip("进入购买界面，返回主菜单");
             click(650 + ran(), 620 + ran());
@@ -1692,9 +1737,9 @@ function find_close(screenshot1, action = null) {
         }
 
         //识别稻草人，左边肩膀，乌鸦身子，脚
-        let daocaoren = matchColor([{ x: 86, y: 406, color: "#bbb2e7" },
-        { x: 166, y: 372, color: "#282b38" },
-        { x: 162, y: 394, color: "#ce9b00" }],
+        let daocaoren = matchColor([{ x: 155, y: 358, color: "#515572" },
+        { x: 187, y: 402, color: "#b2ace0" }, { x: 451, y: 450, color: "#c3bde7" },
+        { x: 123, y: 384, color: "#dab400" }],
             screenshot = sc);
         if (daocaoren) {
             log("识别到稻草人");
@@ -1738,9 +1783,9 @@ function jiaocheng() {
             for (let i = 0; i < 5; i++) {
                 let sc = captureScreen();
                 //识别稻草人
-                let daocaoren = matchColor([{ x: 86, y: 406, color: "#bbb2e7" },
-                { x: 166, y: 372, color: "#282b38" },
-                { x: 162, y: 394, color: "#ce9b00" }], sc);
+                let daocaoren = matchColor([{ x: 155, y: 358, color: "#515572" },
+                { x: 187, y: 402, color: "#b2ace0" }, { x: 451, y: 450, color: "#c3bde7" },
+                { x: 123, y: 384, color: "#dab400" }], sc);
                 //识别到绿色按钮
                 let greenButton = matchColor([{ x: 1075, y: 571, color: "#70bb55" },
                 { x: 1096, y: 599, color: "#6ab952" }, { x: 1123, y: 559, color: "#73be52" },
@@ -1885,7 +1930,7 @@ function switch_account(Account) {
                 if (findMC(["#ffffff", [22, 0, "#0d327a"],
                     [-3, 43, "#ffffff"], [-42, 33, "#0f3785"],
                     [-22, 22, "#ffffff"], [-58, 0, "#ffffff"],
-                    [-43, 9, "#0e3682"]],null, [0, 250, 600, 250])) {
+                    [-43, 9, "#0e3682"]], null, [0, 250, 600, 250])) {
                     break;
                 }
                 sleep(1000);
@@ -2140,9 +2185,12 @@ function stopTimer(timer_Name) {
 }
 
 
+/**
+ * 种植作物,不带手势
+ */
 function plantCrop() {
     try {
-        //种小麦
+        //种植
         console.log("准备种" + config.selectedCrop.text);
         showTip(`准备种${config.selectedCrop.text}`);
         sleep(500)
@@ -2201,43 +2249,12 @@ function plantCrop() {
     }
 }
 
-//循环操作
-function operation(Account) {
-    //收小麦
-    let sc1 = captureScreen();
-    find_close(sc1);
-    sleep(200);
-    let is_findland = findland();
-    if (!is_findland) {
-        findland_click();
-    }
-    console.log("收割" + config.selectedCrop.text);
-    showTip(`收割${config.selectedCrop.text}`);
-    harvest_wheat();
 
-    //找耕地
-    sleep(1500);
-    if (find_close()) {
-        sleep(500);
-        find_close();
-        sleep(500);
-    }
-
-    center_land = findland();
-    console.log("寻找耕地");
-    //找不到重新找耕地
-    if (!center_land) {
-        console.log("未找到，重新寻找耕地");
-        if (find_close()) {
-            sleep(500);
-            find_close();
-            sleep(500);
-        }
-        findland_click();
-    }
-
-
-    //种小麦
+/**
+ * 种植作物,带手势
+ */
+function plant_crop() {
+    //种植
     console.log("准备种" + config.selectedCrop.text);
     showTip(`准备种${config.selectedCrop.text}`);
     sleep(500)
@@ -2299,6 +2316,94 @@ function operation(Account) {
     } catch (e) {
         console.error("种植harvest出错:", e);
     }
+}
+
+function harvest_crop() {
+    //收作物
+    let sc1 = captureScreen();
+    find_close(sc1);
+    sleep(200);
+    let is_findland = findland();
+    if (!is_findland) {
+        findland_click();
+    }
+    console.log("收割" + config.selectedCrop.text);
+    showTip(`收割${config.selectedCrop.text}`);
+    harvest_wheat();
+}
+
+//循环操作
+function operation(Account) {
+
+    //收作物
+    harvest_crop();
+
+    //找耕地
+    sleep(1500);
+    if (find_close()) {
+        sleep(500);
+        find_close();
+        sleep(500);
+    }
+
+    let center_land = findland();
+    console.log("寻找耕地");
+    //找不到重新找耕地
+    if (!center_land) {
+        console.log("未找到，重新寻找耕地");
+        if (find_close()) {
+            sleep(500);
+            find_close();
+            sleep(500);
+        }
+        findland_click();
+    }
+
+    //种植作物
+    plant_crop();
+
+    //检测土地是否种植上
+    log("检测种植情况")
+    if (findland()) {
+        let center_sickle = findMC(["#c6b65d", [-9, 9, "#b5984d"], [39, -1, "#ffdf7c"], [10, -62, "#f3f2f6"], [55, -72, "#e5e5e6"]]);
+        let center_wheat = findMC(crop);
+        if (center_sickle) {
+            console.log("找到镰刀，重新收割");
+            //收作物
+            harvest_crop();
+            //找耕地
+            sleep(1500);
+            if (find_close()) {
+                sleep(500);
+                find_close();
+                sleep(500);
+            }
+            let center_land = findland();
+            console.log("寻找耕地");
+            //找不到重新找耕地
+            if (!center_land) {
+                console.log("未找到，重新寻找耕地");
+                if (find_close()) {
+                    sleep(500);
+                    find_close();
+                    sleep(500);
+                }
+                findland_click();
+            }
+
+            //种植作物
+            plant_crop();
+        };
+        if (center_wheat) {
+            log("找到" + config.selectedCrop.text + "重新种植");
+            //种植作物
+            plant_crop();
+        }
+    } else {
+        log("重新检测时，未找到耕地");
+    }
+
+
     //设定计时器
     let timerName = config.switchAccount ? Account + "计时器" : config.selectedCrop.text;
     if (config.selectedCrop.code == 0) timer(timerName, 115);

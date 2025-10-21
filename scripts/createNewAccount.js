@@ -553,9 +553,9 @@ function jiazai() {
                 continue;
             }
 
-            jiazai = module.matchColor([{ x: 534, y: 155, color: "#c8f64e" },
-            { x: 540, y: 230, color: "#aee851" }, { x: 755, y: 360, color: "#ace64d" },
-            { x: 869, y: 568, color: "#a6d7ea" }], sc);
+            jiazai = module.matchColor([{ x: 438, y: 565, color: "#fcffa2" },
+            { x: 409, y: 550, color: "#85cbec" }, { x: 418, y: 585, color: "#c4e3e8" },
+            { x: 867, y: 546, color: "#7ec8ed" }, { x: 861, y: 587, color: "#c7e3e8" }], sc);
             if (!jiazai) break;
             sleep(1000);
             num++;

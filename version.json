@@ -1,20 +1,20 @@
 {
-  "version": "1.4.16",
-  "description": "\n新增功能：\n存档切号功能（需要root）\n\n功能优化：\n优化滑动手势\n账号列表选择框向左微调，防止与添加按钮重合\n在更多选项里添加设备root信息\n添加改善游戏界面的识别，自动点击”全部接受“\n添加进入设计节界面的识别\n添加升级后出现的评价卡通农场弹窗，自动点击“不再询问”\n脚本内更新内容能显示完全了\n创新号：优化起名操作，添加点击初始进入游戏时的新手动画跳过按键操作\n\n修复Bug：\n修复账号列表删除账号时的显示错误\n修复异形屏切换账号时找不到切换账号按钮的bug\n修复设计节点击失效问题\n修复菜单按钮有红点时的识别问题\n修复切换账号页面识别错误\n\n",
+  "version": "1.4.17",
+  "description": "\n功能优化：\n截图权限点击优化\nUI界面优化\n优化稻草人的识别\n检测进入购买界面判断优化\n在收割种植完成后加入一次检测\n修复Bug：\n\n创新号时检测的加载页面，由于游戏界面更新导致的识别错误\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 38,
+      "versionCode": 39,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 35,
+      "versionCode": 39,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 38,
+      "versionCode": 39,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
     },
     {
@@ -34,7 +34,7 @@
     },
     {
       "name": "createNewAccount.js",
-      "versionCode": 34,
+      "versionCode": 39,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/createNewAccount.js"
     },
     {

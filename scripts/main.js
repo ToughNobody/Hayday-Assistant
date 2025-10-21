@@ -333,19 +333,18 @@ ui.layout(
                                         <switch id="accountSwitch" w="*" h="48"
                                             gravity="left|center" />
                                     </horizontal>
-                                    <horizontal gravity="center_vertical" >
-                                        <text text="识别方式：" textSize="14" w="100" marginRight="8" />
-                                    </horizontal>
+                                    {/* 识别方式选择 */}
                                     <horizontal gravity="center_vertical" marginTop="8">
-                                        <button id="findAccountImage" text="图片识别" w="120" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="8" />
-                                        <button id="findAccountText" text="文字识别" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
+                                        <text text="识别方式：" textSize="14" w="100" marginRight="8" />
+                                        <button id="findAccountImage" text="图片识别" w="80" h="35" textSize="12" bg="#4CAF50" textColor="#FFFFFF" marginRight="8" gravity="center" />
+                                        <button id="findAccountText" text="文字识别" w="80" h="35" textSize="12" bg="#E0E0E0" textColor="#000000" gravity="center" />
                                     </horizontal>
 
                                     {/* 账号方式选择 */}
                                     <horizontal gravity="center_vertical" marginTop="8">
                                         <text text="切换账号方式：" textSize="14" w="100" marginRight="8" />
-                                        <button id="accountMethodEmail" text="邮箱" w="100" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="8" />
-                                        <button id="accountMethodSave" text="存档" w="100" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
+                                        <button id="accountMethodEmail" text="邮箱" w="80" h="35" textSize="12" bg="#4CAF50" textColor="#FFFFFF" marginRight="8" gravity="center" />
+                                        <button id="accountMethodSave" text="存档" w="80" h="35" textSize="12" bg="#E0E0E0" textColor="#000000" gravity="center" />
                                     </horizontal>
 
                                     {/* 账号列表显示 */}
@@ -391,14 +390,37 @@ ui.layout(
                     <scroll>
                         <vertical w="*" h="*" padding="16">
 
-                            {/* 寻找土地方法卡片 - 使用按钮模拟单选 */}
+                            {/* 基础设置卡片 - 使用按钮模拟单选 */}
                             <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
                                 <vertical padding="16">
-                                    <text text="寻找土地方法" textSize="16" textStyle="bold" marginBottom="16" />
+                                    <text text="基础设置" textSize="16" textStyle="bold" marginBottom="16" />
+                                    <text text="寻找土地方法" textSize="14" w="120" marginRight="8" />
                                     <horizontal gravity="center_vertical">
-                                        <button id="methodShop" text="商店" w="120" h="40" textSize="14" bg="#4CAF50" textColor="#FFFFFF" marginRight="16" />
-                                        <button id="methodBakery" text="面包房" w="120" h="40" textSize="14" bg="#E0E0E0" textColor="#000000" />
+                                        <button id="methodShop" text="商店" w="80" h="35" textSize="12" bg="#4CAF50" textColor="#FFFFFF" marginRight="16" gravity="center" />
+                                        <button id="methodBakery" text="面包房" w="80" h="35" textSize="12" bg="#E0E0E0" textColor="#000000" gravity="center" />
                                     </horizontal>
+
+                                    <text text="截图权限点击坐标" textSize="14" w="120" marginRight="8" marginTop="16" />
+                                    <vertical>
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="坐标1 - x:" textSize="14" marginRight="4" />
+                                            <input id="screenshotX1" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="y:" textSize="14" marginRight="4" />
+                                            <input id="screenshotY1" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="坐标2 - x:" textSize="14" marginRight="4" />
+                                            <input id="screenshotX2" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="y:" textSize="14" marginRight="4" />
+                                            <input id="screenshotY2" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="坐标3 - x:" textSize="14" marginRight="4" />
+                                            <input id="screenshotX3" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="y:" textSize="14" marginRight="4" />
+                                            <input id="screenshotY3" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+                                        </horizontal>
+                                    </vertical>
                                 </vertical>
                             </card>
 
@@ -1283,7 +1305,7 @@ ui['SaveAccountList'].on('item_bind', function (itemView, itemHolder) {
             console.log("使用am force-stop命令时出错: " + e);
             toast("使用am force-stop命令时出错: " + e);
         }
-        
+
         copy_shell(item.title, "import");
         setTimeout(() => {
             launch("com.supercell.hayday");
@@ -1603,6 +1625,21 @@ function getConfig() {
             text: ui.serverPlatform.getSelectedItem(),
             code: ["Pushplus推送加", "Server酱", "WxPusher"].indexOf(ui.serverPlatform.getSelectedItem())
         },
+        // 截图坐标配置
+        screenshotCoords: {
+            coord1: {
+                x: ui.screenshotX1.text() || "",
+                y: ui.screenshotY1.text() || ""
+            },
+            coord2: {
+                x: ui.screenshotX2.text() || "",
+                y: ui.screenshotY2.text() || ""
+            },
+            coord3: {
+                x: ui.screenshotX3.text() || "",
+                y: ui.screenshotY3.text() || ""
+            }
+        }
     };
 }
 
@@ -1765,6 +1802,64 @@ function validateConfig(config) {
 
     config.serverPlatform.text = ["Pushplus推送加", "Server酱", "WxPusher"][config.serverPlatform.code];
 
+    // 验证截图坐标配置
+    if (!config.screenshotCoords) {
+        config.screenshotCoords = defaultConfig.screenshotCoords;
+    } else {
+        // 验证坐标1
+        if (!config.screenshotCoords.coord1) {
+            config.screenshotCoords.coord1 = defaultConfig.screenshotCoords.coord1;
+        } else {
+            // 如果值为空字符串或null，保持为空字符串
+            if (config.screenshotCoords.coord1.x === "" || config.screenshotCoords.coord1.x === null) {
+                config.screenshotCoords.coord1.x = "";
+            } else {
+                // 如果有值则转换为数字
+                config.screenshotCoords.coord1.x = !isNaN(Number(config.screenshotCoords.coord1.x)) ? Number(config.screenshotCoords.coord1.x) : defaultConfig.screenshotCoords.coord1.x;
+            }
+
+            if (config.screenshotCoords.coord1.y === "" || config.screenshotCoords.coord1.y === null) {
+                config.screenshotCoords.coord1.y = "";
+            } else {
+                config.screenshotCoords.coord1.y = !isNaN(Number(config.screenshotCoords.coord1.y)) ? Number(config.screenshotCoords.coord1.y) : defaultConfig.screenshotCoords.coord1.y;
+            }
+        }
+
+        // 验证坐标2
+        if (!config.screenshotCoords.coord2) {
+            config.screenshotCoords.coord2 = defaultConfig.screenshotCoords.coord2;
+        } else {
+            if (config.screenshotCoords.coord2.x === "" || config.screenshotCoords.coord2.x === null) {
+                config.screenshotCoords.coord2.x = "";
+            } else {
+                config.screenshotCoords.coord2.x = !isNaN(Number(config.screenshotCoords.coord2.x)) ? Number(config.screenshotCoords.coord2.x) : defaultConfig.screenshotCoords.coord2.x;
+            }
+
+            if (config.screenshotCoords.coord2.y === "" || config.screenshotCoords.coord2.y === null) {
+                config.screenshotCoords.coord2.y = "";
+            } else {
+                config.screenshotCoords.coord2.y = !isNaN(Number(config.screenshotCoords.coord2.y)) ? Number(config.screenshotCoords.coord2.y) : defaultConfig.screenshotCoords.coord2.y;
+            }
+        }
+
+        // 验证坐标3
+        if (!config.screenshotCoords.coord3) {
+            config.screenshotCoords.coord3 = defaultConfig.screenshotCoords.coord3;
+        } else {
+            if (config.screenshotCoords.coord3.x === "" || config.screenshotCoords.coord3.x === null) {
+                config.screenshotCoords.coord3.x = "";
+            } else {
+                config.screenshotCoords.coord3.x = !isNaN(Number(config.screenshotCoords.coord3.x)) ? Number(config.screenshotCoords.coord3.x) : defaultConfig.screenshotCoords.coord3.x;
+            }
+
+            if (config.screenshotCoords.coord3.y === "" || config.screenshotCoords.coord3.y === null) {
+                config.screenshotCoords.coord3.y = "";
+            } else {
+                config.screenshotCoords.coord3.y = !isNaN(Number(config.screenshotCoords.coord3.y)) ? Number(config.screenshotCoords.coord3.y) : defaultConfig.screenshotCoords.coord3.y;
+            }
+        }
+    }
+
     // 其他验证...
     if (config.photoPath.length == 0) config.photoPath = "./res/pictures.1280_720"
     return config;
@@ -1843,6 +1938,21 @@ function getDefaultConfig() {
             text: "Pushplus推送加",
             code: 0
         },
+        // 截图坐标配置
+        screenshotCoords: {
+            coord1: {
+                x: "",
+                y: ""
+            },
+            coord2: {
+                x: "",
+                y: ""
+            },
+            coord3: {
+                x: "",
+                y: ""
+            }
+        }
     };
 }
 
@@ -2117,6 +2227,28 @@ function loadConfigToUI() {
     ui.huocangOffsetX.setText(String(config.huocangOffset.x));
     ui.huocangOffsetY.setText(String(config.huocangOffset.y));
 
+    // 加载截图坐标配置
+    if (config.screenshotCoords) {
+        // 加载坐标1
+        if (config.screenshotCoords.coord1) {
+            // 如果值为空字符串则设置为空，否则转换为字符串
+            ui.screenshotX1.setText(config.screenshotCoords.coord1.x === "" ? "" : String(config.screenshotCoords.coord1.x));
+            ui.screenshotY1.setText(config.screenshotCoords.coord1.y === "" ? "" : String(config.screenshotCoords.coord1.y));
+        }
+
+        // 加载坐标2
+        if (config.screenshotCoords.coord2) {
+            ui.screenshotX2.setText(config.screenshotCoords.coord2.x === "" ? "" : String(config.screenshotCoords.coord2.x));
+            ui.screenshotY2.setText(config.screenshotCoords.coord2.y === "" ? "" : String(config.screenshotCoords.coord2.y));
+        }
+
+        // 加载坐标3
+        if (config.screenshotCoords.coord3) {
+            ui.screenshotX3.setText(config.screenshotCoords.coord3.x === "" ? "" : String(config.screenshotCoords.coord3.x));
+            ui.screenshotY3.setText(config.screenshotCoords.coord3.y === "" ? "" : String(config.screenshotCoords.coord3.y));
+        }
+    }
+
     // 为货仓坐标偏移输入框添加变化监听
     ui.huocangOffsetX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
@@ -2127,6 +2259,55 @@ function loadConfigToUI() {
     }));
 
     ui.huocangOffsetY.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    // 为截图坐标输入框添加变化监听
+    ui.screenshotX1.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    ui.screenshotY1.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    ui.screenshotX2.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    ui.screenshotY2.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    ui.screenshotX3.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    ui.screenshotY3.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
             autoSaveConfig();
