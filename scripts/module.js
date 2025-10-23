@@ -1089,29 +1089,24 @@ function findland(isclick = true) {
 function findshop() {
     console.log("找" + config.landFindMethod);
     let center;
-    try {
-        if (config.landFindMethod == "商店") {
-            center = findimage(files.join(config.photoPath, "shop.png"), 0.6);
-            if (!center) {
-                center = findimage(files.join(config.photoPath, "shop1.png"), 0.6);
-            }
-            if (center) {
-                //找到商店
-                console.log("找到" + config.landFindMethod + "，坐标: " + center.x + "," + center.y,);
-                return center;
+    for (let i = 0; i < 6; i++) {
+        try {
+            if (config.landFindMethod == "商店") {
+                center = findimage(files.join(config.photoPath, "shop.png"), 0.6);
+                if (!center) {
+                    center = findimage(files.join(config.photoPath, "shop1.png"), 0.6);
+                };
             } else {
-                console.log("未找到" + config.landFindMethod);
-                //未找到商店;
-                return false;
-            }
-        } else {
-            center = findimage(files.join(config.photoPath, "bakery.png"), 0.6);
-            if (!center) {
-                center = findimage(files.join(config.photoPath, "bakery1.png"), 0.6);
+                center = findimage(files.join(config.photoPath, "bakery.png"), 0.6);
+                if (!center) {
+                    center = findimage(files.join(config.photoPath, "bakery1.png"), 0.6);
+                };
             };
-        };
-    } catch (error) {
-        log(error);
+        } catch (error) {
+            log(error);
+        }
+        if (center) break
+        else sleep(500);
     }
     if (center) {
         console.log("找到" + config.landFindMethod + "，坐标: " + center.x + "," + center.y,);
@@ -2322,21 +2317,31 @@ function plant_crop() {
     } else {
         console.log("未找到" + config.selectedCrop.text);
         showTip("未找到" + config.selectedCrop.text);
-        let next_button = findMC(["#ffffff",
-            [-30, 12, "#ffffff"], [-17, 28, "#f5bd00"],
-            [-242, 28, "#f5bd00"], [-257, 0, "#ffffff"]]);
+        let next_button = findMC(["#ffffff", [11, 2, "#f4d200"],
+            [21, -1, "#ffffff"], [33, 2, "#fbbd00"], [42, 11, "#fefeef"],
+            [6, 30, "#f3bc00"], [7, 46, "#fefef4"], [-17, 4, "#fac000"],
+            [-30, 14, "#fefeef"], [2, -16, "#f4db35"]]);
 
         if (next_button) {
             let maxTries = 10;
             let tries = 0;
             while (tries < maxTries && next_button) {
-                next_button = findMC(["#ffffff",
-                    [-30, 12, "#ffffff"], [-17, 28, "#f5bd00"],
-                    [-242, 28, "#f5bd00"], [-257, 0, "#ffffff"]]);
+                next_button = findMC(["#ffffff", [11, 2, "#f4d200"],
+                    [21, -1, "#ffffff"], [33, 2, "#fbbd00"], [42, 11, "#fefeef"],
+                    [6, 30, "#f3bc00"], [7, 46, "#fefef4"], [-17, 4, "#fac000"],
+                    [-30, 14, "#fefeef"], [2, -16, "#f4db35"]]);
                 if (next_button) {
                     click(next_button.x + ran(), next_button.y + ran());
                     log("点击下一页按钮");
                     showTip("点击下一页按钮");
+                    tries++;
+                } else {
+                    log("未找到下一个按钮，检查界面");
+                    let close = find_close();
+                    if (close == "levelup") {
+                        log("因为升级，重新种植");
+                        plantCrop();
+                    }
                 }
 
                 sleep(1000);
@@ -2344,19 +2349,13 @@ function plant_crop() {
                 if (center_wheat) {
                     break;
                 }
-            }
-            if (tries >= maxTries) {
-                log("种植时未能找到作物，退出操作");
-                return false;
-            }
-            if (!next_button) {
-                log("未找到下一个按钮，检查界面");
-                let close = find_close();
-                if (close == "levelup") {
-                    log("因为升级，重新种植");
-                    plantCrop();
+
+                if (tries >= maxTries) {
+                    log("种植时未能找到作物，退出操作");
+                    return false;
                 }
             }
+
         } else {
             let close = find_close();
             if (close == "levelup") {

@@ -1,10 +1,10 @@
 {
-  "version": "1.4.18",
-  "description": "\n功能优化：添加两种检测设备root的方式，满足其一即判断已root\n\n",
+  "version": "1.4.19",
+  "description": "\n\n功能优化：\n识别商店时间延长到3秒\n\n修复Bug：\n修复种植时点击下一页出现死循环的Bug\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 40,
+      "versionCode": 41,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
     },
     {
@@ -14,7 +14,7 @@
     },
     {
       "name": "module.js",
-      "versionCode": 40,
+      "versionCode": 41,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
     },
     {
