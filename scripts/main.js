@@ -728,110 +728,102 @@ function showAboutDialog() {
             "作者：ToughNobody\n\n" +
             "希望对你有帮助！",
         positive: "确定",
+        negative: "下载全部文件",
         neutral: "检查更新"
     }).on("neutral", () => {
         checkForUpdates();
-    }).show();
-}
-
-function checkForUpdatesOnce() {
-    log("============= 执行自动更新检查 =============");
-    threads.start(() => {
-        try {
-            // 读取project.json文件获取版本信息
-            let projectConfig = files.read('./project.json');
-            let projectData = JSON.parse(projectConfig);
-            log("当前版本: " + projectData.versionName);
-            log("当前版本代码: " + projectData.versionCode);
-
-            // 发送HTTP请求获取最新版本号
-            let apiUrl = "https://gitee.com/ToughNobody/Hayday-Assistant/raw/main/version.json";
-            log("请求API地址: " + apiUrl);
-
-            let response = http.get(apiUrl, {
-                headers: {
-                    "Accept": "application/vnd.github.v3+json"
+    }).on("negative", () => {
+        // 弹出选择下载源的选项弹窗
+        let updateSource = "gitee"; // 默认更新源
+        dialogs.build({
+            title: "选择下载源",
+            customView: ui.inflate(
+                <vertical padding="16">
+                    <text textSize="14sp" textColor="#333333">请选择下载源：</text>
+                    <radio id="giteeRadio" text="Gitee (国内源)" checked="true" group="updateSourceGroup" marginTop="16" />
+                    <radio id="githubRadio" text="GitHub (国外源)" group="updateSourceGroup" marginTop="8" />
+                </vertical>
+            ),
+            positive: "开始下载",
+            negative: "取消"
+        }).on("show", (dialog) => {
+            // 单选框选择事件
+            dialog.getView().githubRadio.on("check", (checked) => {
+                if (checked) {
+                    updateSource = "github";
+                    dialog.getView().giteeRadio.setChecked(false);
                 }
             });
 
-            log("HTTP响应状态码: " + response.statusCode);
-
-            if (response.statusCode == 200) {
-                let result = response.body.json();
-
-                // 检查result对象和version字段是否存在
-                if (!result || !result.version) {
-                    log("错误: 无法获取版本信息，result对象或version为空");
-                    return;
+            dialog.getView().giteeRadio.on("check", (checked) => {
+                if (checked) {
+                    updateSource = "gitee";
+                    dialog.getView().githubRadio.setChecked(false);
                 }
+            });
+        }).on("positive", () => {
+            // 执行全量更新
+            threads.start(() => {
+                try {
 
-                let latestVersion = result.version;
-                log("最新版本: " + latestVersion);
+                    // 读取project.json文件获取版本信息,   别删会出BUG
+                    let projectConfig = files.read('./project.json');
+                    let projectData = JSON.parse(projectConfig);
 
-                // 比较版本号
-                let compareResult = compareVersions(projectData.versionName, latestVersion);
-                log("版本比较结果: " + compareResult + " (0=相同, <0=旧版本, >0=新版本)");
-
-                // 只有在当前版本低于最新版本时才显示通知
-                if (compareResult < 0) {
-                    ui.run(() => {
-                        log("发现新版本，显示更新通知");
-
-                        dialogs.build({
-                            title: "发现新版本",
-                            content: "当前版本: " + projectData.versionName + "\n" +
-                                "最新版本: " + latestVersion + "\n\n" +
-                                "更新内容: " + (result.description || "无更新说明") + "\n\n" +
-                                "是否更新？",
-                            positive: "立即更新",
-                            negative: "稍后再说"
-                        }).on("positive", () => {
-                            // 调用热更新模块
-                            threads.start(() => {
-                                try {
-                                    // 加载热更新模块
-                                    let hotUpdate = require("./hot_update.js");
-
-                                    // 初始化热更新
-                                    hotUpdate.init({
-                                        version: result.version,
-                                        versionCode: projectData.versionCode,
-                                        files: result.files,
-                                        description: result.description
-                                    });
-
-                                    // 执行增量更新
-                                    let success = hotUpdate.doIncrementalUpdate();
-
-                                    if (success) {
-                                        toastLog("更新成功，即将重启应用...");
-                                        engines.stopAll();
-                                        events.on("exit", function () {
-                                            engines.execScriptFile(engines.myEngine().cwd() + "/main.js");
-                                        });
-                                    } else {
-                                        toastLog("更新失败，请重试");
-                                    }
-                                } catch (e) {
-                                    toastLog("热更新失败: " + e.message);
-                                }
-                            });
-                        }).show();
+                    // 发送HTTP请求获取最新版本号
+                    let apiUrl = "https://gitee.com/ToughNobody/Hayday-Assistant/raw/main/version.json";
+                    log("请求API地址: " + apiUrl);
+                    let response = http.get(apiUrl, {
+                        headers: {
+                            "Accept": "application/vnd.github.v3+json"
+                        }
                     });
-                } else {
-                    log("当前版本已是最新或更高，不显示通知");
+                    log("HTTP响应状态码: " + response.statusCode);
+
+                    let result = response.body.json();
+
+                    // 检查result对象和version字段是否存在
+                    if (!result || !result.version) {
+                        log("错误: 无法获取版本信息，result对象或version为空");
+                        if (!silence) { toast("检查更新失败: 无法获取版本信息") }
+                        return;
+                    }
+
+                    // 加载热更新模块
+                    let hotUpdate = require("./hot_update.js");
+
+                    // 初始化热更新
+                    hotUpdate.init({
+                        version: result.version,
+                        versionCode: projectData.versionCode,
+                        files: result.files,
+                        description: result.description,
+                        updateSource: updateSource, // 根据选择的源更新
+                        downloadAll: true
+                    });
+
+                    // 执行全量更新
+                    let success = hotUpdate.doIncrementalUpdate();
+
+                    if (success) {
+                        toastLog("更新成功，即将重启应用...");
+                        engines.stopAll();
+                        events.on("exit", function () {
+                            engines.execScriptFile(engines.myEngine().cwd() + "/main.js");
+                        });
+                    } else {
+                        toastLog("更新失败，请重试");
+                    }
+                } catch (e) {
+                    toastLog("热更新失败: " + e.message);
                 }
-            } else {
-                log("自动更新检查失败: HTTP状态码 " + response.statusCode);
-            }
-        } catch (e) {
-            log("自动更新检查失败: " + e.message);
-        }
-    });
+            });
+        }).show();
+    }).show();
 }
 
 // 检查更新函数
-function checkForUpdates() {
+function checkForUpdates(silence = false) {
     log("============= 开始检查更新 =============");
     // toast("正在检查更新...");
     threads.start(() => {
@@ -852,7 +844,7 @@ function checkForUpdates() {
                 }
             });
             log("HTTP响应状态码: " + response.statusCode);
-            log("HTTP响应内容: " + response.body.string());
+            if (!silence) { log("HTTP响应内容: " + response.body.string()) }
 
             if (response.statusCode == 200) {
                 let result = response.body.json();
@@ -860,34 +852,193 @@ function checkForUpdates() {
                 // 检查result对象和version字段是否存在
                 if (!result || !result.version) {
                     log("错误: 无法获取版本信息，result对象或version为空");
-                    ui.run(() => {
-                        toast("检查更新失败: 无法获取版本信息");
-                    });
+                    if (!silence) { toast("检查更新失败: 无法获取版本信息") }
                     return;
                 }
 
                 let latestVersion = result.version;
                 log("最新版本: " + latestVersion);
 
+                // 比较版本号
+                let compareResult = compareVersions(projectData.versionName, latestVersion);
+                log("版本比较结果: " + compareResult + " (0=相同, <0=旧版本, >0=新版本)");
+
                 ui.run(() => {
-                    log("关闭更新检查对话框");
-
-                    // 比较版本号
-                    let compareResult = compareVersions(projectData.versionName, latestVersion);
-                    log("版本比较结果: " + compareResult + " (0=相同, <0=旧版本, >0=新版本)");
-
                     if (compareResult < 0) {
                         // 有新版本
+                        let updateSource = "gitee"; // 默认更新源
                         dialogs.build({
                             title: "发现新版本",
-                            content: "当前版本: " + projectData.versionName + "\n" +
-                                "最新版本: " + latestVersion + "\n\n" +
-                                "更新内容: " + (result.description || "无更新说明").substring(0, 200) + "...\n\n" +
-                                "是否更新？",
+                            customView: ui.inflate(
+                                <vertical padding="16">
+                                    <text id="versionInfo" textSize="14sp" textColor="#333333" marginTop="8" />
+                                    <text id="updateContent" textSize="14sp" textColor="#333333" marginTop="16" />
+                                    <text id="giteeResult" textSize="12sp" textColor="#666666" marginTop="8" text="Gitee: 未检测" />
+                                    <text id="githubResult" textSize="12sp" textColor="#666666" marginTop="4" text="Github: 未检测" />
+                                    <button id="connectivityBtn" text="检测连通性" textSize="12sp" w="auto" h="auto" marginTop="16" />
+                                    <text textSize="14sp" textColor="#333333" marginTop="16">选择更新源：</text>
+                                    <radio id="giteeRadio" text="Gitee (国内源)" checked="true" group="updateSourceGroup" />
+                                    <radio id="githubRadio" text="GitHub (国外源)" group="updateSourceGroup" />
+                                </vertical>
+                            ),
                             positive: "立即更新",
-                            negative: "稍后再说"
+                            negative: "下载全部文件",
+                            neutral: "稍后再说"
+                        }).on("show", (dialog) => {
+                            // 设置版本信息
+                            let versionInfo = "当前版本: " + projectData.versionName + "\n" +
+                                "最新版本: " + latestVersion;
+                            dialog.getView().versionInfo.setText(versionInfo);
+
+                            // 设置更新内容
+                            let updateContent = "更新内容: " + (result.description || "无更新说明");
+                            dialog.getView().updateContent.setText(updateContent);
+
+                            // 单选框选择事件
+                            dialog.getView().githubRadio.on("check", (checked) => {
+                                if (checked) {
+                                    updateSource = "github";
+                                    dialog.getView().giteeRadio.setChecked(false);
+                                }
+                            });
+
+                            dialog.getView().giteeRadio.on("check", (checked) => {
+                                if (checked) {
+                                    updateSource = "gitee";
+                                    dialog.getView().githubRadio.setChecked(false);
+                                }
+                            });
+
+                            // 检测连通性按钮点击事件
+                            dialog.getView().connectivityBtn.on("click", () => {
+                                // 清除之前的线程，避免重复检测
+                                if (typeof giteeThread !== 'undefined' && giteeThread.isAlive()) {
+                                    giteeThread.interrupt();
+                                }
+                                if (typeof githubThread !== 'undefined' && githubThread.isAlive()) {
+                                    githubThread.interrupt();
+                                }
+
+                                // 点击后立即显示检测中状态
+                                dialog.getView().giteeResult.setText("Gitee: 检测中");
+                                dialog.getView().giteeResult.setTextColor(colors.parseColor("#666666"));
+                                dialog.getView().githubResult.setText("Github: 检测中");
+                                dialog.getView().githubResult.setTextColor(colors.parseColor("#666666"));
+
+                                // 检测Gitee连通性
+                                let giteeThread = threads.start(function () {
+                                    let startTime = new Date().getTime();
+                                    let isTimeout = false;
+
+                                    // 设置10秒超时
+                                    let timeoutThread = threads.start(function () {
+                                        sleep(10000);
+                                        if (!isTimeout) {
+                                            isTimeout = true;
+                                            ui.run(() => {
+                                                dialog.getView().giteeResult.setText("Gitee检测超时");
+                                                dialog.getView().giteeResult.setTextColor(colors.parseColor("#FF0000")); // 红色
+                                            });
+                                        }
+                                    });
+
+                                    try {
+                                        let response = http.get("https://gitee.com/ToughNobody/Hayday-Assistant/raw/main/version.json");
+                                        if (isTimeout) return; // 如果已经超时，直接返回
+
+                                        let endTime = new Date().getTime();
+                                        let duration = endTime - startTime;
+                                        isTimeout = true; // 标记已完成，防止超时线程继续执行
+                                        timeoutThread.interrupt(); // 中断超时线程
+
+                                        ui.run(() => {
+                                            if (response.statusCode == 200) {
+                                                let text = "Gitee连接成功，耗时: " + duration + "ms";
+                                                dialog.getView().giteeResult.setText(text);
+                                                // 根据耗时设置颜色：超过1000ms为橙色，否则绿色
+                                                if (duration > 1000) {
+                                                    dialog.getView().giteeResult.setTextColor(colors.parseColor("#FFA500")); // 橙色
+                                                } else {
+                                                    dialog.getView().giteeResult.setTextColor(colors.parseColor("#008000")); // 绿色
+                                                }
+                                            } else {
+                                                dialog.getView().giteeResult.setText("Gitee连接失败，状态码: " + response.statusCode + "，耗时: " + duration + "ms");
+                                                dialog.getView().giteeResult.setTextColor(colors.parseColor("#FF0000")); // 红色
+                                            }
+                                        });
+                                    } catch (e) {
+                                        if (isTimeout) return; // 如果已经超时，直接返回
+
+                                        let endTime = new Date().getTime();
+                                        let duration = endTime - startTime;
+                                        isTimeout = true; // 标记已完成，防止超时线程继续执行
+                                        timeoutThread.interrupt(); // 中断超时线程
+
+                                        ui.run(() => {
+                                            dialog.getView().giteeResult.setText("Gitee连接出错: " + e.message + "，耗时: " + duration + "ms");
+                                            dialog.getView().giteeResult.setTextColor(colors.parseColor("#FF0000")); // 红色
+                                        });
+                                    }
+                                });
+
+                                // 检测Github连通性
+                                let githubThread = threads.start(function () {
+                                    let startTime = new Date().getTime();
+                                    let isTimeout = false;
+
+                                    // 设置10秒超时
+                                    let timeoutThread = threads.start(function () {
+                                        sleep(10000);
+                                        if (!isTimeout) {
+                                            isTimeout = true;
+                                            ui.run(() => {
+                                                dialog.getView().githubResult.setText("Github检测超时");
+                                                dialog.getView().githubResult.setTextColor(colors.parseColor("#FF0000")); // 红色
+                                            });
+                                        }
+                                    });
+
+                                    try {
+                                        let response = http.get("https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/version.json");
+                                        if (isTimeout) return; // 如果已经超时，直接返回
+
+                                        let endTime = new Date().getTime();
+                                        let duration = endTime - startTime;
+                                        isTimeout = true; // 标记已完成，防止超时线程继续执行
+                                        timeoutThread.interrupt(); // 中断超时线程
+
+                                        ui.run(() => {
+                                            if (response.statusCode == 200) {
+                                                let text = "Github连接成功，耗时: " + duration + "ms";
+                                                dialog.getView().githubResult.setText(text);
+                                                // 根据耗时设置颜色：超过1000ms为橙色，否则绿色
+                                                if (duration > 1000) {
+                                                    dialog.getView().githubResult.setTextColor(colors.parseColor("#FFA500")); // 橙色
+                                                } else {
+                                                    dialog.getView().githubResult.setTextColor(colors.parseColor("#008000")); // 绿色
+                                                }
+                                            } else {
+                                                dialog.getView().githubResult.setText("Github连接失败，状态码: " + response.statusCode + "，耗时: " + duration + "ms");
+                                                dialog.getView().githubResult.setTextColor(colors.parseColor("#FF0000")); // 红色
+                                            }
+                                        });
+                                    } catch (e) {
+                                        if (isTimeout) return; // 如果已经超时，直接返回
+
+                                        let endTime = new Date().getTime();
+                                        let duration = endTime - startTime;
+                                        isTimeout = true; // 标记已完成，防止超时线程继续执行
+                                        timeoutThread.interrupt(); // 中断超时线程
+
+                                        ui.run(() => {
+                                            dialog.getView().githubResult.setText("Github连接出错: " + e.message + "，耗时: " + duration + "ms");
+                                            dialog.getView().githubResult.setTextColor(colors.parseColor("#FF0000")); // 红色
+                                        });
+                                    }
+                                });
+                            });
                         }).on("positive", () => {
-                            // 调用热更新模块
+                            // 调用热更新模块 - 立即更新（增量更新）
                             threads.start(() => {
                                 try {
                                     // 加载热更新模块
@@ -898,7 +1049,8 @@ function checkForUpdates() {
                                         version: result.version,
                                         versionCode: projectData.versionCode,
                                         files: result.files,
-                                        description: result.description
+                                        description: result.description,
+                                        updateSource: updateSource // 根据选择的源更新
                                     });
 
                                     // 执行增量更新
@@ -917,15 +1069,51 @@ function checkForUpdates() {
                                     toastLog("热更新失败: " + e.message);
                                 }
                             });
+                        }).on("negative", () => {
+                            // 调用热更新模块 - 下载全部文件（全量更新）
+                            threads.start(() => {
+                                try {
+                                    // 加载热更新模块
+                                    let hotUpdate = require("./hot_update.js");
+
+                                    // 初始化热更新
+                                    hotUpdate.init({
+                                        version: result.version,
+                                        versionCode: projectData.versionCode,
+                                        files: result.files,
+                                        description: result.description,
+                                        updateSource: updateSource, // 根据选择的源更新
+                                        downloadAll: true
+                                    });
+
+                                    // 执行全量更新
+                                    let success = hotUpdate.doIncrementalUpdate();
+
+                                    if (success) {
+                                        toastLog("更新成功，即将重启应用...");
+                                        engines.stopAll();
+                                        events.on("exit", function () {
+                                            engines.execScriptFile(engines.myEngine().cwd() + "/main.js");
+                                        });
+                                    } else {
+                                        toastLog("更新失败，请重试");
+                                    }
+                                } catch (e) {
+                                    toastLog("热更新失败: " + e.message);
+                                }
+                            });
+                        }).on("neutral", () => {
+                            // 稍后再说，不执行任何操作，直接关闭对话框
                         }).show();
-                    } else if (compareResult > 0) {
+                    } else if (!silence && compareResult > 0) {
                         // 当前版本更新（开发中）
                         toastLog("你的版本超过了全球100%的用户！作者得在你这更新版本" + projectData.versionName + " > " + latestVersion, "long");
-                    } else {
+                    } else if (!silence && compareResult == 0) {
                         // 没有新版本
                         toastLog("当前已是最新版本: " + projectData.versionName);
                     }
                 });
+
             } else {
                 toastLog("检查更新失败: HTTP状态码 " + response.statusCode);
             }
@@ -2582,7 +2770,7 @@ ui.btnStop.click(() => {
 });
 
 // 输出当前配置日志
-function logCurrentConfig(config, shouldOpenFloatWindow) {
+function logCurrentConfig(config) {
     console.log("=============== 当前配置 ===============");
     console.log("应用版本: " + getAppVersion());
     console.log("设备分辨率：" + config.deviceScreenSize);
@@ -2605,7 +2793,7 @@ function logCurrentConfig(config, shouldOpenFloatWindow) {
     console.log("是否仓库统计: " + (config.isCangkuStatistics ? "是" : "否") + ", 仓库统计间隔时间: " + config.cangkuStatisticsTime + "分钟");
     console.log("推送方式: " + config.serverPlatform.text);
     console.log("token: " + "骗你的,不会把token输出到日志,切勿泄漏个人token!!!");
-    console.log("浮动按钮: " + (shouldOpenFloatWindow ? "是" : "否"));
+    console.log("浮动按钮: " + (ui.win_switch.checked ? "是" : "否"));
     // console.log("主题颜色: " + config.themeColor.text);config
     // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
     console.log("============================");
@@ -2618,7 +2806,7 @@ function startButton() {
     statistics.remove("rowContentData");
 
     if (device.width != 720 || device.height != 1280) {
-        toastLog("当前分辨率不正确，请使用720*1280分辨率,1")
+        toastLog("当前分辨率不正确，请使用720*1280分辨率")
     }
 
     if (!auto.service) {
@@ -2629,18 +2817,9 @@ function startButton() {
         return;
     }
 
-    // 记录用户是否打开浮动按钮
-    const shouldOpenFloatWindow = ui.win_switch.checked;
-
-    // 检查用户是否打开了浮动按钮开关
-    if (shouldOpenFloatWindow) {
-        // 关闭浮动按钮
-        float_win.close();
-        log("已关闭浮动按钮");
-    }
 
     // 输出当前配置
-    logCurrentConfig(config, shouldOpenFloatWindow);
+    logCurrentConfig(config);
 
     switch (config.selectedFunction.code) {
         case 0: // 刷地
@@ -2655,13 +2834,6 @@ function startButton() {
                     engineIds.shuadi = newEngine.id;  // 保存新引擎ID
                     log("启动刷地引擎，ID: " + newEngine.id);
 
-                    // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-                    if (shouldOpenFloatWindow) {
-                        // 启动应用后打开浮动按钮
-                        sleep(1000);
-                        float_win.open();
-                        log("已启动浮动按钮");
-                    }
                 })
             }
             else if (config.accountMethod == "save") {
@@ -2697,13 +2869,6 @@ function startButton() {
                 engineIds.createNewAccount = newEngine.id;  // 保存新引擎ID
                 log("启动建号引擎，ID: " + newEngine.id);
 
-                // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-                if (shouldOpenFloatWindow) {
-                    // 启动应用后打开浮动按钮
-                    sleep(1000);
-                    float_win.open();
-                    log("已启动浮动按钮");
-                }
             });
             break;
 
@@ -2730,18 +2895,8 @@ function winStartButton() {
         return;
     }
 
-    // 记录用户是否打开浮动按钮
-    const shouldOpenFloatWindow = ui.win_switch.checked;
-
-    // 检查用户是否打开了浮动按钮开关
-    if (shouldOpenFloatWindow) {
-        // 关闭浮动按钮
-        float_win.close();
-        log("已关闭浮动按钮");
-    }
-
     // 输出当前配置
-    logCurrentConfig(config, shouldOpenFloatWindow);
+    logCurrentConfig(config);
 
     switch (config.selectedFunction.code) {
         case 0: // 刷地
@@ -2753,13 +2908,6 @@ function winStartButton() {
                 engineIds.shuadi = newEngine.id;  // 保存新引擎ID
                 log("启动刷地引擎，ID: " + newEngine.id);
 
-                // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-                if (shouldOpenFloatWindow) {
-                    // 启动应用后打开浮动按钮
-                    sleep(1000);
-                    float_win.open();
-                    log("已启动浮动按钮");
-                }
             });
             break;
 
@@ -2771,7 +2919,6 @@ function winStartButton() {
                 engineIds.zhongshu = newEngine.id;  // 保存新引擎ID
                 log("启动种树引擎，ID: " + newEngine.id);
             });
-            float_win.close();
             break;
 
         case 2: // 创新号
@@ -2783,13 +2930,6 @@ function winStartButton() {
                 engineIds.createNewAccount = newEngine.id;  // 保存新引擎ID
                 log("启动建号引擎，ID: " + newEngine.id);
 
-                // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-                if (shouldOpenFloatWindow) {
-                    // 启动应用后打开浮动按钮
-                    sleep(1000);
-                    float_win.open();
-                    log("已启动浮动按钮");
-                }
             });
             break;
 
@@ -2845,7 +2985,7 @@ events.broadcast.on("engine_r", function (type) {
  */
 function initUI() {
     // 检查更新
-    checkForUpdatesOnce();
+    checkForUpdates(true);
 
     // 先初始化账号列表UI，确保账号列表在配置加载前已准备好
     initAccountListUI();

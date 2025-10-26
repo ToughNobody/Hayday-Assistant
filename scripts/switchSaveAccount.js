@@ -182,15 +182,6 @@ events.broadcast.on("switchSaveAccount", (account) => {
         let newEngine = engines.execScriptFile("./shuadi.js");
         engineIds.shuadi = newEngine.id;  // 保存新引擎ID
         log("启动刷地引擎，ID: " + newEngine.id);
-        // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-        // 从全局配置中获取是否应该打开浮动窗口
-        const shouldOpenFloatWindow = float_win ? float_win.isCreated() : false;
-        if (shouldOpenFloatWindow) {
-            // 启动应用后打开浮动按钮
-            sleep(1000);
-            float_win.open();
-            log("已启动浮动按钮");
-        }
     });
 });
 
@@ -222,15 +213,6 @@ if (!config.switchAccount || config.saveAccountList.filter(account => account.do
     let newEngine = engines.execScriptFile("./shuadi.js");
     engineIds.shuadi = newEngine.id;  // 保存新引擎ID
     log("启动刷地引擎，ID: " + newEngine.id);
-    // 如果用户打开了浮动按钮开关，则在启动应用后打开浮动按钮
-    // 从全局配置中获取是否应该打开浮动窗口
-    const shouldOpenFloatWindow = float_win ? float_win.isCreated() : false;
-    if (shouldOpenFloatWindow) {
-        // 启动应用后打开浮动按钮
-        sleep(1000);
-        float_win.open();
-        log("已启动浮动按钮");
-    }
 }
 
 

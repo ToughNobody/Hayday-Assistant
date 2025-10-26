@@ -1,17 +1,17 @@
 {
-  "version": "1.4.19",
-  "description": "\n\n功能优化：\n识别商店时间延长到3秒\n\n修复Bug：\n修复种植时点击下一页出现死循环的Bug\n\n",
+  "version": "1.4.20",
+  "description": "\n\n功能优化：\n浮动按钮在每次启动脚本时不会自动退出\n添加github更新源和下载全部文件，当下载失败或文件缺失，可再次尝试下载\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 41,
+      "versionCode": 42,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 40,
+      "versionCode": 42,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/main.js"
@@ -32,7 +32,7 @@
     },
     {
       "name": "switchSaveAccount.js",
-      "versionCode": 34,
+      "versionCode": 42,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/switchSaveAccount.js",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/switchSaveAccount.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/switchSaveAccount.js"
@@ -53,7 +53,7 @@
     },
     {
       "name": "floatyBtn.js",
-      "versionCode": 32,
+      "versionCode": 42,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/floatyBtn.js"
@@ -67,7 +67,7 @@
     },
     {
       "name": "hot_update.js",
-      "versionCode": 32,
+      "versionCode": 42,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/hot_update.js"

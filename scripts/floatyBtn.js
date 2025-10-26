@@ -1,4 +1,5 @@
 
+//自动获取截图权限
 function autorequestSC() {
     // 先尝试点击 "总是"、"整个"、"全部" 等按钮（最多 20 次）
     //使用mumu模拟器不需要了
@@ -9,14 +10,47 @@ function autorequestSC() {
     //     sleep(100);
     // }
 
-    // 再尝试点击 "允许"、"确定"、"同意"、"开始" 等按钮（最多 30 秒）
-    const MAX_RETRIES = 50; // 最多尝试 50 次（10秒）
-    for (let i = 0; i < MAX_RETRIES; i++) {
-        if (click("开始") || click("确定") || click("同意") || click("允许")) {
-            log("已点击截图确认按钮");
-            return; // 成功点击后直接退出函数
+    isclick = false;
+    // 如果配置了截图坐标，则依次点击填入的坐标
+    if (config.screenshotCoords.coord1.x !== "" &&
+        config.screenshotCoords.coord1.y !== "" &&
+        config.screenshotCoords.coord2.x !== "" &&
+        config.screenshotCoords.coord2.y !== "" &&
+        config.screenshotCoords.coord3.x !== "" &&
+        config.screenshotCoords.coord3.y !== "") {
+        sleep(1000);
+        isclick = true;
+    }
+    // 点击coord1坐标
+    if (config.screenshotCoords.coord1.x !== "" &&
+        config.screenshotCoords.coord1.y !== "") {
+        click(parseInt(config.screenshotCoords.coord1.x), parseInt(config.screenshotCoords.coord1.y));
+        sleep(500); // 等待500毫秒
+    }
+
+    // 点击coord2坐标
+    if (config.screenshotCoords.coord2.x !== "" &&
+        config.screenshotCoords.coord2.y !== "") {
+        click(parseInt(config.screenshotCoords.coord2.x), parseInt(config.screenshotCoords.coord2.y));
+        sleep(500); // 等待500毫秒
+    }
+
+    // 点击coord3坐标
+    if (config.screenshotCoords.coord3.x !== "" &&
+        config.screenshotCoords.coord3.y !== "") {
+        click(parseInt(config.screenshotCoords.coord3.x), parseInt(config.screenshotCoords.coord3.y));
+        sleep(500); // 等待500毫秒
+    }
+
+    if (isclick == false) {    // 再尝试点击 "允许"、"确定"、"同意"、"开始" 等按钮（最多 10 秒）
+        const MAX_RETRIES = 50; // 最多尝试 50 次（10秒）
+        for (let i = 0; i < MAX_RETRIES; i++) {
+            if (click("开始") || click("确定") || click("同意") || click("允许")) {
+                log("已点击截图确认按钮");
+                return; // 成功点击后直接退出函数
+            }
+            sleep(200);
         }
-        sleep(200);
     }
 }
 
@@ -107,8 +141,8 @@ function suspendedWindow() {
     );
 
     // 设置初始位置在左侧
-    win.setPosition(-20, device.height / 3);
-    setInterval(() => { }, 1000);
+    setTimeout(() => { }, 1000);
+    win.setPosition(-20, 360);
 
     // 初始隐藏子悬浮窗
     if (win && win.id_logo) {
@@ -159,27 +193,27 @@ function suspendedWindow() {
             logo_buys = false;
         }
     }
-    
+
     // 吸附动画函数 - 只在移动后调用
     function animateWindowToSide(currentX, currentY, toLeft) {
         logo_buys = true; // 设置为运行中，防止重复触发
-        
+
         try {
             // 确定目标位置
             let targetX = toLeft ? -20 : device.width - 60;
             // 计算超调位置（用于弹跳效果）
             let overshootX = toLeft ? -35 : device.width - 45;
             let smallBounceX = toLeft ? -15 : device.width - 65;
-            
+
             // 更新方向标志
             logo_fx = toLeft;
 
             // 更新子悬浮窗方向
             updateSubWindowPosition();
-            
+
             // 关闭子悬浮窗
             win.id_logo.visibility = 8;
-            
+
             let steps = [
                 { action: 'position', x: overshootX, y: currentY, delay: 30 },
                 { action: 'position', x: targetX, y: currentY, delay: 30 },
@@ -187,7 +221,7 @@ function suspendedWindow() {
                 { action: 'position', x: targetX, y: currentY },
                 { action: 'alpha', value: '0.4' }
             ];
-            
+
             // 启动非阻塞动画
             runAnimationSteps(steps);
         } catch (e) {
@@ -215,32 +249,32 @@ function suspendedWindow() {
                 // 关闭子菜单
                 toggleSubWindowVisibility();
                 // 在新线程中执行截图操作，避免UI线程阻塞和requestScreenCapture()错误
-                threads.start(function() {
+                threads.start(function () {
                     try {
                         // 获取截图权限
                         autoSc();
-                        
+
                         // 获取应用目录
                         const scPath = "/storage/emulated/0/$MuMu12Shared/Screenshots"
                         files.ensureDir(scPath + "/1");
-                        
+
                         // 生成带时间戳的文件名
                         var timestamp = new Date().getTime();
                         var fileName = "screenshot_" + timestamp + ".png";
                         var filePath = files.join(scPath, fileName);
-                        
+
                         // 截图并保存
                         sleep(800);
                         var screenshot = captureScreen();
                         screenshot.saveTo(filePath);
-                        
+
                         // 在UI线程中显示toast
-                        ui.run(function() {
+                        ui.run(function () {
                             toastLog("截图已保存到: " + filePath);
                         });
                     } catch (e) {
                         // 在UI线程中显示错误信息
-                        ui.run(function() {
+                        ui.run(function () {
                             toastLog("截图失败: " + e.message);
                         });
                         console.error("截图错误:", e);
@@ -304,7 +338,7 @@ function suspendedWindow() {
         }
         return true;
     });
-    
+
     // 初始化透明度为0.4
     win.floaty_icon.attr("alpha", "0.4");
     // 同步设置背景卡片初始透明度
@@ -313,15 +347,15 @@ function suspendedWindow() {
     // 子悬浮窗动画函数
     function animateSubWindows(show) {
         var logo_ms = 200; // 动画播放时间
-        
+
         // 创建动画数组
         var animators = [];
         var buttonIds = ['id_0', 'id_1', 'id_2', 'id_3', 'id_4'];
-        
+
         // 为每个按钮创建动画，根据方向设置不同的参数
         for (var i = 0; i < buttonIds.length; i++) {
             var button = win[buttonIds[i]];
-            
+
             // 根据悬浮窗方向确定X轴动画参数
             var startX, endX;
             if (logo_fx) {
@@ -332,18 +366,18 @@ function suspendedWindow() {
                 // 右侧悬浮窗 - 按钮向左展开
                 startX = 50;
                 endX = 0;
-                
+
 
                 // 直接调整按钮的位置属性
                 button.attr({
                     'layout_gravity': 'right'
                 });
             }
-            
+
             // Y轴动画参数保持一致
             var startY = -50;
             var endY = 0;
-            
+
             // 根据显示/隐藏确定动画的起始和结束值
             if (!show) {
                 // 关闭动画，交换起始和结束值
@@ -354,70 +388,70 @@ function suspendedWindow() {
                 endX = tempX;
                 endY = tempY;
             }
-            
+
             // 平移动画
             var animX = ObjectAnimator.ofFloat(button, "translationX", startX, endX);
             var animY = ObjectAnimator.ofFloat(button, "translationY", startY, endY);
-            
+
             // 缩放动画
             var animScaleX = ObjectAnimator.ofFloat(button, "scaleX", show ? 0 : 1, show ? 1 : 0);
             var animScaleY = ObjectAnimator.ofFloat(button, "scaleY", show ? 0 : 1, show ? 1 : 0);
-            
+
             // 透明度动画
             var animAlpha = ObjectAnimator.ofFloat(button, "alpha", show ? 0 : 1, show ? 1 : 0);
-            
+
             // 添加到动画数组
             animators.push(animX, animY, animScaleX, animScaleY, animAlpha);
         }
-        
+
         // 创建并启动动画集
         var animatorSet = new AnimatorSet();
         animatorSet.playTogether(animators);
         animatorSet.setDuration(logo_ms);
-        
+
         // 启动动画
         animatorSet.start();
-        
+
         // 设置动画占用状态
         logo_buys = true;
-        setTimeout(function() {
+        setTimeout(function () {
             logo_buys = false;
         }, logo_ms + 50);
     }
-    
+
     // 切换子悬浮窗可见性的辅助函数
     function toggleSubWindowVisibility() {
         if (logo_buys) return; // 如果有动画正在运行，不响应新的操作
         logo_buys = true; // 标记为运行中
-        
+
         let currentX = win.getX();
         let currentY = win.getY();
-        
+
         if (win.id_logo.visibility == 0) {
             // 关闭子悬浮窗
             animateSubWindows(false);
-            
+
             // 关闭后隐藏并恢复透明度
-            setTimeout(function() {
+            setTimeout(function () {
                 win.id_logo.visibility = 8;
                 // 关闭时恢复透明度为0.4
                 win.floaty_icon.attr("alpha", "0.4");
                 // 同步更新背景卡片透明度
                 if (win.circle_window) win.circle_window.attr("alpha", "0.4");
-                
+
                 // 如果是右侧展开，恢复窗口到正确的吸附位置
                 if (!logo_fx && currentX !== (device.width - 60)) {
                     let restoredX = logo_fx ? currentX : currentX + 240; // 恢复偏移量，与展开时保持一致
                     win.setPosition(restoredX, currentY);
                 }
-                
+
                 logo_switch = false; // 更新子悬浮窗展开状态
                 logo_buys = false;
             }, 200);
         } else {
             // 更新子悬浮窗位置
             updateSubWindowPosition();
-            
+
             // 根据方向调整子悬浮窗的显示位置
             if (!logo_fx) {
                 // 如果在右侧，需要调整子悬浮窗的位置，确保按钮不超出屏幕
@@ -428,14 +462,14 @@ function suspendedWindow() {
                 // 左侧保持原位置
                 win.setPosition(currentX, currentY);
             }
-            
+
             // 先让子悬浮窗可见
             win.id_logo.visibility = 0;
             // 展开时透明度为0.9
             win.floaty_icon.attr("alpha", "0.9");
             // 同步更新背景卡片透明度
             if (win.circle_window) win.circle_window.attr("alpha", "0.9");
-            
+
             // 启动展开动画
             animateSubWindows(true);
             logo_switch = true; // 更新子悬浮窗展开状态
@@ -456,8 +490,8 @@ function suspendedWindow() {
                 windowX = win.getX();
                 windowY = win.getY();
                 // 按下时立即设置卡片和图标的透明度为0.9
-                  if (win.circle_window) win.circle_window.attr("alpha", "0.9");
-                  win.floaty_icon.attr("alpha", "0.9");
+                if (win.circle_window) win.circle_window.attr("alpha", "0.9");
+                win.floaty_icon.attr("alpha", "0.9");
                 return true;
 
             case event.ACTION_MOVE:
@@ -502,8 +536,8 @@ function suspendedWindow() {
                     }
                     yd = false;
                     // 移动结束后重置卡片和图标的透明度为0.4
-                      if (win.circle_window) win.circle_window.attr("alpha", "0.4");
-                      win.floaty_icon.attr("alpha", "0.4");
+                    if (win.circle_window) win.circle_window.attr("alpha", "0.4");
+                    win.floaty_icon.attr("alpha", "0.4");
                     return true;
                 }
 
@@ -522,15 +556,75 @@ function suspendedWindow() {
         engines.myEngine().forceStop();
         threads.shutDownAll();
     });
-    
+
     // 标记窗口已创建
     window_created = true;
+    // setInterval(() => {
+    //     log("当前悬浮窗位置: X=" + win.getX() + ", Y=" + win.getY());
+    // }, 1000);
 }
 
-
-
-
-// suspendedWindow();
+/**
+ * 重置悬浮窗位置函数
+ * 获取当前悬浮窗坐标，计算相对于屏幕的高度百分比和宽度距离，并重新设置位置
+ */
+function resetPosition() {
+    // 检查悬浮窗是否存在
+    if (!win) {
+        console.error("悬浮窗未创建，无法重置位置");
+        return;
+    }
+    
+    // 获取当前悬浮窗坐标
+    let currentX = win.getX();
+    let currentY = win.getY();
+    
+    // 获取屏幕尺寸
+    let screenWidth = device.width;
+    let screenHeight = device.height;
+    
+    // 计算Y轴相对于屏幕高度的百分比
+    let yPercent = currentY / screenHeight;
+    
+    // 确定悬浮窗在哪一侧（左或右）
+    let isOnLeft = currentX < screenWidth / 2;
+    
+    // 计算X轴相对于屏幕宽度的距离
+    let xOffset;
+    if (isOnLeft) {
+        // 左侧：计算距离左侧的距离（考虑吸附偏移）
+        xOffset = Math.abs(currentX + 20); // 左侧吸附位置为-20
+    } else {
+        // 右侧：计算距离右侧的距离（考虑吸附偏移）
+        xOffset = Math.abs(screenWidth - currentX - 40); // 右侧吸附位置为screenWidth - 60
+    }
+    
+    // 根据计算结果重新设置悬浮窗位置
+    // 保持相同的Y轴百分比位置
+    let newY = Math.round(yPercent * (screenHeight - 40)); // 考虑悬浮窗高度限制
+    
+    // 根据所在侧边和偏移量设置X轴位置
+    let newX;
+    if (isOnLeft) {
+        // 左侧位置计算（吸附位置为-20）
+        newX = -20;
+    } else {
+        // 右侧位置计算（吸附位置为screenWidth - 60）
+        newX = screenWidth - 60;
+    }
+    
+    // 限制Y轴范围
+    if (newY < 0) newY = 0;
+    if (newY > screenHeight - 40) newY = screenHeight - 40;
+    
+    // 设置新位置
+    win.setPosition(newX, newY);
+    
+    console.log("悬浮窗位置已重置: X=" + newX + ", Y=" + newY + 
+                ", Y轴百分比=" + (yPercent * 100).toFixed(2) + "%" + 
+                ", X轴偏移=" + xOffset + "px" + 
+                ", 位置方向=" + (isOnLeft ? "左侧" : "右侧"));
+}
 
 // 模块导出
 module.exports = {
@@ -551,10 +645,10 @@ module.exports = {
             setTimeout(checkInitialized, 50);
         }
     },
-    
-    toggle: function() {
+
+    toggle: function () {
         if (!this.isCreated() || logo_buys) return;
-        
+
         if (logo_switch) {
             // 如果当前是展开状态，则关闭
             logo_switch = false;
@@ -576,7 +670,7 @@ module.exports = {
                 win.floaty_icon.attr("alpha", "0.4");
                 // 等待动画完成后再关闭窗口
                 let self = this;
-                setTimeout(function() {
+                setTimeout(function () {
                     self._closeAllWindows();
                 }, 200 + 100);
             } else {
@@ -585,9 +679,9 @@ module.exports = {
             }
         }
     },
-    
+
     // 内部方法：关闭所有窗口并重置状态
-    _closeAllWindows: function() {
+    _closeAllWindows: function () {
         if (win) win.close();
         win = null;
         window_created = false;
@@ -600,15 +694,20 @@ module.exports = {
     isCreated: function () {
         return window_created;
     },
-    
+
     isExpanded: function () {
         return logo_switch;
     },
-    
+
     _main: function () {
         window_created = true;
         logo_switch = false; // 初始状态为关闭
         suspendedWindow();
+    },
+    
+    // 添加resetPosition函数到模块导出
+    resetPosition: function() {
+        resetPosition();
     }
 };
 
