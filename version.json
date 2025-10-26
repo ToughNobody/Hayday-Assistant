@@ -5,81 +5,96 @@
     {
       "name": "project.json",
       "versionCode": 41,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/project.json"
     },
     {
       "name": "main.js",
       "versionCode": 40,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/main.js"
     },
     {
       "name": "module.js",
       "versionCode": 41,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/module.js"
     },
     {
       "name": "shuadi.js",
       "versionCode": 34,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/shuadi.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/shuadi.js"
     },
     {
       "name": "switchSaveAccount.js",
       "versionCode": 34,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/switchSaveAccount.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/switchSaveAccount.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/switchSaveAccount.js"
     },
     {
       "name": "zhongshu.js",
       "versionCode": 27,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/zhongshu.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/zhongshu.js"
     },
     {
       "name": "createNewAccount.js",
       "versionCode": 39,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/createNewAccount.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/createNewAccount.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/createNewAccount.js"
     },
     {
       "name": "floatyBtn.js",
       "versionCode": 32,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/floatyBtn.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/floatyBtn.js"
     },
     {
       "name": "icon_Base64.js",
       "versionCode": 32,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/icon_Base64.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/icon_Base64.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/icon_Base64.js"
     },
     {
       "name": "hot_update.js",
       "versionCode": 32,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/hot_update.js"
     },
     {
       "name": "shopSold3.png",
       "versionCode": 8,
       "path": "./res/pictures.1280_720/shopSold3.png",
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold3.png"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold3.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/pictures.1280_720/shopSold3.png"
     },
     {
       "name": "shopSold2.png",
       "versionCode": 13,
       "path": "./res/pictures.1280_720/shopSold2.png",
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold2.png"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold2.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/pictures.1280_720/shopSold2.png"
     },
     {
       "name": "close1.png",
       "versionCode": 20,
       "path": "./res/pictures.1280_720/close1.png",
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/close1.png"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/close1.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/pictures.1280_720/close1.png"
     },
     {
       "name": "close2.png",
       "versionCode": 20,
       "path": "./res/pictures.1280_720/close2.png",
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/close2.png"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/close2.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/pictures.1280_720/close2.png"
     },
     {
       "name": "删除删不掉的文件夹.js",
       "versionCode": 8,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/删除删不掉的文件夹.js"
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/删除删不掉的文件夹.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/删除删不掉的文件夹.js"
     }
   ]
 }
