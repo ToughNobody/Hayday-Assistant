@@ -5,6 +5,8 @@ const icon = require("./icon_Base64.js");
 // 创建存储对象
 let token_storage = storages.create("token_storage");
 let statistics = storages.create("statistics");
+let configs = storages.create("config"); // 创建配置存储对象
+let config = configs.get("config");
 
 // 初始化创新号账号列表
 let AddFriendsList = [];
@@ -24,7 +26,6 @@ const engineIds = {
 };
 
 
-// 配置文件路径
 // 获取应用专属外部目录的完整路径
 let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
 const configDir = files.join(appExternalDir, "configs");
@@ -35,10 +36,6 @@ const scPath = "/storage/emulated/0/$MuMu12Shared/Screenshots"
 files.ensureDir(configDir + "/1");  // 创建配置目录
 files.ensureDir(logDir + "/1");  // 创建日志目录
 files.ensureDir(scPath + "/1");  // 创建截图目录
-// 确保配置文件存在
-if (!files.exists(configPath)) {
-    files.create(configPath);  // 创建配置文件
-}
 
 // 格式化日期为易读格式：YYYY-MM-DD_HH-mm-ss
 let now = new Date();
@@ -78,7 +75,7 @@ var color;
 
 // 初始化颜色函数
 function initColor() {
-    // 尝试从配置文件加载颜色设置
+    // 尝试从存储对象加载颜色设置
     const config = loadConfig();
     if (config && config.themeColor && config.themeColor.code >= 0) {
         // 如果配置中有颜色设置，使用配置中的颜色
@@ -309,33 +306,46 @@ ui.layout(
                                     </horizontal>
 
                                     {/* 作物选择 - 仅在刷地时显示 */}
-                                    <horizontal id="cropSelectContainer" gravity="center_vertical">
+                                    <horizontal id="cropSelectContainer" gravity="center_vertical" visibility="visible">
                                         <text text="种植作物：" textSize="14" w="100" marginRight="8" />
                                         <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆"
                                             w="*" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
                                     {/* 商店售价 - 仅在刷地时显示*/}
-                                    <horizontal id="shopPriceContainer" gravity="center_vertical">
+                                    <horizontal id="shopPriceContainer" gravity="center_vertical" visibility="visible">
                                         <text text="商店售价：" textSize="14" w="100" marginRight="8" />
                                         <spinner id="shopPrice" entries="最低|平价|最高" w="*" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
+                                    {/* 汤姆 - 仅在刷地时显示*/}
+                                    <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="visible">
+                                        <text text="汤姆：" textSize="14" w="100" marginRight="8" />
+                                        <Switch id="tomSwitch" w="*" h="48" gravity="left|center" />
+                                    </horizontal>
+
+                                    {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
+                                    <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
+                                        <text text="物品类型：" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="itemType" entries="货仓|粮仓" w="120" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
+                                        <input id="itemName" hint="物品名称" w="*" h="48" textSize="14" bg="#FFFFFF" />
+                                    </horizontal>
+
                                     {/* 树木选择 - 仅在种树时显示 */}
-                                    <horizontal id="treeSelectContainer" gravity="center_vertical">
+                                    <horizontal id="treeSelectContainer" gravity="center_vertical" visibility="gone">
                                         <text text="种植树木：" textSize="14" w="100" marginRight="8" />
                                         <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
                                             w="*" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
                                     {/* 是否滑动 - 仅在种树时显示 */}
-                                    <horizontal id="treeShouldSwipe" gravity="center_vertical">
+                                    <horizontal id="treeShouldSwipe" gravity="center_vertical" visibility="gone">
                                         <text text="是否自动滑动：" textSize="14" w="100" marginRight="8" />
                                         <Switch id="treeShouldSwipeSwitch" w="*" h="48"
                                             gravity="left|center" />
                                     </horizontal>
 
-                                    <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                    <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2" visibility="gone">
                                         <vertical padding="16">
                                             {/* 账号标签列表显示 */}
                                             <vertical id="addFriendsListDisplay" marginTop="8">
@@ -1368,7 +1378,7 @@ let SaveAccountList = [];
 
 // 从配置加载账号列表
 function loadAccountListFromConfig() {
-    const config = loadConfig();
+
     if (config && config.accountList && Array.isArray(config.accountList)) {
         AccountList = config.accountList;
     } else {
@@ -1385,7 +1395,7 @@ function loadSaveAccountListFromConfig() {
     files.ensureDir(saveAccountDir + "/1");
 
     // 从配置加载存档账号列表
-    const config = loadConfig();
+
     let configSaveAccountList = [];
     if (config && config.saveAccountList && Array.isArray(config.saveAccountList)) {
         configSaveAccountList = config.saveAccountList;
@@ -1430,7 +1440,7 @@ function loadSaveAccountListFromConfig() {
 
 // 从配置加载addFriends列表
 function loadAddFriendsListFromConfig() {
-    const config = loadConfig();
+
     if (config && config.addFriendsList && Array.isArray(config.addFriendsList)) {
         AddFriendsList = config.addFriendsList;
     } else {
@@ -1511,7 +1521,7 @@ ui['AccountList'].on('item_bind', function (itemView, itemHolder) {
         item.done = checked;
         itemView.title.invalidate();
 
-        // 保存到配置文件
+        // 保存到存储对象
         saveAccountListToConfig();
     });
 });
@@ -1524,7 +1534,7 @@ ui['SaveAccountList'].on('item_bind', function (itemView, itemHolder) {
         item.done = checked;
         itemView.saveTitle.invalidate();
 
-        // 保存到配置文件
+        // 保存到存储对象
         saveSaveAccountListToConfig();
     });
 });
@@ -1566,7 +1576,7 @@ ui['addFriendsList'].on('item_bind', function (itemView, itemHolder) {
         item.addFriendsdone = checked;
         itemView.addFriendstitle.invalidate();
 
-        // 保存到配置文件
+        // 保存到存储对象
         saveAddFriendsListToConfig();
     });
 });
@@ -1579,7 +1589,7 @@ ui['AccountList'].on('item_click', function (item, i, itemView) {
                 item.title = newTitle.trim();
                 ui['AccountList'].adapter.notifyDataSetChanged();
 
-                // 保存到配置文件
+                // 保存到存储对象
                 saveAccountListToConfig();
 
                 // 自动保存配置
@@ -1601,7 +1611,7 @@ ui['SaveAccountList'].on('item_click', function (item, i, itemView) {
                 let oldSaveDir = files.join(appExternalDir + "/卡通农场小助手存档", oldTitle);
                 files.rename(oldSaveDir, newTitle.trim());
 
-                // 保存到配置文件
+                // 保存到存储对象
                 saveSaveAccountListToConfig();
 
                 // 自动保存配置
@@ -1618,7 +1628,7 @@ ui['addFriendsList'].on('item_click', function (item, i, itemView) {
                 item.addFriendstitle = newTitle.trim();
                 ui['addFriendsList'].adapter.notifyDataSetChanged();
 
-                // 保存到配置文件
+                // 保存到存储对象
                 saveAddFriendsListToConfig();
 
                 // 自动保存配置
@@ -1635,7 +1645,7 @@ ui['addFriendsList'].on('item_long_click', function (e, item, i) {
                 // 先从数据中删除
                 AddFriendsList.splice(i, 1);
 
-                // 保存到配置文件
+                // 保存到存储对象
                 saveAddFriendsListToConfig();
 
                 // 自动保存配置
@@ -1653,7 +1663,7 @@ ui['AccountList'].on('item_long_click', function (e, item, i) {
                 // 先从数据中删除
                 AccountList.splice(i, 1);
 
-                // 保存到配置文件
+                // 保存到存储对象
                 saveAccountListToConfig();
 
                 // 自动保存配置
@@ -1675,7 +1685,7 @@ ui['SaveAccountList'].on('item_long_click', function (e, item, i) {
                 let saveDir = files.join(appExternalDir + "/卡通农场小助手存档", item.title);
                 files.removeDir(saveDir);
 
-                // 保存到配置文件
+                // 保存到存储对象
                 saveSaveAccountListToConfig();
 
                 // 自动保存配置
@@ -1696,7 +1706,7 @@ ui['addFriend'].on('click', () => {
                 });
                 ui['addFriendsList'].adapter.notifyDataSetChanged();
 
-                // 保存到配置文件
+                // 保存到存储对象
                 saveAddFriendsListToConfig();
 
                 // 自动保存配置
@@ -1723,7 +1733,7 @@ ui['addAccount'].on('click', () => {
                 });
                 ui[listName].adapter.notifyDataSetChanged();
 
-                // 保存到配置文件
+                // 保存到存储对象
                 saveFunction();
 
                 //保存存档
@@ -1786,7 +1796,7 @@ ui.emitter.on("resume", function () {
 
 
 
-// ==================== 配置文件处理 ====================
+// ==================== 存储对象处理 ====================
 
 /**
  * 获取当前配置
@@ -1795,7 +1805,7 @@ function getConfig() {
     // 从AccountList生成accountNames数组，确保一致性
     const accountNamesFromList = AccountList.map(item => item.title);
 
-    // 使用全局状态变量获取当前配置，不依赖颜色判断
+    // 使用全局状态变量获取当前配置
     return {
         selectedFunction: {
             text: ui.functionSelect.getSelectedItem(),
@@ -1870,6 +1880,13 @@ function getConfig() {
             text: ui.serverPlatform.getSelectedItem(),
             code: ["Pushplus推送加", "Server酱", "WxPusher"].indexOf(ui.serverPlatform.getSelectedItem())
         },
+        // 汤姆相关配置
+        tomFind: {
+            enabled: ui.tomSwitch.isChecked(),
+            type: ui.itemType.getSelectedItem(),
+            code: ["货仓", "粮仓"].indexOf(ui.itemType.getSelectedItem()),
+            text: ui.itemName.text().toString(),
+        },
         // 截图坐标配置
         screenshotCoords: {
             coord1: {
@@ -1889,17 +1906,12 @@ function getConfig() {
 }
 
 /**
- * 保存配置到文件
+ * 保存配置到存储对象和配置文件
  */
-function saveConfig(config) {
+function saveConfig(con) {
     try {
-        // 创建配置目录（如果不存在）
-        if (!files.exists(configPath)) {
-            files.createWithDirs(configPath);
-        }
-
-        // 格式化并保存配置
-        files.write(configPath, JSON.stringify(config, null, 2));
+        // 将配置保存到存储对象
+        configs.put("config", con);
         // console.log("配置保存成功");
         return true;
     } catch (e) {
@@ -1910,18 +1922,29 @@ function saveConfig(config) {
 }
 
 /**
- * 从文件加载配置
+ * 从存储对象加载配置
  */
-function loadConfig() {
+function loadConfig(loadConfigFromFile=false) {
     try {
-        if (files.exists(configPath)) {
-            const config = JSON.parse(files.read(configPath));
-            return validateConfig(config);
+        // 检查是否已加载过配置文件
+        if (!configs.get("configChecked") && files.exists(configPath) || loadConfigFromFile) {
+            const fileConfig = JSON.parse(files.read(configPath));
+
+            log("==================================")
+            log("从配置文件加载配置")
+            log("==================================")
+            return validateConfig(fileConfig);
+        }
+        // 从存储对象获取配置
+        const storedConfig = configs.get("config");
+        if (storedConfig) {
+            return validateConfig(storedConfig);
         }
     } catch (e) {
         console.error("加载配置失败:", e);
-        // toast("配置文件损坏，使用默认配置", "long");
+        // toast("配置加载失败，使用默认配置", "long");
     }
+    log("使用默认配置")
     return getDefaultConfig();
 }
 
@@ -2183,6 +2206,12 @@ function getDefaultConfig() {
             text: "Pushplus推送加",
             code: 0
         },
+        // 汤姆相关配置
+        tomFind: {
+            enabled:false,
+            type: "货仓",
+            text: ""
+        },
         // 截图坐标配置
         screenshotCoords: {
             coord1: {
@@ -2240,8 +2269,8 @@ function setFindAccountMethod(method) {
     autoSaveConfig();
 }
 
-function loadConfigToUI() {
-    const config = loadConfig();
+function loadConfigToUI(loadConfigFromFile=false) {
+    const config = loadConfig(loadConfigFromFile);
 
     // 初始化全局状态变量
     currentAccountMethod = config.accountMethod || "email";
@@ -2267,25 +2296,25 @@ function loadConfigToUI() {
     const selectedFunction = config.selectedFunction.text;
     if (selectedFunction === "刷地") {
         // 显示作物选择，隐藏树木选择
-        ui.cropSelectContainer.setVisibility(0); // 0表示可见
-        ui.shopPriceContainer.setVisibility(0); // 0表示可见
-        ui.treeSelectContainer.setVisibility(8); // 8表示不可见
-        ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
-        ui.addFriendsCard.setVisibility(8); // 8表示不可见
+        ui.cropSelectContainer.attr("visibility", "visible");
+        ui.shopPriceContainer.attr("visibility", "visible");
+        ui.treeSelectContainer.attr("visibility", "gone");
+        ui.treeShouldSwipe.attr("visibility", "gone");
+        ui.addFriendsCard.attr("visibility", "gone");
     } else if (selectedFunction === "种树") {
         // 隐藏作物选择，显示树木选择
-        ui.cropSelectContainer.setVisibility(8); // 8表示不可见
-        ui.shopPriceContainer.setVisibility(8); // 8表示不可见
-        ui.treeSelectContainer.setVisibility(0); // 0表示可见
-        ui.treeShouldSwipe.setVisibility(0); // 0表示可见
-        ui.addFriendsCard.setVisibility(8); // 8表示不可见
+        ui.cropSelectContainer.attr("visibility", "gone");
+        ui.shopPriceContainer.attr("visibility", "gone");
+        ui.treeSelectContainer.attr("visibility", "visible");
+        ui.treeShouldSwipe.attr("visibility", "visible");
+        ui.addFriendsCard.attr("visibility", "gone");
     } else if (selectedFunction === "创新号") {
         // 创新号
-        ui.cropSelectContainer.setVisibility(8); // 8表示不可见
-        ui.shopPriceContainer.setVisibility(8); // 8表示不可见
-        ui.treeSelectContainer.setVisibility(8); // 8表示不可见
-        ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
-        ui.addFriendsCard.setVisibility(0); // 0表示可见
+        ui.cropSelectContainer.attr("visibility", "gone");
+        ui.shopPriceContainer.attr("visibility", "gone");
+        ui.treeSelectContainer.attr("visibility", "gone");
+        ui.treeShouldSwipe.attr("visibility", "gone");
+        ui.addFriendsCard.attr("visibility", "visible");
     }
 
 
@@ -2643,6 +2672,24 @@ function loadConfigToUI() {
         }
     }
 
+    // 加载汤姆相关配置
+    if (config.tomFind.enabled !== undefined) {
+        ui.tomSwitch.setChecked(config.tomFind.enabled);
+        // 根据开关状态控制tomItemContainer的可见性
+        ui.tomItemContainer.attr("visibility", config.tomFind.enabled ? "visible" : "gone");
+    }
+
+    if (config.tomFind.type !== undefined) {
+        const typeIndex = ["货仓", "粮仓"].indexOf(config.tomFind.type);
+        if (typeIndex >= 0) {
+            ui.itemType.setSelection(typeIndex);
+        }
+    }
+
+    if (config.tomFind.text !== undefined) {
+        ui.itemName.setText(config.tomFind.text);
+    }
+
     // 更新权限状态
     updateSwitchStatus();
 }
@@ -2713,8 +2760,7 @@ const instructions = [
     "在线文档",
     "• 腾讯文档: https://docs.qq.com/doc/DWEtDUXB0U0dISGxo",
     "",
-    "配置文件位置：",
-    configPath,
+    "配置存储位置：",
     "日志文件位置：",
     logDir,
     ""
@@ -2755,13 +2801,23 @@ function autoSaveConfig() {
 ui.btnSave.click(() => {
     const config = getConfig();
     if (saveConfig(config)) {
-        toastLog("配置保存成功");
+        // 将配置保存到文件
+        try {
+            // 确保配置目录存在
+            files.ensureDir(configPath);
+            // 将配置写入文件
+            files.write(configPath, JSON.stringify(config, null, 2));
+            toastLog("配置保存成功");
+        } catch (e) {
+            console.error("保存配置文件失败:", e);
+            toastLog("配置保存失败: " + e.message);
+        }
     }
 });
 
 // 加载配置按钮点击事件
 ui.btnLoadConfig.click(() => {
-    loadConfigToUI();
+    loadConfigToUI(loadConfigFromFile=true);
     toast("配置已加载");
 });
 
@@ -2992,15 +3048,14 @@ function initUI() {
 
     // 初始化addFriends列表UI
     initAddFriendsListUI();
-    // 尝试加载配置（如果配置文件存在）
+    // 尝试加载配置（从存储对象）
 
-    if (files.exists(configPath)) {
-        try {
-            loadConfigToUI();
-        } catch (e) {
-            console.error("加载配置失败:", e);
-            toast("加载配置失败: " + e.message, "long");
-        }
+    // 使用存储对象加载配置
+    try {
+        loadConfigToUI();
+    } catch (e) {
+        console.error("加载配置失败:", e);
+        toast("加载配置失败: " + e.message, "long");
     }
 
     // 初始化权限开关状态
@@ -3016,6 +3071,17 @@ function initUI() {
         autoSaveConfig();
     });
 
+    ui.tomSwitch.on("check", (checked) => {
+        // console.log("汤姆开关状态变化:", checked);
+        // 根据开关状态控制物品类型和名称输入框的显示
+        if (checked) {
+            ui.tomItemContainer.attr("visibility", "visible");
+        } else {
+            ui.tomItemContainer.attr("visibility", "gone");
+        }
+        autoSaveConfig();
+    });
+
     ui.functionSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
@@ -3026,31 +3092,54 @@ function initUI() {
 
             // 根据选择的功能显示/隐藏相应的选项
             if (selectedFunction === "刷地") {
-                // 显示作物选择，隐藏树木选择
-                ui.cropSelectContainer.setVisibility(0); // 0表示可见
-                ui.shopPriceContainer.setVisibility(0); // 0表示可见
-                ui.treeSelectContainer.setVisibility(8); // addFriendsCard不可见
-                ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
-                ui.addFriendsCard.setVisibility(8); // 8表示不可见
+                // 显示作物选择和汤姆开关，隐藏树木选择
+                ui.cropSelectContainer.attr("visibility", "visible");
+                ui.shopPriceContainer.attr("visibility", "visible");
+                ui.tomSwitchContainer.attr("visibility", "visible");
+                ui.treeSelectContainer.attr("visibility", "gone");
+                ui.treeShouldSwipe.attr("visibility", "gone");
+                ui.addFriendsCard.attr("visibility", "gone");
+                // 控制汤姆相关控件
+                if (ui.tomSwitch.isChecked()) {
+                    ui.tomItemContainer.attr("visibility", "visible");
+                } else {
+                    ui.tomItemContainer.attr("visibility", "gone");
+                }
             } else if (selectedFunction === "种树") {
-                // 隐藏作物选择，显示树木选择
-                ui.cropSelectContainer.setVisibility(8); // 8表示不可见
-                ui.shopPriceContainer.setVisibility(8); // 8表示不可见
-                ui.treeSelectContainer.setVisibility(0); // 0表示可见
-                ui.treeShouldSwipe.setVisibility(0); // 0表示可见
-                ui.addFriendsCard.setVisibility(8); // 8表示不可见
+                // 隐藏作物选择和汤姆开关，显示树木选择
+                ui.cropSelectContainer.attr("visibility", "gone");
+                ui.shopPriceContainer.attr("visibility", "gone");
+                ui.tomSwitchContainer.attr("visibility", "gone");
+                ui.treeSelectContainer.attr("visibility", "visible");
+                ui.treeShouldSwipe.attr("visibility", "visible");
+                ui.addFriendsCard.attr("visibility", "gone");
+                // 隐藏汤姆相关控件
+                ui.tomItemContainer.attr("visibility", "gone");
             } else if (selectedFunction === "创新号") {
                 // 创新号
-                ui.cropSelectContainer.setVisibility(8); // 8表示不可见
-                ui.shopPriceContainer.setVisibility(8); // 8表示不可见
-                ui.treeSelectContainer.setVisibility(8); // 8表示不可见
-                ui.treeShouldSwipe.setVisibility(8); // 8表示不可见
-                ui.addFriendsCard.setVisibility(0); // 0表示可见
+                ui.cropSelectContainer.attr("visibility", "gone");
+                ui.shopPriceContainer.attr("visibility", "gone");
+                ui.tomSwitchContainer.attr("visibility", "gone");
+                ui.treeSelectContainer.attr("visibility", "gone");
+                ui.treeShouldSwipe.attr("visibility", "gone");
+                ui.addFriendsCard.attr("visibility", "visible");
+                // 隐藏汤姆相关控件
+                ui.tomItemContainer.attr("visibility", "gone");
             }
 
             autoSaveConfig();
         }
     }))
+
+    // 为itemType添加事件监听器
+    ui.itemType.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            const item = parent.getItemAtPosition(position).toString();
+            console.log("物品类型选择发生变化: " + item);
+            autoSaveConfig();
+        },
+        onNothingSelected: function (parent) { }
+    }));
 
     ui.cropSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
@@ -3095,7 +3184,7 @@ function initUI() {
                 ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
 
                 // 更新商店按钮颜色（如果当前选中的是商店方法）
-                const config = loadConfig();
+
                 if (config.landFindMethod === "商店") {
                     ui.methodShop.attr("bg", color);
                     ui.methodShop.attr("textColor", "#FFFFFF");
@@ -3121,7 +3210,6 @@ function initUI() {
             ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
 
             // 更新商店按钮颜色（如果当前选中的是商店方法）
-            const config = loadConfig();
             if (config.landFindMethod === "商店") {
                 ui.methodShop.attr("bg", color);
                 ui.methodShop.attr("textColor", "#FFFFFF");
@@ -3177,6 +3265,15 @@ function initUI() {
         afterTextChanged: function (s) { }
     }));
 
+    // 为itemName输入框添加变化监听
+    ui.itemName.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            autoSaveConfig();
+        },
+        afterTextChanged: function (s) { }
+    }));
+
     // 为eyeIcon添加点击事件
     ui.eyeIcon.click(() => {
         // 获取当前token的值
@@ -3211,11 +3308,13 @@ function initUI() {
     ui.serverPlatform.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
-            console.log("推送方式选择发生变化: " + item);
+            // console.log("推送方式选择发生变化: " + item);
             autoSaveConfig();
         },
         onNothingSelected: function (parent) { }
     }));
+    // 设置标志表示已加载过配置文件
+    configs.put("configChecked", true);
 }
 
 /**

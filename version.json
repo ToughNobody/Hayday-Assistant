@@ -1,24 +1,24 @@
 {
-  "version": "1.4.20",
-  "description": "\n\n功能优化：\n浮动按钮在每次启动脚本时不会自动退出\n添加github更新源和下载全部文件，当下载失败或文件缺失，可再次尝试下载\n\n",
+  "version": "1.5.0",
+  "description": "\n\n新增功能：\n汤姆功能（还没有具体测试）\n\n功能优化：\n将配置保存方式改为写入存储storages，现在的保存配置是将当前配置保存到原来的config.json文件，加载是从config.json文件加载,当删除Autojs后可以点击加载配置即可加载本地配置\n\n修复Bug：\n点击切换账号时按钮不会因为按钮闪烁导致识别失败（双重验证，应该没问题了吧）\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 42,
+      "versionCode": 43,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 42,
+      "versionCode": 43,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 41,
+      "versionCode": 43,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/module.js"
@@ -67,7 +67,7 @@
     },
     {
       "name": "hot_update.js",
-      "versionCode": 42,
+      "versionCode": 43,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/hot_update.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/hot_update.js"
@@ -76,7 +76,7 @@
       "name": "shopSold3.png",
       "versionCode": 8,
       "path": "./res/pictures.1280_720/shopSold3.png",
-      "url" : "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold3.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold3.png",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/pictures.1280_720/shopSold3.png",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/pictures.1280_720/shopSold3.png"
     },
@@ -105,11 +105,108 @@
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/pictures.1280_720/close2.png"
     },
     {
-      "name": "删除删不掉的文件夹.js",
-      "versionCode": 8,
-      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/删除删不掉的文件夹.js",
-      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/删除删不掉的文件夹.js",
-      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/删除删不掉的文件夹.js"
+      "name": "0.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/0.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/0.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/0.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/0.png"
+    },
+    {
+      "name": "1.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/1.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/1.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/1.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/1.png"
+    },
+    {
+      "name": "2.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/2.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/2.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/2.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/2.png"
+    },
+    {
+      "name": "3.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/3.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/3.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/3.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/3.png"
+    },
+    {
+      "name": "4.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/4.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/4.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/4.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/4.png"
+    },
+    {
+      "name": "5.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/5.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/5.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/5.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/5.png"
+    },
+    {
+      "name": "6.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/6.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/6.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/6.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/6.png"
+    },
+    {
+      "name": "7.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/7.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/7.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/7.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/7.png"
+    },
+    {
+      "name": "8.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/8.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/8.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/8.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/8.png"
+    },
+    {
+      "name": "9.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/9.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/9.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/9.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/9.png"
+    },
+    {
+      "name": "小时.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/characters/小时.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/characters/小时.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/characters/小时.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/characters/小时.png"
+    },
+    {
+      "name": "分.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/characters/分.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/characters/分.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/characters/分.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/characters/分.png"
+    },
+    {
+      "name": "秒.png",
+      "versionCode": 43,
+      "path": "./res/FontLibrary/Tom/characters/秒.png",
+      "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/characters/秒.png",
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/res/FontLibrary/Tom/characters/秒.png",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/res/FontLibrary/Tom/characters/秒.png"
     }
   ]
 }

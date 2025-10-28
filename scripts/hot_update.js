@@ -207,7 +207,7 @@ function downloadAllFiles(backupDir) {
 
             // 创建目标目录（如果不存在）
             let fileDir = filePath.split("/").slice(0, -1).join("/");
-            files.ensureDir(fileDir + "/");
+            files.ensureDir(fileDir + "/1");
 
             // 将下载的内容直接写入目标文件
             try {

@@ -5,11 +5,9 @@
 const timerMap = new Map();
 
 let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
-const configDir = files.join(appExternalDir, "configs");
-const configPath = files.join(configDir, "config.json");
 
-let content = files.read(configPath);
-let config = JSON.parse(content);
+let configs = storages.create("config"); // 创建配置存储对象
+let config = configs.get("config");
 
 let token_storage = storages.create("token_storage");
 let timeStorage = storages.create("times");
@@ -909,7 +907,342 @@ function findNum(sc, region, xiangsidu = 32, mode = 1) {
     }
 }
 
-//checkmenu 检查主菜单
+/**
+ * 使用垂直投影分割法分割字符
+ * @param {Array} binaryArray - 二值化数组
+ * @param {number} width - 图片宽度
+ * @param {number} height - 图片高度
+ * @returns {Array} 分割后的字符段数组
+ */
+function verticalProjectionSegmentation(binaryArray, width, height) {
+    // 计算垂直投影（每列的黑色像素数）
+    var verticalProjection = [];
+    for (var x = 0; x < width; x++) {
+        var count = 0;
+        for (var y = 0; y < height; y++) {
+            var index = y * width + x;
+            if (binaryArray[index] === 1) {
+                count++;
+            }
+        }
+        verticalProjection.push(count);
+    }
+
+    // 根据垂直投影分割字符
+    var segments = [];
+    var inChar = false;
+    var startPos = 0;
+
+    for (var x = 0; x < width; x++) {
+        if (verticalProjection[x] > 0 && !inChar) {
+            // 开始一个新的字符
+            inChar = true;
+            startPos = x;
+        } else if (verticalProjection[x] === 0 && inChar) {
+            // 结束当前字符
+            inChar = false;
+            var endPos = x;
+
+            // 计算字符的垂直范围（上下边界）
+            var minY = height;
+            var maxY = 0;
+            for (var y = 0; y < height; y++) {
+                for (var cx = startPos; cx < endPos; cx++) {
+                    var index = y * width + cx;
+                    if (binaryArray[index] === 1) {
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            // 如果没有找到黑色像素，则跳过这个字符段
+            if (minY >= height || maxY < 0) {
+                continue;
+            }
+
+            // 提取字符区域的像素数据
+            var charWidth = endPos - startPos;
+            var charHeight = maxY - minY + 1;
+            var charPixels = [];
+            var countOnes = 0; // 添加计数器
+
+            for (var y = minY; y <= maxY; y++) {
+                for (var cx = startPos; cx < endPos; cx++) {
+                    var index = y * width + cx;
+                    charPixels.push(binaryArray[index]);
+                    if (binaryArray[index] === 1) {
+                        countOnes++; // 统计1的数量
+                    }
+                }
+            }
+
+            segments.push({
+                pixels: charPixels,
+                num: countOnes,
+                width: charWidth,
+                height: charHeight,
+                position: {
+                    startX: startPos,
+                    endX: endPos,
+                    width: charWidth,
+                    height: charHeight,
+                    minY: minY,
+                    maxY: maxY
+                }
+            });
+        }
+    }
+
+    // 处理最后一个字符（如果图片以字符结尾）
+    if (inChar) {
+        var endPos = width;
+
+        // 计算字符的垂直范围（上下边界）
+        var minY = height;
+        var maxY = 0;
+        for (var y = 0; y < height; y++) {
+            for (var cx = startPos; cx < endPos; cx++) {
+                var index = y * width + cx;
+                if (binaryArray[index] === 1) {
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        // 如果没有找到黑色像素，则跳过这个字符段
+        if (minY < height && maxY >= 0) {
+            // 提取字符区域的像素数据
+            var charWidth = endPos - startPos;
+            var charHeight = maxY - minY + 1;
+            var charPixels = [];
+            var countOnes = 0; // 添加计数器
+
+            for (var y = minY; y <= maxY; y++) {
+                for (var cx = startPos; cx < endPos; cx++) {
+                    var index = y * width + cx;
+                    charPixels.push(binaryArray[index]);
+                    if (binaryArray[index] === 1) {
+                        countOnes++; // 统计1的数量
+                    }
+                }
+            }
+
+            segments.push({
+                pixels: charPixels,
+                num: countOnes,
+                width: charWidth,
+                height: charHeight,
+                position: {
+                    startX: startPos,
+                    endX: endPos,
+                    width: charWidth,
+                    height: charHeight,
+                    minY: minY,
+                    maxY: maxY
+                }
+            });
+        }
+    }
+
+    return segments;
+}
+
+function 分割识别(binaryImg, dirPath, pngFiles, xiangsidu) {
+
+    // 获取二值化图像的位图数据
+    var binaryBitmap = binaryImg.getBitmap();
+    var width = binaryImg.getWidth();
+    var height = binaryImg.getHeight();
+
+    // 创建二值化数组
+    var binaryArray = [];
+    // 遍历二值化图像每个像素
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+            // 通过bitmap获取当前像素颜色
+            var pixelColor = binaryBitmap.getPixel(x, y);
+            // 非匹配区域为-16777216（0xFF000000），匹配区域为-1（0xFFFFFFFF）
+            if (pixelColor === -1) {
+                binaryArray.push(1); // 匹配区域
+            } else {
+                binaryArray.push(0); // 非匹配区域
+            }
+        }
+    }
+
+    // 使用垂直投影分割法分割字符
+    var segments = verticalProjectionSegmentation(binaryArray, width, height);
+
+    // 用于存储最终结果的字符串
+    let recognizedText = "";
+
+    // 使用try-finally确保截图资源被回收
+    try {
+        // 对每个分割出来的字符进行识别
+        for (var i = 0; i < segments.length; i++) {
+            var segment = segments[i];
+
+            // 调整字符切割区域，左右各增加3像素，但确保不超出图像范围
+            let x = Math.max(0, segment.position.startX - 3);
+            let y = segment.position.minY;
+            let w = Math.min(segment.position.width + 6, binaryImg.getWidth() - x);
+            let h = segment.position.height;
+            let image_clip_char = images.clip(binaryImg, x, y, w, h);
+
+            let Match = null;
+
+            for (let font of pngFiles) {
+                let fontName = font.replace(".png", "");
+
+                let imagepath = files.join(dirPath, font);
+                let template = images.read(imagepath);
+
+                let result = null;
+                if (template.getWidth() <= image_clip_char.getWidth() && template.getHeight() <= image_clip_char.getHeight()) {
+                    try { result = images.findImage(image_clip_char, template, { threshold: xiangsidu }); }
+                    catch (e) {
+                        console.error("图像识别失败(分割识别):", e);
+                        result = null;
+                    }
+                }
+                template.recycle();
+
+                if (result) {
+                    Match = fontName;
+                }
+            }
+
+            // 回收字符图像资源
+            image_clip_char.recycle();
+
+            // 添加识别结果
+            if (Match) {
+                recognizedText += Match;
+            } else {
+                recognizedText += ""; // 未识别的字符用 代替
+            }
+        }
+
+        return recognizedText;
+    } catch (e) {
+        console.error("图像识别失败:", e);
+        return null;
+    } finally {
+
+    }
+}
+
+/**
+ * 
+ * @param {*} sc 未处理大照片
+ * @param {*} region 搜索、裁剪区域
+ * @param {*} color 匹配颜色
+ * @param {*} threshold 阈值
+ * @param {*} dirPath 字库目录
+ * @param {*} xiangsidu 相似度
+ * @param {*} mode 识别模式
+ * @description image_clip为裁剪后的大照片，binaryImg为二值化图像，image_clip_char是二值化照片后裁剪用来识别的大图片
+ * @returns 识别结果
+ */
+function findFont(sc, region, color, threshold = 16, dirPath, xiangsidu = 0.6, mode) {
+    try {
+        // 参数验证
+        let img = sc || captureScreen();
+
+        dirPath = dirPath ? dirPath : "./res/FontLibrary/Tom/";
+        let pngFiles = files.listDir(dirPath, function (name) {
+            return name.endsWith(".png") && files.isFile(files.join(dirPath, name));
+        });
+
+        // 确定搜索区域
+        region = region ? region : [0, 0, img.getWidth(), img.getHeight()];
+        let image_clip = images.clip(img, region[0], region[1], region[2], region[3]);
+        threshold = threshold ? threshold : 16;
+        let binaryImg = images.interval(image_clip, color, threshold);
+
+        if (mode == "tom") {
+            let pngFiles1 = files.listDir(files.join(dirPath, "characters"), function (name) {
+                return name.endsWith(".png") && files.isFile(files.join(dirPath, "characters", name));
+            });
+            let Match = [];
+
+            for (let font of pngFiles1) {
+                let fontName = font.replace(".png", "");
+
+                let imagepath = files.join(dirPath, "characters", font);
+                let template = images.read(imagepath);
+
+                let image_clip_char = images.clip(binaryImg, 0, 0, binaryImg.getWidth(), binaryImg.getHeight());
+
+                let result = null;
+                try { result = images.findImage(image_clip_char, template, { threshold: xiangsidu }); }
+                catch (e) {
+                    console.error("图像识别失败(Tom):", e);
+                    result = null;
+                }
+                if (result) {
+                    Match.push({
+                        font: fontName,
+                        startx: result.x,
+                        starty: result.y,
+                        endx: result.x + template.getWidth(),
+                        endy: result.y + template.getHeight(),
+                        width: template.getWidth(),
+                        height: template.getHeight(),
+                    });
+                }
+                template.recycle();
+            };
+
+            // 将Match按startx排序
+            Match.sort(function (a, b) {
+                return a.startx - b.startx;
+            });
+
+            let recognizedText = "";
+
+            //分割图片（按小时，分，秒分割）
+            for (let i = 0; i <= Match.length; i++) {
+                let image_clip_char_min = null;
+                if (i == 0) { image_clip_char_min = images.clip(binaryImg, 0, 0, Match[i].startx, binaryImg.getHeight()); }
+                else if (i == Match.length) { image_clip_char_min = images.clip(binaryImg, Match[i - 1].endx, 0, binaryImg.getWidth() - Match[i - 1].endx, binaryImg.getHeight()); }
+                else { image_clip_char_min = images.clip(binaryImg, Match[i - 1].endx, 0, Match[i].startx - Match[i - 1].endx, binaryImg.getHeight()); }
+                // 识别字符
+
+                let char = 分割识别(image_clip_char_min, dirPath, pngFiles, xiangsidu);
+                // 添加识别结果
+
+                if (char && i < Match.length) {
+                    recognizedText += char;
+                    recognizedText += Match[i].font;
+                    // log(recognizedText)
+                } else {
+                    char += "?"; // 未识别的字符用?代替
+                }
+                // log(recognizedText)
+                // 回收字符图像资源
+                image_clip_char_min.recycle();
+            }
+
+            //返回识别结果
+            return recognizedText;
+        }
+
+        // 调用分割识别函数
+        let recognizedText = 分割识别(binaryImg, dirPath, pngFiles, xiangsidu);
+
+        // 回收资源
+        binaryImg.recycle();
+        image_clip.recycle();
+
+        return recognizedText;
+    } catch (error) {
+        console.error("findFont识别失败:", error);
+        return "";
+    }
+}
 
 /**
  * 持续检测是否成功进入主界面（通过菜单图标匹配）
@@ -1016,7 +1349,7 @@ function close() {
 
 
 //滑动
-function huadong() {
+function huadong(right = false) {
     try {
         showTip("滑动寻找")
         //缩放
@@ -1039,10 +1372,277 @@ function huadong() {
         gesture(1000, [650 + ran(), 580 + ran()],
             [630 + ran(), 270 + ran()],
         );
+        //右滑
+        if (right) {
+            sleep(100)
+            swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
+        }
+
     } catch (error) {
         log(error)
     }
 }
+
+function find_baozhi() {
+    for (let i = 0; i < 20; i++) {
+        let sc = captureScreen();
+        let baozhi1 = findMC(["#8f4e21", [0, -14, "#904f21"],
+            [9, -39, "#d0cec9"], [-1, -34, "#d60808"],
+            [-15, -8, "#aba79d"], [-12, -24, "#ecdeaf"]], sc, null, 20);
+        let baozhi2 = findMC(["#74401c", [0, -10, "#382517ff"],
+            [8, -33, "#bebcb8"], [11, -23, "#7e7c75"],
+            [-2, -29, "#b90707"], [-18, -13, "#9f916f"],
+            [-14, -1, "#86837c"]], sc, null, 20);
+        log(baozhi1, baozhi2)
+        if (baozhi1 || baozhi2) {
+            return baozhi1 || baozhi2;
+        }
+        sleep(500);
+    }
+}
+
+function find_youxiang() {
+    for (let i = 0; i < 20; i++) {
+        let sc = captureScreen();
+        let youxiang1 = findMC(["#66605d", [13, -10, "#6f9692"],
+            [13, -23, "#ce1d1d"], [1, -23, "#9ecbd0"], [-12, -27, "#93c0c5"]
+        ], sc);
+        let youxiang2 = findMC(["#5f5a56", [14, -10, "#678783"],
+            [13, -20, "#a91717"], [-10, -28, "#87acad"], [3, -20, "#7fa4a7"]
+        ], sc);
+        if (youxiang1 || youxiang2) {
+            return youxiang1 || youxiang2;
+        }
+        sleep(500);
+    }
+}
+
+function findTom() {
+    for (let i = 0; i < 20; i++) {
+        let sc = captureScreen();
+        let baozhi1 = findMC(["#8f4e21", [0, -14, "#904f21"],
+            [9, -39, "#d0cec9"], [-1, -34, "#d60808"],
+            [-15, -8, "#aba79d"], [-12, -24, "#ecdeaf"]], sc);
+        let baozhi2 = findMC(["#74401c", [0, -10, "#382517ff"],
+            [8, -33, "#bebcb8"], [11, -23, "#7e7c75"],
+            [-2, -29, "#b90707"], [-18, -13, "#9f916f"],
+            [-14, -1, "#86837c"]], sc);
+        let youxiang1 = findMC(["#66605d", [13, -10, "#6f9692"],
+            [13, -23, "#ce1d1d"], [1, -23, "#9ecbd0"], [-12, -27, "#93c0c5"]
+        ], sc);
+        let youxiang2 = findMC(["#5f5a56", [14, -10, "#678783"],
+            [13, -20, "#a91717"], [-10, -28, "#87acad"], [3, -20, "#7fa4a7"]
+        ], sc);
+        if (baozhi1 || baozhi2) {
+            let baozhi = baozhi1 || baozhi2;
+            tomPos = { x: baozhi.x + 194, y: baozhi.y + 140 };
+            return tomPos;
+        }
+
+        if (youxiang1 || youxiang2) {
+            let youxiang = youxiang1 || youxiang2;
+            tomPos = { x: youxiang.x + 140, y: youxiang.y + 99 };
+            return tomPos;
+        }
+        sleep(500);
+    }
+    log("未找到汤姆")
+    showTip("未找到汤姆")
+    return null;
+}
+
+function clickTom() {
+    log("找汤姆")
+    showTip("找汤姆")
+    let tomPos = findTom();
+    if (tomPos) {
+        log("点击汤姆")
+        showTip("点击汤姆");
+        click(tomPos.x, tomPos.y);
+        return tomPos;
+    } else {
+        find_close();
+        log("重新寻找汤姆")
+        showTip("重新寻找汤姆");
+        huadong(right = true);
+        sleep(500);
+        let tomPos = findTom();
+        if (tomPos) {
+            log("点击汤姆")
+            showTip("点击汤姆");
+            click(tomPos.x, tomPos.y);
+            return tomPos;
+        } else return false;
+    }
+}
+
+function tomMenu() {
+    //寻找页面
+    let menu1 = matchColor([{ x: 405, y: 145, color: "#ffffff" },
+    { x: 363, y: 221, color: "#423a35" }, { x: 356, y: 318, color: "#ffd158" },
+    { x: 907, y: 318, color: "#fff9db" }, { x: 838, y: 446, color: "#cccccc" }]);
+    if (menu1) {
+        return "寻找"
+    }
+    //等待页面
+    let menu2 = matchColor([{ x: 550, y: 342, color: "#f4ebdd" },
+    { x: 939, y: 352, color: "#f3eada" }, { x: 932, y: 470, color: "#f4e8ca" },
+    { x: 551, y: 458, color: "#f3e9d0" }, { x: 565, y: 405, color: "#7b593d" },
+    { x: 872, y: 405, color: "#7b593d" }, { x: 897, y: 415, color: "#7b593d" }]);
+    if (menu2) {
+        return "等待"
+    }
+    //没有雇佣汤姆页面
+    let menu3 = matchColor([{ x: 1120, y: 292, color: "#ed414c" },
+    { x: 532, y: 521, color: "#fdc32b" }, { x: 802, y: 519, color: "#fdc52d" },
+    { x: 1038, y: 519, color: "#fdc52d" }, { x: 957, y: 389, color: "#f4e8ca" }])
+    if (menu3) {
+        return "没有雇佣汤姆"
+    }
+
+    //没有找到符合的页面
+    return null;
+}
+
+/**
+ * 
+ * @param {*} tomPos 汤姆坐标
+ * @returns 找到返回true，休息返回剩余时间，未雇佣返回null，未找到返回false
+ * @description 点击汤姆后进行操作，需自行设置计时器
+ */
+function tomToFind(tomPos) {
+    function tom_find() {
+        let findnum = 0;
+        while (findnum < 3) {
+            // 根据类型确定点击坐标
+            let x = 365 + ran();
+            let y = 340 + ran();
+            if (config.tomFind.type == "粮仓") {
+                y = 246 + ran();
+            } else if (config.tomFind.type != "货仓") {
+                // 默认情况也点击货仓位置
+                y = 340 + ran();
+            }
+
+            // 执行点击和输入操作
+            click(x, y);
+            sleep(500);
+            //点击搜索
+            if (!matchColor([{ x: 440, y: 255, color: "#ffffca" }, { x: 750, y: 252, color: "#ffffca" }])) click(410 + ran(), 140 + ran()); sleep(500);
+            sleep(500);
+            //点击输入框
+            click(590 + ran(), 240 + ran());
+            log("输入搜索内容:" + config.tomFind.text);
+            showTip("输入搜索内容:" + config.tomFind.text);
+            sleep(500);
+            setText(config.tomFind.text); //输入搜索内容
+            //点击物品
+            sleep(500);
+            if (matchColor([{ x: 504, y: 439, color: "#fff9db" }, { x: 677, y: 433, color: "#fff9db" },
+            { x: 506, y: 497, color: "#fff9db" }, { x: 670, y: 503, color: "#fff9db" },
+            { x: 489, y: 566, color: "#fff9db" }, { x: 684, y: 567, color: "#fff9db" }])) click(500 + ran(), 360 + ran())
+
+            // 点击 开始寻找 按钮
+            sleep(500);
+            if (matchColor([{ x: 806, y: 448, color: "#f6bf3f" }, { x: 1042, y: 448, color: "#f6ba38" }])) {
+                click(920 + ran(), 440 + ran());
+                break;
+            } else {
+                sleep(500);
+                findnum++;
+            }
+            //没有点到物品，开始寻找 按钮是灰色
+        }
+        //第一次回来
+        log("等待汤姆中,请勿进行任何操作...");
+        showTip("等待汤姆中,请勿进行任何操作...");
+        sleep(25000);
+        let isfind = false;
+        findNum = 0;
+        while (!isfind && findNum < 3) {
+
+            if (findNum != 0) {
+                sleep(500);
+                tomPos = clickTom();
+            }
+
+            for (let i = 0; i < 3; i++) {
+                if (findNum == 0) click(tomPos.x, tomPos.y);
+                //选择找的数量
+                if (matchColor([{ x: 677, y: 615, color: "#f6cb51" }, { x: 977, y: 620, color: "#f6c647" },
+                { x: 605, y: 528, color: "#efc462" }, { x: 997, y: 300, color: "#f4e9d0" }])) {
+                    click(980 + ran(), 450 + ran());
+                    isfind = true;
+                    break;
+                }
+                sleep(500);
+            }
+            findNum++;
+        }
+        //第二次回来
+        log("等待汤姆中,请勿进行任何操作...");
+        showTip("等待汤姆中,请勿进行任何操作...");
+        sleep(25000);
+        log("收取物品");
+        showTip("收取物品");
+        click(tomPos)
+        //验证汤姆的点击
+        findNum = 0
+        while (findNum < 3) {
+            sleep(1000);
+            click(tomPos);
+            if (tomMenu() == "等待" || tomMenu() == "没有雇佣汤姆") {
+                log("成功收取物品");
+                showTip("成功收取物品");
+                click(1200 + ran(), 400 + ran());
+                return true;
+            } else {
+                clickTom();
+                findNum++;
+            }
+        }
+    }
+
+    let isfindTom = false;
+    let findNum = 0;
+    while (!isfindTom && findNum < 3) {
+        for (let i = 0; i < 5; i++) {
+            log("第 " + (i + 1) + " 次检测汤姆页面");
+            showTip("第 " + (i + 1) + " 次检测汤姆页面");
+            let tom_menu = tomMenu();
+            if (tom_menu == "寻找") {
+                log("检测到汤姆页面");
+                showTip("检测到汤姆页面");
+                tom_find();
+                isfindTom = true;
+                return true;
+            } else if (tom_menu == "等待") {
+                let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, "./res/FontLibrary/Tom/", 0.6, mode = "tom");
+                let tomTime = extractTime(tomTimeStr);
+                showTip("汤姆剩余时间:" + tomTime.hours + "小时" + tomTime.minutes + "分钟" + tomTime.seconds + "秒");
+                click(1200 + ran(), 400 + ran());
+                isfindTom = true;
+                return tomTime;
+            } else if (tom_menu == "没有雇佣汤姆") {
+                log("没有雇佣汤姆");
+                showTip("没有雇佣汤姆");
+                click(1200 + ran(), 400 + ran());
+                isfindTom = true;
+                return null;
+            }
+
+            else sleep(500);
+        }
+        if (!isfindTom) {
+            log("未检测到汤姆页面");
+            showTip("未检测到汤姆页面");
+            clickTom();
+            findNum++;
+        }
+    }
+    return false;
+}
+
 
 //找耕地，并点击
 /**
@@ -1915,9 +2515,17 @@ function switch_account(Account) {
             let huanhao1 = findMC(["#ffffff", [-22, 9, "#fbb700"],
                 [2, 30, "#f3bb00"], [2, -6, "#e1a282"], [-7, 20, "#e0a383"]]
                 , sc, [0, 0, 200, 250])
+            let shoujianxiang = findMC(["#d0ae84", [2, 6, "#edecea"],
+                [1, 14, "#cf9f73"], [3, 24, "#e5b200"], [9, 39, "#efeee5"],
+                [4, -16, "#efefef"], [-17, -3, "#d4ae86"], [-9, -2, "#d0b28b"]]
+                , sc, [0, 0, 200, 340])
 
             if (huanhao1) {
                 click(huanhao1.x + ran(), huanhao1.y + ran());
+                log("点击切换账号1按钮(识别换号按钮)")
+            } else if (shoujianxiang) {
+                click(shoujianxiang.x + ran(), shoujianxiang.y - 80 + ran());
+                log("点击切换账号1按钮(识别收件箱按钮)")
             }
             sleep(700);
             let huanhao2 = findMC(["#fefdfc", [4, 17, "#f6bd3c"], [-11, 18, "#fffefe"],
@@ -2196,6 +2804,11 @@ function timer(timer_Name, seconds = 120) {
 }
 
 // 获取特定计时器的状态
+/**
+ * 获取特定计时器的状态
+ * @param {string} timer_Name - 计时器的唯一标识名称（用于区分不同计时器）
+ * @returns {number|null} - 剩余时间（单位：秒）,计时结束返回0，如果计时器不存在则返回null
+ */
 function getTimerState(timer_Name) {
     try {
 
@@ -2234,6 +2847,20 @@ function stopTimer(timer_Name) {
         console.error("stopTimer函数出错:", e);
         showTip("停止计时器出错，已跳过");
     }
+}
+
+/**
+ * 从字符串中提取时间信息
+ * @param {string} timeStr - 包含时间信息的字符串（例如："2小时30分15秒"）
+ * @returns {object} - 包含小时、分钟、秒的对象（例如：{ hours: 2, minutes: 30, seconds: 15 }）
+ */
+function extractTime(timeStr) {
+    let matches = timeStr.match(/(?:(\d+)小时)?(?:(\d+)分)?(?:(\d+)秒)?/);
+    return {
+        hours: matches[1] ? parseInt(matches[1]) : 0,
+        minutes: matches[2] ? parseInt(matches[2]) : 0,
+        seconds: matches[3] ? parseInt(matches[3]) : 0
+    };
 }
 
 
@@ -2461,11 +3088,10 @@ function operation(Account) {
 
 
     //设定计时器
-    let timerName = config.switchAccount ? Account + "计时器" : config.selectedCrop.text;
-    if (config.selectedCrop.code == 0) timer(timerName, 115);
-    else if (config.selectedCrop.code == 1) timer(timerName, 295);
-    else if (config.selectedCrop.code == 2) timer(timerName, 595);
-    else if (config.selectedCrop.code == 3) timer(timerName, 1195);
+    //小麦，玉米，胡萝卜，大豆
+    const cropTimes = [115, 295, 595, 1195];
+    let timerName = Account ? Account + "计时器" : config.selectedCrop.text;
+    timer(timerName, cropTimes[config.selectedCrop.code]);
 
     //打开路边小店
     sleep(500);
@@ -2480,6 +3106,38 @@ function operation(Account) {
     //开始售卖
     console.log("============开始售卖系列操作===============")
     shop();
+
+    let currentTimerName = Account ? Account + "Tom计时器" : "Tom计时器";
+
+    let tomIsWorkName = Account ? Account + "TomIsWork" : "TomIsWork"
+    let tom_isWork = timeStorage.get(tomIsWorkName) !== false;
+    if (config.tomFind.enabled && !getTimerState(currentTimerName) && !tom_isWork) {    //汤姆
+        log("===============汤姆===================");
+        sleep(300)
+        swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
+        let tomPos = clickTom();
+        sleep(500);
+        let tomState = tomToFind(tomPos);
+        if (tomState === true) {
+            //设定计时器
+            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
+            timer(timerName, 2 * 60 * 60);//2小时
+            timeStorage.put(tomIsWorkName, true);
+        } else if (tomState === null) {
+            log("未找到汤姆");
+            showTip("未找到汤姆");
+        } else if (tomState === false) {
+            timeStorage.put(tomIsWorkName, false);
+        } else {
+            let tomTimeSecend = tomTime.hours * 60 * 60 + tomTime.minutes * 60 + tomTime.seconds;
+            //设定计时器
+            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
+            timer(timerName, tomTimeSecend);
+            timeStorage.put(tomIsWorkName, true);
+        }
+
+    }
+
 }
 
 
@@ -2973,8 +3631,6 @@ module.exports = {
     crop: crop,
     crop_sail: crop_sail,
     appExternalDir: appExternalDir,
-    configDir: configDir,
-    configPath: configPath
 };
 
 
