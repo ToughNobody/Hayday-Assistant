@@ -3107,11 +3107,8 @@ function operation(Account) {
     console.log("============开始售卖系列操作===============")
     shop();
 
-    let currentTimerName = Account ? Account + "Tom计时器" : "Tom计时器";
 
-    let tomIsWorkName = Account ? Account + "TomIsWork" : "TomIsWork"
-    let tom_isWork = timeStorage.get(tomIsWorkName) !== false;
-    if (config.tomFind.enabled && !getTimerState(currentTimerName) && !tom_isWork) {    //汤姆
+    if (config.tomFind.enabled && config.tomFind.text) {    //汤姆
         log("===============汤姆===================");
         sleep(300)
         swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
@@ -3119,22 +3116,18 @@ function operation(Account) {
         sleep(500);
         let tomState = tomToFind(tomPos);
         if (tomState === true) {
-            //设定计时器
-            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
-            timer(timerName, 2 * 60 * 60);//2小时
-            timeStorage.put(tomIsWorkName, true);
+
         } else if (tomState === null) {
             log("未找到汤姆");
             showTip("未找到汤姆");
         } else if (tomState === false) {
-            timeStorage.put(tomIsWorkName, false);
+
         } else {
-            let tomTimeSecend = tomTime.hours * 60 * 60 + tomTime.minutes * 60 + tomTime.seconds;
-            //设定计时器
-            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
-            timer(timerName, tomTimeSecend);
-            timeStorage.put(tomIsWorkName, true);
+
         }
+        sleep(500);
+        swipe(600 - 350 + ran(), 580 - 200 + ran(), 600 + ran(), 580 + ran(), 1000);
+    } else {
 
     }
 

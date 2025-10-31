@@ -1,10 +1,10 @@
 {
-  "version": "1.5.0",
-  "description": "\n\n新增功能：\n汤姆功能（还没有具体测试）\n\n功能优化：\n将配置保存方式改为写入存储storages，现在的保存配置是将当前配置保存到原来的config.json文件，加载是从config.json文件加载,当删除Autojs后可以点击加载配置即可加载本地配置\n\n修复Bug：\n点击切换账号时按钮不会因为按钮闪烁导致识别失败（双重验证，应该没问题了吧）\n\n",
+  "version": "1.5.1",
+  "description": "\n\n修复Bug：启用汤姆后不执行\n\n",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 43,
+      "versionCode": 44,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/project.json"
@@ -18,7 +18,7 @@
     },
     {
       "name": "module.js",
-      "versionCode": 43,
+      "versionCode": 44,
       "url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js",
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/scripts/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/scripts/module.js"
