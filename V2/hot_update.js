@@ -133,7 +133,7 @@ function shouldDownloadFile(fileConfig) {
  */
 function downloadAllFiles(backupDir) {
     let successCount = 0;
-    
+
     // 计算需要下载的文件数量
     let filesToDownloadCount = 0;
     for (let i = 0; i < updateConfig.files.length; i++) {
@@ -141,25 +141,25 @@ function downloadAllFiles(backupDir) {
             filesToDownloadCount++;
         }
     }
-    
+
     // 如果没有需要下载的文件，直接返回成功
     if (filesToDownloadCount === 0) {
         console.log("没有需要下载的文件，跳过下载过程");
         return true;
     }
-    
+
     // 创建进度条对话框
     let progressDialog = dialogs.build({
         title: "正在下载更新文件...",
         customView: ui.inflate(
             <vertical padding="16">
-                <progressbar id="progressBar" max="100" showMinMax="true"/>
+                <progressbar id="progressBar" max="100" showMinMax="true" />
                 <text id="progressText" textSize="14sp" gravity="center" marginTop="8">准备下载...</text>
             </vertical>
         ),
         cancelable: false
     }).show();
-    
+
     let progressView = progressDialog.getView();
 
     // 遍历所有需要更新的文件
@@ -184,7 +184,7 @@ function downloadAllFiles(backupDir) {
         }
 
         console.log(`正在下载文件: ${fileConfig.name} (URL: ${downloadUrl})`);
-        
+
         // 更新进度条文本
         progressView.progressText.setText(`正在下载: ${fileConfig.name}`);
 
@@ -241,7 +241,7 @@ function downloadAllFiles(backupDir) {
             successCount++;
             downloadedCount++;
             console.log(`文件下载并写入完成: ${fileConfig.name}`);
-            
+
             // 更新进度条
             let progressPercent = Math.round((downloadedCount / filesToDownloadCount) * 100);
             progressView.progressBar.setProgress(progressPercent);
@@ -254,7 +254,7 @@ function downloadAllFiles(backupDir) {
 
     // 关闭进度条对话框
     progressDialog.dismiss();
-    
+
     // 检查是否有文件下载成功
     if (successCount === 0) {
         return false;
@@ -472,6 +472,138 @@ function backupCurrentFiles() {
     return backupSubDir; // 返回备份目录路径
 }
 
+
+/**
+ * 下载压缩包文件
+ * @param {string} downloadUrl - 压缩包的下载链接
+ * @param {string} targetDir - 目标文件夹路径
+ * @param {string} fileName - 保存的文件名（可选，默认为从URL中提取）
+ * @returns {boolean} 下载是否成功
+ */
+function downloadZipFile(downloadUrl, targetDir = "/sdcard/Download/", fileName) {
+    // 创建进度条对话框
+    let progressDialog = dialogs.build({
+        title: "正在下载压缩包...",
+        customView: ui.inflate(
+            <vertical padding="16">
+                <progressbar id="progressBar" max="100" showMinMax="true" />
+                <text id="progressText" textSize="14sp" gravity="center" marginTop="8">准备下载...</text>
+            </vertical>
+        ),
+        cancelable: false
+    }).show();
+
+    let progressView = progressDialog.getView();
+
+    try {
+        console.log("开始下载压缩包: " + downloadUrl);
+
+        // 确保目标目录存在
+        files.ensureDir(targetDir + "/1");
+
+        // 如果未提供文件名，则从URL中提取
+        if (!fileName) {
+            fileName = downloadUrl.split('/').pop().split('?')[0] || "download.zip";
+        }
+
+        // 构建完整的文件路径
+        let filePath = files.join(targetDir, fileName);
+        console.log("保存路径: " + filePath);
+
+        // 更新进度条文本
+        progressView.progressText.setText("正在连接...");
+
+        // 发送HTTP请求获取文件
+        let response = http.get(downloadUrl, {
+            headers: {
+                "Accept": "application/zip, application/octet-stream"
+            }
+        });
+
+        if (response.statusCode != 200) {
+            console.error("下载压缩包失败, HTTP状态码: " + response.statusCode);
+            toast("下载压缩包失败, HTTP状态码: " + response.statusCode);
+            progressDialog.dismiss();
+            return false;
+        }
+
+        // 获取文件内容
+        let content = response.body.bytes();
+        if (!content || content.length === 0) {
+            console.error("下载的内容为空");
+            toast("下载的内容为空");
+            progressDialog.dismiss();
+            return false;
+        }
+
+        console.log("文件大小: " + content.length + "字节");
+
+        // 更新进度条文本
+        progressView.progressText.setText("正在保存文件...");
+
+        // 使用二进制模式写入文件
+        files.writeBytes(filePath, content);
+        console.log("压缩包已保存: " + filePath + ", 大小: " + content.length + "字节");
+
+        // 验证文件是否成功写入
+        if (!files.exists(filePath)) {
+            throw new Error("写入文件后不存在");
+        }
+
+        toast("压缩包下载成功: " + fileName);
+
+    } catch (e) {
+        console.error("下载压缩包时出错: " + e.message);
+        toast("下载压缩包时出错: " + e.message);
+        // 关闭进度条对话框
+        progressDialog.dismiss();
+        return false;
+    }
+
+    try {
+        // 更新进度条文本，显示正在解压
+        progressView.progressText.setText("正在解压文件...");
+        
+        // 解压压缩包
+        let filePath = files.join(targetDir, fileName);
+        let dirPath = files.cwd().substring(0, files.cwd().lastIndexOf("/"));
+        switch (zips.X(filePath, dirPath)) {
+            case 0:
+                log("解压缩成功！请到 " + dirPath + " 目录下查看。");
+                break;
+            case 1:
+                toastLog("压缩结束，存在非致命错误（例如某些文件正在被使用，没有被压缩）");
+                break;
+            case 2:
+                toastLog("致命错误");
+                break;
+            case 7:
+                toastLog("命令行错误");
+                break;
+            case 8:
+                toastLog("没有足够内存");
+                break;
+            case 255:
+                toastLog("用户中止操作");
+                break;
+            default:
+                toastLog("未知错误");
+        }
+        
+        // 关闭进度条对话框
+        progressDialog.dismiss();
+        return true;
+    } catch (error) {
+        console.error("解压缩压缩包时出错: " + error.message);
+        toast("解压缩压缩包时出错: " + error.message);
+        // 关闭进度条对话框
+        progressDialog.dismiss();
+        return false;
+    }
+}
+
+
+
 /**
  * 获取文件的完整路径
  * @param {Object} fileConfig 文件配置
@@ -507,6 +639,8 @@ function isUpdateAvailable() {
     return updateConfig.version && updateConfig.files && updateConfig.files.length > 0;
 }
 
+
+
 // 导出模块
 module.exports = {
     init: init,
@@ -514,4 +648,7 @@ module.exports = {
     getUpdateInfo: getUpdateInfo,
     isUpdateAvailable: isUpdateAvailable,
     shouldDownloadFile: shouldDownloadFile,
+    downloadZipFile: downloadZipFile,
 };
+
+

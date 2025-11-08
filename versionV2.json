@@ -1,25 +1,25 @@
 {
-  "version": "2.0.0",
-  "description": "\n\n修复Bug：启用汤姆后不执行\n\n",
-  "zip_name": "卡通农场小助手v2.0.0.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/2.0.0/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.0.0.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.0.0/v2.0.0.zip",
+  "version": "2.0.1",
+  "description": "\n\nv2.0.1功能优化：下载全部文件改为下载发行版压缩包，下载后自动解压到脚本文件夹(下载后是一个新的脚本文件，不会覆盖原脚本)\n\n修复Bug：修复汤姆休息时的计时器设定错误\n修复退出商店时识别叉号的模板匹配失败的Bug\n\n",
+  "zip_name": "卡通农场小助手v2.0.1.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.0.1/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.0.1.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.0.1/v2.0.1.zip",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 45,
+      "versionCode": 46,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 45,
+      "versionCode": 46,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 45,
+      "versionCode": 46,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
     },
@@ -55,7 +55,7 @@
     },
     {
       "name": "hot_update.js",
-      "versionCode": 45,
+      "versionCode": 46,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/hot_update.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/hot_update.js"
     }

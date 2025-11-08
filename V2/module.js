@@ -1376,7 +1376,17 @@ function checkmenu() {
 //点击叉号
 function close() {
     try {
-        let close_button = findimage(files.join(config.photoPath, "close.png"), 0.5);
+
+        //识别叉叉
+        let close_button = findMC(["#ec404b", [-8, -9, "#f34854"], [10, -13, "#f44955"],
+            [11, 9, "#e4383f"], [-10, 8, "#e6363e"], [-20, 1, "#f9cd43"],
+            [0, -18, "#f7de5c"], [22, 0, "#f9cd42"], [1, 24, "#f6c943"]], sc);//小×
+        if (!close_button) {
+            close_button = findMC(["#ed404b", [-13, -15, "#f54e5a"], [15, -14, "#ee444e"],
+                [13, 11, "#e43840"], [-17, 10, "#e6363e"], [26, 0, "#f9cd42"],
+                [-2, -23, "#f7df5c"], [-29, 1, "#f9cd42"], [-1, 29, "#f6cc44"]], sc);//大×
+        }
+
         if (close_button) {
             click(close_button.x + ran(), close_button.y + ran())
             console.log("点击叉叉")
@@ -3206,7 +3216,7 @@ function operation(Account) {
         } else if (tomState === false) {
             timeStorage.put(tomIsWorkName, false);
         } else {
-            let tomTimeSecend = tomTime.hours * 60 * 60 + tomTime.minutes * 60 + tomTime.seconds;
+            let tomTimeSecend = tomState.hours * 60 * 60 + tomState.minutes * 60 + tomState.seconds;
             //设定计时器
             let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
             timer(timerName, tomTimeSecend);

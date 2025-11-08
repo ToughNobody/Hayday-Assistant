@@ -794,17 +794,12 @@ function showAboutDialog() {
             // 执行全量更新
             threads.start(() => {
                 try {
-
-                    // 读取project.json文件获取版本信息,   别删会出BUG
-                    let projectConfig = files.read('./project.json');
-                    let projectData = JSON.parse(projectConfig);
-
-                    // 发送HTTP请求获取最新版本号
+                    // 发送HTTP请求获取最新版本信息
                     let apiUrl = "https://gitee.com/ToughNobody/Hayday-Assistant/raw/main/versionV2.json";
                     log("请求API地址: " + apiUrl);
                     let response = http.get(apiUrl, {
                         headers: {
-                            "Accept": "application/vnd.github.v3+json"
+                            "Accept": "application/json"
                         }
                     });
                     log("HTTP响应状态码: " + response.statusCode);
@@ -821,24 +816,23 @@ function showAboutDialog() {
                     // 加载热更新模块
                     let hotUpdate = require("./hot_update.js");
 
-                    // 初始化热更新
-                    hotUpdate.init({
-                        version: result.version,
-                        versionCode: projectData.versionCode,
-                        files: result.files,
-                        description: result.description,
-                        updateSource: updateSource, // 根据选择的源更新
-                        downloadAll: true
-                    });
+                    if (updateSource == "gitee") {
+                        downloadUrl = result.zip_url_gitee;
+                    } else if (updateSource == "github") {
+                        downloadUrl = result.zip_url_github;
+                    }
 
-                    // 执行全量更新
-                    let success = hotUpdate.doIncrementalUpdate();
+                    // 从JSON中获取zip_name字段
+                    let fileName = result.zip_name;
+
+                    // 下载压缩包
+                    let success = hotUpdate.downloadZipFile(downloadUrl, "/sdcard/Download/", fileName);
 
                     if (success) {
                         toastLog("更新成功，即将重启应用...");
                         engines.stopAll();
                         events.on("exit", function () {
-                            engines.execScriptFile(engines.myEngine().cwd() + "/main.js");
+                            engines.execScriptFile(files.cwd().substring(0, files.cwd().lastIndexOf("/")) + "/" + fileName.replace(".zip", "") + "/main.js");
                         });
                     } else {
                         toastLog("更新失败，请重试");
@@ -869,7 +863,7 @@ function checkForUpdates(silence = false) {
             log("请求API地址: " + apiUrl);
             let response = http.get(apiUrl, {
                 headers: {
-                    "Accept": "application/vnd.github.v3+json"
+                    "Accept": "application/json"
                 }
             });
             log("HTTP响应状态码: " + response.statusCode);
@@ -3087,7 +3081,7 @@ function startButton() {
     }
 
     // 输出当前配置
-    // logCurrentConfig(config);
+    logCurrentConfig(config);
 
     switch (config.selectedFunction.code) {
         case 0: // 刷地
