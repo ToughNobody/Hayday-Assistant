@@ -1,0 +1,61 @@
+{
+  "version": "2.0.0",
+  "description": "\n\n修复Bug：启用汤姆后不执行\n\n",
+  "files": [
+    {
+      "name": "project.json",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
+    },
+    {
+      "name": "main.js",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
+    },
+    {
+      "name": "module.js",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
+    },
+    {
+      "name": "shuadi.js",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/shuadi.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/shuadi.js"
+    },
+    {
+      "name": "zhongshu.js",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/zhongshu.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/zhongshu.js"
+    },
+    {
+      "name": "createNewAccount.js",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/createNewAccount.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/createNewAccount.js"
+    },
+    {
+      "name": "floatyBtn.js",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/floatyBtn.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/floatyBtn.js"
+    },
+    {
+      "name": "img_Base64.js",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/icon_Base64.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/icon_Base64.js"
+    },
+    {
+      "name": "hot_update.js",
+      "versionCode": 45,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/hot_update.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/hot_update.js"
+    }
+
+  ]
+}
