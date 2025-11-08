@@ -1,6 +1,9 @@
 {
   "version": "2.0.0",
   "description": "\n\n修复Bug：启用汤姆后不执行\n\n",
+  "zip_name": "卡通农场小助手v2.0.0.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/2.0.0/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.0.0.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.0.0/v2.0.0.zip",
   "files": [
     {
       "name": "project.json",
