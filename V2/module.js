@@ -1611,6 +1611,7 @@ function tomToFind(tomPos) {
         log("等待汤姆中,请勿进行任何操作...");
         showTip("等待汤姆中,请勿进行任何操作...");
         sleep(25000);
+        showTip("汤姆第一次返回");
         let isfind = false;
         findNum = 0;
         while (!isfind && findNum < 3) {
@@ -1621,7 +1622,9 @@ function tomToFind(tomPos) {
             }
 
             for (let i = 0; i < 3; i++) {
-                if (findNum == 0) click(tomPos.x, tomPos.y);
+                showTip("汤姆第一次返回，点击汤姆")
+                if (findNum == 0 && i == 0) click(tomPos.x, tomPos.y);
+                sleep(1000);
                 //选择找的数量
                 if (matchColor([{ x: 677, y: 615, color: "#f6cb51" }, { x: 977, y: 620, color: "#f6c647" },
                 { x: 605, y: 528, color: "#efc462" }, { x: 997, y: 300, color: "#f4e9d0" }])) {
@@ -1629,7 +1632,6 @@ function tomToFind(tomPos) {
                     isfind = true;
                     break;
                 }
-                sleep(500);
             }
             findNum++;
         }
