@@ -1378,6 +1378,7 @@ function close() {
     try {
 
         //识别叉叉
+        let sc = captureScreen();
         let close_button = findMC(["#ec404b", [-8, -9, "#f34854"], [10, -13, "#f44955"],
             [11, 9, "#e4383f"], [-10, 8, "#e6363e"], [-20, 1, "#f9cd43"],
             [0, -18, "#f7de5c"], [22, 0, "#f9cd42"], [1, 24, "#f6c943"]], sc);//小×
@@ -1397,7 +1398,7 @@ function close() {
 
         }
     } catch (error) {
-        log("close函数出错")
+        log("close函数出错" + error)
     }
 }
 
@@ -2036,7 +2037,7 @@ function coin() {
     // showTip("收金币");
     let allcenters = [];
     let sc = captureScreen();
-    let region = [155, 158, 1132 - 155, 594 - 158]
+    let region = [158,160,1117-158,542-160]
     let centers1 = findimages(files.join(config.photoPath, "shopsold1.png"), 0.8, 10, sc);
     //汤姆
     let centers2 = findMC(["#cae588", [48, -6, "#875324"], [53, 32, "#ffe875"],
