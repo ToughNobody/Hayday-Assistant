@@ -2092,6 +2092,22 @@ function validateConfig(config) {
     config.showText.x = config.showText.x != undefined ? Number(config.showText.x) : defaultConfig.showText.x;
     config.showText.y = config.showText.y != undefined ? Number(config.showText.y) : defaultConfig.showText.y;
 
+    // 验证功能选择
+    if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
+    const functionOptions = ["刷地", "种树", "创新号"];
+    if (config.selectedFunction.code < 0 || config.selectedFunction.code >= functionOptions.length) {
+        config.selectedFunction.code = defaultConfig.selectedFunction.code;
+    }
+    config.selectedFunction.text = functionOptions[config.selectedFunction.code];
+
+    // 验证作物选择
+    if (!config.selectedCrop) config.selectedCrop = defaultConfig.selectedCrop;
+    const cropOptions = ["小麦", "玉米", "胡萝卜", "大豆", "甘蔗"];
+    if (config.selectedCrop.code < 0 || config.selectedCrop.code >= cropOptions.length) {
+        config.selectedCrop.code = defaultConfig.selectedCrop.code;
+    }
+    config.selectedCrop.text = cropOptions[config.selectedCrop.code];
+
     // 验证树木选择
     if (!config.selectedTree) config.selectedTree = defaultConfig.selectedTree;
     const treeOptions = ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "咖啡丛", "橄榄树", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"];
@@ -2172,6 +2188,11 @@ function validateConfig(config) {
     // 验证账号方式
     if (!config.accountMethod || (config.accountMethod !== "email" && config.accountMethod !== "save")) {
         config.accountMethod = "email"; // 默认为邮箱账号方式
+    }
+
+    // 验证是否切换账号
+    if (typeof config.switchAccount !== "boolean") {
+        config.switchAccount = defaultConfig.switchAccount;
     }
 
     // 验证商店价格选项
