@@ -319,7 +319,10 @@ function restartgame() {
             } else {
                 home();
                 sleep(500);
-                launchSettings("com.supercell.hayday");
+                app.startActivity({
+                    action: "android.settings.APPLICATION_DETAILS_SETTINGS",
+                    data: "package:com.supercell.hayday"
+                });
                 // 循环尝试点击"停止"按钮，直到成功
                 for (let i = 0; i < 5; i++) {
                     if (click("停止")) {
@@ -339,7 +342,21 @@ function restartgame() {
             sleep(1000);
             launch("com.supercell.hayday");
         } else {
-            events.broadcast.emit("engine_r", "刷地引擎_存档");
+            let packageName = "com.supercell.hayday";
+
+            try {
+                let result = shell("am force-stop " + packageName, true);
+                if (result.code === 0) {
+                    console.log("使用am force-stop命令成功停止应用");
+                    // toast("卡通农场已停止");
+                } else {
+                    console.log("am force-stop命令执行失败: " + result.error);
+                }
+            } catch (e) {
+                console.log("使用am force-stop命令时出错: " + e);
+            }
+            sleep(1000);
+            launch("com.supercell.hayday");
         }
     } catch (error) {
         log(error);
@@ -1548,9 +1565,10 @@ function tomMenu() {
         return "等待"
     }
     //没有雇佣汤姆页面
-    let menu3 = matchColor([{ x: 1120, y: 292, color: "#ed414c" },
-    { x: 532, y: 521, color: "#fdc32b" }, { x: 802, y: 519, color: "#fdc52d" },
-    { x: 1038, y: 519, color: "#fdc52d" }, { x: 957, y: 389, color: "#f4e8ca" }])
+    let menu3 = matchColor([{ x: 1127, y: 294, color: "#e93e47" },
+    { x: 1121, y: 324, color: "#f3c442" }, { x: 1009, y: 387, color: "#f3e8cb" },
+    { x: 1049, y: 483, color: "#fbe055" }, { x: 721, y: 482, color: "#fbe055" },
+    { x: 511, y: 483, color: "#fbe054" }])
     if (menu3) {
         return "没有雇佣汤姆"
     }
@@ -2037,7 +2055,7 @@ function coin() {
     // showTip("收金币");
     let allcenters = [];
     let sc = captureScreen();
-    let region = [158,160,1117-158,542-160]
+    let region = [158, 160, 1117 - 158, 542 - 160]
     let centers1 = findimages(files.join(config.photoPath, "shopsold1.png"), 0.8, 10, sc);
     //汤姆
     let centers2 = findMC(["#cae588", [48, -6, "#875324"], [53, 32, "#ffe875"],
@@ -2178,8 +2196,7 @@ function shop() {
                     // 识别数字
                     let region = [wheat_sail.x, wheat_sail.y, 130, 80]
                     let wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
-
-                    if (wheat_num >= wheat_sail_minNum) {
+                    if (Number(wheat_num) >= Number(wheat_sail_minNum)) {
 
                         console.log(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sail_minNum);
                         showTip(config.selectedCrop.text + "数量" + wheat_num);
@@ -3197,11 +3214,30 @@ function operation(Account) {
     console.log("============开始售卖系列操作===============")
     shop();
 
-    let currentTimerName = Account ? Account + "Tom计时器" : "Tom计时器";
+    let currentTomTimerName = Account ? Account + "Tom计时器" : "Tom计时器";
 
     let tomIsWorkName = Account ? Account + "TomIsWork" : "TomIsWork"
-    let tom_isWork = timeStorage.get(tomIsWorkName) !== false;
-    if (config.tomFind.enabled && !getTimerState(currentTimerName) && tom_isWork) {    //汤姆
+    let tom_isWork = timeStorage.get(tomIsWorkName) !== null;
+
+    //如果汤姆在休息，输出剩余时间
+    let tomTime = getTimerState(currentTomTimerName);
+    if (tomTime) {
+        let hours = Math.floor(tomTime / 3600);
+        let minutes = Math.floor(tomTime / 60) % 60;
+        let seconds = tomTime % 60;
+        let timeText = hours > 0 ? `${hours}时${minutes}分${seconds}秒` : minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+        details = `汤姆休息剩余时间: ${timeText}\n`;
+        log(details);
+        showTip(details);
+    }
+
+    //如果没有雇佣汤姆，输出提示，并返回
+    if (tom_isWork) {
+        log("没有雇佣汤姆")
+        showTip("没有雇佣汤姆");
+    }
+
+    if (config.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
         log("===============汤姆===================");
         sleep(300)
         swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
@@ -3216,6 +3252,7 @@ function operation(Account) {
         } else if (tomState === null) {
             log("未雇佣汤姆");
             showTip("未雇佣汤姆");
+            timeStorage.put(tomIsWorkName, null);
         } else if (tomState === false) {
             timeStorage.put(tomIsWorkName, false);
         } else {

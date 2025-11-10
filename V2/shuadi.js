@@ -31,31 +31,7 @@ let config = module.config;
 let timeStorage = storages.create("times");
 let statistics = storages.create("statistics");
 
-//设定分辨率
-let ScreenSize = config.deviceScreenSize;
-let Size = ScreenSize.split("×").map(Number).sort((a, b) => b - a);
-// setScreenMetrics(Size[0], Size[1]);
-// 设计稿参数
-const designWidth = 2664, designHeight = 1200;
 
-// 目标设备参数
-const targetWidth = Size[0];
-const targetHeight = Size[1];
-/**
- * 基于density原始值的坐标转换
- * @param {number} x 设计稿x坐标（基于2664×1200分辨率）
- * @param {number} y 设计稿y坐标
- * @param {number} [baseDensity=524] 设计稿的density原始值
- */
-function adapt(x, y) {
-
-
-    // 1. 仅分辨率缩放
-    const xScaled = x * (targetWidth / designWidth);//0.48
-    const yScaled = y * (targetHeight / designHeight);//0.6
-
-    return [Math.round(xScaled), Math.round(yScaled)];
-}
 
 
 // 启动自动点击权限请求
