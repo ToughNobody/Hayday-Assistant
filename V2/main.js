@@ -1,7 +1,24 @@
 "ui";
 
 const icon = require("./img_Base64.js");
-
+//产品字典 炸药|炸药桶|铁铲|十字镐|木锯|斧头|标桩|木槌|土地契约|胶带|木板|螺栓|螺钉|盒钉|镶板
+const products = {
+    "炸药": "0",
+    "炸药桶": "1",
+    "铁铲": "2",
+    "十字镐": "3",
+    "木锯": "4",
+    "斧头": "5",
+    "标桩": "6",
+    "木槌": "7",
+    "土地契约": "8",
+    "胶带": "9",
+    "木板": "10",
+    "螺栓": "11",
+    "螺钉": "12",
+    "盒钉": "13",
+    "镶板":'14',
+};
 // 创建存储对象
 let token_storage = storages.create("token_storage");
 let statistics = storages.create("statistics");
@@ -373,6 +390,31 @@ ui.layout(
                                             margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
                                     </card>
 
+                                </vertical>
+                            </card>
+                            {/* 上架指定产品 */}
+                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16"> 
+
+                                    {/* 上架指定产品选择 - */}
+                                    <horizontal id="productSelectContainer" gravity="center_vertical" visibility="visible">
+                                        <text text="上架产物：" textSize="14" w="80" marginRight="8" />
+                                        <Switch id="openProduct" w="*" />
+                                    </horizontal>
+                                    
+                                    <horizontal id="productSelectContainer" gravity="center_vertical" visibility="visible">
+                                        <text text="选择产品：" textSize="14" w="80" marginRight="8" />
+                                        <spinner id="productItem" entries="炸药|炸药桶|铁铲|十字镐|木锯|斧头|标桩|木槌|土地契约|胶带|木板|螺栓|螺钉|盒钉|镶板"
+                                            w="50" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+                                    {/* 商店售价*/}
+                                    <horizontal id="shopShouJia" gravity="center_vertical" visibility="visible">
+                                        <text text="商店售价：" textSize="14" w="80" marginRight="8" />
+                                        <spinner id="shopPrice" entries="最低|平价|最高" w="50" textSize="14" h="48" bg="#FFFFFF" />
+                                        <text text="保留数量:" textSize="14" w="80" marginLeft="20" />
+                                        <input id="ReservedQuantity_product" inputType="number" marginRight="8" hint="20" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                    </horizontal>
+                                    
                                 </vertical>
                             </card>
 
@@ -1850,6 +1892,41 @@ ui.emitter.on("resume", function () {
  * 获取当前配置
  */
 function getConfig() {
+    // 从AccountList生成accountNames数组，确保一致性
+    const accountNamesFromList = AccountList.map(item => item.title);
+
+    // 使用全局状态变量获取当前配置
+    return {
+        selectedFunction: {
+            text: ui.functionSelect.getSelectedItem(),
+            code: ["刷地", "种树", "创新号"].indexOf(ui.functionSelect.getSelectedItem())
+        },
+
+        selectedCrop: {
+            text: ui.cropSelect.getSelectedItem(),
+            code: ["小麦", "玉米", "胡萝卜", "大豆", "甘蔗"].indexOf(ui.cropSelect.getSelectedItem())
+        },
+        selectedTree: {
+            text: ui.treeSelect.getSelectedItem(),
+            code: ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "咖啡丛", "橄榄树", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"].indexOf(ui.treeSelect.getSelectedItem())
+        },
+        selectedProduct: {
+            text: ui.productItem.getSelectedItem(),
+            code: products[ui.productItem.getSelectedItem()]
+        },
+        switchAccount: ui.accountSwitch.isChecked(),
+        findAccountMethod: currentFindAccountMethod, // 使用全局变量
+        accountMethod: currentAccountMethod, // 使用全局变量
+        accountList: AccountList, // 添加账号列表到配置
+        saveAccountList: SaveAccountList, // 添加存档账号列表到配置
+        addFriendsList: AddFriendsList, // 添加创新号账号列表到配置
+        shopPrice: {
+            text: ui.shopPrice.getSelectedItem(),
+            code: ["最低", "平价", "最高"].indexOf(ui.shopPrice.getSelectedItem())
+        },
+        ReservedQuantity: parseInt(ui.ReservedQuantity.text()) ?? defaultConfig.ReservedQuantity,
+        ReservedQuantity_product: parseInt(ui.ReservedQuantity_product.text()) ?? defaultConfig.ReservedQuantity_product,
+        landFindMethod: currentLandFindMethod, // 使用全局变量
     // 从存储对象的不同键中获取配置项并组合成完整的配置对象
     const storedConfig = {
         selectedFunction: configs.get("selectedFunction"),
@@ -2087,6 +2164,13 @@ function validateConfig(config) {
         config.ReservedQuantity = defaultConfig.ReservedQuantity;
     } else config.ReservedQuantity = Number(config.ReservedQuantity);
 
+    //验证仓库保留数量
+    if (config.ReservedQuantity_product == null || isNaN(config.ReservedQuantity_product) || config.ReservedQuantity_product < 0) {
+        config.ReservedQuantity_product = defaultConfig.ReservedQuantity_product;
+    }
+
+
+
     //验证悬浮窗坐标
     if (!config.showText) config.showText = defaultConfig.showText;
     config.showText.x = config.showText.x != undefined ? Number(config.showText.x) : defaultConfig.showText.x;
@@ -2312,6 +2396,10 @@ function getDefaultConfig() {
             text: "苹果树",
             code: 0
         },
+        selectedProduct: {
+            text: "炸药",
+            code: '0'
+        },
         switchAccount: false,
         findAccountMethod: "ocr", // 账号识别方式，默认为文字识别
         accountList: [], // 新增账号列表配置
@@ -2322,6 +2410,7 @@ function getDefaultConfig() {
             code: 0
         },
         ReservedQuantity: 20, // 默认保留数量为20
+        ReservedQuantity_product: 1, // 默认保留数量为1
         landFindMethod: "商店",
         landOffset: {
             x: 60,
@@ -2461,6 +2550,8 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 设置功能选择
     ui.functionSelect.setSelection(config.selectedFunction.code);
+    //设置上架产品
+    ui.productItem.setSelection(config.selectedProduct.code);
 
     // 设置作物选择
     ui.cropSelect.setSelection(config.selectedCrop.code);
@@ -2508,6 +2599,8 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 设置保留数量
     ui.ReservedQuantity.setText(String(config.ReservedQuantity));
+    //设置仓库保留数量
+    ui.ReservedQuantity_product.setText(String(config.ReservedQuantity_product));
 
     // 设置寻找土地方法
     setLandMethod(config.landFindMethod);
@@ -2818,6 +2911,12 @@ function loadConfigToUI(loadConfigFromFile = false) {
             configs.put("ReservedQuantity", Number(s));
         }
     }));
+    //仓库剩余数量
+    ui.ReservedQuantity_product.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            autoSaveConfig();
+        }
+    }));
 
     // 悬浮窗坐标
     ui.showTextX.addTextChangedListener(new android.text.TextWatcher({
@@ -3072,11 +3171,13 @@ function logCurrentConfig(config) {
     console.log("应用版本: " + getAppVersion());
     console.log("设备分辨率：" + config.deviceScreenSize);
     console.log("选择功能: " + config.selectedFunction.text);
+    console.log("选择作物: " + config.selectedProduct.text);
     console.log("种植作物: " + config.selectedCrop.text);
     console.log("成熟时间: " + config.matureTime.text);
     console.log("种植树木: " + config.selectedTree.text);
     console.log("商店价格: " + config.shopPrice.text);
     console.log("剩余数量：" + config.ReservedQuantity);
+    console.log("仓库售卖剩余: " + config.ReservedQuantity_product);
     console.log("地块查找方法: " + config.landFindMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
     console.log("账号识别方式: " + config.findAccountMethod);
@@ -3288,8 +3389,70 @@ function winStartButton() {
             toast("未知功能", "long");
     }
 }
+//商店上架
+function startShopping() {
+    const config = getConfig();
+    logCurrentConfig(config);
 
-ui.btnStart.click(startButton);
+    saveConfig(config);
+    storages.remove("times");
+    statistics.remove("rowContentData");
+    log("点击开始按钮")
+    if (device.width != 720 || device.height != 1280) {
+        toastLog("当前分辨率不正确，请使用720*1280分辨率")
+    }
+
+    if (!auto.service) {
+        toast("请先开启无障碍服务");
+        app.startActivity({
+            action: "android.settings.ACCESSIBILITY_SETTINGS"
+        });
+        return;
+    }
+
+    // 输出当前配置
+        stopOtherEngines(); // 先清理所有任务
+            log(config.accountMethod);
+            if (config.accountMethod == "email") {
+                threads.start(() => {
+                    log("开始启动上架");
+                    // launch("com.supercell.hayday");
+                    sleep(1000);
+                    let newEngine = engines.execScriptFile("./shopping.js");
+                    log("启动上架，ID: " + newEngine.id);
+
+                })
+            }
+            else if (config.accountMethod == "save") {
+                threads.start(() => {
+                    if (!checkRoot()) {
+                        toastLog("请先获取Root权限");
+                        return;
+                    }
+
+                    log("开始启动刷地引擎");
+
+                    sleep(1000);
+                    let newEngine = engines.execScriptFile("./shopping.js");
+                    log("启动刷地引擎，ID: " + newEngine.id);
+
+                })
+            }
+}
+
+ui.btnStart.click(()=>{
+    console.log(ui.openProduct.isChecked());
+    log("上架仓库物品");
+    //判断是否是上架仓库物品
+    if (ui.openProduct.isChecked()) {
+      log("上架仓库物品");
+       startShopping();
+    } else {
+      startButton();
+    }
+
+})
+
 
 
 //监听引擎重启事件
