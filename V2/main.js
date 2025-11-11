@@ -23,9 +23,12 @@ const products = {
 let token_storage = storages.create("token_storage");
 let statistics = storages.create("statistics");
 let configs = storages.create("config"); // 创建配置存储对象
-let config = configs.get("config");
+let config
 
-// 初始化创新号账号列表
+
+// 初始化账号列表
+let AccountList = [];
+let SaveAccountList = [];
 let AddFriendsList = [];
 
 
@@ -81,12 +84,12 @@ const colorLibrary = [
 ];
 
 // 随机选择一个颜色
-var color;
+let color = "#009688"
 
 // 初始化颜色函数
 function initColor() {
     // 尝试从存储对象加载颜色设置
-    const config = loadConfig();
+
     if (config && config.themeColor && config.themeColor.code >= 0) {
         // 如果配置中有颜色设置，使用配置中的颜色
         color = colorLibrary[config.themeColor.code];
@@ -96,8 +99,7 @@ function initColor() {
     }
 }
 
-// 初始化颜色
-initColor();
+
 
 
 // 从project.json中读取版本号
@@ -346,8 +348,8 @@ ui.layout(
                                     {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
                                     <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
                                         <text text="物品类型：" textSize="14" w="80" marginRight="8" />
-                                        <spinner id="itemType" entries="货仓|粮仓" w="120" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
-                                        <input id="itemName" hint="物品名称" w="*" h="48" textSize="14" bg="#FFFFFF" />
+                                        <spinner id="Tom_itemType" entries="货仓|粮仓" w="120" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
+                                        <input id="Tom_itemName" hint="物品名称" w="*" h="48" textSize="14" bg="#FFFFFF" />
                                     </horizontal>
 
                                     {/* 树木选择 - 仅在种树时显示 */}
@@ -748,7 +750,7 @@ ui.layout(
             <img w="280" h="200" scaleType="fitXY" src="file://{{currentPath}}/res/images/sidebar.png" />
             <list id="menu">
                 <horizontal bg="?selectableItemBackground" w="*">
-                    <img w="50" h="50" padding="16" src="{{this.icon}}" tint="{{color}}" />
+                    <img id="menuIcon" w="50" h="50" padding="16" src="{{this.icon}}" tint="{{color}}" />
                     <text textColor="black" textSize="15sp" text="{{this.title}}" layout_gravity="center" />
                 </horizontal>
             </list>
@@ -773,6 +775,7 @@ ui.emitter.on("create_options_menu", menu => {
     menu.add("开始");
     menu.add("关于");
     menu.add("日志");
+    menu.add("调试");
 });
 //监听选项菜单点击
 ui.emitter.on("options_item_selected", (e, item) => {
@@ -785,6 +788,10 @@ ui.emitter.on("options_item_selected", (e, item) => {
             break;
         case "日志":
             showLogDialog();
+            break;
+        case "调试":
+            log("当前配置:", loadConfig());
+            // log(typeof config.harvestX)
             break;
     }
     e.consumed = true;
@@ -1191,17 +1198,7 @@ function compareVersions(version1, version2) {
 }
 
 activity.setSupportActionBar(ui.toolbar);
-//监听主题颜色
-ui.themeColor.on("item_selected", (item) => {
-    // 只有在randomColor关闭时才使用选择的颜色
-    if (!ui.randomColor.isChecked()) {
-        color = item.color;
-        ui.statusBarColor(color)
-        ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
-        // 更新按钮的选中状态颜色
-        updateButtonColors();
-    }
-});
+
 
 // 监听randomColor开关
 ui.randomColor.on("check", (checked) => {
@@ -1230,9 +1227,11 @@ ui.randomColor.on("check", (checked) => {
 
 // 更新按钮颜色函数
 function updateButtonColors() {
-    // 直接从配置中获取当前选中的土地方法
-    const config = loadConfig();
+    setAccountMethod(config.accountMethod);
+    setFindAccountMethod(config.findAccountMethod);
     setLandMethod(config.landFindMethod);
+    // 更新菜单图标颜色
+    ui.menu.adapter.notifyDataSetChanged();
 }
 //
 ui.statusBarColor(color)
@@ -1257,6 +1256,12 @@ ui.menu.setDataSource([{
     icon: "@drawable/ic_exit_to_app_black_48dp"
 }
 ]);
+
+// 绑定菜单项，用于更新图标颜色
+ui.menu.on('item_bind', function (itemView, itemHolder) {
+    // 更新菜单图标颜色
+    itemView.menuIcon.attr("tint", color);
+});
 
 ui.menu.on("item_click", item => {
     switch (item.title) {
@@ -1464,23 +1469,10 @@ ui.modifyResolutionBtn.on("click", () => {
     dialog.show();
 })
 
-// 初始化账号列表
-let AccountList = [];
-let SaveAccountList = [];
 
-// 从配置加载账号列表
-function loadAccountListFromConfig(config) {
-
-    if (config && config.accountList && Array.isArray(config.accountList)) {
-        AccountList = config.accountList;
-    } else {
-        AccountList = [];
-    }
-    return AccountList;
-}
 
 // 从文件加载存档账号列表
-function loadSaveAccountListFromConfig() {
+function loadSaveAccountListFromConfig(config_save) {
     const saveAccountDir = appExternalDir + "/卡通农场小助手存档";
 
     // 检查目录是否存在，如果不存在则创建
@@ -1489,8 +1481,8 @@ function loadSaveAccountListFromConfig() {
     // 从配置加载存档账号列表
 
     let configSaveAccountList = [];
-    if (config && config.saveAccountList && Array.isArray(config.saveAccountList)) {
-        configSaveAccountList = config.saveAccountList;
+    if (config_save && Array.isArray(config_save)) {
+        configSaveAccountList = config_save;
     }
 
     // 列出目录下的所有文件夹
@@ -1530,45 +1522,6 @@ function loadSaveAccountListFromConfig() {
     return SaveAccountList;
 }
 
-// 从配置加载addFriends列表
-function loadAddFriendsListFromConfig(config) {
-
-    if (config && config.addFriendsList && Array.isArray(config.addFriendsList)) {
-        AddFriendsList = config.addFriendsList;
-    } else {
-        AddFriendsList = [];
-    }
-    return AddFriendsList;
-}
-
-// 保存账号列表到配置
-function saveAccountListToConfig() {
-    const config = loadConfig();
-    config.accountList = AccountList;
-    return saveConfig(config);
-}
-
-// 保存存档账号列表到配置
-function saveSaveAccountListToConfig() {
-    const config = loadConfig();
-    config.saveAccountList = SaveAccountList;
-    return saveConfig(config);
-}
-
-// 保存addFriends列表到配置
-function saveAddFriendsListToConfig() {
-    const config = loadConfig();
-    config.addFriendsList = AddFriendsList;
-    return saveConfig(config);
-}
-
-// 初始化账号列表UI
-function initAccountListUI(config) {
-    loadAccountListFromConfig(config);
-    loadSaveAccountListFromConfig(config);
-    ui['AccountList'].setDataSource(AccountList);
-    ui['SaveAccountList'].setDataSource(SaveAccountList);
-}
 
 // 设置账号方式
 function setAccountMethod(method) {
@@ -1595,14 +1548,8 @@ function setAccountMethod(method) {
     ui.accountMethodEmail.attr("bg", ui.accountMethodEmail.attr("bg"));
     ui.accountMethodSave.attr("bg", ui.accountMethodSave.attr("bg"));
 
-    // 自动保存配置
-    autoSaveConfig();
-}
-
-// 初始化addFriends列表UI
-function initAddFriendsListUI(config) {
-    loadAddFriendsListFromConfig(config);
-    ui['addFriendsList'].setDataSource(AddFriendsList);
+    // 保存选择的账号方式到配置
+    configs.put("accountMethod", method);
 }
 
 // 点击复选框勾选
@@ -1614,7 +1561,8 @@ ui['AccountList'].on('item_bind', function (itemView, itemHolder) {
         itemView.title.invalidate();
 
         // 保存到存储对象
-        saveAccountListToConfig();
+        AccountList = ui['AccountList'].getDataSource();
+        configs.put("accountList", AccountList);
     });
 });
 
@@ -1627,7 +1575,8 @@ ui['SaveAccountList'].on('item_bind', function (itemView, itemHolder) {
         itemView.saveTitle.invalidate();
 
         // 保存到存储对象
-        saveSaveAccountListToConfig();
+        SaveAccountList = ui['SaveAccountList'].getDataSource();
+        configs.put("saveAccountList", SaveAccountList);
     });
 });
 
@@ -1671,7 +1620,8 @@ ui['addFriendsList'].on('item_bind', function (itemView, itemHolder) {
         itemView.addFriendstitle.invalidate();
 
         // 保存到存储对象
-        saveAddFriendsListToConfig();
+        AddFriendsList = ui['addFriendsList'].getDataSource();
+        configs.put("addFriendsList", AddFriendsList);
     });
 });
 
@@ -1684,11 +1634,16 @@ ui['AccountList'].on('item_click', function (item, i, itemView) {
                 ui['AccountList'].adapter.notifyDataSetChanged();
 
                 // 保存到存储对象
-                saveAccountListToConfig();
+                AccountList = ui['AccountList'].getDataSource();
+                configs.put("accountList", AccountList);
 
-                // 自动保存配置
-                autoSaveConfig();
+                // 保存修改后的账号到配置
+                configs.put("accountList", AccountList);
             }
+        })
+        .catch((error) => {
+            // 处理用户取消输入或其他错误情况
+            console.log("用户取消输入或发生错误:", error);
         });
 });
 
@@ -1706,11 +1661,14 @@ ui['SaveAccountList'].on('item_click', function (item, i, itemView) {
                 files.rename(oldSaveDir, newTitle.trim());
 
                 // 保存到存储对象
-                saveSaveAccountListToConfig();
+                SaveAccountList = ui['SaveAccountList'].getDataSource();
+                configs.put("saveAccountList", SaveAccountList);
 
-                // 自动保存配置
-                autoSaveConfig();
             }
+        })
+        .catch((error) => {
+            // 处理用户取消输入或其他错误情况
+            console.log("用户取消输入或发生错误:", error);
         });
 });
 
@@ -1723,11 +1681,14 @@ ui['addFriendsList'].on('item_click', function (item, i, itemView) {
                 ui['addFriendsList'].adapter.notifyDataSetChanged();
 
                 // 保存到存储对象
-                saveAddFriendsListToConfig();
+                AddFriendsList = ui['addFriendsList'].getDataSource();
+                configs.put("addFriendsList", AddFriendsList);
 
-                // 自动保存配置
-                autoSaveConfig();
             }
+        })
+        .catch((error) => {
+            // 处理用户取消输入或其他错误情况
+            console.log("用户取消输入或发生错误:", error);
         });
 });
 
@@ -1740,11 +1701,14 @@ ui['addFriendsList'].on('item_long_click', function (e, item, i) {
                 AddFriendsList.splice(i, 1);
 
                 // 保存到存储对象
-                saveAddFriendsListToConfig();
+                AddFriendsList = ui['addFriendsList'].getDataSource();
+                configs.put("addFriendsList", AddFriendsList);
 
-                // 自动保存配置
-                autoSaveConfig();
             }
+        })
+        .catch((error) => {
+            // 处理用户取消操作或其他错误情况
+            console.log("用户取消操作或发生错误:", error);
         });
     e.consumed = true;
 });
@@ -1758,11 +1722,14 @@ ui['AccountList'].on('item_long_click', function (e, item, i) {
                 AccountList.splice(i, 1);
 
                 // 保存到存储对象
-                saveAccountListToConfig();
+                AccountList = ui['AccountList'].getDataSource();
+                configs.put("accountList", AccountList);
 
-                // 自动保存配置
-                autoSaveConfig();
             }
+        })
+        .catch((error) => {
+            // 处理用户取消操作或其他错误情况
+            console.log("用户取消操作或发生错误:", error);
         });
     e.consumed = true;
 });
@@ -1780,11 +1747,14 @@ ui['SaveAccountList'].on('item_long_click', function (e, item, i) {
                 files.removeDir(saveDir);
 
                 // 保存到存储对象
-                saveSaveAccountListToConfig();
+                SaveAccountList = ui['SaveAccountList'].getDataSource();
+                configs.put("saveAccountList", SaveAccountList);
 
-                // 自动保存配置
-                autoSaveConfig();
             }
+        })
+        .catch((error) => {
+            // 处理用户取消操作或其他错误情况
+            console.log("用户取消操作或发生错误:", error);
         });
     e.consumed = true;
 });
@@ -1801,11 +1771,14 @@ ui['addFriend'].on('click', () => {
                 ui['addFriendsList'].adapter.notifyDataSetChanged();
 
                 // 保存到存储对象
-                saveAddFriendsListToConfig();
+                AddFriendsList = ui['addFriendsList'].getDataSource();
+                configs.put("addFriendsList", AddFriendsList);
 
-                // 自动保存配置
-                autoSaveConfig();
             }
+        })
+        .catch((error) => {
+            // 处理用户取消输入或其他错误情况
+            console.log("用户取消输入或发生错误:", error);
         });
 });
 
@@ -1814,8 +1787,7 @@ ui['addAccount'].on('click', () => {
     const config = getConfig();
     const method = config.accountMethod || 'email';
     const listName = method === 'email' ? 'AccountList' : 'SaveAccountList';
-    const dataList = method === 'email' ? AccountList : SaveAccountList;
-    const saveFunction = method === 'email' ? saveAccountListToConfig : saveSaveAccountListToConfig;
+    let dataList = method === 'email' ? AccountList : SaveAccountList;
     const dialogTitle = method === 'email' ? '请输入新的账号名称' : '请输入新的存档账号名称';
 
     dialogs.rawInput(dialogTitle)
@@ -1828,7 +1800,8 @@ ui['addAccount'].on('click', () => {
                 ui[listName].adapter.notifyDataSetChanged();
 
                 // 保存到存储对象
-                saveFunction();
+                dataList = ui[listName].getDataSource();
+                configs.put(listName, dataList);
 
                 //保存存档
                 if (method === "save") {
@@ -1836,9 +1809,12 @@ ui['addAccount'].on('click', () => {
                         copy_shell(title.trim());
                     })
                 }
-                // 自动保存配置
-                autoSaveConfig();
+
             }
+        })
+        .catch((error) => {
+            // 处理用户取消输入或其他错误情况
+            console.log("用户取消输入或发生错误:", error);
         });
 });
 
@@ -1951,88 +1927,156 @@ function getConfig() {
         ReservedQuantity: parseInt(ui.ReservedQuantity.text()) ?? defaultConfig.ReservedQuantity,
         ReservedQuantity_product: parseInt(ui.ReservedQuantity_product.text()) ?? defaultConfig.ReservedQuantity_product,
         landFindMethod: currentLandFindMethod, // 使用全局变量
+    // 从存储对象的不同键中获取配置项并组合成完整的配置对象
+    const storedConfig = {
+        selectedFunction: configs.get("selectedFunction"),
+        selectedCrop: configs.get("selectedCrop"),
+        selectedTree: configs.get("selectedTree"),
+        switchAccount: configs.get("switchAccount"),
+        findAccountMethod: configs.get("findAccountMethod"),
+        accountMethod: configs.get("accountMethod"),
+        accountList: configs.get("accountList"),
+        saveAccountList: configs.get("saveAccountList"),
+        addFriendsList: configs.get("addFriendsList"),
+        shopPrice: configs.get("shopPrice"),
+        ReservedQuantity: configs.get("ReservedQuantity"),
+        landFindMethod: configs.get("landFindMethod"),
         landOffset: {
-            x: parseInt(ui.landOffsetX.text()) ?? defaultConfig.landOffset.x,
-            y: parseInt(ui.landOffsetY.text()) ?? defaultConfig.landOffset.y
+            x: configs.get("landOffsetX"),
+            y: configs.get("landOffsetY")
         },
         shopOffset: {
-            x: parseInt(ui.shopOffsetX.text()) ?? defaultConfig.shopOffset.x,
-            y: parseInt(ui.shopOffsetY.text()) ?? defaultConfig.shopOffset.y
+            x: configs.get("shopOffsetX"),
+            y: configs.get("shopOffsetY")
         },
-
         firstland: {
-            x: parseInt(ui.firstlandX.text()) ?? defaultConfig.firstland.x,
-            y: parseInt(ui.firstlandY.text()) ?? defaultConfig.firstland.y,
+            x: configs.get("firstlandX"),
+            y: configs.get("firstlandY")
         },
-        distance: parseInt(ui.distance.text()) ?? defaultConfig.distance,
-        matureTime: parseInt(ui.matureTime.text()) ?? defaultConfig.matureTime,
-        harvestTime: parseInt(ui.harvestTime.text()) ?? defaultConfig.harvestTime,
-        harvestX: parseFloat(ui.harvestX.text()) ?? defaultConfig.harvestX,
-        harvestY: parseFloat(ui.harvestY.text()) ?? defaultConfig.harvestY,
-        harvestRepeat: parseInt(ui.harvestRepeat.text()) ?? defaultConfig.harvestRepeat,
+        distance: configs.get("distance"),
+        matureTime: configs.get("matureTime"),
+        harvestTime: configs.get("harvestTime"),
+        harvestX: configs.get("harvestX"),
+        harvestY: configs.get("harvestY"),
+        harvestRepeat: configs.get("harvestRepeat"),
         showText: {
-            x: parseFloat(ui.showTextX.text()) ?? defaultConfig.showText.x,
-            y: parseFloat(ui.showTextY.text()) ?? defaultConfig.showText.y
+            x: configs.get("showTextX"),
+            y: configs.get("showTextY")
         },
-        photoPath: ui.photoPath.text().toString(),
-        deviceScreenSize: ui.screenResolution.text().toString(),
-
-        randomColor: ui.randomColor.isChecked(),
-        themeColor: {
-            text: ui.themeColor.getSelectedItem(),
-            code: ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"].indexOf(ui.themeColor.getSelectedItem())
-        },
-        isShengcang: ui.isShengcang.isChecked(),
-        shengcangTime: parseFloat(ui.shengcangTime.text()) ?? defaultConfig.shengcangTime,
-        isCangkuStatistics: ui.isCangkuStatistics.isChecked(),
-        cangkuStatisticsTime: parseFloat(ui.cangkuStatisticsTime.text()) ?? defaultConfig.cangkuStatisticsTime,
-        cangkuStatisticsPage: parseInt(ui.cangkuStatisticsPage.text()) ?? defaultConfig.cangkuStatisticsPage,
-        treeShouldSwipe: ui.treeShouldSwipeSwitch.isChecked(),
+        photoPath: configs.get("photoPath"),
+        randomColor: configs.get("randomColor"),
+        themeColor: configs.get("themeColor"),
+        isShengcang: configs.get("isShengcang"),
+        shengcangTime: configs.get("shengcangTime"),
+        isCangkuStatistics: configs.get("isCangkuStatistics"),
+        cangkuStatisticsTime: configs.get("cangkuStatisticsTime"),
+        cangkuStatisticsPage: configs.get("cangkuStatisticsPage"),
+        treeShouldSwipe: configs.get("treeShouldSwipe"),
         liangcangOffset: {
-            x: parseInt(ui.liangcangOffsetX.text()) ?? defaultConfig.liangcangOffset.x,
-            y: parseInt(ui.liangcangOffsetY.text()) ?? defaultConfig.liangcangOffset.y
+            x: configs.get("liangcangOffsetX"),
+            y: configs.get("liangcangOffsetY")
         },
         huocangOffset: {
-            x: parseInt(ui.huocangOffsetX.text()) ?? defaultConfig.huocangOffset.x,
-            y: parseInt(ui.huocangOffsetY.text()) ?? defaultConfig.huocangOffset.y
+            x: configs.get("huocangOffsetX"),
+            y: configs.get("huocangOffsetY")
         },
-        token: token_storage.get("token", ui.tokenInput.text().toString()),
-        serverPlatform: {
-            text: ui.serverPlatform.getSelectedItem(),
-            code: ["Pushplus推送加", "Server酱", "WxPusher"].indexOf(ui.serverPlatform.getSelectedItem())
-        },
-        // 汤姆相关配置
+        token: token_storage.get("token"),
+        serverPlatform: configs.get("serverPlatform"),
         tomFind: {
-            enabled: ui.tomSwitch.isChecked(),
-            type: ui.itemType.getSelectedItem(),
-            code: ["货仓", "粮仓"].indexOf(ui.itemType.getSelectedItem()),
-            text: ui.itemName.text().toString(),
+            enabled: configs.get("Tom_enabled"),
+            type: configs.get("Tom_itemType"),
+            code: configs.get("Tom_code"),
+            text: configs.get("Tom_itemName")
         },
-        // 截图坐标配置
         screenshotCoords: {
             coord1: {
-                x: ui.screenshotX1.text() || "",
-                y: ui.screenshotY1.text() || ""
+                x: configs.get("screenshotX1"),
+                y: configs.get("screenshotY1")
             },
             coord2: {
-                x: ui.screenshotX2.text() || "",
-                y: ui.screenshotY2.text() || ""
+                x: configs.get("screenshotX2"),
+                y: configs.get("screenshotY2")
             },
             coord3: {
-                x: ui.screenshotX3.text() || "",
-                y: ui.screenshotY3.text() || ""
-            }
+                x: configs.get("screenshotX3"),
+                y: configs.get("screenshotY3")
+            },
         }
     };
+    return storedConfig;
 }
 
 /**
- * 保存配置到存储对象和配置文件
+ * 保存配置到存储
  */
 function saveConfig(con) {
     try {
-        // 将配置保存到存储对象
-        configs.put("config", con);
+        // 将配置项分散存储到不同的键中
+        configs.put("selectedFunction", con.selectedFunction);
+        configs.put("selectedCrop", con.selectedCrop);
+        configs.put("selectedTree", con.selectedTree);
+        configs.put("switchAccount", con.switchAccount);
+        configs.put("findAccountMethod", con.findAccountMethod);
+        configs.put("accountMethod", con.accountMethod);
+        configs.put("accountList", con.accountList);
+        configs.put("saveAccountList", con.saveAccountList);
+        configs.put("addFriendsList", con.addFriendsList);
+        configs.put("shopPrice", con.shopPrice);
+        configs.put("ReservedQuantity", con.ReservedQuantity);
+        configs.put("landFindMethod", con.landFindMethod);
+
+        // 存储偏移量配置
+        configs.put("landOffsetX", con.landOffset.x);
+        configs.put("landOffsetY", con.landOffset.y);
+        configs.put("shopOffsetX", con.shopOffset.x);
+        configs.put("shopOffsetY", con.shopOffset.y);
+        configs.put("firstlandX", con.firstland.x);
+        configs.put("firstlandY", con.firstland.y);
+
+        configs.put("distance", con.distance);
+        configs.put("matureTime", con.matureTime);
+        configs.put("harvestTime", con.harvestTime);
+        configs.put("harvestX", con.harvestX);
+        configs.put("harvestY", con.harvestY);
+        configs.put("harvestRepeat", con.harvestRepeat);
+
+        // 存储悬浮窗坐标
+        configs.put("showTextX", con.showText.x);
+        configs.put("showTextY", con.showText.y);
+
+        configs.put("photoPath", con.photoPath);
+        configs.put("randomColor", con.randomColor);
+        configs.put("themeColor", con.themeColor);
+        configs.put("isShengcang", con.isShengcang);
+        configs.put("shengcangTime", con.shengcangTime);
+        configs.put("isCangkuStatistics", con.isCangkuStatistics);
+        configs.put("cangkuStatisticsTime", con.cangkuStatisticsTime);
+        configs.put("cangkuStatisticsPage", con.cangkuStatisticsPage);
+        configs.put("treeShouldSwipe", con.treeShouldSwipe);
+
+        // 存储粮仓和货仓偏移量
+        configs.put("liangcangOffsetX", con.liangcangOffset.x);
+        configs.put("liangcangOffsetY", con.liangcangOffset.y);
+        configs.put("huocangOffsetX", con.huocangOffset.x);
+        configs.put("huocangOffsetY", con.huocangOffset.y);
+
+        configs.put("token", con.token);
+        configs.put("serverPlatform", con.serverPlatform);
+
+        // 存储汤姆查找配置
+        configs.put("Tom_enabled", con.tomFind.enabled);
+        configs.put("Tom_itemType", con.tomFind.type);
+        configs.put("Tom_code", con.tomFind.code);
+        configs.put("Tom_itemName", con.tomFind.text);
+
+        // 存储截图坐标
+        configs.put("screenshotX1", con.screenshotCoords.coord1.x);
+        configs.put("screenshotY1", con.screenshotCoords.coord1.y);
+        configs.put("screenshotX2", con.screenshotCoords.coord2.x);
+        configs.put("screenshotY2", con.screenshotCoords.coord2.y);
+        configs.put("screenshotX3", con.screenshotCoords.coord3.x);
+        configs.put("screenshotY3", con.screenshotCoords.coord3.y);
+
         // console.log("配置保存成功");
         return true;
     } catch (e) {
@@ -2042,25 +2086,30 @@ function saveConfig(con) {
     }
 }
 
+
 /**
  * 从存储对象加载配置
  */
 function loadConfig(loadConfigFromFile = false) {
     try {
-        // 检查是否已加载过配置文件
-        if (!configs.get("configChecked") && files.exists(configPath) || loadConfigFromFile) {
-            const fileConfig = JSON.parse(files.read(configPath));
-
+        let con_load
+        // 检查是否从配置文件加载
+        if (loadConfigFromFile) {
             log("==================================")
             log("从配置文件加载配置")
             log("==================================")
-            return validateConfig(fileConfig);
+            con_load = JSON.parse(files.read(configPath));
+
+        } else {
+            log("==================================")
+            log("从存储对象加载配置")
+            log("==================================")
+            con_load = getConfig();
+
         }
-        // 从存储对象获取配置
-        const storedConfig = configs.get("config");
-        if (storedConfig) {
-            return validateConfig(storedConfig);
-        }
+
+        config = validateConfig(con_load)
+        return config;
     } catch (e) {
         console.error("加载配置失败:", e);
         // toast("配置加载失败，使用默认配置", "long");
@@ -2076,44 +2125,44 @@ function validateConfig(config) {
     const defaultConfig = getDefaultConfig();
     // 验证偏移值
 
-    config.landOffset.x = config.landOffset.x != null ? Number(config.landOffset.x) : defaultConfig.landOffset.x;
-    config.landOffset.y = config.landOffset.y != null ? Number(config.landOffset.y) : defaultConfig.landOffset.y;
-    config.shopOffset.x = config.shopOffset.x != null ? Number(config.shopOffset.x) : defaultConfig.shopOffset.x;
-    config.shopOffset.y = config.shopOffset.y != null ? Number(config.shopOffset.y) : defaultConfig.shopOffset.y;
+    config.landOffset.x = config.landOffset.x != undefined ? Number(config.landOffset.x) : defaultConfig.landOffset.x;
+    config.landOffset.y = config.landOffset.y != undefined ? Number(config.landOffset.y) : defaultConfig.landOffset.y;
+    config.shopOffset.x = config.shopOffset.x != undefined ? Number(config.shopOffset.x) : defaultConfig.shopOffset.x;
+    config.shopOffset.y = config.shopOffset.y != undefined ? Number(config.shopOffset.y) : defaultConfig.shopOffset.y;
 
-    config.firstland.x = config.firstland.x != null ? Number(config.firstland.x) : defaultConfig.firstland.x;
-    config.firstland.y = config.firstland.y != null ? Number(config.firstland.y) : defaultConfig.firstland.y;
-    config.distance = config.distance != null ? Number(config.distance) : defaultConfig.distance;
+    config.firstland.x = config.firstland.x != undefined ? Number(config.firstland.x) : defaultConfig.firstland.x;
+    config.firstland.y = config.firstland.y != undefined ? Number(config.firstland.y) : defaultConfig.firstland.y;
+    config.distance = config.distance != undefined ? Number(config.distance) : defaultConfig.distance;
 
     // 验证matureTime
-    if (config.matureTime == null || isNaN(config.matureTime) || config.matureTime < 0) {
+    if (config.matureTime == undefined || isNaN(config.matureTime) || config.matureTime < 0) {
         config.matureTime = defaultConfig.matureTime;
-    }
+    } else config.matureTime = Number(config.matureTime);
 
     // 验证harvestTime
-    if (config.harvestTime == null || isNaN(config.harvestTime) || config.harvestTime < 0) {
+    if (config.harvestTime == undefined || isNaN(config.harvestTime) || config.harvestTime < 0) {
         config.harvestTime = defaultConfig.harvestTime;
-    }
+    } else config.harvestTime = Number(config.harvestTime);
 
     // 验证harvestX
-    if (config.harvestX == null || isNaN(config.harvestX)) {
+    if (config.harvestX == undefined || isNaN(config.harvestX)) {
         config.harvestX = defaultConfig.harvestX;
-    }
+    } else config.harvestX = Number(config.harvestX);
 
     // 验证harvestY
-    if (config.harvestY == null || isNaN(config.harvestY)) {
+    if (config.harvestY == undefined || isNaN(config.harvestY)) {
         config.harvestY = defaultConfig.harvestY;
-    }
+    } else config.harvestY = Number(config.harvestY);
 
     // 验证harvestRepeat
-    if (config.harvestRepeat == null || isNaN(config.harvestRepeat) || config.harvestRepeat < 0) {
+    if (config.harvestRepeat == undefined || isNaN(config.harvestRepeat) || config.harvestRepeat < 0) {
         config.harvestRepeat = defaultConfig.harvestRepeat;
-    }
+    } else config.harvestRepeat = Number(config.harvestRepeat);
 
     // 验证ReservedQuantity
-    if (config.ReservedQuantity == null || isNaN(config.ReservedQuantity) || config.ReservedQuantity < 0) {
+    if (config.ReservedQuantity == undefined || isNaN(config.ReservedQuantity) || config.ReservedQuantity < 0) {
         config.ReservedQuantity = defaultConfig.ReservedQuantity;
-    }
+    } else config.ReservedQuantity = Number(config.ReservedQuantity);
 
     //验证仓库保留数量
     if (config.ReservedQuantity_product == null || isNaN(config.ReservedQuantity_product) || config.ReservedQuantity_product < 0) {
@@ -2124,8 +2173,24 @@ function validateConfig(config) {
 
     //验证悬浮窗坐标
     if (!config.showText) config.showText = defaultConfig.showText;
-    config.showText.x = config.showText.x != null ? Number(config.showText.x) : defaultConfig.showText.x;
-    config.showText.y = config.showText.y != null ? Number(config.showText.y) : defaultConfig.showText.y;
+    config.showText.x = config.showText.x != undefined ? Number(config.showText.x) : defaultConfig.showText.x;
+    config.showText.y = config.showText.y != undefined ? Number(config.showText.y) : defaultConfig.showText.y;
+
+    // 验证功能选择
+    if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
+    const functionOptions = ["刷地", "种树", "创新号"];
+    if (config.selectedFunction.code < 0 || config.selectedFunction.code >= functionOptions.length) {
+        config.selectedFunction.code = defaultConfig.selectedFunction.code;
+    }
+    config.selectedFunction.text = functionOptions[config.selectedFunction.code];
+
+    // 验证作物选择
+    if (!config.selectedCrop) config.selectedCrop = defaultConfig.selectedCrop;
+    const cropOptions = ["小麦", "玉米", "胡萝卜", "大豆", "甘蔗"];
+    if (config.selectedCrop.code < 0 || config.selectedCrop.code >= cropOptions.length) {
+        config.selectedCrop.code = defaultConfig.selectedCrop.code;
+    }
+    config.selectedCrop.text = cropOptions[config.selectedCrop.code];
 
     // 验证树木选择
     if (!config.selectedTree) config.selectedTree = defaultConfig.selectedTree;
@@ -2135,52 +2200,60 @@ function validateConfig(config) {
     }
     config.selectedTree.text = treeOptions[config.selectedTree.code];
 
+    //验证随机颜色开关
+    if (config.randomColor == undefined || typeof config.randomColor !== "boolean") {
+        config.randomColor = defaultConfig.randomColor;
+    }
     // 验证主题颜色
-    if (!config.themeColor) config.themeColor = defaultConfig.themeColor;
+    if (!config.themeColor) config.themeColor = {
+        code: defaultConfig.themeColor.code,
+        text: defaultConfig.themeColor.text
+    };
+
     if (config.themeColor.code < 0 || config.themeColor.code >= colorLibrary.length) {
         config.themeColor.code = defaultConfig.themeColor.code;
     }
     config.themeColor.text = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"][config.themeColor.code];
 
     // 验证cangkuTime
-    if (config.shengcangTime == null || isNaN(config.shengcangTime) || config.shengcangTime < 0) {
+    if (config.shengcangTime == undefined || isNaN(config.shengcangTime) || config.shengcangTime < 0) {
         config.shengcangTime = defaultConfig.shengcangTime;
-    }
+    } else config.shengcangTime = Number(config.shengcangTime);
 
     // 验证isShengcang
-    if (config.isShengcang == null || typeof config.isShengcang !== "boolean") {
+    if (config.isShengcang == undefined || typeof config.isShengcang !== "boolean") {
         config.isShengcang = defaultConfig.isShengcang;
-    }
+    } 
 
     // 验证isCangkuStatistics
-    if (config.isCangkuStatistics == null || typeof config.isCangkuStatistics !== "boolean") {
+    if (config.isCangkuStatistics == undefined || typeof config.isCangkuStatistics !== "boolean") {
         config.isCangkuStatistics = defaultConfig.isCangkuStatistics;
-    }
+    } 
 
     // 验证cangkuStatisticsTime
-    if (config.cangkuStatisticsTime == null || isNaN(config.cangkuStatisticsTime) || config.cangkuStatisticsTime < 0) {
+    if (config.cangkuStatisticsTime == undefined || isNaN(config.cangkuStatisticsTime) || config.cangkuStatisticsTime < 0) {
         config.cangkuStatisticsTime = defaultConfig.cangkuStatisticsTime;
-    }
+    } else config.cangkuStatisticsTime = Number(config.cangkuStatisticsTime);
 
     // 验证cangkuStatisticsPage
-    if (config.cangkuStatisticsPage == null || isNaN(config.cangkuStatisticsPage) || config.cangkuStatisticsPage <= 0) {
+    if (config.cangkuStatisticsPage == undefined || isNaN(config.cangkuStatisticsPage) || config.cangkuStatisticsPage <= 0) {
         config.cangkuStatisticsPage = defaultConfig.cangkuStatisticsPage;
-    }
+    } else config.cangkuStatisticsPage = Number(config.cangkuStatisticsPage);
 
     // 验证treeShouldSwipe
-    if (config.treeShouldSwipe == null || typeof config.treeShouldSwipe !== "boolean") {
+    if (config.treeShouldSwipe == undefined || typeof config.treeShouldSwipe !== "boolean") {
         config.treeShouldSwipe = defaultConfig.treeShouldSwipe;
     }
 
     // 验证粮仓坐标偏移
     if (!config.liangcangOffset) config.liangcangOffset = defaultConfig.liangcangOffset;
-    config.liangcangOffset.x = config.liangcangOffset.x != null ? Number(config.liangcangOffset.x) : defaultConfig.liangcangOffset.x;
-    config.liangcangOffset.y = config.liangcangOffset.y != null ? Number(config.liangcangOffset.y) : defaultConfig.liangcangOffset.y;
+    config.liangcangOffset.x = config.liangcangOffset.x != undefined ? Number(config.liangcangOffset.x) : defaultConfig.liangcangOffset.x;
+    config.liangcangOffset.y = config.liangcangOffset.y != undefined ? Number(config.liangcangOffset.y) : defaultConfig.liangcangOffset.y;
 
     // 验证货仓坐标偏移
     if (!config.huocangOffset) config.huocangOffset = defaultConfig.huocangOffset;
-    config.huocangOffset.x = config.huocangOffset.x != null ? Number(config.huocangOffset.x) : defaultConfig.huocangOffset.x;
-    config.huocangOffset.y = config.huocangOffset.y != null ? Number(config.huocangOffset.y) : defaultConfig.huocangOffset.y;
+    config.huocangOffset.x = config.huocangOffset.x != undefined ? Number(config.huocangOffset.x) : defaultConfig.huocangOffset.x;
+    config.huocangOffset.y = config.huocangOffset.y != undefined ? Number(config.huocangOffset.y) : defaultConfig.huocangOffset.y;
 
     // 验证账号识别方式
     if (!config.findAccountMethod || (config.findAccountMethod !== "image" && config.findAccountMethod !== "ocr")) {
@@ -2200,8 +2273,41 @@ function validateConfig(config) {
     if (!config.accountMethod || (config.accountMethod !== "email" && config.accountMethod !== "save")) {
         config.accountMethod = "email"; // 默认为邮箱账号方式
     }
+
+    // 验证是否切换账号
+    if (typeof config.switchAccount !== "boolean") {
+        config.switchAccount = defaultConfig.switchAccount;
+    }
+
+    // 验证商店价格选项
+    if (!config.shopPrice) config.shopPrice = defaultConfig.shopPrice;
+    const shopPriceOptions = ["最低", "平价", "最高"];
+    if (config.shopPrice.code < 0 || config.shopPrice.code >= shopPriceOptions.length) {
+        config.shopPrice.code = defaultConfig.shopPrice.code;
+    }
+    config.shopPrice.text = shopPriceOptions[config.shopPrice.code];
+
+    // 验证地块查找方式
+    if (!config.landFindMethod || (config.landFindMethod !== "商店" && config.landFindMethod !== "面包房")) {
+        config.landFindMethod = defaultConfig.landFindMethod;
+    }
+
+    // 验证汤姆查找配置
+    if (!config.tomFind) config.tomFind = defaultConfig.tomFind;
+    if (typeof config.tomFind.enabled !== "boolean") {
+        config.tomFind.enabled = defaultConfig.tomFind.enabled;
+    }
+    const tomFindTypeOptions = ["货仓", "粮仓"];
+    if (config.tomFind.code === undefined || config.tomFind.code < 0 || config.tomFind.code >= tomFindTypeOptions.length) {
+        config.tomFind.code = defaultConfig.tomFind.code;
+    }
+    config.tomFind.type = tomFindTypeOptions[config.tomFind.code];
+    if (typeof config.tomFind.text !== "string") {
+        config.tomFind.text = defaultConfig.tomFind.text;
+    }
+
     // 验证token
-    if (config.token == null) config.token = defaultConfig.token;
+    if (config.token == undefined || config.token === undefined) config.token = defaultConfig.token;
 
     // 验证推送方式
     if (!config.serverPlatform) config.serverPlatform = defaultConfig.serverPlatform;
@@ -2267,7 +2373,8 @@ function validateConfig(config) {
     }
 
     // 其他验证...
-    if (config.photoPath.length == 0) config.photoPath = "./res/pictures.1280_720"
+    if (!config.photoPath || (config.photoPath && config.photoPath.length == 0)) config.photoPath = "./res/pictures.1280_720"
+
     return config;
 }
 
@@ -2296,6 +2403,7 @@ function getDefaultConfig() {
         switchAccount: false,
         findAccountMethod: "ocr", // 账号识别方式，默认为文字识别
         accountList: [], // 新增账号列表配置
+        saveAccountList: [], // 新增保存账号列表配置
         addFriendsList: [], // 新增创新号账号列表配置
         shopPrice: {
             text: "最低",
@@ -2355,6 +2463,7 @@ function getDefaultConfig() {
         tomFind: {
             enabled: false,
             type: "货仓",
+            code: 0,
             text: ""
         },
         // 截图坐标配置
@@ -2410,18 +2519,23 @@ function setFindAccountMethod(method) {
     ui.findAccountImage.attr("bg", ui.findAccountImage.attr("bg"));
     ui.findAccountText.attr("bg", ui.findAccountText.attr("bg"));
 
-    // 自动保存配置
-    autoSaveConfig();
+    // 保存选择的账号识别方式到配置
+    configs.put("findAccountMethod", method);
 }
 
 function loadConfigToUI(loadConfigFromFile = false) {
     const config = loadConfig(loadConfigFromFile);
+    saveConfig(config);
+    // 初始化颜色
+    initColor();
 
-    // 先初始化账号列表UI，确保账号列表在配置加载前已准备好
-    initAccountListUI(config);
+    AccountList = config.accountList
+    ui['AccountList'].setDataSource(AccountList);
+    SaveAccountList = loadSaveAccountListFromConfig(config.saveAccountList);
+    ui['SaveAccountList'].setDataSource(SaveAccountList);
+    AddFriendsList = config.addFriendsList
+    ui['addFriendsList'].setDataSource(AddFriendsList);
 
-    // 初始化addFriends列表UI
-    initAddFriendsListUI(config);
 
     // 初始化全局状态变量
     currentAccountMethod = config.accountMethod || "email";
@@ -2606,12 +2720,12 @@ function loadConfigToUI(loadConfigFromFile = false) {
     if (config.tomFind.type !== undefined) {
         const typeIndex = ["货仓", "粮仓"].indexOf(config.tomFind.type);
         if (typeIndex >= 0) {
-            ui.itemType.setSelection(typeIndex);
+            ui.Tom_itemType.setSelection(typeIndex);
         }
     }
 
     if (config.tomFind.text !== undefined) {
-        ui.itemName.setText(config.tomFind.text);
+        ui.Tom_itemName.setText(config.tomFind.text);
     }
 
     // 更新权限状态
@@ -2627,7 +2741,8 @@ function loadConfigToUI(loadConfigFromFile = false) {
         } else {
             ui.tomItemContainer.attr("visibility", "gone");
         }
-        autoSaveConfig();
+        // 保存修改后的开关状态到配置
+        configs.put("Tom_enabled", checked);
     });
 
     // 随机颜色开关状态变化监听
@@ -2650,129 +2765,150 @@ function loadConfigToUI(loadConfigFromFile = false) {
             ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
         }
 
-        autoSaveConfig();
+        // 保存修改后的开关状态到配置
+        configs.put("randomColor", checked);
     });
 
     // 账号开关状态变化监听
     ui.accountSwitch.on("check", (checked) => {
         // console.log("账号开关状态变化:", checked);
-        autoSaveConfig();
+        // 保存修改后的开关状态到配置
+        configs.put("switchAccount", checked);
     });
 
-    // 是否生菜开关状态变化监听
+    // 是否升仓开关状态变化监听
     ui.isShengcang.on("check", (checked) => {
-        autoSaveConfig();
+        // 保存修改后的开关状态到配置
+        configs.put("isShengcang", checked);
     });
 
     // 仓库统计开关状态变化监听
     ui.isCangkuStatistics.on("check", (checked) => {
-        autoSaveConfig();
+        // 保存修改后的开关状态到配置
+        configs.put("isCangkuStatistics", checked);
     });
 
     // 是否自动滑动开关状态变化监听
     ui.treeShouldSwipeSwitch.on("check", (checked) => {
-        autoSaveConfig();
+        // 保存修改后的开关状态到配置
+        configs.put("treeShouldSwipe", checked);
     });
 
     // 添加输入框的文本变化监听器
     // Token输入框
     ui.tokenInput.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的Token到配置
+            // configs.put("token", s.toString());
         }
     }));
 
     ui.tokenInputPlain.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的明文Token到配置
+            // configs.put("token", s.toString());
         }
     }));
 
     // 汤姆查找相关
-    ui.itemName.addTextChangedListener(new android.text.TextWatcher({
+    ui.Tom_itemName.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的物品名称到配置
+            configs.put("Tom_itemName", s.toString());
         }
     }));
 
     // 坐标偏移相关
     ui.landOffsetX.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的X偏移量到配置
+            configs.put("landOffsetX", Number(s));
         }
     }));
 
     ui.landOffsetY.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的Y偏移量到配置
+            configs.put("landOffsetY", Number(s));
         }
     }));
 
     ui.shopOffsetX.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的商店X偏移量到配置
+            configs.put("shopOffsetX", Number(s));
         }
     }));
 
     ui.shopOffsetY.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的商店Y偏移量到配置
+            configs.put("shopOffsetY", Number(s));
         }
     }));
 
     // 收割相关
     ui.firstlandX.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的第一个坐标X到配置
+            configs.put("firstlandX", Number(s));
         }
     }));
 
     ui.firstlandY.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的第一个坐标Y到配置
+            configs.put("firstlandY", Number(s));
         }
     }));
 
     ui.distance.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的距离到配置
+            configs.put("distance", Number(s));
         }
     }));
 
     ui.matureTime.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的成熟时间到配置
+            configs.put("matureTime", Number(s));
         }
     }));
 
     ui.harvestTime.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的收割时间到配置
+            configs.put("harvestTime", Number(s));
         }
     }));
 
     ui.harvestX.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的收割坐标X到配置
+            configs.put("harvestX", Number(s));
         }
     }));
 
     ui.harvestY.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的收割坐标Y到配置
+            configs.put("harvestY", Number(s));
         }
     }));
 
     ui.harvestRepeat.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的收割重复次数到配置
+            configs.put("harvestRepeat", Number(s));
         }
     }));
 
     // 保留数量
     ui.ReservedQuantity.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的保留数量到配置
+            configs.put("ReservedQuantity", Number(s));
         }
     }));
     //仓库剩余数量
@@ -2785,103 +2921,119 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 悬浮窗坐标
     ui.showTextX.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的悬浮窗坐标X到配置
+            configs.put("showTextX", Number(s));
         }
     }));
 
     ui.showTextY.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的悬浮窗坐标Y到配置
+            configs.put("showTextY", Number(s));
         }
     }));
 
     // 照片路径
     ui.photoPath.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的照片路径到配置
+            configs.put("photoPath", s.toString());
         }
     }));
 
     // 粮仓坐标偏移
     ui.liangcangOffsetX.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的粮仓坐标偏移X到配置
+            configs.put("liangcangOffsetX", Number(s));
         }
     }));
 
     ui.liangcangOffsetY.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的粮仓坐标偏移Y到配置
+            configs.put("liangcangOffsetY", Number(s));
         }
     }));
 
     // 货仓坐标偏移
     ui.huocangOffsetX.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的货仓坐标偏移X到配置
+            configs.put("huocangOffsetX", Number(s));
         }
     }));
 
     ui.huocangOffsetY.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的货仓坐标偏移Y到配置
+            configs.put("huocangOffsetY", Number(s));
         }
     }));
 
     // 截图坐标
     ui.screenshotX1.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的截图坐标X1到配置
+            configs.put("screenshotX1", Number(s));
         }
     }));
 
     ui.screenshotY1.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的截图坐标Y1到配置
+            configs.put("screenshotY1", Number(s));
         }
     }));
 
     ui.screenshotX2.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的截图坐标X2到配置
+            configs.put("screenshotX2", Number(s));
         }
     }));
 
     ui.screenshotY2.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的截图坐标Y2到配置
+            configs.put("screenshotY2", Number(s));
         }
     }));
 
     ui.screenshotX3.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的截图坐标X3到配置
+            configs.put("screenshotX3", Number(s));
         }
     }));
 
     ui.screenshotY3.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的截图坐标Y3到配置
+            configs.put("screenshotY3", Number(s));
         }
     }));
 
     // 升仓时间
     ui.shengcangTime.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的升仓时间到配置
+            configs.put("shengcangTime", Number(s));
         }
     }));
 
     // 仓库统计时间
     ui.cangkuStatisticsTime.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的仓库统计时间到配置
+            configs.put("cangkuStatisticsTime", Number(s));
         }
     }));
 
     ui.cangkuStatisticsPage.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            autoSaveConfig();
+            // 保存修改后的仓库统计页码到配置
+            configs.put("cangkuStatisticsPage", Number(s));
         }
     }));
 }
@@ -2907,8 +3059,6 @@ function setLandMethod(method) {
     ui.methodShop.attr("bg", ui.methodShop.attr("bg"));
     ui.methodBakery.attr("bg", ui.methodBakery.attr("bg"));
 
-    // 自动保存配置
-    autoSaveConfig();
 }
 
 function stopOtherEngines(stopAll = false) {
@@ -2980,34 +3130,29 @@ ui.btnInstructions.click(() => {
         app.openUrl("https://docs.qq.com/doc/DWEtDUXB0U0dISGxo");
     }).show();
 });
-// 自动保存配置函数（无提示）
-function autoSaveConfig() {
-    // console.log("开始自动保存配置");
-    const config = getConfig();
-    // console.log("获取配置:", JSON.stringify(config.selectedTree));
-    if (saveConfig(config)) {
-        // console.log("配置自动保存成功");
-    } else {
-        console.error("配置自动保存失败");
-    }
-}
 
-// 保存按钮点击事件（保留手动保存功能）
+
+// 保存按钮点击事件
 ui.btnSave.click(() => {
-    const config = getConfig();
-    if (saveConfig(config)) {
-        // 将配置保存到文件
-        try {
-            // 确保配置目录存在
-            files.ensureDir(configPath);
-            // 将配置写入文件
-            files.write(configPath, JSON.stringify(config, null, 2));
+    const config = validateConfig(getConfig());
+    // 将配置保存到文件
+    try {
+        // 确保配置目录存在
+        files.ensureDir(configPath);
+        // 将配置写入文件
+        files.write(configPath, JSON.stringify(config, null, 2));
+
+        // 同时将配置保存到存储
+        if (saveConfig(config)) {
             toastLog("配置保存成功");
-        } catch (e) {
-            console.error("保存配置文件失败:", e);
-            toastLog("配置保存失败: " + e.message);
+        } else {
+            toastLog("配置保存到存储失败");
         }
+    } catch (e) {
+        console.error("保存配置文件失败:", e);
+        toastLog("配置保存失败: " + e.message);
     }
+
 });
 
 // 加载配置按钮点击事件
@@ -3107,8 +3252,8 @@ function autoSc() {
 }
 
 function startButton() {
-    const config = getConfig();
-    saveConfig(config);
+    const config = validateConfig(getConfig());
+    configs.put("config", config);
     storages.remove("times");
     statistics.remove("rowContentData");
     log("点击开始按钮")
@@ -3188,8 +3333,8 @@ function startButton() {
 }
 
 function winStartButton() {
-    const config = getConfig();
-    saveConfig(config);
+    const config = validateConfig(getConfig());
+    configs.put("config", config);
     storages.remove("times");
     storages.remove("rowContentData");
 
@@ -3359,11 +3504,11 @@ function initUI() {
     // 绑定土地方法按钮事件
     ui.methodShop.click(() => {
         setLandMethod("商店");
-        autoSaveConfig();
+        configs.put("landFindMethod", "商店");
     });
     ui.methodBakery.click(() => {
         setLandMethod("面包房");
-        autoSaveConfig();
+        configs.put("landFindMethod", "面包房");
     });
 
     ui.functionSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
@@ -3411,16 +3556,19 @@ function initUI() {
                 ui.tomItemContainer.attr("visibility", "gone");
             }
 
-            autoSaveConfig();
+            // 保存选择的功能到配置
+            configs.put("selectedFunction", { text: selectedFunction, code: position });
         }
     }))
 
     // 为itemType添加事件监听器
-    ui.itemType.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+    ui.Tom_itemType.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
-            console.log("物品类型选择发生变化: " + item);
-            autoSaveConfig();
+            // console.log("物品类型选择发生变化: " + item);
+            // 保存选择的物品类型到配置
+            configs.put("Tom_itemType", item);
+            configs.put("Tom_code", position);
         },
         onNothingSelected: function (parent) { }
     }));
@@ -3442,7 +3590,8 @@ function initUI() {
                 ui.matureTime.setText(String(matureTimes[item]));
             }
 
-            autoSaveConfig();
+            // 保存选择的作物到配置
+            configs.put("selectedCrop", { text: item, code: position });
         },
         onNothingSelected: function (parent) { }
     }));
@@ -3451,7 +3600,8 @@ function initUI() {
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
             // console.log("树木选择发生变化: " + item);
-            autoSaveConfig();
+            // 保存选择的树木到配置
+            configs.put("selectedTree", { text: item, code: position });
         },
         onNothingSelected: function (parent) { }
     }));
@@ -3460,7 +3610,8 @@ function initUI() {
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
             // console.log("商店售价选择发生变化: " + item);
-            autoSaveConfig();
+            // 保存选择的商店售价到配置
+            configs.put("shopPrice", { text: item, code: position });
         },
         onNothingSelected: function (parent) { }
     }));
@@ -3482,17 +3633,14 @@ function initUI() {
 
                 // 更新商店按钮颜色（如果当前选中的是商店方法）
 
-                if (config.landFindMethod === "商店") {
-                    ui.methodShop.attr("bg", color);
-                    ui.methodShop.attr("textColor", "#FFFFFF");
-                }
+                updateButtonColors();
 
                 // 更新spinner文字颜色
                 ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
             }
 
-            autoSaveConfig();
-            loadConfigToUI();
+            // 保存选择的主题颜色到配置
+            configs.put("themeColor", { text: item, code: position });
         },
         onNothingSelected: function (parent) { }
     }));
@@ -3500,21 +3648,25 @@ function initUI() {
     // 绑定账号识别方式按钮事件
     ui.findAccountImage.click(() => {
         setFindAccountMethod("image");
-        autoSaveConfig();
+        // 保存选择的账号识别方式到配置
+        configs.put("findAccountMethod", "image");
     });
     ui.findAccountText.click(() => {
         setFindAccountMethod("ocr");
-        autoSaveConfig();
+        // 保存选择的账号识别方式到配置
+        configs.put("findAccountMethod", "ocr");
     });
 
     // 绑定账号方式切换按钮事件
     ui.accountMethodEmail.click(() => {
         setAccountMethod("email");
-        autoSaveConfig();
+        // 保存选择的账号方式到配置
+        configs.put("accountMethod", "email");
     });
     ui.accountMethodSave.click(() => {
         setAccountMethod("save");
-        autoSaveConfig();
+        // 保存选择的账号方式到配置
+        configs.put("accountMethod", "save");
     });
 
     // 为token输入框添加变化监听
@@ -3536,10 +3688,11 @@ function initUI() {
     }));
 
     // 为itemName输入框添加变化监听
-    ui.itemName.addTextChangedListener(new android.text.TextWatcher({
+    ui.Tom_itemName.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的itemName到配置
+            configs.put("Tom_itemName", s.toString());
         },
         afterTextChanged: function (s) { }
     }));
@@ -3548,7 +3701,8 @@ function initUI() {
     ui.landOffsetX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的landOffsetX到配置
+            configs.put("landOffsetX", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3556,7 +3710,8 @@ function initUI() {
     ui.landOffsetY.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的landOffsetY到配置
+            configs.put("landOffsetY", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3564,7 +3719,8 @@ function initUI() {
     ui.shopOffsetX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的shopOffsetX到配置
+            configs.put("shopOffsetX", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3572,7 +3728,8 @@ function initUI() {
     ui.shopOffsetY.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的shopOffsetY到配置
+            configs.put("shopOffsetY", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3581,7 +3738,8 @@ function initUI() {
     ui.firstlandX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的firstlandX到配置
+            configs.put("firstlandX", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3589,7 +3747,8 @@ function initUI() {
     ui.firstlandY.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的firstlandY到配置
+            configs.put("firstlandY", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3598,7 +3757,8 @@ function initUI() {
     ui.distance.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的distance到配置
+            configs.put("distance", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3607,7 +3767,8 @@ function initUI() {
     ui.harvestTime.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的harvestTime到配置
+            configs.put("harvestTime", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3616,7 +3777,8 @@ function initUI() {
     ui.harvestX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的harvestX到配置
+            configs.put("harvestX", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3625,7 +3787,8 @@ function initUI() {
     ui.harvestY.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的harvestY到配置
+            configs.put("harvestY", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3634,7 +3797,8 @@ function initUI() {
     ui.harvestRepeat.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的harvestRepeat到配置
+            configs.put("harvestRepeat", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3643,7 +3807,8 @@ function initUI() {
     ui.showTextX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的showTextX到配置
+            configs.put("showTextX", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3651,7 +3816,8 @@ function initUI() {
     ui.showTextY.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的showTextY到配置
+            configs.put("showTextY", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3660,7 +3826,8 @@ function initUI() {
     ui.photoPath.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的photoPath到配置
+            configs.put("photoPath", s.toString());
         },
         afterTextChanged: function (s) { }
     }));
@@ -3669,7 +3836,8 @@ function initUI() {
     ui.liangcangOffsetX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的liangcangOffsetX到配置
+            configs.put("liangcangOffsetX", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3677,7 +3845,8 @@ function initUI() {
     ui.liangcangOffsetY.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的liangcangOffsetY到配置
+            configs.put("liangcangOffsetY", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3686,7 +3855,8 @@ function initUI() {
     ui.huocangOffsetX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的huocangOffsetX到配置
+            configs.put("huocangOffsetX", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3694,7 +3864,17 @@ function initUI() {
     ui.huocangOffsetY.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的huocangOffsetY到配置
+            configs.put("huocangOffsetY", Number(s));
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    ui.huocangOffsetY.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            // 保存输入的huocangOffsetY到配置
+            configs.put("huocangOffsetY", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3703,7 +3883,8 @@ function initUI() {
     ui.screenshotX1.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的screenshotX1到配置
+            configs.put("screenshotX1", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3711,7 +3892,8 @@ function initUI() {
     ui.screenshotY1.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的screenshotY1到配置
+            configs.put("screenshotY1", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3719,7 +3901,8 @@ function initUI() {
     ui.screenshotX2.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的screenshotX2到配置
+            configs.put("screenshotX2", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3727,7 +3910,8 @@ function initUI() {
     ui.screenshotY2.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的screenshotY2到配置
+            configs.put("screenshotY2", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3735,7 +3919,8 @@ function initUI() {
     ui.screenshotX3.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的screenshotX3到配置
+            configs.put("screenshotX3", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3743,7 +3928,8 @@ function initUI() {
     ui.screenshotY3.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的screenshotY3到配置
+            configs.put("screenshotY3", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3752,7 +3938,8 @@ function initUI() {
     ui.shengcangTime.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的shengcangTime到配置
+            configs.put("shengcangTime", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3761,7 +3948,8 @@ function initUI() {
     ui.cangkuStatisticsTime.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的cangkuStatisticsTime到配置
+            configs.put("cangkuStatisticsTime", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3770,7 +3958,8 @@ function initUI() {
     ui.cangkuStatisticsPage.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            autoSaveConfig();
+            // 保存输入的cangkuStatisticsPage到配置
+            configs.put("cangkuStatisticsPage", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -3805,12 +3994,12 @@ function initUI() {
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
             // console.log("推送方式选择发生变化: " + item);
-            autoSaveConfig();
+            // 保存选择的推送方式到配置
+            configs.put("serverPlatform", { "text": item, "code": position });
         },
         onNothingSelected: function (parent) { }
     }));
-    // 设置标志表示已加载过配置文件
-    configs.put("configChecked", true);
+
 }
 
 /**
