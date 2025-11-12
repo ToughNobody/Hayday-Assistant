@@ -131,29 +131,29 @@ function autoSc() {
 
     isclick = false;
     // 如果配置了截图坐标，则依次点击填入的坐标
-    if ((config.screenshotCoords.coord1.x !== "" && config.screenshotCoords.coord1.y !== "") ||
-        (config.screenshotCoords.coord2.x !== "" && config.screenshotCoords.coord2.y !== "") ||
-        (config.screenshotCoords.coord3.x !== "" && config.screenshotCoords.coord3.y !== "")) {
+    if ((config.screenshotCoords.coord1.x !== 0 && config.screenshotCoords.coord1.y !== 0) ||
+        (config.screenshotCoords.coord2.x !== 0 && config.screenshotCoords.coord2.y !== 0) ||
+        (config.screenshotCoords.coord3.x !== 0 && config.screenshotCoords.coord3.y !== 0)) {
         sleep(1000);
         isclick = true;
     }
     // 点击coord1坐标
-    if (config.screenshotCoords.coord1.x !== "" &&
-        config.screenshotCoords.coord1.y !== "") {
+    if (config.screenshotCoords.coord1.x !== 0 &&
+        config.screenshotCoords.coord1.y !== 0) {
         click(parseInt(config.screenshotCoords.coord1.x), parseInt(config.screenshotCoords.coord1.y));
         sleep(500); // 等待500毫秒
     }
 
     // 点击coord2坐标
-    if (config.screenshotCoords.coord2.x !== "" &&
-        config.screenshotCoords.coord2.y !== "") {
+    if (config.screenshotCoords.coord2.x !== 0 &&
+        config.screenshotCoords.coord2.y !== 0) {
         click(parseInt(config.screenshotCoords.coord2.x), parseInt(config.screenshotCoords.coord2.y));
         sleep(500); // 等待500毫秒
     }
 
     // 点击coord3坐标
-    if (config.screenshotCoords.coord3.x !== "" &&
-        config.screenshotCoords.coord3.y !== "") {
+    if (config.screenshotCoords.coord3.x !== 0 &&
+        config.screenshotCoords.coord3.y !== 0) {
         click(parseInt(config.screenshotCoords.coord3.x), parseInt(config.screenshotCoords.coord3.y));
         sleep(500); // 等待500毫秒
     }
@@ -340,6 +340,7 @@ function restartgame() {
                 }
             }
             sleep(1000);
+            log("启动卡通农场");
             launch("com.supercell.hayday");
         } else {
             let packageName = "com.supercell.hayday";
@@ -2062,13 +2063,13 @@ function coin() {
         [8, 51, "#e15526"], [3, 71, "#97b058"],
         [74, 76, "#94b155"], [48, 76, "#762512"]], sc, region)
     //格雷格
-    let centers3 = findMC(["#69c5ea", [56, -10, "#edad92"], [67, -7, "#ffffff"], [63, 10, "#f0bca7"],
-        [45, 42, "#e5762d"], [58, 35, "#eba489"], [18, 67, "#732f33"],
-        [91, 69, "#622126"], [63, 69, "#b87e67"], [83, 22, "#6ac6e9"]], sc, region)
+    let centers3 = findMC(["#6ac7e9", [51, 21, "#eeb39b"], [34, 50, "#e6792e"],
+        [51, 75, "#ac6d57"], [-1, 67, "#76272e"],
+        [31, 11, "#ffffff"]], sc, region)
     //抱礼物的格雷格
-    let centers4 = findMC(["#6bc9e9", [55, 0, "#e7ae94"], [52, 27, "#e49f81"],
-        [55, 43, "#004db2"], [36, 49, "#00d8be"], [32, 63, "#b85497"],
-        [24, 79, "#e7c1a9"], [16, 45, "#813339"]], sc, region)
+    let centers4 = findMC(["#6bc9e9", [49, 11, "#efbaa5"], [30, 14, "#ffffff"],
+        [45, 65, "#00fad7"], [26, 74, "#1667b8"],
+        [5, 50, "#823439"]], sc, region)
 
     // 合并所有点并过滤距离过近的点
     let allPoints = centers1.concat(centers2, centers3, centers4);
@@ -2617,10 +2618,10 @@ function switch_account(Account) {
 
             if (huanhao1) {
                 click(huanhao1.x + ran(), huanhao1.y + ran());
-                log("点击切换账号1按钮(识别换号按钮)")
+                log("点击切换账号1按钮(识别换号按钮)" + huanhao1.x + "," + huanhao1.y)
             } else if (shoujianxiang) {
                 click(shoujianxiang.x + ran(), shoujianxiang.y - 80 + ran());
-                log("点击切换账号1按钮(识别收件箱按钮)")
+                log("点击切换账号1按钮(识别收件箱按钮)" + shoujianxiang.x + "," + shoujianxiang.y)
             }
             sleep(700);
             let huanhao2 = findMC(["#fefdfc", [4, 17, "#f6bd3c"], [-11, 18, "#fffefe"],
@@ -2643,10 +2644,11 @@ function switch_account(Account) {
                     return num; // 重启游戏后返回
                 }
             }
-            click(225 + ran(), 404 + ran());
+            click(huanhao2.x + ran(), huanhao2.y + ran());
+            log("点击切换账号2按钮(识别换号按钮)" + huanhao2.x + "," + huanhao2.y)
             sleep(800);
-            let huanhao3 = findMC(["#ee434e", [-43, 4, "#fbc239"], [-404, 116, "#3c77da"],
-                [-422, 114, "#ffffff"], [-386, 116, "#ffffff"], [-249, 114, "#4079dc"]]);
+            let huanhao3 = findMC(["#3c77da", [-18, 1, "#ffffff"],
+                [19, 4, "#ffffff"], [406, -112, "#ee434e"], [372, -109, "#f9cb40"]]);
 
             if (!huanhao3) {
                 if (num < 3) {
@@ -2665,7 +2667,8 @@ function switch_account(Account) {
                     return num; // 重启游戏后返回
                 }
             }
-            click(750 + ran(), 175 + ran());
+            click(huanhao3.x + ran(), huanhao3.y + ran());
+            log("点击切换账号3按钮(识别换号按钮)" + huanhao3.x + "," + huanhao3.y)
             let findAccountMenuNum = 0;    //寻找账号菜单次数
             while (true) {
                 findAccountMenuNum++;
@@ -2704,7 +2707,7 @@ function switch_account(Account) {
             let AccountIma = null;
             let AccountText = null;
             if (config.findAccountMethod == "image") {
-                AccountIma = files.join(config.photoPath, Account + ".png");
+                AccountIma = files.join(config.accountImgPath, Account + ".png");
             } else if (config.findAccountMethod == "ocr") {
                 AccountText = Account;
             }

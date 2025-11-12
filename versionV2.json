@@ -1,25 +1,25 @@
 {
-  "version": "2.0.4",
-  "description": "\n\n功能优化：\n又重写了保存逻辑，更新前先点保存配置，更新后点击加载配置就可以了\n减少脚本启动时的资源消耗，启动更快\n优化主题颜色（也不知道为什么就喜欢在无关紧要的地方下功夫( •̀ ω •́ )✧ ）\n汤姆功能开启时，添加了有关汤姆状态的日志输出\n\n修复Bug：\n修复未root设备重启游戏时未能正确打开设置页面导致进入死循环\n添加当未雇佣汤姆时，点击汤姆后出现打折画面的页面检测\n\n",
-  "zip_name": "卡通农场小助手v2.0.4.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.0.4/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.0.4.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.0.4/v2.0.4.zip",
+  "version": "2.0.5",
+  "description": "\n\n功能优化：\n将账号图片文件夹调整至'/storage/emulated/0/Android/data/org.autojs.autoxjs.v7/files/accountImgs'，需手动迁移图片\n\n新增：\n添加仓库售卖UI，实际功能待实装\n\n修复Bug：\n修复切换账号时的按钮点击错误\n\n",
+  "zip_name": "卡通农场小助手v2.0.5.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.0.5/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.0.5.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.0.5/v2.0.5.zip",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 49,
+      "versionCode": 50,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 49,
+      "versionCode": 50,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 49,
+      "versionCode": 50,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
     },

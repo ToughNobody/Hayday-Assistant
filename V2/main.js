@@ -13,6 +13,23 @@ let config
 let AccountList = [];
 let SaveAccountList = [];
 let AddFriendsList = [];
+let CangkuSoldList = [
+    { title: "炸药", done: false, priority: 0, id: 1 },
+    { title: "炸药桶", done: false, priority: 0, id: 2 },
+    { title: "铁铲", done: false, priority: 0, id: 3 },
+    { title: "十字镐", done: false, priority: 0, id: 4 },
+    { title: "斧头", done: false, priority: 0, id: 5 },
+    { title: "木锯", done: false, priority: 0, id: 6 },
+    { title: "土地契约", done: false, priority: 0, id: 7 },
+    { title: "木槌", done: false, priority: 0, id: 8 },
+    { title: "标桩", done: false, priority: 0, id: 9 },
+    { title: "盒钉", done: false, priority: 0, id: 10 },
+    { title: "螺钉", done: false, priority: 0, id: 11 },
+    { title: "镶板", done: false, priority: 0, id: 12 },
+    { title: "螺栓", done: false, priority: 0, id: 13 },
+    { title: "木板", done: false, priority: 0, id: 14 },
+    { title: "胶带", done: false, priority: 0, id: 15 }
+];
 
 
 // 全局状态变量，用于跟踪各种选择状态，避免依赖颜色判断
@@ -27,11 +44,185 @@ let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
 const configDir = files.join(appExternalDir, "configs");
 const configPath = files.join(configDir, "config.json");
 const logDir = files.join(appExternalDir, "logs");
+const accountImgDir = files.join(appExternalDir, "accountImgs");
 const scPath = "/storage/emulated/0/$MuMu12Shared/Screenshots"
 // 确保目录存在
 files.ensureDir(configDir + "/1");  // 创建配置目录
 files.ensureDir(logDir + "/1");  // 创建日志目录
 files.ensureDir(scPath + "/1");  // 创建截图目录
+files.ensureDir(accountImgDir + "/1");  // 创建账号照片目录
+
+
+
+// 根据优先级获取颜色
+function getPriorityColor(priority) {
+    var colors = [
+        "#FF0000", // 0 - 红色 
+        "#FF6600", // 1 - 橙色 
+        "#FFAA00", // 2 - 橙黄色 
+        "#FFFF00", // 3 - 黄色 
+        "#AAFF00", // 4 - 黄绿色 
+        "#55FF00", // 5 - 青绿色 
+        "#00FF00", // 6 - 绿色 
+        "#00FF88", // 7 - 蓝绿色 
+        "#00FFFF", // 8 - 青色 
+        "#0088FF", // 9 - 蓝色 
+        "#0000FF"  // 10 - 深蓝色
+    ];
+
+    // 确保priority在有效范围内
+    priority = Math.max(0, Math.min(10, priority));
+    return colors[priority];
+}
+
+// 显示仓库售卖设置对话框
+function showCangkuSoldDialog() {
+
+    // 设置列表数据
+    CangkuSoldList = configs.get("CangkuSoldList", CangkuSoldList)
+    isCangkuSold = configs.get("isCangkuSold", false)
+
+    // 创建自定义对话框布局
+    var customView = ui.inflate(
+        <vertical>
+            <horizontal paddingLeft="10dp" paddingTop="10dp" >
+                <text textSize="18sp" textColor="#333333" text="仓库售卖" />
+                <text id="helpIcon" text="?" textColor="#007AFF" textSize="18sp" marginLeft="10dp" />
+                <Switch id="CangkuSoldSwitch" paddingLeft="160dp" checked="{{isCangkuSold}}" />
+            </horizontal>
+            <horizontal>
+                <text textSize="15sp" textColor="#333333" text="排序" marginLeft="10dp" />
+                <button id="sortAscButton" text="升序" w="auto" h="auto" style="Widget.AppCompat.Button.Borderless" />
+                <button id="sortDescButton" text="降序" w="auto" h="auto" style="Widget.AppCompat.Button.Borderless" />
+                <button id="sortDefaultButton" text="默认" w="auto" h="auto" style="Widget.AppCompat.Button.Borderless" />
+            </horizontal>
+            <horizontal >
+                <text textSize="15" textColor="#333333" text="物品" marginLeft="30dp" textStyle="bold" />
+                <text textSize="15" textColor="#333333" text="优先级" marginLeft="90dp" textStyle="bold" />
+                <text textSize="15" textColor="#333333" text="选中" marginLeft="60dp" textStyle="bold" />
+            </horizontal>
+            <list id="CangkuSoldList" h="*">
+                <card w="*" h="60" margin="0 5"
+                    cardElevation="1dp" foreground="?selectableItemBackground">
+                    <horizontal gravity="center_vertical">
+                        <frame id="colorBar" h="*" w="10" bg="{{getPriorityColor(this.priority)}}" />
+                        <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                            <text id="title" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                        </vertical>
+                        <horizontal gravity="center_vertical">
+                            <button id="decrease" text="-" w="40dp" h="40dp" textSize="20sp" gravity="center" style="Widget.AppCompat.Button.Borderless" />
+                            <text id="priority" text="{{this.priority}}" w="40dp" h="40dp" gravity="center" textSize="16sp" textColor="#333333" />
+                            <button id="increase" text="+" w="40dp" h="40dp" textSize="20sp" gravity="center" style="Widget.AppCompat.Button.Borderless" />
+                        </horizontal>
+                        <checkbox id="done" marginLeft="10" marginRight="10" checked="{{this.done}}" />
+                    </horizontal>
+                </card>
+            </list>
+        </vertical>
+    );
+
+
+    customView.CangkuSoldList.setDataSource(CangkuSoldList);
+
+    // 创建对话框
+    var dialog = dialogs.build({
+        customView: customView,
+        positive: "确定",
+        neutral: "取消",
+        wrapInScrollView: false,
+        cancelable: true
+    });
+
+    // 为列表项添加点击事件
+    customView.CangkuSoldList.on("item_bind", function (itemView, itemHolder) {
+        // 减号按钮点击事件
+        itemView.decrease.on("click", function () {
+            var item = itemHolder.item;
+            if (item.priority > 0) {
+                item.priority--;
+                itemView.priority.setText(item.priority.toString());
+                // 更新颜色
+                itemView.colorBar.attr("bg", getPriorityColor(item.priority));
+            }
+        });
+
+        // 加号按钮点击事件
+        itemView.increase.on("click", function () {
+            var item = itemHolder.item;
+            if (item.priority < 10) {
+                item.priority++;
+                itemView.priority.setText(item.priority.toString());
+                // 更新颜色
+                itemView.colorBar.attr("bg", getPriorityColor(item.priority));
+            }
+        });
+
+        // 复选框点击事件
+        itemView.done.on("check", function (checked) {
+            var item = itemHolder.item;
+            item.done = checked;
+        });
+    });
+
+    // 为按钮添加点击事件
+    dialog.on("positive", function () {
+        isCangkuSold = customView.CangkuSoldSwitch.isChecked();
+        CangkuSoldList = customView.CangkuSoldList.getDataSource();
+        configs.put("CangkuSoldList", CangkuSoldList);
+        configs.put("isCangkuSold", isCangkuSold);
+        toast("功能开发中")
+        dialog.dismiss();
+    });
+
+
+    dialog.on("neutral", function () {
+        dialog.dismiss();
+    });
+
+    // 为问号图标添加点击事件
+    customView.helpIcon.on("click", function () {
+        dialogs.build({
+            title: "仓库售卖帮助",
+            content: "在这里您可以设置仓库自动售卖功能：\n\n" +
+                "1. 触发阈值：\n" +
+                "   - 第一个空表示当仓库容量剩余多少时开始执行售卖\n" +
+                "   - 第二个空表示每次售卖时将仓库剩余容量控制在多少\n" +
+                "   - 例：触发阈值为10~25,仓库容量为490/500,则开始执行售卖,售卖至475/500\n\n" +
+                "2. 设置物品优先级（0-10）\n" +
+                "   - 点击'+'增加优先级\n" +
+                "   - 点击'-'减少优先级\n" +
+                "   - 优先级越小越先售卖\n\n" +
+                "3. 控制物品是否参与售卖\n" +
+                "   - 勾选复选框表示参与售卖\n" +
+                "   - 取消勾选表示不参与售卖\n\n" +
+                "4. 售卖逻辑：\n" +
+                "   - ",
+            positive: "确定"
+        }).show();
+    });
+
+    // 为排序按钮添加点击事件
+    customView.sortAscButton.on("click", function () {
+        // 对列表进行排序，按priority从小到大
+        CangkuSoldList.sort((a, b) => a.priority - b.priority);
+        customView.CangkuSoldList.setDataSource(CangkuSoldList);
+    });
+
+    customView.sortDescButton.on("click", function () {
+        // 对列表进行排序，按priority从大到小
+        CangkuSoldList.sort((a, b) => b.priority - a.priority);
+        customView.CangkuSoldList.setDataSource(CangkuSoldList);
+    });
+
+    customView.sortDefaultButton.on("click", function () {
+        // 对列表进行排序，按默认顺序
+        CangkuSoldList.sort((a, b) => a.id - b.id);
+        customView.CangkuSoldList.setDataSource(CangkuSoldList);
+    });
+
+    // 显示对话框
+    dialog.show();
+}
 
 // 格式化日期为易读格式：YYYY-MM-DD_HH-mm-ss
 let now = new Date();
@@ -322,9 +513,19 @@ ui.layout(
                                         <input id="ReservedQuantity" inputType="number" marginRight="8" hint="20" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
                                     </horizontal>
 
+                                    {/* 仓库售卖 - 仅在刷地时显示*/}
+                                    <horizontal id="CangkuSoldContainer" gravity="center_vertical" visibility="visible">
+                                        <text text="仓库售卖：" textSize="14" w="80" marginRight="8" />
+                                        <button id="cangkuSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                        <text text="触发阈值:" textSize="14" w="80" marginRight="3" paddingLeft="20" />
+                                        <input id="CangkuSold_triggerNum" type="number" w="auto" h="48" text="10" marginLeft="5" marginRight="5" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                        <text text="~" textSize="14" w="auto" />
+                                        <input id="CangkuSold_targetNum" type="number" w="auto" h="48" text="25" marginLeft="5" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                    </horizontal>
+
                                     {/* 汤姆 - 仅在刷地时显示*/}
-                                    <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="visible">
-                                        <text text="汤姆：" textSize="14" w="80" marginRight="8" />
+                                    <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="gone">
+                                        <text text="汤姆：" textSize="14" w="80" marginLeft="20" />
                                         <Switch id="tomSwitch" w="*" h="48" gravity="left|center" />
                                     </horizontal>
 
@@ -613,8 +814,12 @@ ui.layout(
                                 <vertical padding="16">
                                     <text text="路径设置" textSize="16" textStyle="bold" marginBottom="8" />
                                     <horizontal gravity="center_vertical">
-                                        <text text="照片文件夹路径：" textSize="14" w="100" marginRight="8" />
+                                        <text text="脚本照片文件夹路径：" textSize="14" w="100" marginRight="8" />
                                         <input id="photoPath" text="./res/pictures.1280_720" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+                                    <horizontal gravity="center_vertical">
+                                        <text text="账号照片文件夹路径：" textSize="14" w="100" marginRight="8" />
+                                        <input id="accountImgPath" text="{{accountImgDir}}" w="*" textSize="14" h="auto" bg="#FFFFFF" />
                                     </horizontal>
                                 </vertical>
                             </card>
@@ -703,7 +908,7 @@ ui.layout(
                     </scroll>
                 </frame>
             </viewpager>
-        </vertical>
+        </vertical >
         <vertical layout_gravity="left" bg="#ffffff" w="280">
             <img w="280" h="200" scaleType="fitXY" src="file://{{currentPath}}/res/images/sidebar.png" />
             <list id="menu">
@@ -713,7 +918,7 @@ ui.layout(
                 </horizontal>
             </list>
         </vertical>
-    </drawer>
+    </drawer >
 );
 
 //设置滑动页面的标题
@@ -1427,7 +1632,9 @@ ui.modifyResolutionBtn.on("click", () => {
     dialog.show();
 })
 
-
+ui.cangkuSoldBtn.on("click", () => {
+    showCangkuSoldDialog();
+})
 
 // 从文件加载存档账号列表
 function loadSaveAccountListFromConfig(config_save) {
@@ -1887,6 +2094,7 @@ function getConfig() {
             y: configs.get("showTextY")
         },
         photoPath: configs.get("photoPath"),
+        accountImgPath: configs.get("accountImgPath"),
         randomColor: configs.get("randomColor"),
         themeColor: configs.get("themeColor"),
         isShengcang: configs.get("isShengcang"),
@@ -1911,6 +2119,10 @@ function getConfig() {
             code: configs.get("Tom_code"),
             text: configs.get("Tom_itemName")
         },
+        CangkuSoldList: configs.get("CangkuSoldList", CangkuSoldList),
+        isCangkuSold: configs.get("isCangkuSold", false),
+        CangkuSold_triggerNum: configs.get("CangkuSold_triggerNum", 10),
+        CangkuSold_targetNum: configs.get("CangkuSold_targetNum", 25),
         screenshotCoords: {
             coord1: {
                 x: configs.get("screenshotX1"),
@@ -2139,12 +2351,12 @@ function validateConfig(config) {
     // 验证isShengcang
     if (config.isShengcang == undefined || typeof config.isShengcang !== "boolean") {
         config.isShengcang = defaultConfig.isShengcang;
-    } 
+    }
 
     // 验证isCangkuStatistics
     if (config.isCangkuStatistics == undefined || typeof config.isCangkuStatistics !== "boolean") {
         config.isCangkuStatistics = defaultConfig.isCangkuStatistics;
-    } 
+    }
 
     // 验证cangkuStatisticsTime
     if (config.cangkuStatisticsTime == undefined || isNaN(config.cangkuStatisticsTime) || config.cangkuStatisticsTime < 0) {
@@ -2222,6 +2434,22 @@ function validateConfig(config) {
         config.tomFind.text = defaultConfig.tomFind.text;
     }
 
+    // 验证是否已出售商品列表
+    if (!Array.isArray(config.CangkuSoldList)) config.CangkuSoldList = CangkuSoldList;
+
+    // 验证是否出售商品
+    if (typeof config.isCangkuSold !== "boolean") {
+        config.isCangkuSold = defaultConfig.isCangkuSold;
+    }
+    // 验证触发阈值
+    if (config.CangkuSold_triggerNum == undefined || isNaN(config.CangkuSold_triggerNum) || config.CangkuSold_triggerNum <= 0) {
+        config.CangkuSold_triggerNum = defaultConfig.CangkuSold_triggerNum;
+    } else config.CangkuSold_triggerNum = Number(config.CangkuSold_triggerNum);
+    // 验证目标阈值
+    if (config.CangkuSold_targetNum == undefined || isNaN(config.CangkuSold_targetNum) || config.CangkuSold_targetNum <= 0) {
+        config.CangkuSold_targetNum = defaultConfig.CangkuSold_targetNum;
+    } else config.CangkuSold_targetNum = Number(config.CangkuSold_targetNum);
+
     // 验证token
     if (config.token == undefined || config.token === undefined) config.token = defaultConfig.token;
 
@@ -2290,6 +2518,7 @@ function validateConfig(config) {
 
     // 其他验证...
     if (!config.photoPath || (config.photoPath && config.photoPath.length == 0)) config.photoPath = "./res/pictures.1280_720"
+    if (!config.accountImgPath || (config.accountImgPath && config.accountImgPath.length == 0)) config.accountImgPath = accountImgDir
 
     return config;
 }
@@ -2346,6 +2575,7 @@ function getDefaultConfig() {
             y: 0.65
         },
         photoPath: "./res/pictures.1280_720",
+        accountImgPath: accountImgDir,
         randomColor: false,
         themeColor: {
             text: "碧玉青",
@@ -2377,6 +2607,10 @@ function getDefaultConfig() {
             code: 0,
             text: ""
         },
+        CangkuSoldList: CangkuSoldList,
+        isCangkuSold: false,
+        CangkuSold_triggerNum: 10,
+        CangkuSold_targetNum: 25,
         // 截图坐标配置
         screenshotCoords: {
             coord1: {
@@ -2509,6 +2743,11 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 设置保留数量
     ui.ReservedQuantity.setText(String(config.ReservedQuantity));
 
+    // 设置触发阈值
+    ui.CangkuSold_triggerNum.setText(String(config.CangkuSold_triggerNum));
+    // 设置目标阈值
+    ui.CangkuSold_targetNum.setText(String(config.CangkuSold_targetNum));
+
     // 设置寻找土地方法
     setLandMethod(config.landFindMethod);
 
@@ -2535,6 +2774,9 @@ function loadConfigToUI(loadConfigFromFile = false) {
     ui.showTextY.setText(String(config.showText.y));
     // 设置照片路径
     ui.photoPath.setText(config.photoPath);
+
+    // 设置账号照片路径
+    ui.accountImgPath.setText(config.accountImgPath);
 
 
 
@@ -2819,6 +3061,22 @@ function loadConfigToUI(loadConfigFromFile = false) {
         }
     }));
 
+    // 触发阈值
+    ui.CangkuSold_triggerNum.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的触发阈值到配置
+            configs.put("CangkuSold_triggerNum", Number(s));
+        }
+    }));
+
+    // 目标阈值
+    ui.CangkuSold_targetNum.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的目标阈值到配置
+            configs.put("CangkuSold_targetNum", Number(s));
+        }
+    }));
+
     // 悬浮窗坐标
     ui.showTextX.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
@@ -3076,11 +3334,13 @@ function logCurrentConfig(config) {
     console.log("成熟时间: " + config.matureTime.text);
     console.log("种植树木: " + config.selectedTree.text);
     console.log("商店价格: " + config.shopPrice.text);
-    console.log("剩余数量：" + config.ReservedQuantity);
+    console.log("保留数量：" + config.ReservedQuantity);
+    console.log("仓库售卖: " + (config.isCangkuSold ? "是" : "否"));
+    console.log("触发阈值：" + config.CangkuSold_triggerNum);
+    console.log("目标阈值：" + config.CangkuSold_targetNum);
     console.log("地块查找方法: " + config.landFindMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
     console.log("账号识别方式: " + config.findAccountMethod);
-    // console.log("账号数量: " + config.accountNames.length);
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
     console.log("收割横向偏移: " + config.harvestX + "格");
@@ -3361,6 +3621,7 @@ function initUI() {
                 // 显示作物选择和汤姆开关，隐藏树木选择
                 ui.cropSelectContainer.attr("visibility", "visible");
                 ui.shopPriceContainer.attr("visibility", "visible");
+                ui.CangkuSoldContainer.attr("visibility", "visible");
                 ui.tomSwitchContainer.attr("visibility", "visible");
                 ui.treeSelectContainer.attr("visibility", "gone");
                 ui.treeShouldSwipe.attr("visibility", "gone");
@@ -3375,6 +3636,7 @@ function initUI() {
                 // 隐藏作物选择和汤姆开关，显示树木选择
                 ui.cropSelectContainer.attr("visibility", "gone");
                 ui.shopPriceContainer.attr("visibility", "gone");
+                ui.CangkuSoldContainer.attr("visibility", "gone");
                 ui.tomSwitchContainer.attr("visibility", "gone");
                 ui.treeSelectContainer.attr("visibility", "visible");
                 ui.treeShouldSwipe.attr("visibility", "visible");
@@ -3385,6 +3647,7 @@ function initUI() {
                 // 创新号
                 ui.cropSelectContainer.attr("visibility", "gone");
                 ui.shopPriceContainer.attr("visibility", "gone");
+                ui.CangkuSoldContainer.attr("visibility", "gone");
                 ui.tomSwitchContainer.attr("visibility", "gone");
                 ui.treeSelectContainer.attr("visibility", "gone");
                 ui.treeShouldSwipe.attr("visibility", "gone");
@@ -3665,6 +3928,16 @@ function initUI() {
         onTextChanged: function (s, start, before, count) {
             // 保存输入的photoPath到配置
             configs.put("photoPath", s.toString());
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    // 为账号照片路径输入框添加变化监听
+    ui.accountImgPath.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            // 保存输入的accountImgPath到配置
+            configs.put("accountImgPath", s.toString());
         },
         afterTextChanged: function (s) { }
     }));
