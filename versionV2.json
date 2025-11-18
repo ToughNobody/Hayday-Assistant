@@ -1,25 +1,25 @@
 {
-  "version": "2.0.5",
-  "description": "\n\n功能优化：\n将账号图片文件夹调整至'/storage/emulated/0/Android/data/org.autojs.autoxjs.v7/files/accountImgs'，需手动迁移图片\n\n新增：\n添加仓库售卖UI，实际功能待实装\n\n修复Bug：\n修复切换账号时的按钮点击错误\n\n",
-  "zip_name": "卡通农场小助手v2.0.5.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.0.5/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.0.5.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.0.5/v2.0.5.zip",
+  "version": "2.0.6",
+  "description": "\n\n修复Bug：\n修复截图权限点击的坐标出错Bug\n修复脚本主界面的截图权限开关有时失灵的问题\n修复商店收取金币有时会进格雷格农场Bug\n修复新版本创新号相关Bug\n\n",
+  "zip_name": "卡通农场小助手v2.0.6.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.0.6/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.0.6.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.0.6/v2.0.6.zip",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 50,
+      "versionCode": 51,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 50,
+      "versionCode": 51,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 50,
+      "versionCode": 51,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
     },
@@ -37,7 +37,7 @@
     },
     {
       "name": "createNewAccount.js",
-      "versionCode": 45,
+      "versionCode": 51,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/createNewAccount.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/createNewAccount.js"
     },

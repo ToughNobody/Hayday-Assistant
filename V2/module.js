@@ -2063,13 +2063,13 @@ function coin() {
         [8, 51, "#e15526"], [3, 71, "#97b058"],
         [74, 76, "#94b155"], [48, 76, "#762512"]], sc, region)
     //格雷格
-    let centers3 = findMC(["#6ac7e9", [51, 21, "#eeb39b"], [34, 50, "#e6792e"],
-        [51, 75, "#ac6d57"], [-1, 67, "#76272e"],
-        [31, 11, "#ffffff"]], sc, region)
+    let centers3 = findMC(["#6ac7e9", [52, 19, "#f0b7a1"], [71, 168, "#ffea32"],
+        [31, 9, "#ffffff"], [-2, 66, "#77282f"], [49, 59, "#e3722b"],
+        [79, 8, "#6bcae7"]], sc, region)
     //抱礼物的格雷格
-    let centers4 = findMC(["#6bc9e9", [49, 11, "#efbaa5"], [30, 14, "#ffffff"],
-        [45, 65, "#00fad7"], [26, 74, "#1667b8"],
-        [5, 50, "#823439"]], sc, region)
+    let centers4 = findMC(["#6bc9e9", [49, 12, "#ebb199"], [51, 36, "#e0823c"],
+        [28, 74, "#1265b5"], [6, 50, "#823439"], [69, 167, "#ffeb37"],
+        [29, 11, "#ffffff"]], sc, region)
 
     // 合并所有点并过滤距离过近的点
     let allPoints = centers1.concat(centers2, centers3, centers4);

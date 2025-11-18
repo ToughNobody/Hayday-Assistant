@@ -2468,14 +2468,14 @@ function validateConfig(config) {
         } else {
             // 如果值为空字符串或null，保持为空字符串
             if (config.screenshotCoords.coord1.x === "" || config.screenshotCoords.coord1.x === null) {
-                config.screenshotCoords.coord1.x = "";
+                config.screenshotCoords.coord1.x = 0;
             } else {
                 // 如果有值则转换为数字
                 config.screenshotCoords.coord1.x = !isNaN(Number(config.screenshotCoords.coord1.x)) ? Number(config.screenshotCoords.coord1.x) : defaultConfig.screenshotCoords.coord1.x;
             }
 
             if (config.screenshotCoords.coord1.y === "" || config.screenshotCoords.coord1.y === null) {
-                config.screenshotCoords.coord1.y = "";
+                config.screenshotCoords.coord1.y = 0;
             } else {
                 config.screenshotCoords.coord1.y = !isNaN(Number(config.screenshotCoords.coord1.y)) ? Number(config.screenshotCoords.coord1.y) : defaultConfig.screenshotCoords.coord1.y;
             }
@@ -2486,13 +2486,13 @@ function validateConfig(config) {
             config.screenshotCoords.coord2 = defaultConfig.screenshotCoords.coord2;
         } else {
             if (config.screenshotCoords.coord2.x === "" || config.screenshotCoords.coord2.x === null) {
-                config.screenshotCoords.coord2.x = "";
+                config.screenshotCoords.coord2.x = 0;
             } else {
                 config.screenshotCoords.coord2.x = !isNaN(Number(config.screenshotCoords.coord2.x)) ? Number(config.screenshotCoords.coord2.x) : defaultConfig.screenshotCoords.coord2.x;
             }
 
             if (config.screenshotCoords.coord2.y === "" || config.screenshotCoords.coord2.y === null) {
-                config.screenshotCoords.coord2.y = "";
+                config.screenshotCoords.coord2.y = 0;
             } else {
                 config.screenshotCoords.coord2.y = !isNaN(Number(config.screenshotCoords.coord2.y)) ? Number(config.screenshotCoords.coord2.y) : defaultConfig.screenshotCoords.coord2.y;
             }
@@ -2503,13 +2503,13 @@ function validateConfig(config) {
             config.screenshotCoords.coord3 = defaultConfig.screenshotCoords.coord3;
         } else {
             if (config.screenshotCoords.coord3.x === "" || config.screenshotCoords.coord3.x === null) {
-                config.screenshotCoords.coord3.x = "";
+                config.screenshotCoords.coord3.x = 0;
             } else {
                 config.screenshotCoords.coord3.x = !isNaN(Number(config.screenshotCoords.coord3.x)) ? Number(config.screenshotCoords.coord3.x) : defaultConfig.screenshotCoords.coord3.x;
             }
 
             if (config.screenshotCoords.coord3.y === "" || config.screenshotCoords.coord3.y === null) {
-                config.screenshotCoords.coord3.y = "";
+                config.screenshotCoords.coord3.y = 0;
             } else {
                 config.screenshotCoords.coord3.y = !isNaN(Number(config.screenshotCoords.coord3.y)) ? Number(config.screenshotCoords.coord3.y) : defaultConfig.screenshotCoords.coord3.y;
             }
@@ -3363,29 +3363,29 @@ function autoSc() {
 
     isclick = false;
     // 如果配置了截图坐标，则依次点击填入的坐标
-    if ((config.screenshotCoords.coord1.x !== "" && config.screenshotCoords.coord1.y !== "") ||
-        (config.screenshotCoords.coord2.x !== "" && config.screenshotCoords.coord2.y !== "") ||
-        (config.screenshotCoords.coord3.x !== "" && config.screenshotCoords.coord3.y !== "")) {
+    if ((config.screenshotCoords.coord1.x !== 0 && config.screenshotCoords.coord1.y !== 0) ||
+        (config.screenshotCoords.coord2.x !== 0 && config.screenshotCoords.coord2.y !== 0) ||
+        (config.screenshotCoords.coord3.x !== 0 && config.screenshotCoords.coord3.y !== 0)) {
         sleep(1000);
         isclick = true;
     }
     // 点击coord1坐标
-    if (config.screenshotCoords.coord1.x !== "" &&
-        config.screenshotCoords.coord1.y !== "") {
+    if (config.screenshotCoords.coord1.x !== 0 &&
+        config.screenshotCoords.coord1.y !== 0) {
         click(parseInt(config.screenshotCoords.coord1.x), parseInt(config.screenshotCoords.coord1.y));
         sleep(500); // 等待500毫秒
     }
 
     // 点击coord2坐标
-    if (config.screenshotCoords.coord2.x !== "" &&
-        config.screenshotCoords.coord2.y !== "") {
+    if (config.screenshotCoords.coord2.x !== 0 &&
+        config.screenshotCoords.coord2.y !== 0) {
         click(parseInt(config.screenshotCoords.coord2.x), parseInt(config.screenshotCoords.coord2.y));
         sleep(500); // 等待500毫秒
     }
 
     // 点击coord3坐标
-    if (config.screenshotCoords.coord3.x !== "" &&
-        config.screenshotCoords.coord3.y !== "") {
+    if (config.screenshotCoords.coord3.x !== 0 &&
+        config.screenshotCoords.coord3.y !== 0) {
         click(parseInt(config.screenshotCoords.coord3.x), parseInt(config.screenshotCoords.coord3.y));
         sleep(500); // 等待500毫秒
     }

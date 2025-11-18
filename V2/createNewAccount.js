@@ -142,8 +142,8 @@ function harvestAll(center) {
         module.showTip("执行手势");
         log("执行手势");
         const safe = (x, y) => [
-            Math.max(0, Math.min(x, device.width - 1)),
-            Math.max(0, Math.min(y, device.height - 1))
+            Math.max(0, Math.min(x, 1280 - 1)),
+            Math.max(0, Math.min(y, 720 - 1))
         ];
         // gestures([0, 3000, [pos.x, pos.y], [safe(pos.x)]],
         //     [0, 3000, [pos.x, pos.y], []]
@@ -310,7 +310,7 @@ function findJiaSuBtn() {
                 log("找到加速按钮")
                 num = 0; // 重置计数器
                 sleep(300);
-                click(jiasu);
+                click(jiasu.x, jiasu.y);
                 break; // 找到并点击后退出当前循环
             }
         }
@@ -438,7 +438,7 @@ function inputName() {
         if (name) {
             module.showTip("起个响亮的名字");
             log("起个响亮的名字");
-            click(name);
+            click(name.x, name.y);
             sleep(500);
             setText("新号");
             sleep(500);
@@ -556,7 +556,10 @@ function jiazai() {
             jiazai = module.matchColor([{ x: 438, y: 565, color: "#fcffa2" },
             { x: 409, y: 550, color: "#85cbec" }, { x: 418, y: 585, color: "#c4e3e8" },
             { x: 867, y: 546, color: "#7ec8ed" }, { x: 861, y: 587, color: "#c7e3e8" }], sc);
-            if (!jiazai) break;
+            if (!jiazai && num > 3) {
+                sleep(4000)
+                break
+            };
             sleep(1000);
             num++;
         }
