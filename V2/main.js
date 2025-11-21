@@ -170,7 +170,6 @@ function showCangkuSoldDialog() {
         CangkuSoldList = customView.CangkuSoldList.getDataSource();
         configs.put("CangkuSoldList", CangkuSoldList);
         configs.put("isCangkuSold", isCangkuSold);
-        toast("功能开发中")
         dialog.dismiss();
     });
 

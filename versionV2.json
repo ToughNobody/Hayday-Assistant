@@ -1,31 +1,31 @@
 {
-  "version": "2.0.6",
-  "description": "\n\n修复Bug：\n修复截图权限点击的坐标出错Bug\n修复脚本主界面的截图权限开关有时失灵的问题\n修复商店收取金币有时会进格雷格农场Bug\n修复新版本创新号相关Bug\n\n",
-  "zip_name": "卡通农场小助手v2.0.6.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.0.6/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.0.6.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.0.6/v2.0.6.zip",
+  "version": "2.1.0",
+  "description": "\n\n新增功能：\n增加仓库售卖功能\n\n功能优化：\n几乎重写了售卖功能，大幅提升了商店售卖的速度，并且能“精准的”控制剩余作物数量等于预设保留量\n获取截图权限后多加了一秒等待时间。\n小改了一下重启函数，删除home()\n汤姆功能只有在开启才会加载\n\n",
+  "zip_name": "卡通农场小助手v2.1.0.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.0/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.0.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.0/v2.1.0.zip",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 51,
+      "versionCode": 52,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 51,
+      "versionCode": 52,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 51,
+      "versionCode": 52,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 49,
+      "versionCode": 52,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/shuadi.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/shuadi.js"
     },

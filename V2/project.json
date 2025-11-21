@@ -43,6 +43,6 @@
     "v4Sign": false
   },
   "useNodejs": false,
-  "versionCode": 51,
-  "versionName": "2.0.6"
+  "versionCode": 52,
+  "versionName": "2.1.0"
 }

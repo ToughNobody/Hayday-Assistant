@@ -58,25 +58,6 @@ const cangkuItemColor = {
     "十字镐": ["#fffadc", [-38, -68, "#8c9694"], [-83, -88, "#d6d7d6"], [-71, -101, "#987936"], [-113, -78, "#e7e7e7"], [-104, -1, "#a0853e"], [-93, -35, "#8f6d32"]],
 };
 
-//取中间为基准点
-// const cangkuItemColor = {
-//     "盒钉": ["#d12410", [-16, -31, "#8d6e53"], [14, -24, "#8c9294"], [-12, 26, "#efe0c9"], [-19, 36, "#ce2410"], [25, -10, "#a27f65"]],
-//     "螺钉": ["#c0c6c0", [35, -1, "#b5bbbe"], [10, -34, "#f6f7f6"], [13, -14, "#d4d7d6"], [-10, -16, "#fffadc"], [-50, 56, "#b2baba"], [-57, 51, "#fef9db"], [25, -21, "#596062"]],
-//     "镶板": ["#935929", [-34, -3, "#fffadc"], [-17, -11, "#d2d2d2"], [31, -6, "#8c5529"], [-31, 48, "#c67f44"], [-58, 29, "#cc8850"]],
-//     "螺栓": ["#edeeee", [1, -35, "#e8e8e8"], [28, -22, "#f2f2f2"], [35, -14, "#7b8a8c"], [-19, 53, "#636c71"], [-37, 36, "#738284"], [-40, 6, "#fffadc"]],
-//     "木板": ["#ae6a30", [32, 0, "#ab6529"], [32, -17, "#7e4621"], [46, -17, "#7a4421"], [-4, 24, "#c67939"], [-36, 20, "#c67a37"], [-41, 32, "#844518"], [-50, 42, "#faf5d8"], [-27, 1, "#fffadc"]],
-//     "胶带": ["#aebbbd", [-17, 0, "#53392a"], [-39, 0, "#a5b2b5"], [-4, -34, "#e5eceb"], [-41, 42, "#566166"], [-10, 53, "#9fa9ad"], [-13, -13, "#533a2a"]],
-//     "土地契约": ["#f7f7ef", [30, -27, "#7a89bd"], [-41, -11, "#8492bd"], [-33, -5, "#f7f7ec"], [-27, 57, "#6b79b5"], [-21, 43, "#f7f5e7"], [-49, 42, "#fffadc"], [13, 59, "#fffadc"]],
-//     "木槌": ["#d5a030", [35, -21, "#f3e7b4"], [29, 3, "#e6c76b"], [-3, -37, "#ddc643"], [-10, -25, "#cb8f26"], [-23, 59, "#deba39"], [15, 31, "#fffadc"]],
-//     "标桩": ["#d42320", [7, -24, "#d0963b"], [-31, 52, "#e1b964"], [-28, 46, "#c77932"], [15, 33, "#e33736"], [-23, -7, "#fffadc"], [-17, 27, "#ca7b31"]],
-//     "斧头": ["#ad954a", [22, -28, "#edeaef"], [50, -10, "#ffffff"], [-37, 52, "#ad964a"], [-14, 16, "#b5a252"], [-13, -1, "#fffadc"], [16, 8, "#fffadc"]],
-//     "木锯": ["#f1f0f2", [-42, 56, "#b85900"], [-36, 38, "#a54d00"], [-29, 28, "#e4e3e8"], [18, -20, "#e8e8f0"], [28, -23, "#bd5d00"], [42, -21, "#b85a02"], [-22, -7, "#fffadc"]],
-//     "炸药": ["#ffa567", [28, -8, "#d20e06"], [21, -20, "#ff9159"], [14, -28, "#f75d39"], [-28, 36, "#ffc16e"], [-37, 37, "#423818"]],
-//     "炸药桶": ["#f7e0cf", [-15, 0, "#d81008"], [-44, -13, "#f4d232"], [-53, 34, "#ad6918"], [15, -23, "#f75837"], [-33, -2, "#fffadc"]],
-//     "铁铲": ["#e37e36", [20, 0, "#fffadc"], [-9, 0, "#fffadc"], [22, -41, "#e78837"], [-23, 26, "#9ba3a3"], [-32, 57, "#b4b6bc"], [-19, 12, "#fffadc"], [4, -8, "#e68b38"]],
-//     "十字镐": ["#8f7134", [-23, 67, "#754c23"], [-27, -23, "#e7e7e7"], [45, -14, "#9ba1a3"], [13, -45, "#a2883d"], [3, -23, "#dee3e7"], [-13, -5, "#fffadc"]],
-// };
-
 const numColor = {
     "0": ["#ffffff", [-2, -8, "#ffffff"], [-6, -12, "#ffffff"], [-10, -15, "#ffffff"], [-15, -10, "#ffffff"], [-17, -5, "#ffffff"], [-18, 1, "#ffffff"], [-17, 17, "#ffffff"], [-15, 23, "#ffffff"], [-11, 26, "#fcfcf9"], [-10, 15, "#000000"], [-9, 16, "#000000"], [-9, -5, "#000000"], [-11, -2, "#060606"], [-11, 0, "#040404"], [-11, 2, "#040404"], [-8, 5, "#020202"], [-8, 7, "#020202"], [-2, 24, "#000000"], [-1, 22, "#000000"]],
     "1": ["#ffffff", [0, 13, "#ffffff"], [0, 27, "#ffffff"], [0, 39, "#ffffff"], [0, 43, "#000000"], [-5, 43, "#000000"], [-5, 39, "#ffffff"], [-5, 24, "#ffffff"], [-5, 11, "#ffffff"], [-5, 5, "#ffffff"], [-9, 4, "#ffffff"], [-9, 3, "#ffffff"], [-6, 0, "#ffffff"], [-2, 0, "#ffffff"], [-10, 8, "#000000"], [-3, 4, "#ffffff"], [-3, 20, "#ffffff"], [-3, 37, "#ffffff"], [-3, 39, "#ffffff"]],
@@ -129,7 +110,7 @@ function ran() {
 //自动获取截图权限
 function autoSc() {
 
-    isclick = false;
+    let isclick = false;
     // 如果配置了截图坐标，则依次点击填入的坐标
     if ((config.screenshotCoords.coord1.x !== 0 && config.screenshotCoords.coord1.y !== 0) ||
         (config.screenshotCoords.coord2.x !== 0 && config.screenshotCoords.coord2.y !== 0) ||
@@ -176,6 +157,7 @@ function autoSc() {
             }
         });
     }
+    sleep(1000);
 }
 
 
@@ -317,7 +299,7 @@ function restartgame() {
                     console.log("使用am force-stop命令时出错: " + e);
                 }
             } else {
-                home();
+
                 sleep(500);
                 app.startActivity({
                     action: "android.settings.APPLICATION_DETAILS_SETTINGS",
@@ -1238,6 +1220,7 @@ function findFont(sc, region, color, threshold = 16, FontLibrary, xiangsidu = 0.
         // 确定搜索区域
         region = region ? region : [0, 0, img.getWidth(), img.getHeight()];
         let image_clip = images.clip(img, region[0], region[1], region[2], region[3]);
+        // images.save(image_clip, "/sdcard/" + Date.now() + ".png");//测试用，截取识别部位图片
         threshold = threshold ? threshold : 16;
         let binaryImg = images.interval(image_clip, color, threshold);
 
@@ -1380,7 +1363,6 @@ function checkmenu() {
     // 超过最大重试次数
     log(`超过最大重试次数 ${MAX_RETRY} 次，未检测到主界面`);
     showTip(`超过最大重试次数 ${MAX_RETRY} 次，未检测到主界面`);
-    home();
     // 尝试重启游戏
     log("尝试重启");
     restartgame();
@@ -1487,6 +1469,63 @@ function find_youxiang() {
             return youxiang1 || youxiang2;
         }
         sleep(500);
+    }
+}
+
+function tomOperation() {
+    let currentTomTimerName = Account ? Account + "Tom计时器" : "Tom计时器";
+
+    let tomIsWorkName = Account ? Account + "TomIsWork" : "TomIsWork"
+    let tom_isWork = timeStorage.get(tomIsWorkName) !== null;
+
+    //如果汤姆在休息，输出剩余时间
+    let tomTime = getTimerState(currentTomTimerName);
+    if (tomTime) {
+        let hours = Math.floor(tomTime / 3600);
+        let minutes = Math.floor(tomTime / 60) % 60;
+        let seconds = tomTime % 60;
+        let timeText = hours > 0 ? `${hours}时${minutes}分${seconds}秒` : minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+        details = `汤姆休息剩余时间: ${timeText}\n`;
+        log(details);
+        showTip(details);
+    }
+
+    //如果没有雇佣汤姆，输出提示，并返回
+    if (tom_isWork) {
+        log("没有雇佣汤姆")
+        showTip("没有雇佣汤姆");
+    }
+
+    if (config.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
+        log("===============汤姆===================");
+        sleep(300)
+        swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
+        let tomPos = clickTom();
+        sleep(500);
+        let tomState = tomToFind(tomPos);
+        if (tomState === true) {
+            //设定计时器
+            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
+            timer(timerName, 2 * 60 * 60);//2小时
+            timeStorage.put(tomIsWorkName, true);
+        } else if (tomState === null) {
+            log("未雇佣汤姆");
+            showTip("未雇佣汤姆");
+            timeStorage.put(tomIsWorkName, null);
+        } else if (tomState === false) {
+            timeStorage.put(tomIsWorkName, false);
+        } else {
+            let tomTimeSecend = tomState.hours * 60 * 60 + tomState.minutes * 60 + tomState.seconds;
+            //设定计时器
+            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
+            timer(timerName, tomTimeSecend);
+            timeStorage.put(tomIsWorkName, true);
+        }
+        if (config.switchAccount === false) {//不换账号滑动回去
+            sleep(500);
+            swipe(600 - 350 + ran(), 580 - 200 + ran(), 600 + ran(), 580 + ran(), 1000);
+        }
+
     }
 }
 
@@ -2105,8 +2144,8 @@ function coin() {
         allcenters.forEach(target => {
             let pos = [48, 60];
             click(target.x + pos[0] + ran(), target.y + pos[1] + ran());
-            // sleep(10);
         });
+        if (allcenters.length > 0) sleep(1000)
     } catch (error) {
         log(error);
     }
@@ -2122,12 +2161,12 @@ function find_ad() {
             //如果找到货架上的金币
             let [x1, y1] = [-58, -23];
             click(shop_coin.x + x1 + ran(), shop_coin.y + y1 + ran()); //点击金币
-            sleep(300);
+            sleep(100);
             let ad = matchColor([{ x: 765, y: 423, color: "#fbba15" }, { x: 496, y: 499, color: "#cbcbcb" }]);
             if (ad) {
                 console.log("可以发布广告");
                 click(800 + ran(), 330 + ran());
-                sleep(300);
+                // sleep(300);
                 click(640 + ran(), 500 + ran());
                 return true;
             }
@@ -2150,11 +2189,8 @@ function shop() {
         showTip("商店售卖");
         sleep(300);
         coin();
-        sleep(1000);
-        let shopEnd = false;
-        let shopisswipe = false;
-        let maxAttempts = 5; // 最大尝试次数
-        let attempts = 0; // 当前尝试次数
+        sleep(500);
+
         let wheat_sail_minNum = config.ReservedQuantity;//小麦售卖最低保存数量
 
         // 检查是否还在商店界面
@@ -2163,97 +2199,90 @@ function shop() {
             return;
         }
 
-        while (!shopEnd && attempts < maxAttempts) {
-            // 每次循环开始时检查是否还在商店界面
-            // if (!matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
-            //     console.log("商店界面已关闭，退出循环");
-            //     return;
-            // }
-            if (shopisswipe) {
-                shopEnd = matchColor([{ x: 990, y: 292, color: "#cccccc" }]);
-                if (shopEnd) {
-                    log("右滑到顶了");
-                    showTip("右滑到顶了");
-                }
+        if (configs.get("isCangkuSold", false)) {
+            let sellPlan = shopStatistic();
+            if (sellPlan) {
+                log("商店售卖计划:" + JSON.stringify(sellPlan))
+                shop_sail(sellPlan, cangkuItemColor)
             }
-            sleep(500);
-            //找空闲货架
-            let kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130], 20);
+        }
 
-            if (kongxian) { //有空闲货架点击上架
-                console.log("找到空闲货架");
-                showTip("找到空闲货架");
-                click(kongxian.x + ran(), kongxian.y + ran()); //点击空闲货架
-                console.log("点击空闲货架")
-                sleep(100);
+
+        while (true) {
+            let kongxian = find_kongxian();
+            if (!kongxian) {    //没有空闲货架
+                console.log("未找到空闲货架,商店售卖结束");
+                showTip("未找到空闲货架,商店售卖结束");
+                break;
+            }
+
+            //判断是否在粮仓界面
+            if (!matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
                 click(200 + ran(), 200 + ran());//点击售卖粮仓按钮
-
-                console.log("点击粮仓按钮")
                 sleep(100);
+                console.log("点击粮仓按钮")
+            }
 
-                let wheat_sail = findMC(crop_sail, null, [270, 120, 650 - 270, 680 - 120], 16);
+            let wheat_sail = findMC(crop_sail, null, [261, 122, 707 - 261, 688 - 122], 16);
 
-                if (wheat_sail) {   //找到售卖货架上的作物
-                    // 识别数字
-                    let region = [wheat_sail.x, wheat_sail.y, 130, 80]
-                    let wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
-                    if (Number(wheat_num) >= Number(wheat_sail_minNum)) {
-
-                        console.log(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sail_minNum);
-                        showTip(config.selectedCrop.text + "数量" + wheat_num);
-
-                        click(wheat_sail.x + ran(), wheat_sail.y + ran()); //点击小麦
-                        console.log("点击" + config.selectedCrop.text);
-                        sleep(300);
-
-                        console.log("修改售价");
-                        if (config.shopPrice.code == 0) {
-                            click(860 + ran(), 360 + ran());//修改售价(最低)
-
-                        } else if (config.shopPrice.code == 2) {
-                            click(1020 + ran(), 370 + ran());//修改售价(最高)
-                        }
-                        sleep(100);
-                        click(940 + ran(), 660 + ran());
-                        //上架
-                        console.log("上架");
-                        sleep(100);
-                        kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130]);
-                    } else {
-                        console.log(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sail_minNum + "，结束售卖");
-                        log(wheat_num)
-                        showTip(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sail_minNum + "，结束售卖");
-                        close();
-                        log(config.selectedCrop.text + "数量不足，退出售卖");
-                        break;
-                    }
-                } else {   //没找到售卖货架上的作物
+            if (!wheat_sail) {   //没找到售卖货架上的作物
+                sleep(100);
+                wheat_sail = findMC(crop_sail, null, [261, 122, 707 - 261, 688 - 122], 16);
+                if (!wheat_sail) {
                     console.log("未识别到" + config.selectedCrop.text);
                     showTip("未识别到" + config.selectedCrop.text);
-                    // toast("未识别到小麦")
                     close();
                     break;
                 }
-            } else {    //没有空闲货架
-                console.log("未找到空闲货架");
-                showTip("未找到空闲货架");
-                attempts++;
-                sleep(200)
-                const [x1, y1] = [960, 390];
-                const [x2, y2] = [288, 390];
-                swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), 600);
-                console.log("商店右滑")
-                sleep(400);
-                coin();
-                shopisswipe = true;
             }
 
+            // 识别数字
+            let region = [wheat_sail.x, wheat_sail.y, 130, 80]
+            sleep(100);//上架有残影，有时识别不到
+            let wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+            if (wheat_num == "") {
+                sleep(500)
+                wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+            }
+
+            let sellNum = Number(wheat_num) - Number(wheat_sail_minNum)
+            if (sellNum <= 0) {
+                console.log(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sail_minNum + "，结束售卖");
+                showTip(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sail_minNum + "，结束售卖");
+                log(config.selectedCrop.text + "数量不足，退出售卖");
+                close();
+                break;
+            }
+
+            console.log(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sail_minNum + "，可售卖" + sellNum);
+            showTip(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sail_minNum + "，可售卖" + sellNum);
+            close();
+            shop_sail([{ title: config.selectedCrop.text, num: sellNum }], { [config.selectedCrop.text]: crop_sail }, "left", config.shopPrice.code)
+            break;
+            // click(wheat_sail.x + ran(), wheat_sail.y + ran()); //点击小麦
+            // console.log("点击" + config.selectedCrop.text);
+
+
+            // console.log("修改售价");
+            // if (config.shopPrice.code == 0) {
+            //     click(860 + ran(), 360 + ran());//修改售价(最低)
+
+            // } else if (config.shopPrice.code == 2) {
+            //     click(1020 + ran(), 370 + ran());//修改售价(最高)
+            // }
+
+            // click(940 + ran(), 660 + ran());
+            // //上架
+            // console.log("上架");
+            // sleep(100);
+
         }
+
         console.log("发布广告");
         showTip("发布广告");
         sleep(300);
         coin();
-        sleep(500);
+
         let shop_coin = findMC(["#fffabb", [83, -17, "#fff27d"], [80, -3, "#ffe718"], [-73, 22, "#f7cd88"]],
             null, null, 16);
         if (shop_coin) {
@@ -2261,26 +2290,26 @@ function shop() {
 
             click(shop_coin.x + ran(), shop_coin.y + ran()); //点击可上架物品
             log("发布广告：点击" + config.selectedCrop.text)
-            sleep(300);
+            sleep(100);
 
             let ad = matchColor([{ x: 750, y: 420, color: "#fff9db" }]);
             if (!ad) {
                 console.log("可以发布广告");
                 click(800 + ran(), 330 + ran());
-                sleep(100);
+                // sleep(100);
                 click(640 + ran(), 500 + ran());
-                sleep(200);
+                // sleep(200);
                 close();
             } else {
                 console.log("广告正在冷却或已发布广告");
                 showTip("广告正在冷却或已发布广告");
-                sleep(200);
+                // sleep(200);
                 close();
                 sleep(100);
             }
         } else {  //如果没有找到货架上的物品
             coin();
-            sleep(500);
+
             let is_find_ad = find_ad();
             log("发布广告：没找到货架上的物品");
             if (!is_find_ad) {
@@ -2316,6 +2345,467 @@ function shop() {
         sleep(300);
         find_close();
     }
+}
+
+/**
+ * 查找空闲货架并点击
+ * @param {number} attempts - 当前尝试次数
+ * @param {number} maxAttempts - 最大尝试次数
+ * @returns {boolean} - 是否成功找到空闲货架
+ */
+function find_kongxian(attempts, maxAttempts = 5) {
+    let shopEnd = false;
+    let currentAttempts = attempts || 0;
+    log("当前尝试次数: " + currentAttempts);
+
+    while (true) {
+        sleep(100);
+        var kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130], 10);
+        if (!kongxian) {    //没有空闲货架
+            console.log("未找到空闲货架");
+            showTip("未找到空闲货架");
+
+            if (shopEnd || currentAttempts >= maxAttempts) { //如果右滑到顶了，且尝试次数超过最大次数，返回true
+                log("右滑到顶了");
+                showTip("右滑到顶了");
+                return false;
+            }
+
+            currentAttempts++;
+
+            const [x1, y1] = [960, 390];
+            const [x2, y2] = [288, 390];
+            swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), 600);
+            console.log("商店右滑")
+            sleep(200);
+            coin();
+            shopEnd = matchColor([{ x: 990, y: 292, color: "#cccccc" }]);
+            if (shopEnd) {
+                log("右滑到顶了");
+                showTip("右滑到顶了");
+                continue;
+            }
+        }
+
+        if (kongxian) break;
+    }
+
+    //有空闲货架点击上架
+    console.log("找到空闲货架");
+    showTip("找到空闲货架");
+    click(kongxian.x + ran(), kongxian.y + ran()); //点击空闲货架
+    console.log("点击空闲货架")
+    sleep(200);
+    return true;
+}
+
+/**
+ * 售卖统计
+ * @param {*} sc 屏幕截图
+ * @returns [ { title: '炸药', num: 7 },]
+ */
+function shopStatistic(sc) {
+    try {
+        let kongxian = find_kongxian();
+        if (!kongxian) {    //没有空闲货架
+            console.log("未找到空闲货架,商店售卖结束");
+            showTip("未找到空闲货架,商店售卖结束");
+            return false;
+        }
+        //判断是否在货仓界面
+        if (matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
+            click(200 + ran(), 330 + ran());//点击售卖货仓按钮
+            sleep(100);
+            console.log("点击货仓按钮")
+        }
+
+        sc = sc || captureScreen();
+        let capacity_result = findFont(sc, [679, 53, 814 - 679, 103 - 53], "#FFFFFF", 8, Font.FontLibrary_ShopCapacity, 0.9);
+        log(capacity_result);
+
+        // 提取 '/' 两边的数字并计算差值
+        if (typeof capacity_result === 'string' && capacity_result.includes('/')) {
+            // 使用正则表达式提取数字
+            var match = capacity_result.match(/(\d+)\/(\d+)/);
+            if (match && match.length === 3) {
+                var leftNumber = parseInt(match[1], 10);
+                var rightNumber = parseInt(match[2], 10);
+                var difference = rightNumber - leftNumber;
+                var CangkuSold_targetNum = configs.get("CangkuSold_targetNum", 25)
+                log('当前容量: ' + leftNumber);
+                log('仓库容量: ' + rightNumber);
+                log('剩余容量: ' + difference);
+
+            }
+        }
+        if (difference >= configs.get("CangkuSold_triggerNum", 10)) {
+            log("不需要仓库售卖", capacity_result)
+            showTip("不需要仓库售卖", capacity_result)
+            return false;
+        } else if (difference <= -20) {
+            log("仓库容量统计出错，不进行售卖")
+            showTip("仓库容量统计出错，不进行售卖")
+            return false;
+        }
+        else {
+            var sellNum = (CangkuSold_targetNum - difference) > 0 ? (CangkuSold_targetNum - difference) : 0
+            log("需要售卖数量：" + sellNum)
+            showTip("需要售卖数量：" + sellNum)
+        }
+
+        // 初始化检测结果
+        const shopResult = {};
+        let currentPage = 0;
+        let allItemsDetected = false;
+
+        // 初始化所有物品状态为未检测
+        Object.keys(cangkuItemColor).forEach(itemName => {
+            shopResult[itemName] = {
+                counts: 0,
+                position: [],
+                detected: false
+            };
+        });
+
+        // 开始检测
+        let maxPages = 3;
+        while (currentPage < maxPages && !allItemsDetected) {
+            console.log(`开始第 ${currentPage + 1} 页检测`);
+            showTip(`开始第 ${currentPage + 1} 页检测`);
+
+            // 截取屏幕
+            let sc = captureScreen();
+            if (!sc) {
+                console.error("截图失败");
+                break;
+            }
+
+            let sc1 = sc
+
+            // 检测所有物品
+            Object.keys(cangkuItemColor).forEach(itemName => {
+                // 如果已经检测到该物品，跳过
+                if (shopResult[itemName].detected) {
+                    return
+                }
+
+                let itemColor = cangkuItemColor[itemName];
+                let position = findMC(itemColor, sc, [285, 123, 686 - 285, 688 - 123]);
+
+                if (position) {
+                    // 找到物品
+                    let itemNum = 0;
+                    let numRegion = [position.x - 80, position.y - 60, 90, 75];
+                    itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+                    // 如果第一次检测为空，再检测一遍
+                    if (!itemNum || itemNum.trim() === "") {
+                        console.log(`第一次检测${itemName}为空，重新检测`);
+                        showTip(`第一次检测${itemName}为空，重新检测`);
+                        sleep(100);
+                        itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+                    }
+
+                    shopResult[itemName] = {
+                        counts: itemNum ? itemNum : 0,
+                        position: position,
+                        detected: true
+                    };
+                    console.log(`${itemName} : ${itemNum}`);
+                    showTip(`${itemName} : ${itemNum}`);
+
+                }
+            });
+
+            // 检查是否所有物品都已找到
+            allItemsDetected = Object.values(shopResult).every(item => item.detected);
+            if (allItemsDetected) {
+                console.log("所有物品都已检测到");
+                showTip("所有物品都已检测到");
+                break;
+            }
+
+            // 如果不是最后一页，则向下翻页
+            if (currentPage < maxPages - 1) {
+                console.log("向下翻页...");
+                showTip("向下翻页...");
+                swipe(480, 660, 480, 145, 1000)
+                sleep(30)
+                click(480, 132)
+                currentPage++;
+            } else {
+                console.log("已达到最大翻页次数");
+                showTip("已达到最大翻页次数");
+                break;
+            }
+        }
+
+        // 处理结果数据
+        const processedResult = {};
+
+        Object.keys(shopResult).forEach(itemName => {
+            const count = shopResult[itemName].counts;
+
+            if (!count || count.trim() === "") {
+                // 如果数量为空，则设置为0
+                processedResult[itemName] = 0;
+            } else {
+                // 如果数量是纯数字，则直接转换为整数
+                processedResult[itemName] = parseInt(count);
+            }
+        });
+
+    } catch (error) {
+        log("仓库统计出错" + error);
+    } finally {
+        close();
+    }
+
+    var sellPlan = distributeSellQuantity(processedResult, sellNum);
+    return sellPlan;
+}
+
+/**
+ * 根据优先级分配物品售卖数量
+ * @param {Array} CangkuSoldList - 物品列表，包含title, done, priority, id
+ * @param {Object} itemQuantities - 每个物品的当前数量，格式: {物品名称: 数量}
+ * @param {number} totalSellQuantity - 要售卖的总数量
+ * @returns {Array} - 返回售卖计划，格式: [{title: 物品名称, num: 售卖数量}]
+ */
+function distributeSellQuantity(itemQuantities, totalSellQuantity) {
+    // 确保输入有效
+    if (!itemQuantities || typeof totalSellQuantity !== 'number' || totalSellQuantity <= 0) {
+        return [];
+    }
+    let CangkuSoldList = configs.get("CangkuSoldList")
+
+    // 按优先级排序物品（priority数字越低优先级越高）
+    // 创建数组副本以避免修改原数组
+    var sortedItems = [];
+    for (var i = 0; i < CangkuSoldList.length; i++) {
+        sortedItems.push(CangkuSoldList[i]);
+    }
+
+    // 使用传统的sort函数
+    sortedItems.sort(function (a, b) {
+        return a.priority - b.priority;
+    });
+
+    // 按优先级分组
+    var priorityGroups = {};
+    for (var i = 0; i < sortedItems.length; i++) {
+        var item = sortedItems[i];
+        var priority = item.priority;
+        if (!priorityGroups[priority]) {
+            priorityGroups[priority] = [];
+        }
+        priorityGroups[priority].push(item);
+    }
+
+    // 最终售卖计划
+    var sellPlan = [];
+    var remainingSellQuantity = totalSellQuantity;
+
+    // 获取优先级键并排序
+    var priorityKeys = [];
+    for (var key in priorityGroups) {
+        if (priorityGroups.hasOwnProperty(key)) {
+            priorityKeys.push(key);
+        }
+    }
+    priorityKeys.sort(function (a, b) {
+        return parseInt(a) - parseInt(b);
+    });
+
+    // 按优先级顺序处理每个组
+    for (var i = 0; i < priorityKeys.length; i++) {
+        var priority = priorityKeys[i];
+        var itemsInGroup = priorityGroups[priority];
+
+        // 计算该组中所有物品的总数量
+        var groupTotalQuantity = 0;
+        for (var j = 0; j < itemsInGroup.length; j++) {
+            var item = itemsInGroup[j];
+            var quantity = itemQuantities[item.title] || 0;
+            groupTotalQuantity += quantity;
+        }
+
+        // 如果该组总数量小于剩余待售数量，则全部卖出
+        if (groupTotalQuantity <= remainingSellQuantity) {
+            for (var j = 0; j < itemsInGroup.length; j++) {
+                var item = itemsInGroup[j];
+                var quantity = itemQuantities[item.title] || 0;
+                if (quantity > 0) {
+                    sellPlan.push({ title: item.title, num: quantity });
+                    remainingSellQuantity -= quantity;
+                }
+            }
+        } else {
+            // 该组总数量大于剩余待售数量，需要按比例分配
+            var tempGroupTotal = groupTotalQuantity;
+            var tempRemaining = remainingSellQuantity;
+
+            for (var j = 0; j < itemsInGroup.length; j++) {
+                var item = itemsInGroup[j];
+                var itemQuantity = itemQuantities[item.title] || 0;
+                if (itemQuantity > 0) {
+                    // 按比例分配剩余待售数量
+                    var sellQuantity = Math.floor((itemQuantity / tempGroupTotal) * tempRemaining);
+                    sellPlan.push({ title: item.title, num: sellQuantity });
+                    tempRemaining -= sellQuantity;
+                    tempGroupTotal -= itemQuantity;
+                }
+            }
+
+            // 处理可能的余数（确保精确分配）
+            remainingSellQuantity = tempRemaining;
+            if (remainingSellQuantity > 0) {
+                for (var j = 0; j < sellPlan.length && remainingSellQuantity > 0; j++) {
+                    var planItem = sellPlan[j];
+                    var availableQuantity = itemQuantities[planItem.title] || 0;
+                    if (planItem.num < availableQuantity) {
+                        planItem.num += 1;
+                        remainingSellQuantity -= 1;
+                    }
+                }
+            }
+        }
+
+        // 如果已满足总售卖数量，结束循环
+        if (remainingSellQuantity <= 0) {
+            break;
+        }
+    }
+
+    return sellPlan;
+}
+
+/**
+ * 售卖物品
+ * @param {*} sellPlan 售卖计划,格式[{title:"物品名称",num:数量}]
+ * @param {*} itemColor 物品颜色,格式{物品名称:颜色}
+ * @param {*} pos 物品位置,"left"为基准点左上方向，即作物售卖
+ * @param {*} price 售卖价格,0为最低价格,2为最高价格
+ * @returns 
+ */
+function shop_sail(sellPlan, itemColor, pos, price = 2) {
+
+    coin()
+    for (let item of sellPlan) {    //遍历售卖计划中的每个物品
+
+        while (true) {
+            if (item.num <= 0) {    //如果数量为0，跳出循环，继续下一个物品
+                break;
+            }
+            let sailNum = item.num > 10 ? 10 : item.num;
+
+            let kongxian = find_kongxian();
+            if (!kongxian) {    //没有空闲货架
+                console.log("未找到空闲货架,商店售卖结束");
+                showTip("未找到空闲货架,商店售卖结束");
+                return false;
+            }
+
+            //判断是否在货仓/粮仓界面
+            if (matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
+                if (pos != "left") {
+                    click(200 + ran(), 330 + ran());//点击售卖货仓按钮
+                    sleep(100);
+                    console.log("点击货仓按钮")
+                }
+            } else {
+                if (pos == "left") {
+                    click(200 + ran(), 200 + ran());//点击售卖粮仓按钮
+                    sleep(100);
+                    console.log("点击粮仓按钮")
+                }
+            }
+
+            let item_sail = findMC(itemColor[item.title], null, [261, 122, 707 - 261, 688 - 122], 16);
+
+            if (!item_sail) {   //没找到售卖货架上的作物
+                for (let i = 0; i < 3; i++) {
+                    swipe(480, 660, 480, 145, 1000)
+                    sleep(30)
+                    click(480, 132)
+                    sleep(100)
+                    item_sail = findMC(itemColor[item.title], null, [261, 122, 707 - 261, 688 - 122], 16);
+                    if (item_sail) {
+                        break;
+                    }
+                }
+                if (!item_sail) {
+                    console.log("未找到" + item.title + "，尝试下一个");
+                    showTip("未找到" + item.title + "，尝试下一个");
+                    click(1150 + ran(), 50 + ran())//点击叉号
+                    break;
+                }
+            }
+
+            //确定点击范围
+            let range1 = [-80, -60]
+            if (pos == "left") {
+                range1 = [10, 10]
+            }
+            click(item_sail.x + range1[0] + ran(), item_sail.y + range1[1] + ran()); //点击物品
+
+            // 识别售卖数字
+            sleep(100);
+            let item_num
+            if (matchColor([{ x: 1103, y: 214, color: "#b6b6b6" }, { x: 799, y: 216, color: "#f4bd00" }])) {
+                item_num = 10
+            } else if (matchColor([{ x: 799, y: 214, color: "#bababa" }, { x: 1101, y: 212, color: "#f8b900" }]) ||
+                matchColor([{ x: 801, y: 215, color: "#bababa" }, { x: 1101, y: 211, color: "#b7b7b7" }])) {
+                item_num = 1
+            } else {
+                let region2 = [829, 168, 941 - 829, 250 - 168]
+                item_num = findFont(null, region2, "#FFFFFF", 8, Font.FontLibrary_ShopSoldNum, 0.9);
+                log("识别售卖个数" + item_num)
+                if (item_num == "" || item_num == 0) {
+                    sleep(500)
+                    item_num = findFont(null, region2, "#FFFFFF", 8, Font.FontLibrary_ShopSoldNum, 0.9);
+                    log("第二次识别售卖个数" + item_num)
+                    if (item_num == "") {
+                        console.log("未识别到售卖数字,售卖下一个物品");
+                        showTip("未识别到售卖数字,售卖下一个物品");
+                        break;
+                    }
+                }
+            }
+
+            //确定售卖个数
+            let sailNum_difference = Number(sailNum) - Number(item_num);
+            log("售卖:", item.title, ",售卖差值：", sailNum_difference, ",本次售卖个数：", sailNum, ",识别个数：", item_num)
+            showTip("售卖:" + item.title + ",个数:" + sailNum)
+            if (sailNum_difference >= 0) {
+                for (let i = 0; i < sailNum_difference; i++) {
+                    click(1085 + ran(), 190 + ran());
+                }
+            }
+
+            if (sailNum_difference < 0) {
+                for (let i = 0; i < -sailNum_difference; i++) {
+                    click(800 + ran(), 190 + ran());
+                }
+            }
+
+            console.log("修改售价");
+            if (price == 0) {
+                click(860 + ran(), 360 + ran());//修改售价(最低)
+            } else if (price == 2) {
+                click(1020 + ran(), 370 + ran());//修改售价(最高)
+            }
+
+            //上架
+            click(940 + ran(), 660 + ran());
+            console.log("上架");
+            let itemIndex = sellPlan.findIndex(i => i.title === item.title);
+            if (itemIndex !== -1) {
+                sellPlan[itemIndex].num -= sailNum;
+            }
+            sleep(100);
+        }
+    }
+
 }
 
 /**
@@ -3217,59 +3707,8 @@ function operation(Account) {
     console.log("============开始售卖系列操作===============")
     shop();
 
-    let currentTomTimerName = Account ? Account + "Tom计时器" : "Tom计时器";
-
-    let tomIsWorkName = Account ? Account + "TomIsWork" : "TomIsWork"
-    let tom_isWork = timeStorage.get(tomIsWorkName) !== null;
-
-    //如果汤姆在休息，输出剩余时间
-    let tomTime = getTimerState(currentTomTimerName);
-    if (tomTime) {
-        let hours = Math.floor(tomTime / 3600);
-        let minutes = Math.floor(tomTime / 60) % 60;
-        let seconds = tomTime % 60;
-        let timeText = hours > 0 ? `${hours}时${minutes}分${seconds}秒` : minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
-        details = `汤姆休息剩余时间: ${timeText}\n`;
-        log(details);
-        showTip(details);
-    }
-
-    //如果没有雇佣汤姆，输出提示，并返回
-    if (tom_isWork) {
-        log("没有雇佣汤姆")
-        showTip("没有雇佣汤姆");
-    }
-
-    if (config.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
-        log("===============汤姆===================");
-        sleep(300)
-        swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
-        let tomPos = clickTom();
-        sleep(500);
-        let tomState = tomToFind(tomPos);
-        if (tomState === true) {
-            //设定计时器
-            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
-            timer(timerName, 2 * 60 * 60);//2小时
-            timeStorage.put(tomIsWorkName, true);
-        } else if (tomState === null) {
-            log("未雇佣汤姆");
-            showTip("未雇佣汤姆");
-            timeStorage.put(tomIsWorkName, null);
-        } else if (tomState === false) {
-            timeStorage.put(tomIsWorkName, false);
-        } else {
-            let tomTimeSecend = tomState.hours * 60 * 60 + tomState.minutes * 60 + tomState.seconds;
-            //设定计时器
-            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
-            timer(timerName, tomTimeSecend);
-            timeStorage.put(tomIsWorkName, true);
-        }
-        if (config.switchAccount === false) {//不换账号滑动回去
-            sleep(500);
-            swipe(600 - 350 + ran(), 580 - 200 + ran(), 600 + ran(), 580 + ran(), 1000);
-        }
-
+    if (config.tomFind.enabled) {
+        tomOperation();
     }
 
 }
@@ -3290,8 +3729,8 @@ function cangkuStatistics(maxPages = 2) {
         const result = {};
         let currentPage = 0;
         let allItemsDetected = false;
-        let lcCapacity = null;
-        let hcCapacity = null;
+        let lcCapacity = "0/0";
+        let hcCapacity = "0/0";
         sleep(500);
         let isFindShop = findshop();
         if (isFindShop) {  //判断是否找到商店
@@ -3321,133 +3760,138 @@ function cangkuStatistics(maxPages = 2) {
 
         sleep(500);
         isFindShop = findshop();
-        if (isFindShop) {  //判断是否找到商店
-            console.log("点击货仓");
-            showTip("点击货仓");
-            click(isFindShop.x + config.huocangOffset.x + ran(), isFindShop.y + config.huocangOffset.y + ran()); //点击货仓
-            sleep(500);
-            if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入货仓
-                hcCapacity = findNum(captureScreen(), [657, 58, 900 - 657, 117 - 58], 32, 2).toString();
-                if (!hcCapacity) {
-                    sleep(500);
-                    hcCapacity = findNum(captureScreen(), [657, 58, 900 - 657, 117 - 58], 32, 2).toString();
-                }
-                log("货仓容量：" + hcCapacity);
-                showTip("货仓容量：" + hcCapacity);
-                // 初始化所有物品状态为未检测
-                Object.keys(cangkuItemColor).forEach(itemName => {
-                    result[itemName] = {
-                        counts: 0,
-                        position: [],
-                        detected: false
-                    };
-                });
-
-                // 开始检测
-                while (currentPage < maxPages && !allItemsDetected) {
-                    console.log(`开始第 ${currentPage + 1} 页检测`);
-                    showTip(`开始第 ${currentPage + 1} 页检测`);
-
-                    // 截取屏幕
-                    let sc = captureScreen();
-                    if (!sc) {
-                        console.error("截图失败");
-                        break;
-                    }
-
-                    let sc1 = sc
-
-                    // 检测所有物品
-                    Object.keys(cangkuItemColor).forEach(itemName => {
-                        // 如果已经检测到该物品，跳过
-                        if (result[itemName].detected) {
-                            return
-                        }
-                        // sleep(10);
-                        let itemColor = cangkuItemColor[itemName];
-                        let position = findMC(itemColor, sc, [146, 93, 1139 - 146, 576 - 93]);
-
-                        if (position) {
-                            // 找到物品
-                            //
-                            let itemNum = 0;
-                            let numRegion = [position.x - 80, position.y - 60, 90, 75];
-                            itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.7);
-                            // 如果第一次检测为空，再检测一遍
-                            if (!itemNum || itemNum.trim() === "") {
-                                console.log(`第一次检测${itemName}为空，重新检测`);
-                                showTip(`第一次检测${itemName}为空，重新检测`);
-                                sleep(100);
-                                itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.7);
-                            }
-
-                            result[itemName] = {
-                                counts: itemNum ? itemNum : 0,
-                                position: position,
-                                detected: true
-                            };
-                            console.log(`${itemName} : ${itemNum}`);
-                            showTip(`${itemName} : ${itemNum}`);
-                            // sleep(100);
-                        }
-                    });
-
-                    // 检查是否所有物品都已找到
-                    allItemsDetected = Object.values(result).every(item => item.detected);
-                    if (allItemsDetected) {
-                        console.log("所有物品都已检测到");
-                        showTip("所有物品都已检测到");
-                        break;
-                    }
-
-                    // 如果不是最后一页，则向下翻页
-                    if (currentPage < maxPages - 1) {
-                        console.log("向下翻页...");
-                        showTip("向下翻页...");
-                        swipe(640, 540, 640, 150, 1000)
-                        sleep(30)
-                        click(640, 400)
-                        // sleep(1000);
-                        currentPage++;
-                    } else {
-                        console.log("已达到最大翻页次数");
-                        showTip("已达到最大翻页次数");
-                        break;
-                    }
-
-                    // 回收截图
-                    sc.recycle();
-                }
-
-                // 处理结果数据
-                const processedResult = {};
-
-                Object.keys(result).forEach(itemName => {
-                    const count = result[itemName].counts;
-
-                    // 处理数量值
-                    if (lcCapacity) processedResult["粮仓容量"] = lcCapacity ? lcCapacity : "未识别";
-                    if (hcCapacity) processedResult["货仓容量"] = hcCapacity ? hcCapacity : "未识别";
-
-                    if (!count || count.trim() === "") {
-                        // 如果数量为空，则设置为null
-                        processedResult[itemName] = null;
-                    } else {
-                        // 如果数量是纯数字，则直接转换为整数
-                        processedResult[itemName] = parseInt(count);
-                    }
-                });
-                find_close();
-            } else {  //未进入粮仓
-                console.log("未进入货仓");
-                showTip("未进入货仓");
-                find_close();
-            }
-        } else {  //未找到商店
+        //判断是否找到商店
+        if (!isFindShop) {  //未找到商店
             console.log("未找到商店");
             showTip("未找到商店");
             find_close();
+            return null
         }
+
+        console.log("点击货仓");
+        showTip("点击货仓");
+        click(isFindShop.x + config.huocangOffset.x + ran(), isFindShop.y + config.huocangOffset.y + ran()); //点击货仓
+        sleep(500);
+
+        //判断是否进入货仓
+        if (!matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //未进入粮仓
+            console.log("未进入货仓");
+            showTip("未进入货仓");
+            find_close();
+            return null
+        }
+
+        hcCapacity = findNum(captureScreen(), [657, 58, 900 - 657, 117 - 58], 32, 2).toString();
+        if (!hcCapacity) {
+            sleep(500);
+            hcCapacity = findNum(captureScreen(), [657, 58, 900 - 657, 117 - 58], 32, 2).toString();
+        }
+        log("货仓容量：" + hcCapacity);
+        showTip("货仓容量：" + hcCapacity);
+        // 初始化所有物品状态为未检测
+        Object.keys(cangkuItemColor).forEach(itemName => {
+            result[itemName] = {
+                counts: 0,
+                position: [],
+                detected: false
+            };
+        });
+
+        // 开始检测
+        while (currentPage < maxPages && !allItemsDetected) {
+            console.log(`开始第 ${currentPage + 1} 页检测`);
+            showTip(`开始第 ${currentPage + 1} 页检测`);
+
+            // 截取屏幕
+            let sc = captureScreen();
+            if (!sc) {
+                console.error("截图失败");
+                break;
+            }
+
+            let sc1 = sc
+
+            // 检测所有物品
+            Object.keys(cangkuItemColor).forEach(itemName => {
+                // 如果已经检测到该物品，跳过
+                if (result[itemName].detected) {
+                    return
+                }
+
+                let itemColor = cangkuItemColor[itemName];
+                let position = findMC(itemColor, sc, [146, 93, 1139 - 146, 576 - 93]);
+
+                if (position) {
+                    // 找到物品
+                    let itemNum = 0;
+                    let numRegion = [position.x - 80, position.y - 60, 90, 75];
+                    itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.7);
+                    // 如果第一次检测为空，再检测一遍
+                    if (!itemNum || itemNum.trim() === "") {
+                        console.log(`第一次检测${itemName}为空，重新检测`);
+                        showTip(`第一次检测${itemName}为空，重新检测`);
+                        sleep(100);
+                        itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.7);
+                    }
+
+                    result[itemName] = {
+                        counts: itemNum ? itemNum : 0,
+                        position: position,
+                        detected: true
+                    };
+                    console.log(`${itemName} : ${itemNum}`);
+                    showTip(`${itemName} : ${itemNum}`);
+                    // sleep(100);
+                }
+            });
+
+            // 检查是否所有物品都已找到
+            allItemsDetected = Object.values(result).every(item => item.detected);
+            if (allItemsDetected) {
+                console.log("所有物品都已检测到");
+                showTip("所有物品都已检测到");
+                break;
+            }
+
+            // 如果不是最后一页，则向下翻页
+            if (currentPage < maxPages - 1) {
+                console.log("向下翻页...");
+                showTip("向下翻页...");
+                swipe(640, 540, 640, 150, 1000)
+                sleep(30)
+                click(640, 400)
+                // sleep(1000);
+                currentPage++;
+            } else {
+                console.log("已达到最大翻页次数");
+                showTip("已达到最大翻页次数");
+                break;
+            }
+
+            // 回收截图
+            sc1.recycle();
+        }
+
+        // 处理结果数据
+        const processedResult = {};
+
+        // 处理数量值
+        if (lcCapacity) processedResult["粮仓容量"] = lcCapacity ? lcCapacity : "0/0";
+        if (hcCapacity) processedResult["货仓容量"] = hcCapacity ? hcCapacity : "0/0";
+
+        Object.keys(result).forEach(itemName => {
+            const count = result[itemName].counts;
+
+            if (!count || count.trim() === "") {
+                // 如果数量为空，则设置为0
+                processedResult[itemName] = 0;
+            } else {
+                // 如果数量是纯数字，则直接转换为整数
+                processedResult[itemName] = parseInt(count);
+            }
+        });
+        find_close();
+
     } catch (error) {
         log("仓库统计出错" + error);
     } finally {
@@ -3467,6 +3911,7 @@ function cangkuStatistics(maxPages = 2) {
  */
 function creatContentData(accountName, data, rowTable) {
     try {
+        if (!data) return rawTable;
         // 初始化表格（只有表头和分隔线）
         let rowContentData = null;
         if (!rowTable) {

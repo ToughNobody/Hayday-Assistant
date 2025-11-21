@@ -503,16 +503,4 @@ function main_save() {
 
 
 
-//
-// threads.start(() => {
-//     while (true) {
-//         sleep(5000);
-//         let disconnect = findimage(files.join(config.photoPath, "disconnected.png"), 0.8)
-//         if (disconnect) {
-//             click(adapt(1300, 1100))
-//         }
-//     }
-// })
-
-
 main()
