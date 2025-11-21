@@ -179,7 +179,9 @@ function findimage(imagepath, xiangsidu, sc = null, region = null) {
     let picture = null;
     try {
         picture = images.read(imagepath);
-        if (!picture) throw new Error("模板图片读取失败");
+        if (!picture) {
+            toast("模板图片读取失败");
+            throw new Error("模板图片读取失败")}
 
         // 如果指定了区域参数，则只在区域内搜索
         if (region) {
@@ -1472,11 +1474,11 @@ function find_youxiang() {
     }
 }
 
-function tomOperation() {
+function tomOperation(Account) {
     let currentTomTimerName = Account ? Account + "Tom计时器" : "Tom计时器";
 
     let tomIsWorkName = Account ? Account + "TomIsWork" : "TomIsWork"
-    let tom_isWork = timeStorage.get(tomIsWorkName) !== null;
+    let tom_isWork = timeStorage.get(tomIsWorkName) !== null;//是否在工作
 
     //如果汤姆在休息，输出剩余时间
     let tomTime = getTimerState(currentTomTimerName);
@@ -1491,9 +1493,10 @@ function tomOperation() {
     }
 
     //如果没有雇佣汤姆，输出提示，并返回
-    if (tom_isWork) {
+    if (!tom_isWork) {
         log("没有雇佣汤姆")
         showTip("没有雇佣汤姆");
+        return false;
     }
 
     if (config.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
@@ -2280,7 +2283,11 @@ function shop() {
 
         console.log("发布广告");
         showTip("发布广告");
-        sleep(300);
+        sleep(100);
+        if (matchColor([{x:253,y:107,color:"#ffffff"},{x:342,y:58,color:"#deb476"},{x:1163,y:49,color:"#fac73f"}])){
+            click(1150 + ran(), 50 + ran())//点击叉号
+            sleep(100)
+        }
         coin();
 
         let shop_coin = findMC(["#fffabb", [83, -17, "#fff27d"], [80, -3, "#ffe718"], [-73, 22, "#f7cd88"]],
@@ -3198,6 +3205,7 @@ function switch_account(Account) {
             let AccountText = null;
             if (config.findAccountMethod == "image") {
                 AccountIma = files.join(config.accountImgPath, Account + ".png");
+                log("账号图片路径：" + AccountIma);
             } else if (config.findAccountMethod == "ocr") {
                 AccountText = Account;
             }
@@ -3708,7 +3716,7 @@ function operation(Account) {
     shop();
 
     if (config.tomFind.enabled) {
-        tomOperation();
+        tomOperation(Account);
     }
 
 }
