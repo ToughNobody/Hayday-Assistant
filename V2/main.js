@@ -8,6 +8,8 @@ let statistics = storages.create("statistics");
 let configs = storages.create("config"); // 创建配置存储对象
 let config
 
+// 首次加载标志位，用于忽略首次加载时的选择事件
+let isFirstLoad_cropSelect = true;
 
 // 初始化账号列表
 let AccountList = [];
@@ -87,7 +89,7 @@ function showCangkuSoldDialog() {
         <vertical>
             <horizontal paddingLeft="10dp" paddingTop="10dp" >
                 <text textSize="18sp" textColor="#333333" text="仓库售卖" />
-                <text id="helpIcon" text="?" textColor="#007AFF" textSize="18sp" marginLeft="10dp" />
+                <text id="helpIcon_CangkuSold" text="?" textColor="#007AFF" textSize="18sp" marginLeft="10dp" />
                 <Switch id="CangkuSoldSwitch" paddingLeft="160dp" checked="{{isCangkuSold}}" />
             </horizontal>
             <horizontal>
@@ -180,7 +182,7 @@ function showCangkuSoldDialog() {
     });
 
     // 为问号图标添加点击事件
-    customView.helpIcon.on("click", function () {
+    customView.helpIcon_CangkuSold.on("click", function () {
         dialogs.build({
             title: "仓库售卖帮助",
             content: "在这里您可以设置仓库自动售卖功能：\n\n" +
@@ -224,6 +226,161 @@ function showCangkuSoldDialog() {
     dialog.show();
 }
 
+// 显示截图设置对话框
+function showScreenshotDialog() {
+
+    // 设置列表数据
+    screenshotX1 = configs.get("screenshotX1", 0)
+    screenshotY1 = configs.get("screenshotY1", 0)
+    screenshotX2 = configs.get("screenshotX2", 0)
+    screenshotY2 = configs.get("screenshotY2", 0)
+    screenshotX3 = configs.get("screenshotX3", 0)
+    screenshotY3 = configs.get("screenshotY3", 0)
+
+    // 创建自定义对话框布局
+    var customView = ui.inflate(
+        <vertical gravity="center" paddingTop="16">
+            <horizontal gravity="center" marginBottom="8">
+                <text text="坐标1 - x:" textSize="14" marginRight="4" />
+                <input id="screenshotX1" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                <text text="y:" textSize="14" marginRight="4" />
+                <input id="screenshotY1" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+            </horizontal>
+            <horizontal gravity="center" marginBottom="8">
+                <text text="坐标2 - x:" textSize="14" marginRight="4" />
+                <input id="screenshotX2" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                <text text="y:" textSize="14" marginRight="4" />
+                <input id="screenshotY2" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+            </horizontal>
+            <horizontal gravity="center">
+                <text text="坐标3 - x:" textSize="14" marginRight="4" />
+                <input id="screenshotX3" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                <text text="y:" textSize="14" marginRight="4" />
+                <input id="screenshotY3" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+            </horizontal>
+        </vertical>
+    );
+
+    customView.screenshotX1.setText(String(screenshotX1));
+    customView.screenshotY1.setText(String(screenshotY1));
+    customView.screenshotX2.setText(String(screenshotX2));
+    customView.screenshotY2.setText(String(screenshotY2));
+    customView.screenshotX3.setText(String(screenshotX3));
+    customView.screenshotY3.setText(String(screenshotY3));
+
+    // 创建对话框
+    var dialog = dialogs.build({
+        customView: customView,
+        positive: "确定",
+        neutral: "取消",
+        wrapInScrollView: false,
+        cancelable: true
+    });
+
+    // 为按钮添加点击事件
+    dialog.on("positive", function () {
+        screenshotX1 = parseInt(customView.screenshotX1.getText()) || 0;
+        screenshotY1 = parseInt(customView.screenshotY1.getText()) || 0;
+        screenshotX2 = parseInt(customView.screenshotX2.getText()) || 0;
+        screenshotY2 = parseInt(customView.screenshotY2.getText()) || 0;
+        screenshotX3 = parseInt(customView.screenshotX3.getText()) || 0;
+        screenshotY3 = parseInt(customView.screenshotY3.getText()) || 0;
+        configs.put("screenshotX1", screenshotX1);
+        configs.put("screenshotY1", screenshotY1);
+        configs.put("screenshotX2", screenshotX2);
+        configs.put("screenshotY2", screenshotY2);
+        configs.put("screenshotX3", screenshotX3);
+        configs.put("screenshotY3", screenshotY3);
+        toast("保存成功")
+        dialog.dismiss();
+    });
+
+
+    dialog.on("neutral", function () {
+        dialog.dismiss();
+    });
+
+    // 显示对话框
+    dialog.show();
+}
+
+function showSwitchAccountDialog() {
+
+    // 设置列表数据
+    switchAccountX1 = configs.get("switchAccountX1", 0)
+    switchAccountY1 = configs.get("switchAccountY1", 0)
+    switchAccountX2 = configs.get("switchAccountX2", 0)
+    switchAccountY2 = configs.get("switchAccountY2", 0)
+    switchAccountX3 = configs.get("switchAccountX3", 0)
+    switchAccountY3 = configs.get("switchAccountY3", 0)
+
+    // 创建自定义对话框布局
+    var customView = ui.inflate(
+        <vertical gravity="center" paddingTop="16">
+            <horizontal gravity="center" marginBottom="8">
+                <text text="坐标1 - x:" textSize="14" marginRight="4" />
+                <input id="switchAccountX1" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                <text text="y:" textSize="14" marginRight="4" />
+                <input id="switchAccountY1" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+            </horizontal>
+            <horizontal gravity="center" marginBottom="8">
+                <text text="坐标2 - x:" textSize="14" marginRight="4" />
+                <input id="switchAccountX2" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                <text text="y:" textSize="14" marginRight="4" />
+                <input id="switchAccountY2" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+            </horizontal>
+            <horizontal gravity="center">
+                <text text="坐标3 - x:" textSize="14" marginRight="4" />
+                <input id="switchAccountX3" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                <text text="y:" textSize="14" marginRight="4" />
+                <input id="switchAccountY3" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
+            </horizontal>
+        </vertical>
+    );
+
+    customView.switchAccountX1.setText(String(switchAccountX1));
+    customView.switchAccountY1.setText(String(switchAccountY1));
+    customView.switchAccountX2.setText(String(switchAccountX2));
+    customView.switchAccountY2.setText(String(switchAccountY2));
+    customView.switchAccountX3.setText(String(switchAccountX3));
+    customView.switchAccountY3.setText(String(switchAccountY3));
+
+    // 创建对话框
+    var dialog = dialogs.build({
+        customView: customView,
+        positive: "确定",
+        neutral: "取消",
+        wrapInScrollView: false,
+        cancelable: true
+    });
+
+    // 为按钮添加点击事件
+    dialog.on("positive", function () {
+        switchAccountX1 = parseInt(customView.switchAccountX1.getText()) || 0;
+        switchAccountY1 = parseInt(customView.switchAccountY1.getText()) || 0;
+        switchAccountX2 = parseInt(customView.switchAccountX2.getText()) || 0;
+        switchAccountY2 = parseInt(customView.switchAccountY2.getText()) || 0;
+        switchAccountX3 = parseInt(customView.switchAccountX3.getText()) || 0;
+        switchAccountY3 = parseInt(customView.switchAccountY3.getText()) || 0;
+        configs.put("switchAccountX1", switchAccountX1);
+        configs.put("switchAccountY1", switchAccountY1);
+        configs.put("switchAccountX2", switchAccountX2);
+        configs.put("switchAccountY2", switchAccountY2);
+        configs.put("switchAccountX3", switchAccountX3);
+        configs.put("switchAccountY3", switchAccountY3);
+        toast("保存成功")
+        dialog.dismiss();
+    });
+
+
+    dialog.on("neutral", function () {
+        dialog.dismiss();
+    });
+
+    // 显示对话框
+    dialog.show();
+}
+
 // 格式化日期为易读格式：YYYY-MM-DD_HH-mm-ss
 let now = new Date();
 let formatDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
@@ -245,31 +402,51 @@ console.setGlobalLogConfig({
 
 // 颜色库
 const colorLibrary = [
-    "#009688",
-    "#FF9800",
-    "#4CAF50",
-    "#2196F3",
-    "#DB7093",
-    "#F44336",
-    "#00BCD4",
-    "#FFEB3B",
-    "#795548",
-    "#607D8B"
+    { name: "碧玉青", code: "#009688" },
+    { name: "落日橙", code: "#FF9800" },
+    { name: "翠竹绿", code: "#4CAF50" },
+    { name: "晴空蓝", code: "#2196F3" },
+    { name: "胭脂粉", code: "#DB7093" },
+    { name: "朱砂红", code: "#F44336" },
+    { name: "湖水蓝", code: "#00BCD4" },
+    { name: "紫罗兰", code: "#9C27B0" },
+    { name: "咖啡棕", code: "#795548" },
+    { name: "烟雨灰", code: "#607D8B" }
 ];
 
 // 随机选择一个颜色
 let color = "#009688"
 
+// 颜色名称数组，用于UI显示
+const colorNames = ["随机颜色"].concat(colorLibrary.map(item => item.name));
+
 // 初始化颜色函数
+/**
+ * 只选择本次启动的颜色，改变color。不应用UI
+ */
 function initColor() {
     // 尝试从存储对象加载颜色设置
 
     if (config && config.themeColor && config.themeColor.code >= 0) {
         // 如果配置中有颜色设置，使用配置中的颜色
-        color = colorLibrary[config.themeColor.code];
+        const item = colorNames[config.themeColor.code];
+
+        if (item === "随机颜色") {
+            // 如果配置中选择了随机颜色，则随机选择一个颜色
+            color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)].code;
+        } else {
+            // 使用配置中的颜色
+            const selectedIndex = config.themeColor.code - 1; // 减1是因为"随机颜色"占了第一个位置
+            if (selectedIndex >= 0) {
+                color = colorLibrary[selectedIndex].code;
+            } else {
+                // 默认随机选择一个颜色
+                color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)].code;
+            }
+        }
     } else {
         // 否则随机选择一个颜色
-        color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)];
+        color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)].code;
     }
 }
 
@@ -493,15 +670,15 @@ ui.layout(
                                     <horizontal gravity="center_vertical">
                                         <text text="选择功能：" textSize="14" w="80" marginRight="8" />
                                         <spinner id="functionSelect" entries="刷地|种树|创新号"
-                                            w="50" textSize="14" h="48" bg="#FFFFFF" />
+                                            w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
                                     {/* 作物选择 - 仅在刷地时显示 */}
                                     <horizontal id="cropSelectContainer" gravity="center_vertical" visibility="visible">
                                         <text text="种植作物：" textSize="14" w="80" marginRight="8" />
                                         <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗"
-                                            w="50" textSize="14" h="48" bg="#FFFFFF" />
-                                        <text text="成熟时间:" textSize="14" w="80" marginLeft="20" />
+                                            w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                        <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
                                         <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
                                     </horizontal>
 
@@ -540,7 +717,7 @@ ui.layout(
                                     <horizontal id="treeSelectContainer" gravity="center_vertical" visibility="gone">
                                         <text text="种植树木：" textSize="14" w="80" marginRight="8" />
                                         <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
-                                            w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                            w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
                                     {/* 是否滑动 - 仅在种树时显示 */}
@@ -672,27 +849,19 @@ ui.layout(
                                         <button id="methodBakery" text="面包房" w="80" h="35" textSize="12" bg="#E0E0E0" textColor="#000000" gravity="center" />
                                     </horizontal>
 
-                                    <text text="截图权限点击坐标" textSize="14" w="120" marginRight="8" marginTop="16" />
-                                    <vertical>
-                                        <horizontal gravity="center_vertical" marginBottom="8">
-                                            <text text="坐标1 - x:" textSize="14" marginRight="4" />
-                                            <input id="screenshotX1" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                            <text text="y:" textSize="14" marginRight="4" />
-                                            <input id="screenshotY1" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
-                                        </horizontal>
-                                        <horizontal gravity="center_vertical" marginBottom="8">
-                                            <text text="坐标2 - x:" textSize="14" marginRight="4" />
-                                            <input id="screenshotX2" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                            <text text="y:" textSize="14" marginRight="4" />
-                                            <input id="screenshotY2" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
-                                        </horizontal>
-                                        <horizontal gravity="center_vertical">
-                                            <text text="坐标3 - x:" textSize="14" marginRight="4" />
-                                            <input id="screenshotX3" hint="X坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                            <text text="y:" textSize="14" marginRight="4" />
-                                            <input id="screenshotY3" hint="Y坐标" w="60" h="40" textSize="14" bg="#FFFFFF" inputType="number" />
-                                        </horizontal>
-                                    </vertical>
+                                    <horizontal paddingTop="8">
+                                        <text text="坐标点击" textSize="14" w="auto" marginRight="8" />
+                                        <text id="helpIcon_coordClick" text="?" textColor="#007AFF" textSize="18" marginRight="8" />
+                                    </horizontal>
+                                    <horizontal paddingTop="8">
+                                        <text text="截图权限坐标" textSize="14" marginRight="4" w="100" />
+                                        <text id="screenshotBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" paddingLeft="150" />
+                                    </horizontal>
+                                    <horizontal paddingTop="8">
+                                        <text text="换号坐标" textSize="14" marginRight="4" w="100" />
+                                        <text id="switchAccountBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" paddingLeft="150" />
+                                    </horizontal>
+
                                 </vertical>
                             </card>
 
@@ -705,7 +874,9 @@ ui.layout(
                                     {/* 仓库升仓 */}
                                     <horizontal gravity="center_vertical">
                                         <text text="自动升仓" textSize="14" w="120" marginRight="8" />
-                                        <Switch id="isShengcang" w="*" h="48" gravity="left|center" />
+                                        <checkbox id="shengcang_h" checked="false" text="货仓"/>
+                                        <frame w="30" />
+                                        <checkbox id="shengcang_l" checked="false" text="粮仓"/>
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
                                         <text text="升仓间隔时间" textSize="14" w="120" marginRight="8" />
@@ -838,12 +1009,8 @@ ui.layout(
 
                                     {/* 主题颜色 */}
                                     <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="随机颜色：" textSize="14" w="100" marginRight="8" />
-                                        <Switch id="randomColor" checked="{{false}}" w="*" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="固定颜色：" textSize="14" w="100" marginRight="8" />
-                                        <spinner id="themeColor" entries="碧玉青|落日橙|翠竹绿|晴空蓝|胭脂粉|朱砂红|湖水蓝|柠檬黄|咖啡棕|烟雨灰"
+                                        <text text="主题颜色：" textSize="14" w="100" marginRight="8" />
+                                        <spinner id="themeColor" entries="随机颜色|碧玉青|落日橙|翠竹绿|晴空蓝|胭脂粉|朱砂红|湖水蓝|紫罗兰|咖啡棕|烟雨灰"
                                             w="*" textSize="14" textColor="{{color}}" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
@@ -1363,30 +1530,7 @@ function compareVersions(version1, version2) {
 activity.setSupportActionBar(ui.toolbar);
 
 
-// 监听randomColor开关
-ui.randomColor.on("check", (checked) => {
-    if (checked) {
-        // 如果打开随机颜色，则随机选择一个颜色
-        color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)];
-        ui.statusBarColor(color);
-        ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
-        // 更新按钮的选中状态颜色
-        updateButtonColors();
-    } else {
-        // 如果关闭随机颜色，则使用当前选择的颜色
-        // 使用getSelectedItem方法获取当前选择的文本
-        const selectedItem = ui.themeColor.getSelectedItem();
-        const colorNames = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"];
-        const selectedIndex = colorNames.indexOf(selectedItem);
-        if (selectedIndex >= 0) {
-            color = colorLibrary[selectedIndex];
-            ui.statusBarColor(color);
-            ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
-            // 更新按钮的选中状态颜色
-            updateButtonColors();
-        }
-    }
-});
+
 
 // 更新按钮颜色函数
 function updateButtonColors() {
@@ -1395,9 +1539,15 @@ function updateButtonColors() {
     setLandMethod(config.landFindMethod);
     // 更新菜单图标颜色
     ui.menu.adapter.notifyDataSetChanged();
+    // 更新主题颜色文本颜色
+    ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
+    // 更新状态栏颜色
+    ui.statusBarColor(color);
+    // 更新应用栏背景颜色
+    ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
 }
 //
-ui.statusBarColor(color)
+
 
 //让工具栏左上角可以打开侧拉菜单
 ui.toolbar.setupWithDrawer(ui.drawer);
@@ -1630,10 +1780,6 @@ ui.modifyResolutionBtn.on("click", () => {
     });
 
     dialog.show();
-})
-
-ui.cangkuSoldBtn.on("click", () => {
-    showCangkuSoldDialog();
 })
 
 // 从文件加载存档账号列表
@@ -2095,9 +2241,9 @@ function getConfig() {
         },
         photoPath: configs.get("photoPath"),
         accountImgPath: configs.get("accountImgPath"),
-        randomColor: configs.get("randomColor"),
         themeColor: configs.get("themeColor"),
-        isShengcang: configs.get("isShengcang"),
+        shengcang_h: configs.get("shengcang_h"),
+        shengcang_l: configs.get("shengcang_l"),
         shengcangTime: configs.get("shengcangTime"),
         isCangkuStatistics: configs.get("isCangkuStatistics"),
         cangkuStatisticsTime: configs.get("cangkuStatisticsTime"),
@@ -2136,7 +2282,21 @@ function getConfig() {
                 x: configs.get("screenshotX3"),
                 y: configs.get("screenshotY3")
             },
-        }
+        },
+        switchAccountCoords: {
+            coord1: {
+                x: configs.get("switchAccountX1"),
+                y: configs.get("switchAccountY1")
+            },
+            coord2: {
+                x: configs.get("switchAccountX2"),
+                y: configs.get("switchAccountY2")
+            },
+            coord3: {
+                x: configs.get("switchAccountX3"),
+                y: configs.get("switchAccountY3")
+            },
+        },
     };
     return storedConfig;
 }
@@ -2180,9 +2340,9 @@ function saveConfig(con) {
         configs.put("showTextY", con.showText.y);
 
         configs.put("photoPath", con.photoPath);
-        configs.put("randomColor", con.randomColor);
         configs.put("themeColor", con.themeColor);
-        configs.put("isShengcang", con.isShengcang);
+        configs.put("shengcang_h", con.shengcang_h);
+        configs.put("shengcang_l", con.shengcang_l);
         configs.put("shengcangTime", con.shengcangTime);
         configs.put("isCangkuStatistics", con.isCangkuStatistics);
         configs.put("cangkuStatisticsTime", con.cangkuStatisticsTime);
@@ -2212,6 +2372,14 @@ function saveConfig(con) {
         configs.put("screenshotX3", con.screenshotCoords.coord3.x);
         configs.put("screenshotY3", con.screenshotCoords.coord3.y);
 
+        // 存储切换账号坐标
+        configs.put("switchAccountX1", con.switchAccountCoords.coord1.x);
+        configs.put("switchAccountY1", con.switchAccountCoords.coord1.y);
+        configs.put("switchAccountX2", con.switchAccountCoords.coord2.x);
+        configs.put("switchAccountY2", con.switchAccountCoords.coord2.y);
+        configs.put("switchAccountX3", con.switchAccountCoords.coord3.x);
+        configs.put("switchAccountY3", con.switchAccountCoords.coord3.y);
+
         // console.log("配置保存成功");
         return true;
     } catch (e) {
@@ -2223,7 +2391,9 @@ function saveConfig(con) {
 
 
 /**
- * 从存储对象加载配置
+ * 从配置文件、存储对象加载配置
+ * @param {boolean} loadConfigFromFile - 是否从配置文件加载，默认从存储对象加载
+ * @returns {object} 加载的配置对象
  */
 function loadConfig(loadConfigFromFile = false) {
     try {
@@ -2255,6 +2425,8 @@ function loadConfig(loadConfigFromFile = false) {
 
 /**
  * 验证配置有效性
+ * @param {object} config - 待验证的配置对象
+ * @returns {object} 验证后的配置对象
  */
 function validateConfig(config) {
     const defaultConfig = getDefaultConfig();
@@ -2328,29 +2500,35 @@ function validateConfig(config) {
     }
     config.selectedTree.text = treeOptions[config.selectedTree.code];
 
-    //验证随机颜色开关
-    if (config.randomColor == undefined || typeof config.randomColor !== "boolean") {
-        config.randomColor = defaultConfig.randomColor;
-    }
     // 验证主题颜色
     if (!config.themeColor) config.themeColor = {
         code: defaultConfig.themeColor.code,
         text: defaultConfig.themeColor.text
     };
 
-    if (config.themeColor.code < 0 || config.themeColor.code >= colorLibrary.length) {
+    if (config.themeColor.code < 0) {
         config.themeColor.code = defaultConfig.themeColor.code;
     }
-    config.themeColor.text = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"][config.themeColor.code];
+    // 处理主题颜色文本显示，当code为0时表示随机颜色
+    if (config.themeColor.code === 0) {
+        config.themeColor.text = "随机颜色";
+    } else {
+        config.themeColor.text = colorLibrary[config.themeColor.code - 1].name;
+    }
 
     // 验证cangkuTime
     if (config.shengcangTime == undefined || isNaN(config.shengcangTime) || config.shengcangTime < 0) {
         config.shengcangTime = defaultConfig.shengcangTime;
     } else config.shengcangTime = Number(config.shengcangTime);
 
-    // 验证isShengcang
-    if (config.isShengcang == undefined || typeof config.isShengcang !== "boolean") {
-        config.isShengcang = defaultConfig.isShengcang;
+    // 验证shengcang_h
+    if (config.shengcang_h == undefined || typeof config.shengcang_h !== "boolean") {
+        config.shengcang_h = defaultConfig.shengcang_h;
+    }
+
+    // 验证shengcang_l
+    if (config.shengcang_l == undefined || typeof config.shengcang_l !== "boolean") {
+        config.shengcang_l = defaultConfig.shengcang_l;
     }
 
     // 验证isCangkuStatistics
@@ -2442,11 +2620,11 @@ function validateConfig(config) {
         config.isCangkuSold = defaultConfig.isCangkuSold;
     }
     // 验证触发阈值
-    if (config.CangkuSold_triggerNum == undefined || isNaN(config.CangkuSold_triggerNum) || config.CangkuSold_triggerNum <= 0) {
+    if (config.CangkuSold_triggerNum == undefined || isNaN(config.CangkuSold_triggerNum) || config.CangkuSold_triggerNum < 0) {
         config.CangkuSold_triggerNum = defaultConfig.CangkuSold_triggerNum;
     } else config.CangkuSold_triggerNum = Number(config.CangkuSold_triggerNum);
     // 验证目标阈值
-    if (config.CangkuSold_targetNum == undefined || isNaN(config.CangkuSold_targetNum) || config.CangkuSold_targetNum <= 0) {
+    if (config.CangkuSold_targetNum == undefined || isNaN(config.CangkuSold_targetNum) || config.CangkuSold_targetNum < 0) {
         config.CangkuSold_targetNum = defaultConfig.CangkuSold_targetNum;
     } else config.CangkuSold_targetNum = Number(config.CangkuSold_targetNum);
 
@@ -2514,6 +2692,64 @@ function validateConfig(config) {
                 config.screenshotCoords.coord3.y = !isNaN(Number(config.screenshotCoords.coord3.y)) ? Number(config.screenshotCoords.coord3.y) : defaultConfig.screenshotCoords.coord3.y;
             }
         }
+
+        // 验证切换账号坐标配置
+        if (!config.switchAccountCoords) {
+            config.switchAccountCoords = defaultConfig.switchAccountCoords;
+        } else {
+            // 验证坐标1
+            if (!config.switchAccountCoords.coord1) {
+                config.switchAccountCoords.coord1 = defaultConfig.switchAccountCoords.coord1;
+            } else {
+                if (config.switchAccountCoords.coord1.x === "" || config.switchAccountCoords.coord1.x === null) {
+                    config.switchAccountCoords.coord1.x = 0;
+                } else {
+                    config.switchAccountCoords.coord1.x = !isNaN(Number(config.switchAccountCoords.coord1.x)) ? Number(config.switchAccountCoords.coord1.x) : defaultConfig.switchAccountCoords.coord1.x;
+                }
+
+                if (config.switchAccountCoords.coord1.y === "" || config.switchAccountCoords.coord1.y === null) {
+                    config.switchAccountCoords.coord1.y = 0;
+                } else {
+                    config.switchAccountCoords.coord1.y = !isNaN(Number(config.switchAccountCoords.coord1.y)) ? Number(config.switchAccountCoords.coord1.y) : defaultConfig.switchAccountCoords.coord1.y;
+                }
+            }
+
+            // 验证坐标2
+            if (!config.switchAccountCoords.coord2) {
+                config.switchAccountCoords.coord2 = defaultConfig.switchAccountCoords.coord2;
+            } else {
+                if (config.switchAccountCoords.coord2.x === "" || config.switchAccountCoords.coord2.x === null) {
+                    config.switchAccountCoords.coord2.x = 0;
+                } else {
+                    config.switchAccountCoords.coord2.x = !isNaN(Number(config.switchAccountCoords.coord2.x)) ? Number(config.switchAccountCoords.coord2.x) : defaultConfig.switchAccountCoords.coord2.x;
+                }
+
+                if (config.switchAccountCoords.coord2.y === "" || config.switchAccountCoords.coord2.y === null) {
+                    config.switchAccountCoords.coord2.y = 0;
+                } else {
+                    config.switchAccountCoords.coord2.y = !isNaN(Number(config.switchAccountCoords.coord2.y)) ? Number(config.switchAccountCoords.coord2.y) : defaultConfig.switchAccountCoords.coord2.y;
+                }
+            }
+
+            // 验证坐标3
+            if (!config.switchAccountCoords.coord3) {
+                config.switchAccountCoords.coord3 = defaultConfig.switchAccountCoords.coord3;
+            } else {
+                if (config.switchAccountCoords.coord3.x === "" || config.switchAccountCoords.coord3.x === null) {
+                    config.switchAccountCoords.coord3.x = 0;
+                } else {
+                    config.switchAccountCoords.coord3.x = !isNaN(Number(config.switchAccountCoords.coord3.x)) ? Number(config.switchAccountCoords.coord3.x) : defaultConfig.switchAccountCoords.coord3.x;
+                }
+
+                if (config.switchAccountCoords.coord3.y === "" || config.switchAccountCoords.coord3.y === null) {
+                    config.switchAccountCoords.coord3.y = 0;
+                } else {
+                    config.switchAccountCoords.coord3.y = !isNaN(Number(config.switchAccountCoords.coord3.y)) ? Number(config.switchAccountCoords.coord3.y) : defaultConfig.switchAccountCoords.coord3.y;
+                }
+            }
+        }
+
+
     }
 
     // 其他验证...
@@ -2576,12 +2812,12 @@ function getDefaultConfig() {
         },
         photoPath: "./res/pictures.1280_720",
         accountImgPath: accountImgDir,
-        randomColor: false,
         themeColor: {
-            text: "碧玉青",
+            text: "随机颜色",
             code: 0
         },
-        isShengcang: false,
+        shengcang_h: false,
+        shengcang_l: false,
         shengcangTime: 60,
         isCangkuStatistics: false,
         cangkuStatisticsTime: 300,
@@ -2614,16 +2850,30 @@ function getDefaultConfig() {
         // 截图坐标配置
         screenshotCoords: {
             coord1: {
-                x: "",
-                y: ""
+                x: 0,
+                y: 0
             },
             coord2: {
-                x: "",
-                y: ""
+                x: 0,
+                y: 0
             },
             coord3: {
-                x: "",
-                y: ""
+                x: 0,
+                y: 0
+            }
+        },
+        switchAccountCoords: {
+            coord1: {
+                x: 0,
+                y: 0
+            },
+            coord2: {
+                x: 0,
+                y: 0
+            },
+            coord3: {
+                x: 0,
+                y: 0
             }
         }
     };
@@ -2740,6 +2990,9 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 设置商店售价
     ui.shopPrice.setSelection(config.shopPrice.code);
 
+    //设置主题颜色
+    ui.themeColor.setSelection(config.themeColor.code);
+
     // 设置保留数量
     ui.ReservedQuantity.setText(String(config.ReservedQuantity));
 
@@ -2757,10 +3010,7 @@ function loadConfigToUI(loadConfigFromFile = false) {
     ui.shopOffsetX.setText(String(config.shopOffset.x));
     ui.shopOffsetY.setText(String(config.shopOffset.y));
 
-
-
     // 设置收割偏移
-
     ui.firstlandX.setText(String(config.firstland.x));
     ui.firstlandY.setText(String(config.firstland.y));
     ui.distance.setText(String(config.distance));
@@ -2772,45 +3022,20 @@ function loadConfigToUI(loadConfigFromFile = false) {
     //设置悬浮窗坐标
     ui.showTextX.setText(String(config.showText.x));
     ui.showTextY.setText(String(config.showText.y));
+
     // 设置照片路径
     ui.photoPath.setText(config.photoPath);
 
     // 设置账号照片路径
     ui.accountImgPath.setText(config.accountImgPath);
 
-
-
     // 设置粮仓坐标偏移
     ui.liangcangOffsetX.setText(String(config.liangcangOffset.x));
     ui.liangcangOffsetY.setText(String(config.liangcangOffset.y));
 
-
-
     // 设置货仓坐标偏移
     ui.huocangOffsetX.setText(String(config.huocangOffset.x));
     ui.huocangOffsetY.setText(String(config.huocangOffset.y));
-
-    // 加载截图坐标配置
-    if (config.screenshotCoords) {
-        // 加载坐标1
-        if (config.screenshotCoords.coord1) {
-            // 如果值为空字符串则设置为空，否则转换为字符串
-            ui.screenshotX1.setText(config.screenshotCoords.coord1.x === "" ? "" : String(config.screenshotCoords.coord1.x));
-            ui.screenshotY1.setText(config.screenshotCoords.coord1.y === "" ? "" : String(config.screenshotCoords.coord1.y));
-        }
-
-        // 加载坐标2
-        if (config.screenshotCoords.coord2) {
-            ui.screenshotX2.setText(config.screenshotCoords.coord2.x === "" ? "" : String(config.screenshotCoords.coord2.x));
-            ui.screenshotY2.setText(config.screenshotCoords.coord2.y === "" ? "" : String(config.screenshotCoords.coord2.y));
-        }
-
-        // 加载坐标3
-        if (config.screenshotCoords.coord3) {
-            ui.screenshotX3.setText(config.screenshotCoords.coord3.x === "" ? "" : String(config.screenshotCoords.coord3.x));
-            ui.screenshotY3.setText(config.screenshotCoords.coord3.y === "" ? "" : String(config.screenshotCoords.coord3.y));
-        }
-    }
 
     // 设置token
     const savedToken = token_storage.get("token", "");
@@ -2820,21 +3045,15 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 设置推送方式
     ui.serverPlatform.setSelection(config.serverPlatform.code);
 
-    // 设置随机颜色开关
-    ui.randomColor.setChecked(config.randomColor);
-
     // 设置cangkuTime
     ui.shengcangTime.setText(String(config.shengcangTime));
 
     // 设置是否自动升仓
-    ui.isShengcang.setChecked(config.isShengcang);
-
-
+    ui.shengcang_h.setChecked(config.shengcang_h);
+    ui.shengcang_l.setChecked(config.shengcang_l);
 
     // 设置仓库统计开关
     ui.isCangkuStatistics.setChecked(config.isCangkuStatistics);
-
-
 
     // 设置仓库统计间隔时间
     ui.cangkuStatisticsTime.setText(String(config.cangkuStatisticsTime));
@@ -2844,20 +3063,6 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 设置是否自动滑动
     ui.treeShouldSwipeSwitch.setChecked(config.treeShouldSwipe);
-
-
-
-    // 设置主题颜色
-    if (config.themeColor.code >= 0) {
-        ui.themeColor.setSelection(config.themeColor.code);
-
-        // 如果randomColor为false，则使用配置中的颜色
-        if (!config.randomColor) {
-            color = colorLibrary[config.themeColor.code];
-            ui.statusBarColor(color);
-            ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
-        }
-    }
 
     // 加载汤姆相关配置
     if (config.tomFind.enabled !== undefined) {
@@ -2880,321 +3085,6 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 更新权限状态
     updateSwitchStatus();
 
-    // 重新绑定监听器以确保它们正常工作
-    // 汤姆开关状态变化监听
-    ui.tomSwitch.on("check", (checked) => {
-        // console.log("汤姆开关状态变化:", checked);
-        // 根据开关状态控制物品类型和名称输入框的显示
-        if (checked) {
-            ui.tomItemContainer.attr("visibility", "visible");
-        } else {
-            ui.tomItemContainer.attr("visibility", "gone");
-        }
-        // 保存修改后的开关状态到配置
-        configs.put("Tom_enabled", checked);
-    });
-
-    // 随机颜色开关状态变化监听
-    ui.randomColor.on("check", (checked) => {
-        // console.log("随机颜色开关状态变化:", checked);
-
-        if (checked) {
-            // 如果打开随机颜色，则随机选择一个颜色
-            color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)];
-            ui.statusBarColor(color);
-            ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
-
-            // 更新商店按钮颜色（如果当前选中的是商店方法）
-            if (config.landFindMethod === "商店") {
-                ui.methodShop.attr("bg", color);
-                ui.methodShop.attr("textColor", "#FFFFFF");
-            }
-
-            // 更新spinner文字颜色
-            ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
-        }
-
-        // 保存修改后的开关状态到配置
-        configs.put("randomColor", checked);
-    });
-
-    // 账号开关状态变化监听
-    ui.accountSwitch.on("check", (checked) => {
-        // console.log("账号开关状态变化:", checked);
-        // 保存修改后的开关状态到配置
-        configs.put("switchAccount", checked);
-    });
-
-    // 是否升仓开关状态变化监听
-    ui.isShengcang.on("check", (checked) => {
-        // 保存修改后的开关状态到配置
-        configs.put("isShengcang", checked);
-    });
-
-    // 仓库统计开关状态变化监听
-    ui.isCangkuStatistics.on("check", (checked) => {
-        // 保存修改后的开关状态到配置
-        configs.put("isCangkuStatistics", checked);
-    });
-
-    // 是否自动滑动开关状态变化监听
-    ui.treeShouldSwipeSwitch.on("check", (checked) => {
-        // 保存修改后的开关状态到配置
-        configs.put("treeShouldSwipe", checked);
-    });
-
-    // 添加输入框的文本变化监听器
-    // Token输入框
-    ui.tokenInput.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的Token到配置
-            // configs.put("token", s.toString());
-        }
-    }));
-
-    ui.tokenInputPlain.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的明文Token到配置
-            // configs.put("token", s.toString());
-        }
-    }));
-
-    // 汤姆查找相关
-    ui.Tom_itemName.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的物品名称到配置
-            configs.put("Tom_itemName", s.toString());
-        }
-    }));
-
-    // 坐标偏移相关
-    ui.landOffsetX.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的X偏移量到配置
-            configs.put("landOffsetX", Number(s));
-        }
-    }));
-
-    ui.landOffsetY.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的Y偏移量到配置
-            configs.put("landOffsetY", Number(s));
-        }
-    }));
-
-    ui.shopOffsetX.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的商店X偏移量到配置
-            configs.put("shopOffsetX", Number(s));
-        }
-    }));
-
-    ui.shopOffsetY.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的商店Y偏移量到配置
-            configs.put("shopOffsetY", Number(s));
-        }
-    }));
-
-    // 收割相关
-    ui.firstlandX.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的第一个坐标X到配置
-            configs.put("firstlandX", Number(s));
-        }
-    }));
-
-    ui.firstlandY.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的第一个坐标Y到配置
-            configs.put("firstlandY", Number(s));
-        }
-    }));
-
-    ui.distance.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的距离到配置
-            configs.put("distance", Number(s));
-        }
-    }));
-
-    ui.matureTime.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的成熟时间到配置
-            configs.put("matureTime", Number(s));
-        }
-    }));
-
-    ui.harvestTime.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的收割时间到配置
-            configs.put("harvestTime", Number(s));
-        }
-    }));
-
-    ui.harvestX.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的收割坐标X到配置
-            configs.put("harvestX", Number(s));
-        }
-    }));
-
-    ui.harvestY.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的收割坐标Y到配置
-            configs.put("harvestY", Number(s));
-        }
-    }));
-
-    ui.harvestRepeat.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的收割重复次数到配置
-            configs.put("harvestRepeat", Number(s));
-        }
-    }));
-
-    // 保留数量
-    ui.ReservedQuantity.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的保留数量到配置
-            configs.put("ReservedQuantity", Number(s));
-        }
-    }));
-
-    // 触发阈值
-    ui.CangkuSold_triggerNum.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的触发阈值到配置
-            configs.put("CangkuSold_triggerNum", Number(s));
-        }
-    }));
-
-    // 目标阈值
-    ui.CangkuSold_targetNum.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的目标阈值到配置
-            configs.put("CangkuSold_targetNum", Number(s));
-        }
-    }));
-
-    // 悬浮窗坐标
-    ui.showTextX.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的悬浮窗坐标X到配置
-            configs.put("showTextX", Number(s));
-        }
-    }));
-
-    ui.showTextY.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的悬浮窗坐标Y到配置
-            configs.put("showTextY", Number(s));
-        }
-    }));
-
-    // 照片路径
-    ui.photoPath.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的照片路径到配置
-            configs.put("photoPath", s.toString());
-        }
-    }));
-
-    // 粮仓坐标偏移
-    ui.liangcangOffsetX.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的粮仓坐标偏移X到配置
-            configs.put("liangcangOffsetX", Number(s));
-        }
-    }));
-
-    ui.liangcangOffsetY.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的粮仓坐标偏移Y到配置
-            configs.put("liangcangOffsetY", Number(s));
-        }
-    }));
-
-    // 货仓坐标偏移
-    ui.huocangOffsetX.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的货仓坐标偏移X到配置
-            configs.put("huocangOffsetX", Number(s));
-        }
-    }));
-
-    ui.huocangOffsetY.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的货仓坐标偏移Y到配置
-            configs.put("huocangOffsetY", Number(s));
-        }
-    }));
-
-    // 截图坐标
-    ui.screenshotX1.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的截图坐标X1到配置
-            configs.put("screenshotX1", Number(s));
-        }
-    }));
-
-    ui.screenshotY1.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的截图坐标Y1到配置
-            configs.put("screenshotY1", Number(s));
-        }
-    }));
-
-    ui.screenshotX2.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的截图坐标X2到配置
-            configs.put("screenshotX2", Number(s));
-        }
-    }));
-
-    ui.screenshotY2.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的截图坐标Y2到配置
-            configs.put("screenshotY2", Number(s));
-        }
-    }));
-
-    ui.screenshotX3.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的截图坐标X3到配置
-            configs.put("screenshotX3", Number(s));
-        }
-    }));
-
-    ui.screenshotY3.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的截图坐标Y3到配置
-            configs.put("screenshotY3", Number(s));
-        }
-    }));
-
-    // 升仓时间
-    ui.shengcangTime.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的升仓时间到配置
-            configs.put("shengcangTime", Number(s));
-        }
-    }));
-
-    // 仓库统计时间
-    ui.cangkuStatisticsTime.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的仓库统计时间到配置
-            configs.put("cangkuStatisticsTime", Number(s));
-        }
-    }));
-
-    ui.cangkuStatisticsPage.addTextChangedListener(new android.text.TextWatcher({
-        afterTextChanged: function (s) {
-            // 保存修改后的仓库统计页码到配置
-            configs.put("cangkuStatisticsPage", Number(s));
-        }
-    }));
 }
 
 // 设置寻找土地方法按钮状态
@@ -3348,43 +3238,42 @@ function logCurrentConfig(config) {
     console.log("收割重复次数: " + config.harvestRepeat + "次");
     console.log("收割操作用时: " + config.harvestTime + "秒");
     console.log("粮仓偏移: (" + config.liangcangOffset.x + ", " + config.liangcangOffset.y + "), 货仓偏移 (" + config.huocangOffset.x + ", " + config.huocangOffset.y + ")");
-    console.log("是否升仓: " + (config.isShengcang ? "是" : "否") + ", 升仓间隔时间: " + config.shengcangTime + "分钟");
+    console.log("是否升仓: " + "货仓"+(config.shengcang_h ? "是" : "否") +",粮仓"+(config.shengcang_l ? "是" : "否")+ ", 升仓间隔时间: " + config.shengcangTime + "分钟");
     console.log("是否仓库统计: " + (config.isCangkuStatistics ? "是" : "否") + ", 仓库统计间隔时间: " + config.cangkuStatisticsTime + "分钟");
     console.log("推送方式: " + config.serverPlatform.text);
     console.log("token: " + "骗你的,不会把token输出到日志,切勿泄漏个人token!!!");
     console.log("浮动按钮: " + (ui.win_switch.checked ? "是" : "否"));
     // console.log("主题颜色: " + config.themeColor.text);config
-    // console.log("随机颜色: " + (config.randomColor ? "是" : "否"));
     console.log("============================");
 }
 
 //自动获取截图权限
 function autoSc() {
 
-    isclick = false;
+    let isclick = false;
     // 如果配置了截图坐标，则依次点击填入的坐标
-    if ((config.screenshotCoords.coord1.x !== 0 && config.screenshotCoords.coord1.y !== 0) ||
-        (config.screenshotCoords.coord2.x !== 0 && config.screenshotCoords.coord2.y !== 0) ||
-        (config.screenshotCoords.coord3.x !== 0 && config.screenshotCoords.coord3.y !== 0)) {
+    if ((config.screenshotCoords.coord1.x !== 0 || config.screenshotCoords.coord1.y !== 0) ||
+        (config.screenshotCoords.coord2.x !== 0 || config.screenshotCoords.coord2.y !== 0) ||
+        (config.screenshotCoords.coord3.x !== 0 || config.screenshotCoords.coord3.y !== 0)) {
         sleep(1000);
         isclick = true;
     }
     // 点击coord1坐标
-    if (config.screenshotCoords.coord1.x !== 0 &&
+    if (config.screenshotCoords.coord1.x !== 0 ||
         config.screenshotCoords.coord1.y !== 0) {
         click(parseInt(config.screenshotCoords.coord1.x), parseInt(config.screenshotCoords.coord1.y));
         sleep(500); // 等待500毫秒
     }
 
     // 点击coord2坐标
-    if (config.screenshotCoords.coord2.x !== 0 &&
+    if (config.screenshotCoords.coord2.x !== 0 ||
         config.screenshotCoords.coord2.y !== 0) {
         click(parseInt(config.screenshotCoords.coord2.x), parseInt(config.screenshotCoords.coord2.y));
         sleep(500); // 等待500毫秒
     }
 
     // 点击coord3坐标
-    if (config.screenshotCoords.coord3.x !== 0 &&
+    if (config.screenshotCoords.coord3.x !== 0 ||
         config.screenshotCoords.coord3.y !== 0) {
         click(parseInt(config.screenshotCoords.coord3.x), parseInt(config.screenshotCoords.coord3.y));
         sleep(500); // 等待500毫秒
@@ -3661,6 +3550,47 @@ function initUI() {
         }
     }))
 
+    // 汤姆开关状态变化监听
+    ui.tomSwitch.on("check", (checked) => {
+        // console.log("汤姆开关状态变化:", checked);
+        // 根据开关状态控制物品类型和名称输入框的显示
+        if (checked) {
+            ui.tomItemContainer.attr("visibility", "visible");
+        } else {
+            ui.tomItemContainer.attr("visibility", "gone");
+        }
+        // 保存修改后的开关状态到配置
+        configs.put("Tom_enabled", checked);
+    });
+
+    // 账号开关状态变化监听
+    ui.accountSwitch.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("switchAccount", checked);
+    });
+
+    // 是否升仓开关状态变化监听
+    ui.shengcang_h.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("shengcang_h", checked);
+    });
+    ui.shengcang_l.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("shengcang_l", checked);
+    });
+
+    // 仓库统计开关状态变化监听
+    ui.isCangkuStatistics.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("isCangkuStatistics", checked);
+    });
+
+    // 是否自动滑动开关状态变化监听
+    ui.treeShouldSwipeSwitch.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("treeShouldSwipe", checked);
+    });
+
     // 为itemType添加事件监听器
     ui.Tom_itemType.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
@@ -3673,8 +3603,15 @@ function initUI() {
         onNothingSelected: function (parent) { }
     }));
 
+    // 为作物选择添加事件监听器
     ui.cropSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
+            // 忽略首次加载时的选择事件
+            if (isFirstLoad_cropSelect) {
+                isFirstLoad_cropSelect = false;
+                return; // 直接返回，不执行后续逻辑
+            }
+
             const item = parent.getItemAtPosition(position).toString();
 
             // 根据作物选择自动设置成熟时间
@@ -3696,48 +3633,45 @@ function initUI() {
         onNothingSelected: function (parent) { }
     }));
 
+    // 为树木选择添加事件监听器
     ui.treeSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
-            // console.log("树木选择发生变化: " + item);
             // 保存选择的树木到配置
             configs.put("selectedTree", { text: item, code: position });
         },
         onNothingSelected: function (parent) { }
     }));
 
+    // 为商店售价添加事件监听器
     ui.shopPrice.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
-            // console.log("商店售价选择发生变化: " + item);
             // 保存选择的商店售价到配置
             configs.put("shopPrice", { text: item, code: position });
         },
         onNothingSelected: function (parent) { }
     }));
 
+    // 为主题颜色添加事件监听器
     ui.themeColor.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
             const item = parent.getItemAtPosition(position).toString();
-            // console.log("主题颜色选择发生变化: " + item);
 
             // 更新颜色
-            const colorNames = ["碧玉青", "落日橙", "翠竹绿", "晴空蓝", "胭脂粉", "朱砂红", "湖水蓝", "柠檬黄", "咖啡棕", "烟雨灰"];
-            const selectedIndex = colorNames.indexOf(item);
-            if (selectedIndex >= 0) {
-                color = colorLibrary[selectedIndex];
-
-                // 更新UI颜色
-                ui.statusBarColor(color);
-                ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
-
-                // 更新商店按钮颜色（如果当前选中的是商店方法）
-
-                updateButtonColors();
-
-                // 更新spinner文字颜色
-                ui.themeColor.setTextColor(android.graphics.Color.parseColor(color));
+            if (item === "随机颜色") {
+                // 如果选择随机颜色，则随机选择一个颜色
+                color = colorLibrary[Math.floor(Math.random() * colorLibrary.length)].code;
+            } else {
+                const selectedIndex = colorNames.indexOf(item) - 1; // 减1是因为"随机颜色"占了第一个位置
+                if (selectedIndex >= 0) {
+                    color = colorLibrary[selectedIndex].code;
+                }
             }
+
+            // 更新商店按钮颜色（如果当前选中的是商店方法）
+
+            updateButtonColors();
 
             // 保存选择的主题颜色到配置
             configs.put("themeColor", { text: item, code: position });
@@ -3768,6 +3702,29 @@ function initUI() {
         // 保存选择的账号方式到配置
         configs.put("accountMethod", "save");
     });
+
+    ui.cangkuSoldBtn.on("click", () => {
+        showCangkuSoldDialog();
+    })
+
+    ui.helpIcon_coordClick.on("click", function () {
+        dialogs.build({
+            title: "坐标点击帮助",
+            content: "\n1. 如何查询屏幕坐标\n " + "（不同设备可能不同，都大差不差）" + "\n\n" +
+                "进入设置=>关于手机=>连续点击版本号7次,进入开发者模式" + "\n\n" +
+                "进入系统和更新=>开发人员选项=>指针位置" + "\n\n" +
+                "2. 当X坐标和Y坐标都为0时不点击,如不使用此功能请将其设置为0",
+            positive: "确定"
+        }).show();
+    });
+
+    ui.screenshotBtn.on("click", () => {
+        showScreenshotDialog();
+    })
+
+    ui.switchAccountBtn.on("click", () => {
+        showSwitchAccountDialog();
+    })
 
     // 为token输入框添加变化监听
     ui.tokenInput.addTextChangedListener(new android.text.TextWatcher({
@@ -3989,61 +3946,6 @@ function initUI() {
         afterTextChanged: function (s) { }
     }));
 
-    // 为截图坐标输入框添加变化监听
-    ui.screenshotX1.addTextChangedListener(new android.text.TextWatcher({
-        beforeTextChanged: function (s, start, count, after) { },
-        onTextChanged: function (s, start, before, count) {
-            // 保存输入的screenshotX1到配置
-            configs.put("screenshotX1", Number(s));
-        },
-        afterTextChanged: function (s) { }
-    }));
-
-    ui.screenshotY1.addTextChangedListener(new android.text.TextWatcher({
-        beforeTextChanged: function (s, start, count, after) { },
-        onTextChanged: function (s, start, before, count) {
-            // 保存输入的screenshotY1到配置
-            configs.put("screenshotY1", Number(s));
-        },
-        afterTextChanged: function (s) { }
-    }));
-
-    ui.screenshotX2.addTextChangedListener(new android.text.TextWatcher({
-        beforeTextChanged: function (s, start, count, after) { },
-        onTextChanged: function (s, start, before, count) {
-            // 保存输入的screenshotX2到配置
-            configs.put("screenshotX2", Number(s));
-        },
-        afterTextChanged: function (s) { }
-    }));
-
-    ui.screenshotY2.addTextChangedListener(new android.text.TextWatcher({
-        beforeTextChanged: function (s, start, count, after) { },
-        onTextChanged: function (s, start, before, count) {
-            // 保存输入的screenshotY2到配置
-            configs.put("screenshotY2", Number(s));
-        },
-        afterTextChanged: function (s) { }
-    }));
-
-    ui.screenshotX3.addTextChangedListener(new android.text.TextWatcher({
-        beforeTextChanged: function (s, start, count, after) { },
-        onTextChanged: function (s, start, before, count) {
-            // 保存输入的screenshotX3到配置
-            configs.put("screenshotX3", Number(s));
-        },
-        afterTextChanged: function (s) { }
-    }));
-
-    ui.screenshotY3.addTextChangedListener(new android.text.TextWatcher({
-        beforeTextChanged: function (s, start, count, after) { },
-        onTextChanged: function (s, start, before, count) {
-            // 保存输入的screenshotY3到配置
-            configs.put("screenshotY3", Number(s));
-        },
-        afterTextChanged: function (s) { }
-    }));
-
     // 为cangkuTime输入框添加变化监听
     ui.shengcangTime.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
@@ -4109,6 +4011,39 @@ function initUI() {
         },
         onNothingSelected: function (parent) { }
     }));
+
+    ui.matureTime.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的成熟时间到配置
+            configs.put("matureTime", Number(s));
+        }
+    }));
+
+    // 保留数量监听
+    ui.ReservedQuantity.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的保留数量到配置
+            configs.put("ReservedQuantity", Number(s));
+        }
+    }));
+
+    // 触发阈值监听
+    ui.CangkuSold_triggerNum.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的触发阈值到配置
+            configs.put("CangkuSold_triggerNum", Number(s));
+        }
+    }));
+
+    // 目标阈值监听
+    ui.CangkuSold_targetNum.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的目标阈值到配置
+            configs.put("CangkuSold_targetNum", Number(s));
+            log("目标阈值: " + Number(s));
+        }
+    }));
+
 
 }
 

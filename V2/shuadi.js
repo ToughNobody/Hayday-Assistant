@@ -50,7 +50,7 @@ function main() {
 
 function main_email() {
 
-    if (config.isShengcang && !timeStorage.get("shengcangTime")) {
+    if ((config.shengcang_h || config.shengcang_l) && !timeStorage.get("shengcangTime")) {
         module.timer("shengcangTime", config.shengcangTime * 60);
     }
     if (config.isCangkuStatistics && !timeStorage.get("cangkuStatisticsTime")) {
@@ -78,7 +78,7 @@ function main_email() {
             log("等待作物成熟");
 
             //执行升仓
-            if (config.isShengcang && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
+            if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
                 module.shengcang();
                 module.timer("shengcangTime", config.shengcangTime * 60);
             }
@@ -130,7 +130,7 @@ function main_email() {
             let rowContentData = statistics.get("rowContentData") || null;
 
             //判断是否需要升仓
-            if (config.isShengcang && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
+            if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
                 shengcangForEach = true;
                 module.timer("shengcangTime", config.shengcangTime * 60);
             }
@@ -373,7 +373,7 @@ function main_save() {
     // 新建账号列表
     const doneAccountsList = config.saveAccountList.filter(account => account.done === true);
 
-    if (config.isShengcang && !timeStorage.get("shengcangTime")) {
+    if ((config.shengcang_h || config.shengcang_l) && !timeStorage.get("shengcangTime")) {
         module.timer("shengcangTime", config.shengcangTime * 60);
     }
     if (config.isCangkuStatistics && !timeStorage.get("cangkuStatisticsTime")) {
@@ -395,7 +395,7 @@ function main_save() {
         let rowContentData = statistics.get("rowContentData") || null;
 
         //判断是否需要升仓
-        if (config.isShengcang && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
+        if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
             shengcangForEach = true;
             module.timer("shengcangTime", config.shengcangTime * 60);
         }

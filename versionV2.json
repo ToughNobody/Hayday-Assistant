@@ -1,31 +1,31 @@
 {
-  "version": "2.1.1",
-  "description": "\n\n修复Bug：\n修复汤姆功能Account未定义Bug\n修复售卖时售卖数量检测出错的Bug\n\n功能优化：\n读取模板图片时会在日志输出图片路径，模板图片读取出错会直接弹出toast提醒。\n仓库售卖弹窗点击确定加入“保存成功”提醒\n上报前会检测界面，如果在售卖界面则会点击叉号退出再上报\n\n",
-  "zip_name": "卡通农场小助手v2.1.1.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.1/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.1.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.1/v2.1.1.zip",
+  "version": "2.1.2",
+  "description": "\n\n功能优化：\n让售卖计划显示时间稍长一点\n加快换号时按钮点击速度\n添加切换按钮点击坐标，当切换账号识别失效时，可手动添加按钮坐标\n升仓分为升粮仓和升货仓，可单独选择\n大幅提升收金币速度\n\n修复Bug：\n修复仓库售卖项目未勾选也售卖该物品的Bug\n修复仓库售卖触发阈值无法设置为0的Bug\n修复作物成熟时间在每次加载时都恢复默认的Bug\n\n",
+  "zip_name": "卡通农场小助手v2.1.2.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.2/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.2.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.2/v2.1.2.zip",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 53,
+      "versionCode": 54,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 53,
+      "versionCode": 54,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 53,
+      "versionCode": 54,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 52,
+      "versionCode": 54,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/shuadi.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/shuadi.js"
     },

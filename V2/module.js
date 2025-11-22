@@ -85,22 +85,12 @@ const ckNumColor = {
     "/": ["#faf6f1", [1, -1, "#13110e"], [-6, -3, "#f5efe8"], [-8, -3, "#000000"], [-9, 3, "#f7f3ed"], [-10, 3, "#24201c"], [-14, 14, "#f7f2eb"], [-16, 14, "#020101"], [-21, 30, "#fcfaf6"], [-23, 30, "#010100"], [-25, 39, "#fdfaf8"], [-27, 39, "#000000"], [-27, 44, "#fefdfc"], [-27, 47, "#000000"], [-22, 46, "#ffffff"], [-19, 46, "#010100"], [-14, 30, "#ffffff"], [-11, 30, "#000000"], [-4, 9, "#fefdfc"], [-2, 9, "#040303"]]
 }
 
-let crop;
-let crop_sail;
+//作物颜色
+const cropName = config.selectedCrop.text
 
-//作物名称映射
-const cropNames = ["小麦", "玉米", "胡萝卜", "大豆"];
+let crop = cropItemColor[cropName].crop;
+let crop_sail = cropItemColor[cropName].crop_sail;
 
-//根据选择的作物获取颜色
-const selectedCropName = cropNames[config.selectedCrop.code];
-if (selectedCropName && cropItemColor[selectedCropName]) {
-    crop = cropItemColor[selectedCropName].crop;
-    crop_sail = cropItemColor[selectedCropName].crop_sail;
-} else {
-    // 默认值，以防找不到对应的作物
-    // crop = ["#ffef14", [9, -32, "#d59b08"], [-8, 20, "#b56000"], [-32, 28, "#f3c107"], [29, 30, "#ffdf7c"]];
-    // crop_sail = ["#fff00a", [-4, -2, "#ffffff"], [-20, 28, "#ffde05"], [6, -34, "#fed704"], [-20, 2, "#feef08"]];
-}
 
 let randomOffset = 5; // 随机偏移量
 function ran() {
@@ -112,28 +102,28 @@ function autoSc() {
 
     let isclick = false;
     // 如果配置了截图坐标，则依次点击填入的坐标
-    if ((config.screenshotCoords.coord1.x !== 0 && config.screenshotCoords.coord1.y !== 0) ||
-        (config.screenshotCoords.coord2.x !== 0 && config.screenshotCoords.coord2.y !== 0) ||
-        (config.screenshotCoords.coord3.x !== 0 && config.screenshotCoords.coord3.y !== 0)) {
+    if ((config.screenshotCoords.coord1.x !== 0 || config.screenshotCoords.coord1.y !== 0) ||
+        (config.screenshotCoords.coord2.x !== 0 || config.screenshotCoords.coord2.y !== 0) ||
+        (config.screenshotCoords.coord3.x !== 0 || config.screenshotCoords.coord3.y !== 0)) {
         sleep(1000);
         isclick = true;
     }
     // 点击coord1坐标
-    if (config.screenshotCoords.coord1.x !== 0 &&
+    if (config.screenshotCoords.coord1.x !== 0 ||
         config.screenshotCoords.coord1.y !== 0) {
         click(parseInt(config.screenshotCoords.coord1.x), parseInt(config.screenshotCoords.coord1.y));
         sleep(500); // 等待500毫秒
     }
 
     // 点击coord2坐标
-    if (config.screenshotCoords.coord2.x !== 0 &&
+    if (config.screenshotCoords.coord2.x !== 0 ||
         config.screenshotCoords.coord2.y !== 0) {
         click(parseInt(config.screenshotCoords.coord2.x), parseInt(config.screenshotCoords.coord2.y));
         sleep(500); // 等待500毫秒
     }
 
     // 点击coord3坐标
-    if (config.screenshotCoords.coord3.x !== 0 &&
+    if (config.screenshotCoords.coord3.x !== 0 ||
         config.screenshotCoords.coord3.y !== 0) {
         click(parseInt(config.screenshotCoords.coord3.x), parseInt(config.screenshotCoords.coord3.y));
         sleep(500); // 等待500毫秒
@@ -181,7 +171,8 @@ function findimage(imagepath, xiangsidu, sc = null, region = null) {
         picture = images.read(imagepath);
         if (!picture) {
             toast("模板图片读取失败");
-            throw new Error("模板图片读取失败")}
+            throw new Error("模板图片读取失败")
+        }
 
         // 如果指定了区域参数，则只在区域内搜索
         if (region) {
@@ -530,7 +521,7 @@ function showDetails(text, position, duration) {
 function getDetails() {
     let details = "";
     try {
-        if (config.isShengcang && config.shengcangTime >= 0) {
+        if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0) {
             let shengcangTimeState = getTimerState("shengcangTime");
             if (shengcangTimeState) {
                 let minutes = Math.floor(shengcangTimeState / 60);
@@ -1393,7 +1384,7 @@ function close() {
         if (close_button) {
             click(close_button.x + ran(), close_button.y + ran())
             console.log("点击叉叉")
-            showTip("点击叉叉")
+            // showTip("点击叉叉")
         } else {
             // click(2110, 125)
             // console.log("未识别到叉，点击默认坐标")
@@ -2144,11 +2135,18 @@ function coin() {
         if (allcenters.length > 0) {
             showTip("有" + allcenters.length + "个金币可以收")
         }
-        allcenters.forEach(target => {
-            let pos = [48, 60];
-            click(target.x + pos[0] + ran(), target.y + pos[1] + ran());
-        });
-        if (allcenters.length > 0) sleep(1000)
+        
+        // 使用gestures一次性点击所有金币位置
+        if (allcenters.length > 0) {
+            let gesturePoints = [];
+            allcenters.forEach(target => {
+                let pos = [48, 60];
+                gesturePoints.push([0, 100, [target.x + pos[0] + ran(), target.y + pos[1] + ran()]]);
+            });
+
+            gestures.apply(null, gesturePoints);
+            sleep(1000);
+        }
     } catch (error) {
         log(error);
     }
@@ -2284,7 +2282,7 @@ function shop() {
         console.log("发布广告");
         showTip("发布广告");
         sleep(100);
-        if (matchColor([{x:253,y:107,color:"#ffffff"},{x:342,y:58,color:"#deb476"},{x:1163,y:49,color:"#fac73f"}])){
+        if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
             click(1150 + ran(), 50 + ran())//点击叉号
             sleep(100)
         }
@@ -2363,7 +2361,7 @@ function shop() {
 function find_kongxian(attempts, maxAttempts = 5) {
     let shopEnd = false;
     let currentAttempts = attempts || 0;
-    log("当前尝试次数: " + currentAttempts);
+    // log("当前尝试次数: " + currentAttempts);
 
     while (true) {
         sleep(100);
@@ -2401,7 +2399,7 @@ function find_kongxian(attempts, maxAttempts = 5) {
     console.log("找到空闲货架");
     showTip("找到空闲货架");
     click(kongxian.x + ran(), kongxian.y + ran()); //点击空闲货架
-    console.log("点击空闲货架")
+    // console.log("点击空闲货架")
     sleep(200);
     return true;
 }
@@ -2573,7 +2571,6 @@ function shopStatistic(sc) {
 
 /**
  * 根据优先级分配物品售卖数量
- * @param {Array} CangkuSoldList - 物品列表，包含title, done, priority, id
  * @param {Object} itemQuantities - 每个物品的当前数量，格式: {物品名称: 数量}
  * @param {number} totalSellQuantity - 要售卖的总数量
  * @returns {Array} - 返回售卖计划，格式: [{title: 物品名称, num: 售卖数量}]
@@ -2589,10 +2586,12 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
     // 创建数组副本以避免修改原数组
     var sortedItems = [];
     for (var i = 0; i < CangkuSoldList.length; i++) {
-        sortedItems.push(CangkuSoldList[i]);
+        if (CangkuSoldList[i].done === true) {
+            sortedItems.push(CangkuSoldList[i]);
+        }
     }
 
-    // 使用传统的sort函数
+    // 按优先级排序物品（priority数字越低优先级越高）
     sortedItems.sort(function (a, b) {
         return a.priority - b.priority;
     });
@@ -3098,78 +3097,165 @@ function switch_account(Account) {
         while (true) {
             console.log("切换账号" + Account);
             showTip("切换账号" + Account);
-            sleep(700)
+            sleep(100)
 
             find_close();
+            sleep(100);
+
+            //点击换号1
+            let huanhao1;
+            if (configs.get("switchAccountX1", 0) != 0 || configs.get("switchAccountY1", 0) != 0) {
+                // 如果配置了坐标，则直接点击
+                sleep(300);
+                click(configs.get("switchAccountX1", 0) + ran(), configs.get("switchAccountY1", 0) + ran());
+                log("点击切换账号1按钮(配置坐标)" + configs.get("switchAccountX1", 0) + "," + configs.get("switchAccountY1", 0));
+            } else {
+                // 如果没有配置坐标，则进行识别，最多尝试10次
+                for (let i = 0; i < 10; i++) {
+                    //新版界面
+                    huanhao1 = findMC(["#ffffff", [-22, 9, "#fbb700"],
+                        [2, 30, "#f3bb00"], [2, -6, "#e1a282"], [-7, 20, "#e0a383"]]
+                        , null, [0, 0, 200, 250]);
+                    let shoujianxiang = findMC(["#d0ae84", [2, 6, "#edecea"],
+                        [1, 14, "#cf9f73"], [3, 24, "#e5b200"], [9, 39, "#efeee5"],
+                        [4, -16, "#efefef"], [-17, -3, "#d4ae86"], [-9, -2, "#d0b28b"]]
+                        , null, [0, 0, 200, 340]);
+
+                    if (huanhao1) {
+                        click(huanhao1.x + ran(), huanhao1.y + ran());
+                        log("点击切换账号1按钮(识别换号按钮)" + huanhao1.x + "," + huanhao1.y);
+                        break;
+                    } else if (shoujianxiang) {
+                        click(shoujianxiang.x + ran(), shoujianxiang.y - 80 + ran());
+                        log("点击切换账号1按钮(识别收件箱按钮)" + shoujianxiang.x + "," + shoujianxiang.y);
+                        break;
+                    }
+
+                    // 如果没找到，等待300ms后继续
+                    sleep(300);
+                }
+
+                // 如果10次都没找到
+                if (!huanhao1) {
+                    if (num < 3) {
+                        num++;
+                        console.log(`未识别到切换账号1按钮，重试第${num}次`);
+                        find_close();
+                        sleep(200);
+                        find_close();
+                        continue;
+                    } else {
+                        console.log("超过最大尝试次数，重进游戏");
+                        restartgame();
+                        checkmenu();
+                        return num; // 重启游戏后返回
+                    }
+                }
+            }
             sleep(300);
 
-            let sc = captureScreen();
-            //新版界面
-            let huanhao1 = findMC(["#ffffff", [-22, 9, "#fbb700"],
-                [2, 30, "#f3bb00"], [2, -6, "#e1a282"], [-7, 20, "#e0a383"]]
-                , sc, [0, 0, 200, 250])
-            let shoujianxiang = findMC(["#d0ae84", [2, 6, "#edecea"],
-                [1, 14, "#cf9f73"], [3, 24, "#e5b200"], [9, 39, "#efeee5"],
-                [4, -16, "#efefef"], [-17, -3, "#d4ae86"], [-9, -2, "#d0b28b"]]
-                , sc, [0, 0, 200, 340])
+            //点击换号2
+            let huanhao2;
+            if (configs.get("switchAccountX2", 0) != 0 || configs.get("switchAccountY2", 0) != 0) {
+                // 如果配置了坐标，则直接点击
+                sleep(300);
+                huanhao2 = { x: configs.get("switchAccountX2", 0), y: configs.get("switchAccountY2", 0) };
+                click(huanhao2.x + ran(), huanhao2.y + ran());
+                log("点击切换账号2按钮(配置坐标)" + huanhao2.x + "," + huanhao2.y);
+            } else {
+                // 如果没有配置坐标，则进行识别，最多尝试10次
+                for (let i = 0; i < 10; i++) {
+                    huanhao2 = findMC(["#fefdfc", [4, 17, "#f6bd3c"], [-11, 18, "#fffefe"],
+                        [-33, 18, "#fefdfc"], [-14, -3, "#f7c247"], [-26, -1, "#f7bc3f"],
+                        [-38, -15, "#fefdfc"]], null, [0, 0, 430, 600]);
 
-            if (huanhao1) {
-                click(huanhao1.x + ran(), huanhao1.y + ran());
-                log("点击切换账号1按钮(识别换号按钮)" + huanhao1.x + "," + huanhao1.y)
-            } else if (shoujianxiang) {
-                click(shoujianxiang.x + ran(), shoujianxiang.y - 80 + ran());
-                log("点击切换账号1按钮(识别收件箱按钮)" + shoujianxiang.x + "," + shoujianxiang.y)
-            }
-            sleep(700);
-            let huanhao2 = findMC(["#fefdfc", [4, 17, "#f6bd3c"], [-11, 18, "#fffefe"],
-                [-33, 18, "#fefdfc"], [-14, -3, "#f7c247"], [-26, -1, "#f7bc3f"],
-                [-38, -15, "#fefdfc"]], null, [0, 0, 430, 600]);
+                    if (huanhao2) {
+                        click(huanhao2.x + ran(), huanhao2.y + ran());
+                        log("点击切换账号2按钮(识别换号按钮)" + huanhao2.x + "," + huanhao2.y);
+                        break;
+                    }
 
-            if (!huanhao2) {
-                if (num < 3) {
-                    num++
-                    console.log(`未识别到切换账号2按钮，重试第${num}次`)
-                    sleep(3000);
-                    find_close();
-                    sleep(200);
-                    find_close();
-                    continue;
-                } else {
-                    console.log("超过最大尝试次数，重进游戏")
-                    restartgame();
-                    checkmenu();
-                    return num; // 重启游戏后返回
+                    // 如果没找到，等待300ms后继续
+                    sleep(300);
+                }
+
+                // 如果10次都没找到
+                if (!huanhao2) {
+                    if (num < 3) {
+                        num++;
+                        console.log(`未识别到切换账号2按钮，重试第${num}次`);
+                        sleep(3000);
+                        find_close();
+                        sleep(200);
+                        find_close();
+                        continue;
+                    } else {
+                        console.log("超过最大尝试次数，重进游戏");
+                        restartgame();
+                        checkmenu();
+                        return num; // 重启游戏后返回
+                    }
                 }
             }
-            click(huanhao2.x + ran(), huanhao2.y + ran());
-            log("点击切换账号2按钮(识别换号按钮)" + huanhao2.x + "," + huanhao2.y)
-            sleep(800);
-            let huanhao3 = findMC(["#3c77da", [-18, 1, "#ffffff"],
-                [19, 4, "#ffffff"], [406, -112, "#ee434e"], [372, -109, "#f9cb40"]]);
 
-            if (!huanhao3) {
-                if (num < 3) {
-                    num++
-                    console.log(`未识别到切换账号按钮，重试第${num}次`)
-                    sleep(3000);
-                    find_close();
-                    sleep(200);
-                    find_close();
-                    // 继续循环而不是递归调用
-                    continue;
-                } else {
-                    console.log("超过最大尝试次数，重进游戏")
-                    restartgame();
-                    checkmenu();
-                    return num; // 重启游戏后返回
+            //点击换号3
+            let huanhao3;
+            if (configs.get("switchAccountX3", 0) != 0 || configs.get("switchAccountY3", 0) != 0) {
+                // 如果配置了坐标，则直接点击
+                sleep(300);
+                huanhao3 = { x: configs.get("switchAccountX3", 0), y: configs.get("switchAccountY3", 0) };
+                click(huanhao3.x + ran(), huanhao3.y + ran());
+                log("点击切换账号3按钮(配置坐标)" + huanhao3.x + "," + huanhao3.y);
+            } else {
+                // 如果没有配置坐标，则进行识别，最多尝试10次
+                for (let i = 0; i < 10; i++) {
+                    huanhao3 = findMC(["#3c77da", [-18, 1, "#ffffff"],
+                        [19, 4, "#ffffff"], [406, -112, "#ee434e"], [372, -109, "#f9cb40"]]);
+
+                    if (huanhao3) {
+                        click(huanhao3.x + ran(), huanhao3.y + ran());
+                        log("点击切换账号3按钮(识别换号按钮)" + huanhao3.x + "," + huanhao3.y);
+                        break;
+                    }
+
+                    // 如果没找到，等待300ms后继续
+                    sleep(300);
+                }
+
+                // 如果10次都没找到
+                if (!huanhao3) {
+                    if (num < 3) {
+                        num++;
+                        console.log(`未识别到切换账号3按钮，重试第${num}次`);
+                        sleep(3000);
+                        find_close();
+                        sleep(200);
+                        find_close();
+                        continue;
+                    } else {
+                        console.log("超过最大尝试次数，重进游戏");
+                        restartgame();
+                        checkmenu();
+                        return num; // 重启游戏后返回
+                    }
                 }
             }
-            click(huanhao3.x + ran(), huanhao3.y + ran());
-            log("点击切换账号3按钮(识别换号按钮)" + huanhao3.x + "," + huanhao3.y)
             let findAccountMenuNum = 0;    //寻找账号菜单次数
-            while (true) {
+            // 检测supercell ID界面
+            for (let i = 0; i < 20; i++) {
                 findAccountMenuNum++;
-                if (findAccountMenuNum > 8 && num < 3) {
+                if (findMC(["#ffffff", [22, 0, "#0d327a"],
+                    [-3, 43, "#ffffff"], [-42, 33, "#0f3785"],
+                    [-22, 22, "#ffffff"], [-58, 0, "#ffffff"],
+                    [-43, 9, "#0e3682"]], null, [0, 250, 600, 250])) {
+                    break;
+                }
+                sleep(500);
+            }
+
+            // 如果20次都没找到
+            if (findAccountMenuNum >= 20) {
+                if (num < 3) {
                     num++
                     console.log(`未识别到切换账号界面，重试第${num}次`)
                     showTip(`未识别到切换账号界面，重试第${num}次`)
@@ -3178,99 +3264,91 @@ function switch_account(Account) {
                     sleep(200);
                     find_close(null, ["except_switchAccount"]);
                     continue;
-                } else if (findAccountMenuNum > 8 && num >= 3) {
+                } else if (num >= 3) {
                     console.log("重试次数过多，重进游戏");
                     showTip("重试次数过多，重进游戏");
                     restartgame();
                     checkmenu();
                     return num; // 重启游戏后返回
                 }
-                if (findMC(["#ffffff", [22, 0, "#0d327a"],
-                    [-3, 43, "#ffffff"], [-42, 33, "#0f3785"],
-                    [-22, 22, "#ffffff"], [-58, 0, "#ffffff"],
-                    [-43, 9, "#0e3682"]], null, [0, 250, 600, 250])) {
-                    break;
-                }
-                sleep(1000);
             }
+            break;
+        }
 
-            const MAX_SCROLL_DOWN = 15; // 最多下滑3次
-            const Max_findAccountNum = 2; // 最多查找2次
+        const MAX_SCROLL_DOWN = 15; // 最多下滑15次
+        const Max_findAccountNum = 2; // 最多查找2次
 
-            let found = false; // 是否找到目标
-            let scrollDownCount = 0; // 当前下滑次数
-            let findAccountNum = 0; // 当前上滑次数
-            let isEnd = false;
-            let AccountIma = null;
-            let AccountText = null;
+        let found = false; // 是否找到目标
+        let scrollDownCount = 0; // 当前下滑次数
+        let findAccountNum = 0; // 当前上滑次数
+        let isEnd = false;
+        let AccountIma = null;
+        let AccountText = null;
+        if (config.findAccountMethod == "image") {
+            AccountIma = files.join(config.accountImgPath, Account + ".png");
+            log("账号图片路径：" + AccountIma);
+        } else if (config.findAccountMethod == "ocr") {
+            AccountText = Account;
+        }
+        while (!found) {
+            sleep(500);
+            let is_find_Account = null;
             if (config.findAccountMethod == "image") {
-                AccountIma = files.join(config.accountImgPath, Account + ".png");
-                log("账号图片路径：" + AccountIma);
-            } else if (config.findAccountMethod == "ocr") {
-                AccountText = Account;
+                is_find_Account = findimage(AccountIma, 0.9);
+            };
+            if (config.findAccountMethod == "ocr") {
+                is_find_Account = findText(AccountText, null, [640, 0, 1100 - 640, 720]);
             }
-            while (!found) {
+
+            if (is_find_Account) { //如果找到账号名称，则点击
+                log(`找到账号${Account}`);
+                showTip(`找到账号${Account}`);
                 sleep(500);
-                let is_find_Account = null;
-                if (config.findAccountMethod == "image") {
-                    is_find_Account = findimage(AccountIma, 0.9);
-                };
-                if (config.findAccountMethod == "ocr") {
-                    is_find_Account = findText(AccountText, null, [640, 0, 1100 - 640, 720]);
-                }
-
-                if (is_find_Account) { //如果找到账号名称，则点击
-                    log(`找到账号${Account}`);
-                    showTip(`找到账号${Account}`);
-                    sleep(500);
-                    click(is_find_Account.x + ran(), is_find_Account.y + ran());
-                    sleep(500);
-                    found = true;
-                    break;
-                }
-                if (scrollDownCount < MAX_SCROLL_DOWN && !isEnd) {
-                    const [x1, y1] = [960, 600];
-                    const [x2, y2] = [960, 150];//原960,60
-                    swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), [500]); // 下滑
-                    scrollDownCount++;
-                    log(`未找到账号，第 ${scrollDownCount} 次下滑...`);
-                    showTip(`未找到账号，第 ${scrollDownCount} 次下滑...`);
-                    sleep(1500);
-                    if (findMC(["#000000", [-16, -8, "#ffffff"], [1, -40, "#2d85f3"], [-55, -6, "#ffffff"]])) {
-                        log("滑到底了");
-                        showTip("滑到底了");
-                        isEnd = true;
-                    }
-                    continue;
-                }
-                else if (findAccountNum > (Max_findAccountNum - 1)) {
-                    log("未找到目标账号，重启游戏");
-                    showTip("未找到目标账号，重启游戏");
-                    restartgame();
-                    checkmenu();
-                    return num; // 重启游戏后返回
-                }
-                // 1270,0
-                else if (scrollDownCount >= MAX_SCROLL_DOWN || isEnd) {
-                    log(`未找到账号，上滑回顶部...`);
-                    showTip("未找到账号，上滑回顶部");
-                    const [x3, y3] = [960, 60];
-                    const [x4, y4] = [960, 600];
-                    let scrollup = 0; //上滑次数
-                    while (!findMC(["#000000", [-221, -1, "#f2f2f2"], [-384, -1, "#041e54"], [315, 5, "#2d85f3"]], null, [0, 0, 1270, 150]) && scrollup < 10) {
-                        swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
-                        sleep(200);
-                        scrollup++;
-                    }
-                    scrollDownCount = 0;
-                    findAccountNum++;
-                    isEnd = false;
-                } else {
-
-                }
+                click(is_find_Account.x + ran(), is_find_Account.y + ran());
+                sleep(500);
+                found = true;
+                break;
             }
-            break; // 找到账号并成功切换后退出外层循环
+            if (scrollDownCount < MAX_SCROLL_DOWN && !isEnd) {
+                const [x1, y1] = [960, 600];
+                const [x2, y2] = [960, 150];//原960,60
+                swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), [500]); // 下滑
+                scrollDownCount++;
+                log(`未找到账号，第 ${scrollDownCount} 次下滑...`);
+                showTip(`未找到账号，第 ${scrollDownCount} 次下滑...`);
+                sleep(1500);
+                if (findMC(["#000000", [-16, -8, "#ffffff"], [1, -40, "#2d85f3"], [-55, -6, "#ffffff"]])) {
+                    log("滑到底了");
+                    showTip("滑到底了");
+                    isEnd = true;
+                }
+                continue;
+            }
+            else if (findAccountNum > (Max_findAccountNum - 1)) {
+                log("未找到目标账号，重启游戏");
+                showTip("未找到目标账号，重启游戏");
+                restartgame();
+                checkmenu();
+                return num; // 重启游戏后返回
+            }
+            // 1270,0
+            else if (scrollDownCount >= MAX_SCROLL_DOWN || isEnd) {
+                log(`未找到账号，上滑回顶部...`);
+                showTip("未找到账号，上滑回顶部");
+                const [x3, y3] = [960, 60];
+                const [x4, y4] = [960, 600];
+                let scrollup = 0; //上滑次数
+                while (!findMC(["#000000", [-221, -1, "#f2f2f2"], [-384, -1, "#041e54"], [315, 5, "#2d85f3"]], null, [0, 0, 1270, 150]) && scrollup < 10) {
+                    swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), [500]); // 上划
+                    sleep(200);
+                    scrollup++;
+                }
+                scrollDownCount = 0;
+                findAccountNum++;
+                isEnd = false;
+            } else {
 
+            }
 
         }
 
@@ -3293,78 +3371,83 @@ function switch_account(Account) {
  */
 function shengcang() {
     console.log("当前操作:升仓");
-    showTip("升级仓库");
-    //升粮仓
-    sleep(500);
+    showTip("当前操作:升仓");
+
     try {
-        let isFindShop = findshop();
-        if (isFindShop) {  //判断是否找到商店
-            console.log("点击粮仓");
-            showTip("点击粮仓");
-            click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
-            sleep(500);
-            if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入粮仓
-                click(700 + ran(), 625 + ran());
+        //升粮仓
+        if (config.shengcang_l) {
+            sleep(100);
+            let isFindShop = findshop();
+            if (isFindShop) {  //判断是否找到商店
+                console.log("点击粮仓");
+                showTip("点击粮仓");
+                click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
                 sleep(500);
-                if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
-                    click(932 + ran(), 408 + ran());//点击升级
+                if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入粮仓
+                    click(700 + ran(), 625 + ran());
                     sleep(500);
-                    find_close();
-                    sleep(500);
-                    find_close();
-                } else {    //建材不够升级
-                    console.log("建材不够升级");
-                    showTip("建材不够升级");
-                    sleep(500);
-                    find_close();
-                    sleep(500);
-                    find_close();
+                    if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
+                        click(932 + ran(), 408 + ran());//点击升级
+                        sleep(500);
+                        find_close();
+                        sleep(500);
+                        find_close();
+                    } else {    //建材不够升级
+                        console.log("建材不够升级");
+                        showTip("建材不够升级");
+                        sleep(500);
+                        find_close();
+                        sleep(500);
+                        find_close();
+                    }
+                } else {  //未进入粮仓
+                    console.log("未进入粮仓");
+                    showTip("未进入粮仓");
+                    find_close()
                 }
-            } else {  //未进入粮仓
-                console.log("未进入粮仓");
-                showTip("未进入粮仓");
-                find_close()
+            } else {  //未找到商店
+                console.log("未找到商店");
+                showTip("未找到商店");
+                find_close();
             }
-        } else {  //未找到商店
-            console.log("未找到商店");
-            showTip("未找到商店");
-            find_close();
         }
 
         //升货仓
-        sleep(500);
-        isFindShop = findshop();
-        if (isFindShop) {  //判断是否找到商店
-            console.log("点击货仓");
-            showTip("点击货仓");
-            click(isFindShop.x + config.huocangOffset.x + ran(), isFindShop.y + config.huocangOffset.y + ran()); //点击货仓
-            sleep(500);
-            if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入货仓
-                click(700 + ran(), 625 + ran());
+        if (config.shengcang_h) {
+            sleep(100);
+            isFindShop = findshop();
+            if (isFindShop) {  //判断是否找到商店
+                console.log("点击货仓");
+                showTip("点击货仓");
+                click(isFindShop.x + config.huocangOffset.x + ran(), isFindShop.y + config.huocangOffset.y + ran()); //点击货仓
                 sleep(500);
-                if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
-                    click(932 + ran(), 408 + ran());//点击升级
+                if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入货仓
+                    click(700 + ran(), 625 + ran());
                     sleep(500);
-                    find_close();
-                    sleep(500);
-                    find_close();
-                } else {    //建材不够升级
-                    console.log("建材不够升级");
-                    showTip("建材不够升级");
-                    sleep(500);
-                    find_close();
-                    sleep(500);
-                    find_close();
+                    if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
+                        click(932 + ran(), 408 + ran());//点击升级
+                        sleep(500);
+                        find_close();
+                        sleep(500);
+                        find_close();
+                    } else {    //建材不够升级
+                        console.log("建材不够升级");
+                        showTip("建材不够升级");
+                        sleep(500);
+                        find_close();
+                        sleep(500);
+                        find_close();
+                    }
+                } else {  //未进入粮仓
+                    console.log("未进入货仓");
+                    showTip("未进入货仓");
+                    find_close()
                 }
-            } else {  //未进入粮仓
-                console.log("未进入货仓");
-                showTip("未进入货仓");
-                find_close()
+            } else {  //未找到商店
+                console.log("未找到商店");
+                showTip("未找到商店");
+                find_close();
             }
-        } else {  //未找到商店
-            console.log("未找到商店");
-            showTip("未找到商店");
-            find_close();
         }
 
     } catch (e) {
