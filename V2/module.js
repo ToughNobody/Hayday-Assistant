@@ -276,83 +276,77 @@ function checkRoot() {
 
 function restartgame() {
     try {
-        if (config.accountMethod == "email") {
-            if (checkRoot()) {
-                let packageName = "com.supercell.hayday";
+        home();
+        sleep(100);
+        let packageName = "com.supercell.hayday";
+        let rootStopSuccess = false;
 
-                try {
-                    let result = shell("am force-stop " + packageName, true);
-                    if (result.code === 0) {
-                        console.log("使用am force-stop命令成功停止应用");
-                        // toast("卡通农场已停止");
-                    } else {
-                        console.log("am force-stop命令执行失败: " + result.error);
-                    }
-                } catch (e) {
-                    console.log("使用am force-stop命令时出错: " + e);
-                }
-            } else {
-
-                sleep(500);
-                app.startActivity({
-                    action: "android.settings.APPLICATION_DETAILS_SETTINGS",
-                    data: "package:com.supercell.hayday"
-                });
-                // 循环尝试点击"停止"按钮，直到成功
-                for (let i = 0; i < 5; i++) {
-                    if (click("停止")) {
-                        break; // 点击成功后退出循环               
-                    }
-                    sleep(1000);
-                }
-                sleep(1000);
-                for (let i = 0; i < 3; i++) {
-                    if (click("确定") || click("停止")) {
-                        toastLog("已停止应用");
-                        break;// 点击成功后退出循环
-                    }
-                    sleep(1000);
-                }
-            }
-            sleep(1000);
-            log("启动卡通农场");
-            launch("com.supercell.hayday");
-        } else {
-            let packageName = "com.supercell.hayday";
-
+        // 尝试使用Root方式停止应用
+        if (configs.get("restartWithShell", false)) {
             try {
                 let result = shell("am force-stop " + packageName, true);
                 if (result.code === 0) {
                     console.log("使用am force-stop命令成功停止应用");
-                    // toast("卡通农场已停止");
+                    sleep(500);
+                    log("启动卡通农场");
+                    launch("com.supercell.hayday");
+                    rootStopSuccess = true;
                 } else {
                     console.log("am force-stop命令执行失败: " + result.error);
                 }
             } catch (e) {
                 console.log("使用am force-stop命令时出错: " + e);
             }
-            sleep(1000);
-            launch("com.supercell.hayday");
+        }
+
+        // 如果Root方式失败或未使用Root方式，则使用非Root方式停止应用
+        if (!rootStopSuccess || !configs.get("restartWithShell", false)) {
+            sleep(500);
+            app.openAppSetting("com.supercell.hayday")
+
+            // 循环尝试点击"停止"按钮，直到成功
+            for (let i = 0; i < 5; i++) {
+                if (click("停止")) {
+                    break;
+                }
+                sleep(1000);
+            }
+
+            sleep(500);
+            for (let i = 0; i < 3; i++) {
+                if (click("确定") || click("停止")) {
+                    toastLog("已停止应用");
+                    break;
+                }
+                sleep(1000);
+            }
+
+            sleep(500);
+            for (let i = 0; i < 3; i++) {
+                let open = text("打开").findOne()
+                if (open) {
+                    open.click()
+                    log("启动卡通农场");
+                    sleep(300)
+                    break;
+                }
+                sleep(500);
+            }
+            //回到主界面点击"卡通农场"
+            if (currentPackage() != "com.supercell.hayday") {
+                home();
+                sleep(500);
+                click("卡通农场")
+                sleep(500)
+                if (currentPackage() != "com.supercell.hayday") {
+                    log("启动卡通农场");
+                    launch("com.supercell.hayday");
+                }
+            }
         }
     } catch (error) {
         log(error);
     }
-
-    // // 确保旧引擎资源已清理后再触发重启
-    // try {
-    //     // 检查是否有旧引擎存在
-    //     if (typeof engineArray !== "undefined" && engineArray.length > 0) {
-    //         console.log("等待旧引擎资源清理...");
-    //         sleep(500); // 给旧引擎一些时间清理资源
-    //     }
-
-    //     // 触发引擎重启事件
-    //     events.broadcast.emit("engine_r", "刷地引擎");
-    //     console.log("已发送引擎重启事件");
-    // } catch (e) {
-    //     console.error("触发引擎重启事件失败:", e);
-    // }
-
 }
 
 //悬浮窗
@@ -404,7 +398,7 @@ function createWindow(position) {
             targetX = 1280 * config.showText.x;
             targetY = 720 * config.showText.y;
         }
-        // 设置位置和不可触摸，退出时关闭
+        // 设置位置和不可触摸
         window.setPosition(targetX, targetY);
         // window.setTouchable(false);
 
@@ -431,14 +425,18 @@ function showTip(text) {
 
 function closeWindow() {
     try {
-        if (window) {
-            window.close();
-            window = null;
-        }
-        if (ui["tip_window"]) {
-            ui["tip_window"].close();
-            ui["tip_window"] = null;
-        }
+        ui.run(() => {
+            log(window, ui["tip_window"])
+            if (window) {
+                window.close();
+                window = null;
+                return;
+            }
+            if (ui["tip_window"]) {
+                ui["tip_window"].close();
+                ui["tip_window"] = null;
+            }
+        })
     } catch (e) {
         console.error("关闭悬浮窗失败:", e);
     }
@@ -489,11 +487,11 @@ function showDetails(text, position, duration) {
         } else {
             // 使用默认配置
             targetX = 1280 * config.showText.x;
-            targetY = 720 * config.showText.x;
+            targetY = 720 * config.showText.y;
         }
-        // 设置位置和不可触摸，退出时关闭
+        // 设置位置和不可触摸
         window_details.setPosition(targetX, targetY);
-        window_details.setTouchable(false);
+        // window_details.setTouchable(false);
 
     } catch (e) {
         console.error("createTipWindow函数执行失败:", e);
@@ -2135,7 +2133,7 @@ function coin() {
         if (allcenters.length > 0) {
             showTip("有" + allcenters.length + "个金币可以收")
         }
-        
+
         // 使用gestures一次性点击所有金币位置
         if (allcenters.length > 0) {
             let gesturePoints = [];

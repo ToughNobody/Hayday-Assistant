@@ -779,8 +779,7 @@ ui.layout(
                                     <text text="账号设置" textSize="16" textStyle="bold" />
                                     <horizontal gravity="center_vertical">
                                         <text text="切换账号：" textSize="14" w="100" marginRight="8" />
-                                        <Switch id="accountSwitch" w="*" h="48"
-                                            gravity="left|center" />
+                                        <Switch id="accountSwitch" w="*" h="48" />
                                     </horizontal>
                                     {/* 识别方式选择 */}
                                     <horizontal gravity="center_vertical" marginTop="8">
@@ -874,9 +873,9 @@ ui.layout(
                                     {/* 仓库升仓 */}
                                     <horizontal gravity="center_vertical">
                                         <text text="自动升仓" textSize="14" w="120" marginRight="8" />
-                                        <checkbox id="shengcang_h" checked="false" text="货仓"/>
+                                        <checkbox id="shengcang_h" checked="false" text="货仓" />
                                         <frame w="30" />
-                                        <checkbox id="shengcang_l" checked="false" text="粮仓"/>
+                                        <checkbox id="shengcang_l" checked="false" text="粮仓" />
                                     </horizontal>
                                     <horizontal gravity="center_vertical">
                                         <text text="升仓间隔时间" textSize="14" w="120" marginRight="8" />
@@ -1002,7 +1001,7 @@ ui.layout(
                     <scroll>
                         <vertical w="*" h="*" padding="16">
 
-                            {/* 硬件信息卡片 */}
+                            {/* 主题颜色卡片 */}
                             <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
                                 <vertical padding="16">
                                     <text text="主题颜色" textSize="16" textStyle="bold" marginBottom="8" />
@@ -1014,6 +1013,19 @@ ui.layout(
                                             w="*" textSize="14" textColor="{{color}}" h="48" bg="#FFFFFF" />
                                     </horizontal>
 
+                                </vertical>
+                            </card>
+
+                            {/* 运行设置卡片 */}
+                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                <vertical padding="16">
+                                    <text text="运行设置" textSize="16" textStyle="bold" marginBottom="8" />
+
+                                    {/* 使用shell命令重启游戏 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="使用shell命令重启游戏:" textSize="14" w="auto" marginRight="8" />
+                                        <Switch id="restartWithShell" checked="false" w="*" h="48" />
+                                    </horizontal>
 
                                 </vertical>
                             </card>
@@ -2269,6 +2281,7 @@ function getConfig() {
         isCangkuSold: configs.get("isCangkuSold", false),
         CangkuSold_triggerNum: configs.get("CangkuSold_triggerNum", 10),
         CangkuSold_targetNum: configs.get("CangkuSold_targetNum", 25),
+        restartWithShell: configs.get("restartWithShell", false),
         screenshotCoords: {
             coord1: {
                 x: configs.get("screenshotX1"),
@@ -2379,6 +2392,13 @@ function saveConfig(con) {
         configs.put("switchAccountY2", con.switchAccountCoords.coord2.y);
         configs.put("switchAccountX3", con.switchAccountCoords.coord3.x);
         configs.put("switchAccountY3", con.switchAccountCoords.coord3.y);
+
+
+        configs.put("CangkuSold_triggerNum", con.CangkuSold_triggerNum);
+        configs.put("CangkuSold_targetNum", con.CangkuSold_targetNum);
+
+        // 存储其他配置项
+        configs.put("restartWithShell", con.restartWithShell);
 
         // console.log("配置保存成功");
         return true;
@@ -2636,6 +2656,11 @@ function validateConfig(config) {
 
     config.serverPlatform.text = ["Pushplus推送加", "Server酱", "WxPusher"][config.serverPlatform.code];
 
+    // 验证是否使用shell命令重启游戏
+    if (typeof config.restartWithShell !== "boolean") {
+        config.restartWithShell = defaultConfig.restartWithShell;
+    }
+
     // 验证截图坐标配置
     if (!config.screenshotCoords) {
         config.screenshotCoords = defaultConfig.screenshotCoords;
@@ -2847,6 +2872,8 @@ function getDefaultConfig() {
         isCangkuSold: false,
         CangkuSold_triggerNum: 10,
         CangkuSold_targetNum: 25,
+        // 是否使用shell命令重启游戏
+        restartWithShell: false,
         // 截图坐标配置
         screenshotCoords: {
             coord1: {
@@ -3082,6 +3109,9 @@ function loadConfigToUI(loadConfigFromFile = false) {
         ui.Tom_itemName.setText(config.tomFind.text);
     }
 
+    // 设置是否使用shell命令重启游戏
+    ui.restartWithShell.setChecked(config.restartWithShell);
+
     // 更新权限状态
     updateSwitchStatus();
 
@@ -3112,30 +3142,27 @@ function setLandMethod(method) {
 
 function stopOtherEngines(stopAll = false) {
     log("开始停止" + (stopAll ? "所有" : "其他") + "引擎");
-    let engineArray = engines.all();
-    let engine0 = engines.myEngine();
-    // 遍历引擎数组
-    let stoppedAny = false;
-    for (let i = 0; i < engineArray.length; i++) {
-        let engine = engineArray[i];
-        // 如果当前引擎是主引擎，则跳过
-        if (!stopAll && engine === engine0) {
-            continue;
-        }
 
-        try {
-            engine.forceStop();
-            // 从引擎数组中移除已停止的引擎
-            engineArray.splice(i, 1);
-            log(`已停止引擎(ID: ${engine.id})`);
-            stoppedAny = true;
-        } catch (e) {
-            log(`停止引擎失败(ID: ${engine.id}): ${e}`);
-        }
-    }
+    while (engines.all().length > 1) {
+        let engineArray = engines.all();
+        let engine0 = engines.myEngine();
+        // 遍历引擎数组
+        for (let i = 0; i < engineArray.length; i++) {
+            let engine = engineArray[i];
+            // 如果当前引擎是主引擎，则跳过
+            if (!stopAll && engine === engine0) {
+                continue;
+            }
 
-    if (!stoppedAny) {
-        // toast("没有需要停止的引擎");
+            try {
+                engine.forceStop();
+                // 从引擎数组中移除已停止的引擎
+                engineArray.splice(i, 1);
+                log(`已停止引擎(ID: ${engine.id})`);
+            } catch (e) {
+                log(`停止引擎失败(ID: ${engine.id}): ${e}`);
+            }
+        }
     }
 
     // 如果包含主引擎且成功停止了所有引擎，可以退出程序
@@ -3238,10 +3265,11 @@ function logCurrentConfig(config) {
     console.log("收割重复次数: " + config.harvestRepeat + "次");
     console.log("收割操作用时: " + config.harvestTime + "秒");
     console.log("粮仓偏移: (" + config.liangcangOffset.x + ", " + config.liangcangOffset.y + "), 货仓偏移 (" + config.huocangOffset.x + ", " + config.huocangOffset.y + ")");
-    console.log("是否升仓: " + "货仓"+(config.shengcang_h ? "是" : "否") +",粮仓"+(config.shengcang_l ? "是" : "否")+ ", 升仓间隔时间: " + config.shengcangTime + "分钟");
+    console.log("是否升仓: " + "货仓" + (config.shengcang_h ? "是" : "否") + ",粮仓" + (config.shengcang_l ? "是" : "否") + ", 升仓间隔时间: " + config.shengcangTime + "分钟");
     console.log("是否仓库统计: " + (config.isCangkuStatistics ? "是" : "否") + ", 仓库统计间隔时间: " + config.cangkuStatisticsTime + "分钟");
     console.log("推送方式: " + config.serverPlatform.text);
     console.log("token: " + "骗你的,不会把token输出到日志,切勿泄漏个人token!!!");
+    console.log("是否使用shell命令重启游戏: " + (config.restartWithShell ? "是" : "否"));
     console.log("浮动按钮: " + (ui.win_switch.checked ? "是" : "否"));
     // console.log("主题颜色: " + config.themeColor.text);config
     console.log("============================");
@@ -4043,6 +4071,12 @@ function initUI() {
             log("目标阈值: " + Number(s));
         }
     }));
+
+    // 是否使用shell命令重启游戏监听
+    ui.restartWithShell.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("restartWithShell", checked);
+    });
 
 
 }
