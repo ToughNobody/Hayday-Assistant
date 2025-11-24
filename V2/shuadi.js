@@ -484,7 +484,7 @@ function main_save() {
             } catch (error) {
                 console.error("showDetails error:", error);
             }
-            
+
             if (cangkuStatisticsForEach && rowContentData) {
                 //在表格前后加入标题，合计列
                 let contentData = module.rowContentData2(rowContentData);

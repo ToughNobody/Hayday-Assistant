@@ -35,9 +35,9 @@ let CangkuSoldList = [
 
 
 // 全局状态变量，用于跟踪各种选择状态，避免依赖颜色判断
-let currentAccountMethod = "email"; // 当前账号方式: "email" 或 "save"
-let currentFindAccountMethod = "ocr"; // 当前账号识别方式: "image" 或 "ocr"
-let currentLandFindMethod = "商店"; // 当前寻找土地方法: "商店" 或 "面包房"
+// let currentAccountMethod = "email"; // 当前账号方式: "email" 或 "save"
+// let currentFindAccountMethod = "ocr"; // 当前账号识别方式: "image" 或 "ocr"
+// let currentLandFindMethod = "商店"; // 当前寻找土地方法: "商店" 或 "面包房"
 
 
 const currentPath = files.cwd();
@@ -632,7 +632,9 @@ ui.layout(
         <vertical>
             {/*页头*/}
             <appbar id="appbar" bg="{{color}}">
-                <toolbar id="toolbar" title="卡通农场小助手" />
+                <toolbar id="toolbar" title="卡通农场小助手" >
+                    <text id="log_icon" textColor="white" textSize="18sp" gravity="center" layout_gravity="right" marginRight="16" text="📝" />
+                </toolbar>
                 <tabs id="tabs" />
             </appbar>
             <viewpager id="viewpager">
@@ -782,18 +784,25 @@ ui.layout(
                                         <text text="切换账号：" textSize="14" w="100" marginRight="8" />
                                         <Switch id="accountSwitch" w="*" h="48" />
                                     </horizontal>
+
                                     {/* 识别方式选择 */}
                                     <horizontal gravity="center_vertical" marginTop="8">
                                         <text text="识别方式：" textSize="14" w="100" marginRight="8" />
-                                        <button id="findAccountImage" text="图片识别" w="80" h="35" textSize="12" bg="#4CAF50" textColor="#FFFFFF" marginRight="8" gravity="center" />
-                                        <button id="findAccountText" text="文字识别" w="80" h="35" textSize="12" bg="#E0E0E0" textColor="#000000" gravity="center" />
+                                        <radiogroup id="findAccountMethod" orientation="horizontal">
+                                            <radio id="findAccountMethod_image" checked="false" text="图片识别" />
+                                            <frame w="3" />
+                                            <radio id="findAccountMethod_text" checked="false" text="文字识别" />
+                                        </radiogroup>
                                     </horizontal>
 
                                     {/* 账号方式选择 */}
                                     <horizontal gravity="center_vertical" marginTop="8">
                                         <text text="切换账号方式：" textSize="14" w="100" marginRight="8" />
-                                        <button id="accountMethodEmail" text="邮箱" w="80" h="35" textSize="12" bg="#4CAF50" textColor="#FFFFFF" marginRight="8" gravity="center" />
-                                        <button id="accountMethodSave" text="存档" w="80" h="35" textSize="12" bg="#E0E0E0" textColor="#000000" gravity="center" />
+                                        <radiogroup id="accountMethod" orientation="horizontal">
+                                            <radio id="accountMethod_email" checked="false" text="邮箱" />
+                                            <frame w="30" />
+                                            <radio id="accountMethod_save" checked="false" text="存档" />
+                                        </radiogroup>
                                     </horizontal>
 
                                     {/* 账号列表显示 */}
@@ -842,11 +851,21 @@ ui.layout(
                             {/* 基础设置卡片 - 使用按钮模拟单选 */}
                             <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
                                 <vertical padding="16">
-                                    <text text="基础设置" textSize="16" textStyle="bold" marginBottom="16" />
-                                    <text text="寻找土地方法" textSize="14" w="120" marginRight="8" />
+                                    <text text="基础设置" textSize="16" textStyle="bold" />
+
                                     <horizontal gravity="center_vertical">
-                                        <button id="methodShop" text="商店" w="80" h="35" textSize="12" bg="#4CAF50" textColor="#FFFFFF" marginRight="16" gravity="center" />
-                                        <button id="methodBakery" text="面包房" w="80" h="35" textSize="12" bg="#E0E0E0" textColor="#000000" gravity="center" />
+                                        <text text="顶号延迟" textSize="14" w="120" marginRight="8" />
+                                        <input id="pauseTime" hint="5" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                        <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                    </horizontal>
+
+                                    <horizontal gravity="center_vertical">
+                                        <text text="寻找土地方法" textSize="14" w="120" marginRight="8" />
+                                        <radiogroup id="landFindMethod" orientation="horizontal">
+                                            <radio id="landFindMethod_shop" checked="false" text="商店" />
+                                            <frame w="30" />
+                                            <radio id="landFindMethod_bread" checked="false" text="面包房" />
+                                        </radiogroup>
                                     </horizontal>
 
                                     <horizontal paddingTop="8">
@@ -1112,6 +1131,10 @@ ui.screenResolution.setText(device.width + "×" + device.height);
 
 // 手动设置设备型号
 ui.deviceModel.setText(device.brand + " " + device.model);
+
+ui.log_icon.on("click", () => {
+
+});
 
 
 //创建选项菜单(右上角)
@@ -1549,9 +1572,6 @@ activity.setSupportActionBar(ui.toolbar);
 
 // 更新按钮颜色函数
 function updateButtonColors() {
-    setAccountMethod(config.accountMethod);
-    setFindAccountMethod(config.findAccountMethod);
-    setLandMethod(config.landFindMethod);
     // 更新菜单图标颜色
     ui.menu.adapter.notifyDataSetChanged();
     // 更新主题颜色文本颜色
@@ -1846,36 +1866,6 @@ function loadSaveAccountListFromConfig(config_save) {
 
     SaveAccountList = orderedSaveAccountList;
     return SaveAccountList;
-}
-
-
-// 设置账号方式
-function setAccountMethod(method) {
-    // 更新全局状态变量
-    currentAccountMethod = method;
-
-    if (method === "email") {
-        ui.accountMethodEmail.attr("bg", color);
-        ui.accountMethodEmail.attr("textColor", "#FFFFFF");
-        ui.accountMethodSave.attr("bg", "#E0E0E0");
-        ui.accountMethodSave.attr("textColor", "#000000");
-        ui['AccountList'].attr("visibility", "visible");
-        ui['SaveAccountList'].attr("visibility", "gone");
-    } else {
-        ui.accountMethodEmail.attr("bg", "#E0E0E0");
-        ui.accountMethodEmail.attr("textColor", "#000000");
-        ui.accountMethodSave.attr("bg", color);
-        ui.accountMethodSave.attr("textColor", "#FFFFFF");
-        ui['AccountList'].attr("visibility", "gone");
-        ui['SaveAccountList'].attr("visibility", "visible");
-    }
-
-    // 强制刷新UI
-    ui.accountMethodEmail.attr("bg", ui.accountMethodEmail.attr("bg"));
-    ui.accountMethodSave.attr("bg", ui.accountMethodSave.attr("bg"));
-
-    // 保存选择的账号方式到配置
-    configs.put("accountMethod", method);
 }
 
 // 点击复选框勾选
@@ -2231,6 +2221,7 @@ function getConfig() {
         addFriendsList: configs.get("addFriendsList"),
         shopPrice: configs.get("shopPrice"),
         ReservedQuantity: configs.get("ReservedQuantity"),
+        pauseTime: configs.get("pauseTime"),
         landFindMethod: configs.get("landFindMethod"),
         landOffset: {
             x: configs.get("landOffsetX"),
@@ -2334,6 +2325,7 @@ function saveConfig(con) {
         configs.put("addFriendsList", con.addFriendsList);
         configs.put("shopPrice", con.shopPrice);
         configs.put("ReservedQuantity", con.ReservedQuantity);
+        configs.put("pauseTime", con.pauseTime);
         configs.put("landFindMethod", con.landFindMethod);
 
         // 存储偏移量配置
@@ -2499,6 +2491,19 @@ function validateConfig(config) {
     config.showText.x = config.showText.x != undefined ? Number(config.showText.x) : defaultConfig.showText.x;
     config.showText.y = config.showText.y != undefined ? Number(config.showText.y) : defaultConfig.showText.y;
 
+    //验证账号识别方式
+    if (!config.findAccountMethod || (config.findAccountMethod !== "image" && config.findAccountMethod !== "ocr")) {
+        config.findAccountMethod = defaultConfig.findAccountMethod;
+    }
+
+    //验证切换账号方式
+    if (!config.accountMethod || (config.accountMethod !== "ocr" && config.accountMethod !== "save")) {
+        config.accountMethod = defaultConfig.accountMethod;
+    }
+
+    // 验证查找土地方式
+    if (config.landFindMethod != "商店" && config.landFindMethod != "面包房") config.landFindMethod = defaultConfig.landFindMethod;
+
     // 验证功能选择
     if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
     const functionOptions = ["刷地", "种树", "创新号"];
@@ -2538,6 +2543,11 @@ function validateConfig(config) {
     } else {
         config.themeColor.text = colorLibrary[config.themeColor.code - 1].name;
     }
+
+    // 验证pauseTime
+    if (config.pauseTime == undefined || isNaN(config.pauseTime) || config.pauseTime < 0) {
+        config.pauseTime = defaultConfig.pauseTime;
+    } else config.pauseTime = Number(config.pauseTime);
 
     // 验证cangkuTime
     if (config.shengcangTime == undefined || isNaN(config.shengcangTime) || config.shengcangTime < 0) {
@@ -2598,11 +2608,6 @@ function validateConfig(config) {
     // 验证创新号账号列表
     if (!Array.isArray(config.addFriendsList)) config.addFriendsList = [];
 
-    // 验证账号方式
-    if (!config.accountMethod || (config.accountMethod !== "email" && config.accountMethod !== "save")) {
-        config.accountMethod = "email"; // 默认为邮箱账号方式
-    }
-
     // 验证是否切换账号
     if (typeof config.switchAccount !== "boolean") {
         config.switchAccount = defaultConfig.switchAccount;
@@ -2615,11 +2620,6 @@ function validateConfig(config) {
         config.shopPrice.code = defaultConfig.shopPrice.code;
     }
     config.shopPrice.text = shopPriceOptions[config.shopPrice.code];
-
-    // 验证地块查找方式
-    if (!config.landFindMethod || (config.landFindMethod !== "商店" && config.landFindMethod !== "面包房")) {
-        config.landFindMethod = defaultConfig.landFindMethod;
-    }
 
     // 验证汤姆查找配置
     if (!config.tomFind) config.tomFind = defaultConfig.tomFind;
@@ -2806,6 +2806,7 @@ function getDefaultConfig() {
             code: 0
         },
         switchAccount: false,
+        accountMethod: "email", // 账号切换方式，默认使用邮箱切换
         findAccountMethod: "ocr", // 账号识别方式，默认为文字识别
         accountList: [], // 新增账号列表配置
         saveAccountList: [], // 新增保存账号列表配置
@@ -2815,6 +2816,7 @@ function getDefaultConfig() {
             code: 0
         },
         ReservedQuantity: 20, // 默认保留数量为20
+        pauseTime: 5, // 默认顶号延迟为5分钟
         landFindMethod: "商店",
         landOffset: {
             x: 60,
@@ -2920,33 +2922,6 @@ function parseAccountNames(text) {
         .filter(name => name.length > 0);
 }
 
-/**
- * 加载配置到界面
- */
-// 设置账号识别方式按钮状态
-function setFindAccountMethod(method) {
-    // 更新全局状态变量
-    currentFindAccountMethod = method;
-
-    if (method === "image") {
-        ui.findAccountImage.attr("bg", color);
-        ui.findAccountImage.attr("textColor", "#FFFFFF");
-        ui.findAccountText.attr("bg", "#E0E0E0");
-        ui.findAccountText.attr("textColor", "#000000");
-    } else {
-        ui.findAccountImage.attr("bg", "#E0E0E0");
-        ui.findAccountImage.attr("textColor", "#000000");
-        ui.findAccountText.attr("bg", color);
-        ui.findAccountText.attr("textColor", "#FFFFFF");
-    }
-
-    // 强制刷新UI
-    ui.findAccountImage.attr("bg", ui.findAccountImage.attr("bg"));
-    ui.findAccountText.attr("bg", ui.findAccountText.attr("bg"));
-
-    // 保存选择的账号识别方式到配置
-    configs.put("findAccountMethod", method);
-}
 
 function loadConfigToUI(loadConfigFromFile = false) {
     const config = loadConfig(loadConfigFromFile);
@@ -2961,17 +2936,8 @@ function loadConfigToUI(loadConfigFromFile = false) {
     AddFriendsList = config.addFriendsList
     ui['addFriendsList'].setDataSource(AddFriendsList);
 
-
-    // 初始化全局状态变量
-    currentAccountMethod = config.accountMethod || "email";
-    currentFindAccountMethod = config.findAccountMethod || "ocr";
-    currentLandFindMethod = config.landFindMethod || "商店";
-
-    // 设置账号识别方式
-    setFindAccountMethod(config.findAccountMethod);
-
-    // 设置账号方式
-    setAccountMethod(config.accountMethod || 'email');
+    // 设置顶号延迟
+    ui.pauseTime.setText(String(config.pauseTime));
 
     // 设置功能选择
     ui.functionSelect.setSelection(config.selectedFunction.code);
@@ -3032,7 +2998,25 @@ function loadConfigToUI(loadConfigFromFile = false) {
     ui.CangkuSold_targetNum.setText(String(config.CangkuSold_targetNum));
 
     // 设置寻找土地方法
-    setLandMethod(config.landFindMethod);
+    if (config.landFindMethod == "商店") {
+        ui.landFindMethod_shop.setChecked(true);
+    } else {
+        ui.landFindMethod_bread.setChecked(true);
+    }
+
+    // 设置账号识别方式
+    if (config.findAccountMethod == "image") {
+        ui.findAccountMethod_image.setChecked(true);
+    } else {
+        ui.findAccountMethod_text.setChecked(true);
+    }
+
+    // 设置切换账号方式
+    if (config.accountMethod == "email") {
+        ui.accountMethod_email.setChecked(true);
+    } else {
+        ui.accountMethod_save.setChecked(true);
+    }
 
     // 设置坐标偏移
     ui.landOffsetX.setText(String(config.landOffset.x));
@@ -3117,29 +3101,6 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 更新权限状态
     updateSwitchStatus();
-
-}
-
-// 设置寻找土地方法按钮状态
-function setLandMethod(method) {
-    // 更新全局状态变量
-    currentLandFindMethod = method;
-
-    if (method === "商店") {
-        ui.methodShop.attr("bg", color);
-        ui.methodShop.attr("textColor", "#FFFFFF");
-        ui.methodBakery.attr("bg", "#E0E0E0");
-        ui.methodBakery.attr("textColor", "#000000");
-    } else {
-        ui.methodShop.attr("bg", "#E0E0E0");
-        ui.methodShop.attr("textColor", "#000000");
-        ui.methodBakery.attr("bg", color);
-        ui.methodBakery.attr("textColor", "#FFFFFF");
-    }
-
-    // 强制刷新UI
-    ui.methodShop.attr("bg", ui.methodShop.attr("bg"));
-    ui.methodBakery.attr("bg", ui.methodBakery.attr("bg"));
 
 }
 
@@ -3260,6 +3221,8 @@ function logCurrentConfig(config) {
     console.log("目标阈值：" + config.CangkuSold_targetNum);
     console.log("地块查找方法: " + config.landFindMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
+    console.log("切换账号方式: " + config.accountMethod);
+    console.log("顶号延迟: " + config.pauseTime + "分钟");
     console.log("账号识别方式: " + config.findAccountMethod);
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
@@ -3518,14 +3481,43 @@ function initUI() {
     // 初始化权限开关状态
     updateSwitchStatus();
 
-    // 绑定土地方法按钮事件
-    ui.methodShop.click(() => {
-        setLandMethod("商店");
-        configs.put("landFindMethod", "商店");
+    // 绑定土地方法单选框事件
+    ui.landFindMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
+        // 获取被选中的单选框
+        let selectedRadioButton = radioGroup.findViewById(isCheckedId);
+        // 获取被选中的单选框的文字内容
+        let selectedText = selectedRadioButton.getText();
+        configs.put("landFindMethod", selectedText);
     });
-    ui.methodBakery.click(() => {
-        setLandMethod("面包房");
-        configs.put("landFindMethod", "面包房");
+
+    // 绑定账号识别方式单选框事件
+    ui.findAccountMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
+        // 获取被选中的单选框
+        let selectedRadioButton = radioGroup.findViewById(isCheckedId);
+        // 获取被选中的单选框的文字内容
+        let selectedIndex = radioGroup.indexOfChild(selectedRadioButton);
+        if (selectedIndex == 0) {
+            configs.put("findAccountMethod", "image");
+        } else {
+            configs.put("findAccountMethod", "ocr");
+        }
+    });
+
+    // 绑定切换账号方式单选框事件
+    ui.accountMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
+        // 获取被选中的单选框
+        let selectedRadioButton = radioGroup.findViewById(isCheckedId);
+        // 获取被选中的单选框的文字内容
+        let selectedIndex = radioGroup.indexOfChild(selectedRadioButton);
+        if (selectedIndex == 0) {
+            configs.put("accountMethod", "email");
+            ui['AccountList'].attr("visibility", "visible");
+            ui['SaveAccountList'].attr("visibility", "gone");
+        } else {
+            configs.put("accountMethod", "save");
+            ui['AccountList'].attr("visibility", "gone");
+            ui['SaveAccountList'].attr("visibility", "visible");
+        }
     });
 
     ui.functionSelect.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
@@ -3710,29 +3702,13 @@ function initUI() {
         onNothingSelected: function (parent) { }
     }));
 
-    // 绑定账号识别方式按钮事件
-    ui.findAccountImage.click(() => {
-        setFindAccountMethod("image");
-        // 保存选择的账号识别方式到配置
-        configs.put("findAccountMethod", "image");
-    });
-    ui.findAccountText.click(() => {
-        setFindAccountMethod("ocr");
-        // 保存选择的账号识别方式到配置
-        configs.put("findAccountMethod", "ocr");
-    });
-
-    // 绑定账号方式切换按钮事件
-    ui.accountMethodEmail.click(() => {
-        setAccountMethod("email");
-        // 保存选择的账号方式到配置
-        configs.put("accountMethod", "email");
-    });
-    ui.accountMethodSave.click(() => {
-        setAccountMethod("save");
-        // 保存选择的账号方式到配置
-        configs.put("accountMethod", "save");
-    });
+    // 为顶号延迟添加事件监听器
+    ui.pauseTime.addTextChangedListener(new android.text.TextWatcher({
+        onTextChanged: function (s, start, before, count) {
+            // 保存输入的pauseTime到配置
+            configs.put("pauseTime", Number(s));
+        }
+    }));
 
     ui.cangkuSoldBtn.on("click", () => {
         showCangkuSoldDialog();
@@ -3752,9 +3728,9 @@ function initUI() {
     ui.helpIcon_restartWithShell.on("click", function () {
         dialogs.build({
             title: "重启游戏帮助",
-            content: "需root权限,如设备root,推荐开启\n\n"+
-            "开启后则会使用shell命令关闭游戏,不会跳转到应用设置页\n"+
-            "跳转到应用设置页可能会出Bug",
+            content: "需root权限,如设备root,推荐开启\n\n" +
+                "开启后则会使用shell命令关闭游戏,不会跳转到应用设置页\n" +
+                "跳转到应用设置页可能会出Bug",
             positive: "确定"
         }).show();
     })
@@ -3762,9 +3738,9 @@ function initUI() {
     ui.helpIcon_functionSelect.on("click", function () {
         dialogs.build({
             title: "功能选择帮助",
-            content: "选择功能右边的下拉菜单是能点的\n\n"+
-            "默认是刷地功能，点击刷地可选择其他功能\n"+
-            "" ,
+            content: "选择功能右边的下拉菜单是能点的\n\n" +
+                "默认是刷地功能，点击刷地可选择其他功能\n" +
+                "",
             positive: "确定"
         }).show();
     })

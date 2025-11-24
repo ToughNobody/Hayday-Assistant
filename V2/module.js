@@ -1362,9 +1362,9 @@ function close() {
 
         //识别叉叉
         let sc = captureScreen();
-        let close_button = findMC(["#ec404b", [-8, -9, "#f34854"], [10, -13, "#f44955"],
-            [11, 9, "#e4383f"], [-10, 8, "#e6363e"], [-20, 1, "#f9cd43"],
-            [0, -18, "#f7de5c"], [22, 0, "#f9cd42"], [1, 24, "#f6c943"]], sc);//小×
+        let close_button = findMC(["#ef444f", [-7, -1, "#ef444d"], [26, 2, "#faca3f"],
+            [-24, 4, "#f9ca3f"], [-12, 13, "#e7363e"], [2, 37, "#f3c241"],
+            [15, 16, "#e5373f"], [1, 16, "#9d1719"]], sc);//小×
         if (!close_button) {
             close_button = findMC(["#ed404b", [-13, -15, "#f54e5a"], [15, -14, "#ee444e"],
                 [13, 11, "#e43840"], [-17, 10, "#e6363e"], [26, 0, "#f9cd42"],
@@ -1373,7 +1373,7 @@ function close() {
 
         if (close_button) {
             click(close_button.x + ran(), close_button.y + ran())
-            console.log("点击叉叉")
+            console.log("点击叉叉,close")
             // showTip("点击叉叉")
         } else {
             // click(2110, 125)
@@ -1796,7 +1796,7 @@ function findland(isclick = true) {
 function findshop() {
     console.log("找" + config.landFindMethod);
     let center;
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
         try {
             showTip("第 " + (i + 1) + " 次检测" + config.landFindMethod);
             if (config.landFindMethod == "商店") {
@@ -1814,7 +1814,10 @@ function findshop() {
             log(error);
         }
         if (center) break
-        else sleep(500);
+        else {
+            find_close();
+            sleep(500);
+        }
     }
     if (center) {
         console.log("找到" + config.landFindMethod + "，坐标: " + center.x + "," + center.y,);
@@ -2191,6 +2194,7 @@ function shop() {
         }
 
         if (configs.get("isCangkuSold", false)) {
+            log("当前操作:商店售卖")
             let sellPlan = shopStatistic();
             if (sellPlan) {
                 log("商店售卖计划:" + JSON.stringify(sellPlan))
@@ -2250,22 +2254,6 @@ function shop() {
             close();
             shop_sail([{ title: config.selectedCrop.text, num: sellNum }], { [config.selectedCrop.text]: crop_sail }, "left", config.shopPrice.code)
             break;
-            // click(wheat_sail.x + ran(), wheat_sail.y + ran()); //点击小麦
-            // console.log("点击" + config.selectedCrop.text);
-
-
-            // console.log("修改售价");
-            // if (config.shopPrice.code == 0) {
-            //     click(860 + ran(), 360 + ran());//修改售价(最低)
-
-            // } else if (config.shopPrice.code == 2) {
-            //     click(1020 + ran(), 370 + ran());//修改售价(最高)
-            // }
-
-            // click(940 + ran(), 660 + ran());
-            // //上架
-            // console.log("上架");
-            // sleep(100);
 
         }
 
@@ -2274,6 +2262,7 @@ function shop() {
         sleep(100);
         if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
             click(1150 + ran(), 50 + ran())//点击叉号
+            log("发布广告(在售卖界面)：点击叉号")
             sleep(100)
         }
         coin();
@@ -2552,7 +2541,10 @@ function shopStatistic(sc) {
     } catch (error) {
         log("仓库统计出错" + error);
     } finally {
-        close();
+        if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
+            click(1150 + ran(), 50 + ran())//点击叉号
+            log("商店统计(在售卖界面)：点击叉号")
+        }
     }
 
     var sellPlan = distributeSellQuantity(processedResult, sellNum);
@@ -2813,9 +2805,9 @@ function find_close(screenshot1, action = null) {
         let sc = screenshot1 || captureScreen();
 
         //识别叉叉
-        let close_button = findMC(["#ec404b", [-8, -9, "#f34854"], [10, -13, "#f44955"],
-            [11, 9, "#e4383f"], [-10, 8, "#e6363e"], [-20, 1, "#f9cd43"],
-            [0, -18, "#f7de5c"], [22, 0, "#f9cd42"], [1, 24, "#f6c943"]], sc);//小×
+        let close_button = findMC(["#ef444f", [-7, -1, "#ef444d"], [26, 2, "#faca3f"],
+            [-24, 4, "#f9ca3f"], [-12, 13, "#e7363e"], [2, 37, "#f3c241"],
+            [15, 16, "#e5373f"], [1, 16, "#9d1719"]], sc);//小×
         if (!close_button) {
             close_button = findMC(["#ed404b", [-13, -15, "#f54e5a"], [15, -14, "#ee444e"],
                 [13, 11, "#e43840"], [-17, 10, "#e6363e"], [26, 0, "#f9cd42"],
@@ -2824,7 +2816,7 @@ function find_close(screenshot1, action = null) {
 
         if (close_button) {
             click(close_button.x + ran(), close_button.y + ran());
-            console.log("点击叉叉");
+            console.log("点击叉叉,find_close");
             showTip("点击叉叉");
             return true;
         }
@@ -2922,14 +2914,64 @@ function find_close(screenshot1, action = null) {
         }
 
         //断开连接
-        let disconnect = matchColor([{ x: 279, y: 222, color: "#fff9db" },
-        { x: 435, y: 62, color: "#deb476" },
-        { x: 630, y: 202, color: "#ffe9d6" },
-        { x: 647, y: 632, color: "#fada75" }],
+        let disconnect = matchColor([{ x: 347, y: 55, color: "#deb477" }, { x: 629, y: 252, color: "#ef9b7f" },
+        { x: 919, y: 234, color: "#fff9db" }, { x: 638, y: 627, color: "#fbdc7c" },
+        { x: 622, y: 242, color: "#322a27" }, { x: 699, y: 157, color: "#ddf6ff" }],
             screenshot = sc);
         if (disconnect) {
-            console.log("断开连接，重试");
-            showTip("断开连接，重试");
+            //检测是否是顶号
+            if (matchColor([{ x: 526, y: 644, color: "#ffffff" }, { x: 661, y: 670, color: "#f5c746" }, { x: 645, y: 653, color: "#f5d558" }])) {
+                let pauseTime = configs.get("pauseTime");
+                log(`顶号,暂停${pauseTime}分钟`)
+                showTip(`顶号,暂停${pauseTime}分钟`)
+                timer("pauseTime", pauseTime * 60)
+                while (true) {
+                    // 获取计时器状态
+                    let timerState = getTimerState("pauseTime");
+
+                    if (!timerState) {
+                        // 如果计时器不存在，直接跳出循环
+                        break;
+                    }
+
+                    // 显示计时器的状态
+                    let minutes = Math.floor(timerState / 60);
+                    let seconds = timerState % 60;
+                    let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                    showTip(`顶号,暂停${pauseTime}分钟,剩余${timeText}`);
+
+                    sleep(1000);
+                }
+            }
+            //检测是否是服务器下线
+            else if (matchColor([{ x: 537, y: 670, color: "#ffffff" }, { x: 769, y: 653, color: "#ffffff" }, { x: 769, y: 644, color: "#f6d45e" }])) {
+                log("服务器下线,暂停15分钟")
+                showTip("服务器下线,暂停15分钟")
+                timer("pauseTime", 15 * 60)
+                while (true) {
+                    // 获取计时器状态
+                    let timerState = getTimerState("pauseTime");
+
+                    if (!timerState) {
+                        // 如果计时器不存在，直接跳出循环
+                        break;
+                    }
+
+                    // 显示计时器的状态
+                    let minutes = Math.floor(timerState / 60);
+                    let seconds = timerState % 60;
+                    let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                    showTip(`服务器下线,暂停15分钟,剩余${timeText}`);
+
+                    sleep(1000);
+                }
+            }
+            //掉线
+            else {
+                console.log("断开连接，重试");
+                showTip("断开连接，重试");
+            }
+
             click(640 + ran(), 660 + ran())
             sleep(1000);
             checkmenu();
@@ -2951,6 +2993,19 @@ function find_close(screenshot1, action = null) {
                 click(1150 + ran(), 70 + ran());
                 return true;
             }
+        }
+
+        //进入Supercell ID界面
+        let supercellID = matchColor([{ x: 80, y: 63, color: "#f2f2f2" },
+        { x: 327, y: 64, color: "#f2f2f2" }, { x: 345, y: 61, color: "#666666" },
+        { x: 53, y: 67, color: "#666666" }]
+            , sc)
+        if (supercellID) {
+            log("进入Supercell ID界面");
+            showTip("进入Supercell ID界面");
+            click(60 + ran(), 60 + ran());
+            sleep(300)
+            return true;
         }
 
         //进入购买界面
