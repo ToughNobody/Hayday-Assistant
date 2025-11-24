@@ -671,6 +671,7 @@ ui.layout(
                                         <text text="选择功能：" textSize="14" w="80" marginRight="8" />
                                         <spinner id="functionSelect" entries="刷地|种树|创新号"
                                             w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                        <text id="helpIcon_functionSelect" text="?" textColor="#007AFF" textSize="18" marginRight="8" />
                                     </horizontal>
 
                                     {/* 作物选择 - 仅在刷地时显示 */}
@@ -702,7 +703,7 @@ ui.layout(
 
                                     {/* 汤姆 - 仅在刷地时显示*/}
                                     <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="gone">
-                                        <text text="汤姆：" textSize="14" w="80" marginLeft="20" />
+                                        <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
                                         <Switch id="tomSwitch" w="*" h="48" gravity="left|center" />
                                     </horizontal>
 
@@ -1024,6 +1025,7 @@ ui.layout(
                                     {/* 使用shell命令重启游戏 */}
                                     <horizontal gravity="center_vertical" marginBottom="8">
                                         <text text="使用shell命令重启游戏:" textSize="14" w="auto" marginRight="8" />
+                                        <text id="helpIcon_restartWithShell" text="?" textColor="#007AFF" textSize="18" marginLeft="10" />
                                         <Switch id="restartWithShell" checked="false" w="*" h="48" />
                                     </horizontal>
 
@@ -1301,6 +1303,7 @@ function checkForUpdates(silence = false) {
                             customView: ui.inflate(
                                 <vertical padding="16">
                                     <text id="versionInfo" textSize="14sp" textColor="#333333" marginTop="8" />
+                                    <text textSize="14sp" textColor="#ef9a9a" marginTop="8" text="强烈建议使用“下载压缩包”方式更新!!!" />
                                     <text id="updateContent" textSize="14sp" textColor="#333333" marginTop="16" />
                                     <text id="giteeResult" textSize="12sp" textColor="#666666" marginTop="8" text="Gitee: 未检测" />
                                     <text id="githubResult" textSize="12sp" textColor="#666666" marginTop="4" text="Github: 未检测" />
@@ -1310,8 +1313,8 @@ function checkForUpdates(silence = false) {
                                     <radio id="githubRadio" text="GitHub (国外源)" group="updateSourceGroup" />
                                 </vertical>
                             ),
-                            positive: "立即更新",
-                            negative: "下载压缩包",
+                            positive: "下载压缩包",
+                            negative: "立即更新",
                             neutral: "稍后再说"
                         }).on("show", (dialog) => {
                             // 设置版本信息
@@ -1466,7 +1469,7 @@ function checkForUpdates(silence = false) {
                                     }
                                 });
                             });
-                        }).on("positive", () => {
+                        }).on("negative", () => {
                             // 调用热更新模块 - 立即更新（增量更新）
                             threads.start(() => {
                                 try {
@@ -1498,7 +1501,7 @@ function checkForUpdates(silence = false) {
                                     toastLog("热更新失败: " + e.message);
                                 }
                             });
-                        }).on("negative", () => {
+                        }).on("positive", () => {
                             downloadZip_dialogs();
                         }).on("neutral", () => {
                             // 稍后再说，不执行任何操作，直接关闭对话框
@@ -3745,6 +3748,26 @@ function initUI() {
             positive: "确定"
         }).show();
     });
+
+    ui.helpIcon_restartWithShell.on("click", function () {
+        dialogs.build({
+            title: "重启游戏帮助",
+            content: "需root权限,如设备root,推荐开启\n\n"+
+            "开启后则会使用shell命令关闭游戏,不会跳转到应用设置页\n"+
+            "跳转到应用设置页可能会出Bug",
+            positive: "确定"
+        }).show();
+    })
+
+    ui.helpIcon_functionSelect.on("click", function () {
+        dialogs.build({
+            title: "功能选择帮助",
+            content: "选择功能右边的下拉菜单是能点的\n\n"+
+            "默认是刷地功能，点击刷地可选择其他功能\n"+
+            "" ,
+            positive: "确定"
+        }).show();
+    })
 
     ui.screenshotBtn.on("click", () => {
         showScreenshotDialog();

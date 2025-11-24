@@ -284,6 +284,7 @@ function restartgame() {
         // 尝试使用Root方式停止应用
         if (configs.get("restartWithShell", false)) {
             try {
+                sleep(500);
                 let result = shell("am force-stop " + packageName, true);
                 if (result.code === 0) {
                     console.log("使用am force-stop命令成功停止应用");
@@ -307,6 +308,7 @@ function restartgame() {
             // 循环尝试点击"停止"按钮，直到成功
             for (let i = 0; i < 5; i++) {
                 if (click("停止")) {
+                    log("点击停止按钮");
                     break;
                 }
                 sleep(1000);
@@ -314,34 +316,24 @@ function restartgame() {
 
             sleep(500);
             for (let i = 0; i < 3; i++) {
-                if (click("确定") || click("停止")) {
+                if (click("确定")) {
                     toastLog("已停止应用");
                     break;
                 }
-                sleep(1000);
+                sleep(300);
             }
 
-            sleep(500);
-            for (let i = 0; i < 3; i++) {
-                let open = text("打开").findOne()
-                if (open) {
-                    open.click()
-                    log("启动卡通农场");
-                    sleep(300)
-                    break;
-                }
-                sleep(500);
-            }
-            //回到主界面点击"卡通农场"
+            sleep(300);
+            log("launch方法启动卡通农场");
+            launch("com.supercell.hayday");
+            sleep(100)
+
             if (currentPackage() != "com.supercell.hayday") {
+                log("最后的倔强了,bro")
                 home();
                 sleep(500);
                 click("卡通农场")
-                sleep(500)
-                if (currentPackage() != "com.supercell.hayday") {
-                    log("启动卡通农场");
-                    launch("com.supercell.hayday");
-                }
+                log("点击卡通农场")
             }
         }
     } catch (error) {
@@ -3102,6 +3094,7 @@ function switch_account(Account) {
 
             //点击换号1
             let huanhao1;
+            let huanhao2_detection; // 用于检测换号2
             if (configs.get("switchAccountX1", 0) != 0 || configs.get("switchAccountY1", 0) != 0) {
                 // 如果配置了坐标，则直接点击
                 sleep(300);
@@ -3110,16 +3103,28 @@ function switch_account(Account) {
             } else {
                 // 如果没有配置坐标，则进行识别，最多尝试10次
                 for (let i = 0; i < 10; i++) {
+                    let sc = captureScreen();
                     //新版界面
                     huanhao1 = findMC(["#ffffff", [-22, 9, "#fbb700"],
                         [2, 30, "#f3bb00"], [2, -6, "#e1a282"], [-7, 20, "#e0a383"]]
-                        , null, [0, 0, 200, 250]);
+                        , sc, [0, 0, 200, 250]);
+
+                    // 同时检测换号2按钮
+                    huanhao2_detection = findMC(["#fefdfc", [4, 17, "#f6bd3c"], [-11, 18, "#fffefe"],
+                        [-33, 18, "#fefdfc"], [-14, -3, "#f7c247"], [-26, -1, "#f7bc3f"],
+                        [-38, -15, "#fefdfc"]], sc, [0, 0, 430, 600]);
+
                     let shoujianxiang = findMC(["#d0ae84", [2, 6, "#edecea"],
                         [1, 14, "#cf9f73"], [3, 24, "#e5b200"], [9, 39, "#efeee5"],
                         [4, -16, "#efefef"], [-17, -3, "#d4ae86"], [-9, -2, "#d0b28b"]]
-                        , null, [0, 0, 200, 340]);
+                        , sc, [0, 0, 200, 340]);
 
-                    if (huanhao1) {
+                    // 如果检测到换号2，直接点击换号2
+                    if (huanhao2_detection) {
+                        click(huanhao2_detection.x + ran(), huanhao2_detection.y + ran());
+                        log("检测到换号2按钮,直接点击换号2按钮(识别换号按钮)" + huanhao2_detection.x + "," + huanhao2_detection.y);
+                        break;
+                    } else if (huanhao1) {
                         click(huanhao1.x + ran(), huanhao1.y + ran());
                         log("点击切换账号1按钮(识别换号按钮)" + huanhao1.x + "," + huanhao1.y);
                         break;
@@ -3134,7 +3139,7 @@ function switch_account(Account) {
                 }
 
                 // 如果10次都没找到
-                if (!huanhao1) {
+                if (!huanhao1 && !huanhao2_detection) {
                     if (num < 3) {
                         num++;
                         console.log(`未识别到切换账号1按钮，重试第${num}次`);
@@ -3154,44 +3159,53 @@ function switch_account(Account) {
 
             //点击换号2
             let huanhao2;
-            if (configs.get("switchAccountX2", 0) != 0 || configs.get("switchAccountY2", 0) != 0) {
-                // 如果配置了坐标，则直接点击
-                sleep(300);
-                huanhao2 = { x: configs.get("switchAccountX2", 0), y: configs.get("switchAccountY2", 0) };
-                click(huanhao2.x + ran(), huanhao2.y + ran());
-                log("点击切换账号2按钮(配置坐标)" + huanhao2.x + "," + huanhao2.y);
+            let huanhao2Clicked = false; // 标记是否已经点击过换号2
+            // 如果已经点击过换号2（在检测换号1时），则跳过此处的检测
+            if (huanhao2_detection) {
+                huanhao2Clicked = true; // 标记已点击
+                log("已在检测换号1时点击换号2，跳过此处检测");
             } else {
-                // 如果没有配置坐标，则进行识别，最多尝试10次
-                for (let i = 0; i < 10; i++) {
-                    huanhao2 = findMC(["#fefdfc", [4, 17, "#f6bd3c"], [-11, 18, "#fffefe"],
-                        [-33, 18, "#fefdfc"], [-14, -3, "#f7c247"], [-26, -1, "#f7bc3f"],
-                        [-38, -15, "#fefdfc"]], null, [0, 0, 430, 600]);
+                if (configs.get("switchAccountX2", 0) != 0 || configs.get("switchAccountY2", 0) != 0) {
+                    // 如果配置了坐标，则直接点击
+                    sleep(300);
+                    huanhao2 = { x: configs.get("switchAccountX2", 0), y: configs.get("switchAccountY2", 0) };
+                    click(huanhao2.x + ran(), huanhao2.y + ran());
+                    log("点击切换账号2按钮(配置坐标)" + huanhao2.x + "," + huanhao2.y);
+                    huanhao2Clicked = true; // 标记已点击
+                } else {
+                    // 如果没有配置坐标，则进行识别，最多尝试10次
+                    for (let i = 0; i < 10; i++) {
+                        huanhao2 = findMC(["#fefdfc", [4, 17, "#f6bd3c"], [-11, 18, "#fffefe"],
+                            [-33, 18, "#fefdfc"], [-14, -3, "#f7c247"], [-26, -1, "#f7bc3f"],
+                            [-38, -15, "#fefdfc"]], null, [0, 0, 430, 600]);
 
-                    if (huanhao2) {
-                        click(huanhao2.x + ran(), huanhao2.y + ran());
-                        log("点击切换账号2按钮(识别换号按钮)" + huanhao2.x + "," + huanhao2.y);
-                        break;
+                        if (huanhao2) {
+                            click(huanhao2.x + ran(), huanhao2.y + ran());
+                            log("点击切换账号2按钮(识别换号按钮)" + huanhao2.x + "," + huanhao2.y);
+                            huanhao2Clicked = true; // 标记已点击
+                            break;
+                        }
+
+                        // 如果没找到，等待300ms后继续
+                        sleep(300);
                     }
 
-                    // 如果没找到，等待300ms后继续
-                    sleep(300);
-                }
-
-                // 如果10次都没找到
-                if (!huanhao2) {
-                    if (num < 3) {
-                        num++;
-                        console.log(`未识别到切换账号2按钮，重试第${num}次`);
-                        sleep(3000);
-                        find_close();
-                        sleep(200);
-                        find_close();
-                        continue;
-                    } else {
-                        console.log("超过最大尝试次数，重进游戏");
-                        restartgame();
-                        checkmenu();
-                        return num; // 重启游戏后返回
+                    // 如果10次都没找到
+                    if (!huanhao2) {
+                        if (num < 3) {
+                            num++;
+                            console.log(`未识别到切换账号2按钮，重试第${num}次`);
+                            sleep(3000);
+                            find_close();
+                            sleep(200);
+                            find_close();
+                            continue;
+                        } else {
+                            console.log("超过最大尝试次数，重进游戏");
+                            restartgame();
+                            checkmenu();
+                            return num; // 重启游戏后返回
+                        }
                     }
                 }
             }
