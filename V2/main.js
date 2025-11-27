@@ -391,13 +391,14 @@ let logPath = files.join(logDir, `${formatDate}.txt`);
 // 确保日志目录存在
 files.ensureDir(logDir + "/1");
 
-console.setGlobalLogConfig({
-    file: logPath, // 日志路径
-    maxFileSize: 1024 * 1024 * 10,          // 10MB 后分割
-    maxBackupSize: 10,                 // 最多保留 10 个备份
-    rootLevel: "all",                  // 记录所有级别日志
-    filePattern: "%d [%p] %m%n",      // 格式：时间 + 日志级别 + 消息
-    writeSyncInterval: 500             // 每500ms同步写入一次
+// 监听控制台的所有输出
+console.emitter.on("println", (log, level, levelString) => {
+    // 获取当前时间戳（只包含小时、分钟、秒钟）
+    let now = new Date();
+    let timestamp = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+    // 写入日志文件
+    files.append(logPath, `[${timestamp}] ${log}\n`);
 });
 
 // 颜色库
@@ -457,6 +458,7 @@ function initColor() {
 function getAppVersion() {
     try {
         let projectPath = files.cwd() + "/project.json";
+        log("projectPath: " + projectPath)
         if (files.exists(projectPath)) {
             let projectContent = files.read(projectPath);
             let projectJson = JSON.parse(projectContent);
@@ -671,7 +673,7 @@ ui.layout(
                                     {/* 主功能选择 */}
                                     <horizontal gravity="center_vertical">
                                         <text text="选择功能：" textSize="14" w="80" marginRight="8" />
-                                        <spinner id="functionSelect" entries="刷地|种树|创新号"
+                                        <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆"
                                             w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                         <text id="helpIcon_functionSelect" text="?" textColor="#007AFF" textSize="18" marginRight="8" />
                                     </horizontal>
@@ -1133,7 +1135,7 @@ ui.screenResolution.setText(device.width + "×" + device.height);
 ui.deviceModel.setText(device.brand + " " + device.model);
 
 ui.log_icon.on("click", () => {
-
+    app.startActivity("console")
 });
 
 
@@ -1267,7 +1269,7 @@ function showAboutDialog() {
 
 // 检查更新函数
 function checkForUpdates(silence = false) {
-    log("============= 开始检查更新 =============");
+    log("======== 开始检查更新 ========");
     // toast("正在检查更新...");
     threads.start(() => {
         try {
@@ -1315,7 +1317,7 @@ function checkForUpdates(silence = false) {
 
                 // 比较版本号
                 let compareResult = compareVersions(projectData.versionName, latestVersion);
-                log("版本比较结果: " + compareResult + " (0=相同, <0=旧版本, >0=新版本)");
+                log("版本比较结果: " + compareResult);
 
                 ui.run(() => {
                     if (compareResult < 0) {
@@ -2197,13 +2199,6 @@ ui.emitter.on("resume", function () {
 });
 
 
-
-//
-
-
-
-// ==================== 存储对象处理 ====================
-
 /**
  * 获取当前配置
  */
@@ -2415,15 +2410,11 @@ function loadConfig(loadConfigFromFile = false) {
         let con_load
         // 检查是否从配置文件加载
         if (loadConfigFromFile) {
-            log("==================================")
             log("从配置文件加载配置")
-            log("==================================")
             con_load = JSON.parse(files.read(configPath));
 
         } else {
-            log("==================================")
             log("从存储对象加载配置")
-            log("==================================")
             con_load = getConfig();
 
         }
@@ -2506,7 +2497,7 @@ function validateConfig(config) {
 
     // 验证功能选择
     if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
-    const functionOptions = ["刷地", "种树", "创新号"];
+    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆"];
     if (config.selectedFunction.code < 0 || config.selectedFunction.code >= functionOptions.length) {
         config.selectedFunction.code = defaultConfig.selectedFunction.code;
     }
@@ -2951,34 +2942,6 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 设置树木选择
     ui.treeSelect.setSelection(config.selectedTree.code);
 
-    // 根据选择的功能设置初始显示状态
-    const selectedFunction = config.selectedFunction.text;
-    if (selectedFunction === "刷地") {
-        // 显示作物选择，隐藏树木选择
-        ui.cropSelectContainer.attr("visibility", "visible");
-        ui.shopPriceContainer.attr("visibility", "visible");
-        ui.treeSelectContainer.attr("visibility", "gone");
-        ui.treeShouldSwipe.attr("visibility", "gone");
-        ui.addFriendsCard.attr("visibility", "gone");
-    } else if (selectedFunction === "种树") {
-        // 隐藏作物选择，显示树木选择
-        ui.cropSelectContainer.attr("visibility", "gone");
-        ui.shopPriceContainer.attr("visibility", "gone");
-        ui.treeSelectContainer.attr("visibility", "visible");
-        ui.treeShouldSwipe.attr("visibility", "visible");
-        ui.addFriendsCard.attr("visibility", "gone");
-    } else if (selectedFunction === "创新号") {
-        // 创新号
-        ui.cropSelectContainer.attr("visibility", "gone");
-        ui.shopPriceContainer.attr("visibility", "gone");
-        ui.treeSelectContainer.attr("visibility", "gone");
-        ui.treeShouldSwipe.attr("visibility", "gone");
-        ui.addFriendsCard.attr("visibility", "visible");
-    }
-
-
-
-
 
     // 设置账号相关
     ui.accountSwitch.setChecked(config.switchAccount);
@@ -3207,7 +3170,7 @@ ui.btnStop.click(() => {
 
 // 输出当前配置日志
 function logCurrentConfig(config) {
-    console.log("=============== 当前配置 ===============");
+    console.log("========== 当前配置 ==========");
     console.log("应用版本: " + getAppVersion());
     console.log("设备分辨率：" + config.deviceScreenSize);
     console.log("选择功能: " + config.selectedFunction.text);
@@ -3238,7 +3201,7 @@ function logCurrentConfig(config) {
     console.log("是否使用shell命令重启游戏: " + (config.restartWithShell ? "是" : "否"));
     console.log("浮动按钮: " + (ui.win_switch.checked ? "是" : "否"));
     // console.log("主题颜色: " + config.themeColor.text);config
-    console.log("============================");
+    console.log("====================");
 }
 
 //自动获取截图权限
@@ -3322,7 +3285,7 @@ function startButton() {
                 threads.start(() => {
                     log("开始启动刷地引擎");
                     launch("com.supercell.hayday");
-                    sleep(1000);
+                    sleep(100);
                     let newEngine = engines.execScriptFile("./shuadi.js");
                     log("启动刷地引擎，ID: " + newEngine.id);
 
@@ -3337,7 +3300,7 @@ function startButton() {
 
                     log("开始启动刷地引擎");
 
-                    sleep(1000);
+                    sleep(100);
                     let newEngine = engines.execScriptFile("./shuadi.js");
                     log("启动刷地引擎，ID: " + newEngine.id);
 
@@ -3349,7 +3312,7 @@ function startButton() {
             stopOtherEngines();
 
             launch("com.supercell.hayday");
-            setTimeout(() => { }, 1000);
+            setTimeout(() => { }, 100);
             if (!ui.win_switch.checked) {
                 float_win.open();
                 log("启动浮动按钮");
@@ -3362,9 +3325,20 @@ function startButton() {
             stopOtherEngines();
             threads.start(() => {
                 launch("com.supercell.hayday");
-                sleep(1000);
+                sleep(100);
                 let newEngine = engines.execScriptFile("./createNewAccount.js");
                 log("启动建号引擎，ID: " + newEngine.id);
+
+            });
+            break;
+
+        case 3: // 仅汤姆
+            stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./tom.js");
+                log("启动汤姆引擎，ID: " + newEngine.id);
 
             });
             break;
@@ -3400,7 +3374,7 @@ function winStartButton() {
             stopOtherEngines(); // 先清理所有任务
             threads.start(() => {
                 launch("com.supercell.hayday");
-                sleep(1000);
+                sleep(100);
                 let newEngine = engines.execScriptFile("./shuadi.js");
                 log("启动刷地引擎，ID: " + newEngine.id);
 
@@ -3409,7 +3383,7 @@ function winStartButton() {
 
         case 1: // 种树
             stopOtherEngines();
-            setTimeout(() => { }, 1000);
+            setTimeout(() => { }, 100);
             threads.start(() => {
                 let newEngine = engines.execScriptFile("./zhongshu.js");
                 log("启动种树引擎，ID: " + newEngine.id);
@@ -3420,12 +3394,23 @@ function winStartButton() {
             stopOtherEngines();
             threads.start(() => {
                 launch("com.supercell.hayday");
-                sleep(1000);
+                sleep(100);
                 let newEngine = engines.execScriptFile("./createNewAccount.js");
                 log("启动建号引擎，ID: " + newEngine.id);
 
             });
+
+        case 3: // 仅汤姆
+            stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./tom.js");
+                log("启动汤姆引擎，ID: " + newEngine.id);
+
+            });
             break;
+            
 
         default:
             toast("未知功能", "long");
@@ -3566,7 +3551,20 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "visible");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
+            } else if (selectedFunction === "仅汤姆") {
+                // 仅汤姆
+                ui.cropSelectContainer.attr("visibility", "gone");
+                ui.shopPriceContainer.attr("visibility", "gone");
+                ui.CangkuSoldContainer.attr("visibility", "gone");
+                ui.tomSwitchContainer.attr("visibility", "gone");
+                ui.treeSelectContainer.attr("visibility", "gone");
+                ui.treeShouldSwipe.attr("visibility", "gone");
+                ui.addFriendsCard.attr("visibility", "gone");
+                // 隐藏汤姆相关控件
+                ui.tomItemContainer.attr("visibility", "visible");
             }
+
+
 
             // 保存选择的功能到配置
             configs.put("selectedFunction", { text: selectedFunction, code: position });
@@ -3739,8 +3737,19 @@ function initUI() {
         dialogs.build({
             title: "功能选择帮助",
             content: "选择功能右边的下拉菜单是能点的\n\n" +
-                "默认是刷地功能，点击刷地可选择其他功能\n" +
-                "",
+                "默认是刷地功能,点击刷地可选择其他功能\n\n" +
+                "刷地功能：\n"+
+                "- 应该不用解释\n\n"+
+                "种树功能：\n"+
+                "- 先启用浮动按钮,进入游戏后,在浮动按钮点击开始即可运行\n"+
+                "- 自动滑动当检测此页面”没有“可种植地块后,自动滑动屏幕,关闭可自行滑动调整\n\n"+
+                "创新号功能：\n"+
+                "-先新建一个号,确保进入游戏后是在最初的教程界面,点击开始,自动运行到5级\n"+
+                "-添加好友,新手教程结束后,根据输入的农场标签,自动添加农场好友\n\n"+
+                "仅汤姆：\n"+
+                "-先在上方账号信息一栏中选择是否切换账号并且勾选需要刷取的账号\n"+
+                "-在等待期间会回到主界面,并不是脚本掉了\n"+
+                "当剩余时间小于60秒时,启动游戏\n",
             positive: "确定"
         }).show();
     })

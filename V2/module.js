@@ -284,19 +284,29 @@ function restartgame() {
         // 尝试使用Root方式停止应用
         if (configs.get("restartWithShell", false)) {
             try {
-                sleep(500);
-                let result = shell("am force-stop " + packageName, true);
-                if (result.code === 0) {
-                    console.log("使用am force-stop命令成功停止应用");
-                    sleep(500);
-                    log("启动卡通农场");
-                    launch("com.supercell.hayday");
-                    rootStopSuccess = true;
+                // 获取应用的PID
+                let pidResult = shell("pidof " + packageName, true);
+                log(pidResult);
+                if (pidResult.code === 0 && pidResult.result) {
+                    let pid = pidResult.result.trim();
+                    console.log("获取到应用PID: " + pid);
+
+                    // 使用kill命令终止进程
+                    let result = shell("kill " + pid, true);
+                    if (result.code === 0) {
+                        console.log("使用PID成功停止应用");
+                        sleep(1000);
+                        log("启动卡通农场");
+                        launch("com.supercell.hayday");
+                        rootStopSuccess = true;
+                    } else {
+                        console.log("kill命令执行失败: " + result.error);
+                    }
                 } else {
-                    console.log("am force-stop命令执行失败: " + result.error);
+                    console.log("未能获取到应用PID: " + (pidResult.error || "无PID返回"));
                 }
             } catch (e) {
-                console.log("使用am force-stop命令时出错: " + e);
+                console.log("使用PID停止应用时出错: " + e);
             }
         }
 
@@ -560,6 +570,7 @@ function findText(targetText, sc, region) {
     try {
         let ocrResult = gmlkit.ocr(img, "zh")
         if (!ocrResult || !ocrResult.children) {
+            log("OCR识别结果:", ocrResult.text)
             return null;
         }
 
@@ -1414,6 +1425,7 @@ function huadong(right = false) {
         if (right) {
             sleep(100)
             swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
+            sleep(350)
         }
 
     } catch (error) {
@@ -1468,31 +1480,30 @@ function tomOperation(Account) {
         let minutes = Math.floor(tomTime / 60) % 60;
         let seconds = tomTime % 60;
         let timeText = hours > 0 ? `${hours}时${minutes}分${seconds}秒` : minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
-        details = `汤姆休息剩余时间: ${timeText}\n`;
+        details = `汤姆休息剩余时间: ${timeText}`;
         log(details);
         showTip(details);
+        return true
     }
 
-    //如果没有雇佣汤姆，输出提示，并返回
+    //如果没有雇佣汤姆，输出提示，并返回false
     if (!tom_isWork) {
         log("没有雇佣汤姆")
         showTip("没有雇佣汤姆");
         return false;
     }
 
-    if (config.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
-        log("===============汤姆===================");
-        sleep(300)
+    if ((config.tomFind.enabled || config.selectedFunction.code == 3) && !tomTime && tom_isWork) {    //汤姆
+        log("========== 汤姆 ==========");
+        sleep(100)
+        find_close();
+        sleep(100);
         swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
+        sleep(350)
         let tomPos = clickTom();
         sleep(500);
         let tomState = tomToFind(tomPos);
-        if (tomState === true) {
-            //设定计时器
-            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
-            timer(timerName, 2 * 60 * 60);//2小时
-            timeStorage.put(tomIsWorkName, true);
-        } else if (tomState === null) {
+        if (tomState === null) {
             log("未雇佣汤姆");
             showTip("未雇佣汤姆");
             timeStorage.put(tomIsWorkName, null);
@@ -1516,6 +1527,20 @@ function tomOperation(Account) {
 function findTom() {
     for (let i = 0; i < 20; i++) {
         let sc = captureScreen();
+
+        let box = findMC(["#cc9759", [32, 0, "#6f371c"],
+            [34, 5, "#c8a250"], [42, 2, "#87b80e"],
+            [40, 12, "#87b50f"], [11, -23, "#cdc921"]])
+        if (box) {
+            tomPos = { x: box.x + 20, y: box.y };
+            log("盒子定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
+            if (tomPos.x < 1280 && tomPos.y < 720) {
+                return tomPos;
+            } else {
+                return null
+            }
+        }
+
         let baozhi1 = findMC(["#8f4e21", [0, -14, "#904f21"],
             [9, -39, "#d0cec9"], [-1, -34, "#d60808"],
             [-15, -8, "#aba79d"], [-12, -24, "#ecdeaf"]], sc);
@@ -1523,23 +1548,36 @@ function findTom() {
             [8, -33, "#bebcb8"], [11, -23, "#7e7c75"],
             [-2, -29, "#b90707"], [-18, -13, "#9f916f"],
             [-14, -1, "#86837c"]], sc);
+
+        if (baozhi1 || baozhi2) {
+            let baozhi = baozhi1 || baozhi2;
+            tomPos = { x: baozhi.x + 194, y: baozhi.y + 140 };
+            log("报纸定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
+            if (tomPos.x < 1280 && tomPos.y < 720) {
+                return tomPos;
+            } else {
+                return null
+            }
+        }
+
         let youxiang1 = findMC(["#66605d", [13, -10, "#6f9692"],
             [13, -23, "#ce1d1d"], [1, -23, "#9ecbd0"], [-12, -27, "#93c0c5"]
         ], sc);
         let youxiang2 = findMC(["#5f5a56", [14, -10, "#678783"],
             [13, -20, "#a91717"], [-10, -28, "#87acad"], [3, -20, "#7fa4a7"]
         ], sc);
-        if (baozhi1 || baozhi2) {
-            let baozhi = baozhi1 || baozhi2;
-            tomPos = { x: baozhi.x + 194, y: baozhi.y + 140 };
-            return tomPos;
-        }
 
         if (youxiang1 || youxiang2) {
             let youxiang = youxiang1 || youxiang2;
             tomPos = { x: youxiang.x + 140, y: youxiang.y + 99 };
-            return tomPos;
+            log("邮箱定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
+            if (tomPos.x < 1280 && tomPos.y < 720) {
+                return tomPos;
+            } else {
+                return null
+            }
         }
+
         sleep(500);
     }
     log("未找到汤姆")
@@ -1597,6 +1635,12 @@ function tomMenu() {
         return "没有雇佣汤姆"
     }
 
+    let menu4 = matchColor([{ x: 677, y: 615, color: "#f6cb51" }, { x: 977, y: 620, color: "#f6c647" },
+    { x: 605, y: 528, color: "#efc462" }, { x: 997, y: 300, color: "#f4e9d0" }])
+    if (menu4) {
+        return "选择数量"
+    }
+
     //没有找到符合的页面
     return null;
 }
@@ -1604,13 +1648,15 @@ function tomMenu() {
 /**
  * 
  * @param {*} tomPos 汤姆坐标
- * @returns 找到返回true，休息返回剩余时间，未雇佣返回null，未找到返回false
+ * @returns 找到返回休息时间，休息返回剩余时间，未雇佣返回null，未找到返回false
  * @description 点击汤姆后进行操作，需自行设置计时器
  */
 function tomToFind(tomPos) {
-    function tom_find() {
-        let findnum = 0;
-        while (findnum < 3) {
+
+    //第一次点击汤姆
+    function tom_operation1() {
+        let findNum = 0;
+        while (findNum < 3) {
             // 根据类型确定点击坐标
             let x = 365 + ran();
             let y = 340 + ran();
@@ -1643,21 +1689,41 @@ function tomToFind(tomPos) {
             sleep(500);
             if (matchColor([{ x: 806, y: 448, color: "#f6bf3f" }, { x: 1042, y: 448, color: "#f6ba38" }])) {
                 click(920 + ran(), 440 + ran());
-                break;
+                //第一次回来
+                log("等待汤姆中,请勿进行任何操作...");
+                showTip("等待汤姆中,请勿进行任何操作...");
+                sleep(25000);
+                showTip("汤姆第一次返回");
+                return true;
             } else {
                 sleep(500);
-                findnum++;
+                findNum++;
             }
             //没有点到物品，开始寻找 按钮是灰色
         }
-        //第一次回来
-        log("等待汤姆中,请勿进行任何操作...");
-        showTip("等待汤姆中,请勿进行任何操作...");
-        sleep(25000);
-        showTip("汤姆第一次返回");
-        let isfind = false;
-        findNum = 0;
-        while (!isfind && findNum < 3) {
+        return false
+    }
+
+    function tom_operation2(tomPos, inTomMenu = false) {
+
+        function tom_operation2_click(tomPos) {
+            click(980 + ran(), 450 + ran());
+            //第二次回来
+            log("等待汤姆中,请勿进行任何操作...");
+            showTip("等待汤姆中,请勿进行任何操作...");
+            sleep(25000);
+            log("收取物品");
+            showTip("收取物品");
+            click(tomPos.x, tomPos.y);
+        }
+
+        if (inTomMenu) {
+            tom_operation2_click(tomPos);
+            return true;
+        }
+
+        let findNum = 0;
+        while (findNum < 3) {
 
             if (findNum != 0) {
                 sleep(500);
@@ -1666,35 +1732,49 @@ function tomToFind(tomPos) {
 
             for (let i = 0; i < 3; i++) {
                 showTip("汤姆第一次返回，点击汤姆")
-                if (findNum == 0 && i == 0) click(tomPos.x, tomPos.y);
+                if (findNum == 0 && i == 0 && tomPos) click(tomPos.x, tomPos.y);
                 sleep(1000);
                 //选择找的数量
-                if (matchColor([{ x: 677, y: 615, color: "#f6cb51" }, { x: 977, y: 620, color: "#f6c647" },
+                if (!matchColor([{ x: 677, y: 615, color: "#f6cb51" }, { x: 977, y: 620, color: "#f6c647" },
                 { x: 605, y: 528, color: "#efc462" }, { x: 997, y: 300, color: "#f4e9d0" }])) {
-                    click(980 + ran(), 450 + ran());
-                    isfind = true;
-                    break;
+                    continue;
                 }
+                tom_operation2_click(tomPos);
+                return true;
             }
             findNum++;
         }
-        //第二次回来
-        log("等待汤姆中,请勿进行任何操作...");
-        showTip("等待汤姆中,请勿进行任何操作...");
-        sleep(25000);
-        log("收取物品");
-        showTip("收取物品");
-        click(tomPos)
+        return false;
+    }
+
+    /**
+     * @description 验证汤姆的点击
+     * @param {*} tomPos 汤姆坐标
+     * @returns 找到返回汤姆休息时间
+     */
+    function tom_operation3(tomPos) {
         //验证汤姆的点击
-        findNum = 0
+        let findNum = 0
         while (findNum < 3) {
             sleep(1000);
-            click(tomPos);
+            click(tomPos.x, tomPos.y);
             if (tomMenu() == "等待" || tomMenu() == "没有雇佣汤姆") {
                 log("成功收取物品");
                 showTip("成功收取物品");
+                let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "tom");
+                let tomTimeStr_fixed = tomTimeStr.replace(/(\d*)小时/, function (match, p1) {
+                    // 如果没有数字或者数字不是1，则替换为1
+                    if (p1 === "" || p1 !== "1") {
+                        return "1小时";
+                    }
+                    // 如果是1，则保持不变
+                    return match;
+                });
+                let tomTime = extractTime(tomTimeStr_fixed);
+                showTip("汤姆剩余时间:" + tomTime.hours + "小时" + tomTime.minutes + "分钟" + tomTime.seconds + "秒");
                 click(1200 + ran(), 400 + ran());
-                return true;
+                isfindTom = true;
+                return tomTime;
             } else {
                 clickTom();
                 findNum++;
@@ -1702,20 +1782,36 @@ function tomToFind(tomPos) {
         }
     }
 
+    function tom_find(tomPos) {
+
+        tom_operation1();
+
+        tom_operation2(tomPos);
+
+        let tomTime = tom_operation3(tomPos);
+        return tomTime;
+    }
+
     let isfindTom = false;
     let findNum = 0;
+
     while (!isfindTom && findNum < 3) {
         for (let i = 0; i < 5; i++) {
             log("第 " + (i + 1) + " 次检测汤姆页面");
             showTip("第 " + (i + 1) + " 次检测汤姆页面");
             let tom_menu = tomMenu();
             if (tom_menu == "寻找") {
+                findNum = 0;
                 log("检测到汤姆页面");
                 showTip("检测到汤姆页面");
-                tom_find();
+                let tomTime = tom_find(tomPos);
                 isfindTom = true;
-                return true;
+                return tomTime;
+            } else if (tom_menu == "选择数量") {
+                findNum = 0;
+                tom_operation2(tomPos, true);
             } else if (tom_menu == "等待") {
+                findNum = 0;
                 let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "tom");
                 let tomTimeStr_fixed = tomTimeStr.replace(/(\d*)小时/, function (match, p1) {
                     // 如果没有数字或者数字不是1，则替换为1
@@ -1731,6 +1827,7 @@ function tomToFind(tomPos) {
                 isfindTom = true;
                 return tomTime;
             } else if (tom_menu == "没有雇佣汤姆") {
+                findNum = 0;
                 log("没有雇佣汤姆");
                 showTip("没有雇佣汤姆");
                 click(1200 + ran(), 400 + ran());
@@ -2245,13 +2342,19 @@ function shop() {
                 console.log(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sail_minNum + "，结束售卖");
                 showTip(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sail_minNum + "，结束售卖");
                 log(config.selectedCrop.text + "数量不足，退出售卖");
-                close();
+                if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
+                    log("识别到售卖界面，点击叉叉")
+                    close();
+                }
                 break;
             }
 
             console.log(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sail_minNum + "，可售卖" + sellNum);
             showTip(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sail_minNum + "，可售卖" + sellNum);
-            close();
+            if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
+                log("识别到售卖界面，点击叉叉")
+                close();
+            }
             shop_sail([{ title: config.selectedCrop.text, num: sellNum }], { [config.selectedCrop.text]: crop_sail }, "left", config.shopPrice.code)
             break;
 
@@ -3846,8 +3949,7 @@ function operation(Account) {
 
 
     //设定计时器
-    //小麦，玉米，胡萝卜，大豆
-    let cropTime = config.matureTime * 60 - 5; //成熟时间-5秒
+    let cropTime = config.matureTime * 60 - config.harvestTime; //成熟时间-收割时间
     let timerName = Account ? Account + "计时器" : config.selectedCrop.text;
     timer(timerName, cropTime);
 
@@ -4358,6 +4460,10 @@ module.exports = {
     operation: operation,
 
     // 种树相关
+    //汤姆相关
+    tomOperation: tomOperation,
+    findTom: findTom,
+
 
 
     // 全局变量

@@ -1,31 +1,31 @@
 {
-  "version": "2.1.5",
-  "description": "\n\n新增功能：\n添加顶号延迟，当其他设备登录脚本执行的账号时，会等待5分钟(时间可自行设置)\n如遇到服务器下线，会等待15分钟\n\n功能优化：\nUI界面优化\n添加supercell账号界面的检测\n\n修复Bug：\n修复商店售卖时，当货架全满，不会上报纸的Bug\n\n",
-  "zip_name": "卡通农场小助手v2.1.5.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.5/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.5.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.5/v2.1.5.zip",
+  "version": "2.1.6",
+  "description": "\n\nv2.1.6\n新增功能：\n右上角添加控制台按钮，能直接打开控制台查看近期日志输出\n将汤姆功能单独拿出来，可以仅跑汤姆\n\n功能优化：\n将重启游戏的shell命令从force-stop改为kill，使用关闭进程而非强行停止\n点击开始后更快的启动\n使用文字识别进行切换账号，如果未找到账号会输出OCR识别结果\n优化日志输出，且清空日志不会影响日志文件的写入\n汤姆的识别点击添加了使用汤姆的小木盒定位\n\n修复Bug：\n修复在汤姆功能已经选择物品后，汤姆第一次回来，在选择物品数量界面执行汤姆导致的运行Bug\n\n",
+  "zip_name": "卡通农场小助手v2.1.6.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.6/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.6.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.6/v2.1.6.zip",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 57,
+      "versionCode": 58,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 57,
+      "versionCode": 58,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 57,
+      "versionCode": 58,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
     },
     {
       "name": "shuadi.js",
-      "versionCode": 57,
+      "versionCode": 58,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/shuadi.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/shuadi.js"
     },
@@ -40,6 +40,12 @@
       "versionCode": 51,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/createNewAccount.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/createNewAccount.js"
+    },
+    {
+      "name": "tom.js",
+      "versionCode": 58,
+      "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/tom.js",
+      "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/tom.js"
     },
     {
       "name": "floatyBtn.js",
@@ -59,6 +65,5 @@
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/hot_update.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/hot_update.js"
     }
-
   ]
 }

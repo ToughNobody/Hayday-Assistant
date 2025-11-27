@@ -536,14 +536,14 @@ function downloadZipFile(downloadUrl, targetDir = "/sdcard/Download/", fileName)
             return false;
         }
 
-        console.log("文件大小: " + content.length + "字节");
+        console.log("文件大小: " + (content.length / (1024 * 1024)).toFixed(2) + "MB");
 
         // 更新进度条文本
         progressView.progressText.setText("正在保存文件...");
 
         // 使用二进制模式写入文件
         files.writeBytes(filePath, content);
-        console.log("压缩包已保存: " + filePath + ", 大小: " + content.length + "字节");
+        console.log("压缩包已保存: " + filePath + ", 大小: " + (content.length / (1024 * 1024)).toFixed(2) + "MB");
 
         // 验证文件是否成功写入
         if (!files.exists(filePath)) {

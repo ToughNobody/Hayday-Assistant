@@ -30,7 +30,7 @@ try {
 let config = module.config;
 let timeStorage = storages.create("times");
 let statistics = storages.create("statistics");
-
+let configs = storages.create("config");
 
 
 
@@ -64,7 +64,7 @@ function main_email() {
     }
 
     //主界面判断
-    sleep(1000);
+    sleep(100);
     module.checkmenu();
     sleep(500);
     if (!config.switchAccount || config.accountList.filter(account => account.done).length <= 1) { //不切换账号
@@ -437,7 +437,7 @@ function main_save() {
 
 
             //主界面判断
-            sleep(1000);
+            sleep(100);
             module.checkmenu();
             sleep(500);
 
