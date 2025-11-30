@@ -451,88 +451,6 @@ function inputName() {
     }
 }
 
-function addFriends() {
-    try {
-        let friendButton = null;
-        let num = 0;
-        while (num < 10) {
-            friendButton = module.matchColor([{ x: 1206, y: 630, color: "#fcf7f5" }, { x: 1211, y: 664, color: "#f1dcd3" }, { x: 1188, y: 646, color: "#a64b01" },
-            { x: 1178, y: 661, color: "#fab72e" }, { x: 1248, y: 654, color: "#a64b00" }, { x: 1235, y: 682, color: "#f4c03f" }])
-            if (friendButton) break
-            else {
-                friendButton = module.matchColor([{ x: 1215, y: 634, color: "#f8f0eb" }, { x: 1216, y: 664, color: "#f1dcd3" }, { x: 1249, y: 664, color: "#a24700" },
-                { x: 1235, y: 681, color: "#f3c13f" }, { x: 1192, y: 649, color: "#a54b01" }])
-                if (friendButton) break
-            }
-            sleep(500);
-            num++;
-        }
-        if (!friendButton) {
-            module.showTip("没有找到好友按钮");
-            log("没有找到好友按钮");
-            return false;
-        }
-        click(1200, 640);
-        sleep(500);
-        let friendMenu = null;
-        num = 0;
-        while (num < 10) {
-            friendMenu = module.matchColor([{ x: 256, y: 542, color: "#ffcb42" },
-            { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
-            { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
-            { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }])
-            if (friendMenu) break;
-            sleep(500);
-            num++;
-        }
-        if (!friendMenu) {
-            module.showTip("没有找到好友菜单");
-            log("没有找到好友菜单");
-            return false;
-        }
-        click(255, 600);
-        sleep(500);
-        let addFriendMenu = null;
-        num = 0;
-        while (num < 10) {
-            addFriendMenu = module.matchColor([{ x: 147, y: 82, color: "#f5d94e" },
-            { x: 167, y: 79, color: "#fefdfc" }, { x: 260, y: 134, color: "#fcd05c" },
-            { x: 193, y: 251, color: "#d9a285" }, { x: 783, y: 255, color: "#ffffed" },
-            { x: 926, y: 252, color: "#f6c647" }])
-            if (addFriendMenu) break;
-            sleep(500);
-            num++;
-        }
-        if (!addFriendMenu) {
-            module.showTip("没有找到添加好友菜单");
-            log("没有找到添加好友菜单");
-            return false;
-        }
-
-        // 处理名称，确保每个名称都以#开头
-        let nameMap = doneAddFriendsList.map(item => {
-            // 如果第一个字符不是#，则添加#
-            return item.addFriendstitle.charAt(0) === '#' ? item.addFriendstitle : '#' + item.addFriendstitle;
-        });
-
-        for (let name of nameMap) {
-            module.showTip("加好友" + name);
-            log("加好友" + name);
-            click(500, 260);
-            sleep(1000);
-            setText(name);
-            sleep(1000);
-            click(980, 250);
-            sleep(1000);
-            if (module.matchColor([{ x: 719, y: 402, color: "#51cb30" }, { x: 863, y: 403, color: "#4dca2b" }])) {
-                click(780, 400);
-            }
-
-        }
-    } catch (error) {
-        console.error("addFriends函数出错:", error);
-    }
-}
 
 function jiazai() {
     try {
@@ -745,7 +663,10 @@ function main() {
         inputName()
         clickDuihua()
         if (doneAddFriendsList.length) {
-            addFriends();
+            let nameMap = doneAddFriendsList.map(item => {
+                return item.addFriendstitle
+            });
+            module.addFriends(nameMap);
             sleep(1000);
             //点击叉号
             click(1115, 90);

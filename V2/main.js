@@ -33,11 +33,119 @@ let CangkuSoldList = [
     { title: "胶带", done: false, priority: 0, id: 15 }
 ];
 
+// 初始化账户列表数据
+var savedData = configs.get("sell_accountList");
+// 确保savedData是一个有效的数组
+if (!Array.isArray(savedData)) {
+    savedData = [];
+}
 
-// 全局状态变量，用于跟踪各种选择状态，避免依赖颜色判断
-// let currentAccountMethod = "email"; // 当前账号方式: "email" 或 "save"
-// let currentFindAccountMethod = "ocr"; // 当前账号识别方式: "image" 或 "ocr"
-// let currentLandFindMethod = "商店"; // 当前寻找土地方法: "商店" 或 "面包房"
+var sell_accountList = [];
+
+// 如果有保存的数据，则从中提取账户列表信息
+if (savedData.length > 0) {
+    // 从保存的数据格式转换为当前使用的格式
+    for (var i = 0; i < savedData.length; i++) {
+        // 确保每个保存的数据项都是有效的对象
+        if (savedData[i] && typeof savedData[i] === 'object') {
+            sell_accountList.push({
+                title: savedData[i].account || '未知账户',
+                addFriend: savedData[i].addFriend || '',
+                done: savedData[i].done !== undefined ? savedData[i].done : false,
+                price: savedData[i].price || 0
+            });
+        }
+    }
+} else {
+    // 如果没有保存的数据，使用默认值
+    sell_accountList = [];
+}
+
+// 添加"当前"账户作为第一个账户（如果还没有的话）
+if (sell_accountList.length === 0 || sell_accountList[0].title !== '当前') {
+    sell_accountList.unshift({ title: '当前', addFriend: '', done: false, price: 0 });
+}
+
+// 创建所有账户对应的仓库售卖列表数据源
+var allCangkuSoldLists = {};
+
+// 确保初始化过程更加健壮
+try {
+    if (savedData.length > 0) {
+        // 从保存的数据中恢复每个账户的售卖计划
+        for (var i = 0; i < savedData.length; i++) {
+            var accountIndex = i + 1; // 账户索引（从1开始，因为"当前"账户是第0个）
+            // 确保保存的数据项是有效的对象
+            if (savedData[i] && typeof savedData[i] === 'object') {
+                var sellPlan = Array.isArray(savedData[i].sellPlan) ? savedData[i].sellPlan : [];
+
+                // 初始化默认的仓库售卖列表
+                var defaultItemList = createDefaultItemList();
+
+                // 创建一个新的列表，用于存储合并后的项目
+                var mergedItemList = JSON.parse(JSON.stringify(defaultItemList)); // 深拷贝默认列表
+
+                // 查找并添加保存数据中存在但默认列表中没有的项目
+                for (var j = 0; j < sellPlan.length; j++) {
+                    var planItem = sellPlan[j];
+                    // 确保计划项是有效的对象
+                    if (planItem && typeof planItem === 'object') {
+                        // 检查该项目是否存在于默认列表中
+                        var itemExists = false;
+                        for (var k = 0; k < mergedItemList.length; k++) {
+                            if (mergedItemList[k].title === planItem.item) {
+                                itemExists = true;
+                                break;
+                            }
+                        }
+
+                        // 如果项目不存在于默认列表中，添加它
+                        if (!itemExists) {
+                            mergedItemList.push({
+                                title: planItem.item,
+                                sellNum: planItem.sellNum !== undefined ? planItem.sellNum : 0,
+                                done: planItem.done !== undefined ? planItem.done : false
+                            });
+                        }
+                    }
+                }
+
+                allCangkuSoldLists["sell_CangkuSoldList" + accountIndex] = mergedItemList;
+
+                // 应用保存的售卖计划到数据源
+                for (var j = 0; j < sellPlan.length; j++) {
+                    var planItem = sellPlan[j];
+                    // 确保计划项是有效的对象
+                    if (planItem && typeof planItem === 'object') {
+                        // 在合并后的列表中查找匹配的项目并更新其值
+                        for (var k = 0; k < allCangkuSoldLists["sell_CangkuSoldList" + accountIndex].length; k++) {
+                            if (allCangkuSoldLists["sell_CangkuSoldList" + accountIndex][k].title === planItem.item) {
+                                allCangkuSoldLists["sell_CangkuSoldList" + accountIndex][k].sellNum = planItem.sellNum !== undefined ? planItem.sellNum : 0;
+                                allCangkuSoldLists["sell_CangkuSoldList" + accountIndex][k].done = planItem.done !== undefined ? planItem.done : false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 如果没有保存的数据或保存的数据不完整，初始化默认的仓库售卖列表
+    for (var i = 1; i <= sell_accountList.length; i++) {
+        // 只有当该索引尚未初始化时才初始化
+        if (!allCangkuSoldLists["sell_CangkuSoldList" + i]) {
+            allCangkuSoldLists["sell_CangkuSoldList" + i] = createDefaultItemList();
+        }
+    }
+} catch (e) {
+    // 如果初始化过程中出现任何错误，确保有一个默认的空对象
+    allCangkuSoldLists = {};
+    for (var i = 1; i <= sell_accountList.length; i++) {
+        allCangkuSoldLists["sell_CangkuSoldList" + i] = createDefaultItemList();
+    }
+}
+
 
 
 const currentPath = files.cwd();
@@ -89,7 +197,7 @@ function showCangkuSoldDialog() {
         <vertical>
             <horizontal paddingLeft="10dp" paddingTop="10dp" >
                 <text textSize="18sp" textColor="#333333" text="仓库售卖" />
-                <text id="helpIcon_CangkuSold" text="?" textColor="#007AFF" textSize="18sp" marginLeft="10dp" />
+                <img id="helpIcon_CangkuSold" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginLeft="10dp" />
                 <Switch id="CangkuSoldSwitch" paddingLeft="160dp" checked="{{isCangkuSold}}" />
             </horizontal>
             <horizontal>
@@ -629,498 +737,690 @@ function copy_shell(name, direction = "export") {
     }
 }
 
+// 动态生成内容块的函数
+function generateContentBlocks(accountList) {
+
+    for (var i = 0; i < accountList.length; i++) {
+        var account = accountList[i];
+        var visibility = i === 0 ? "" : " visibility=\"gone\"";
+
+        let contentBlocks = `
+<vertical id="sell_contentBlock${i + 1}"  bg="#FFFFFF" padding="10dp"${visibility}>
+    <horizontal w="*">
+        <text id="sell_pageTitle${i + 1}" layout_gravity="left|center_vertical" w="70" textSize="18" textColor="#333333" text="${account.title}" />
+        <button id="sell_applyAllButton${i + 1}" text="应用到全部" w="100" textSize="14" layout_gravity="right|center_vertical" style="Widget.AppCompat.Button.Borderless" />
+        <button id="sell_addItemButton${i + 1}" text="添加项目" w="80" textSize="14" layout_gravity="right|center_vertical" style="Widget.AppCompat.Button.Borderless" />
+    </horizontal>
+    <horizontal w="*">
+        <text layout_gravity="left|center_vertical" w="50" textSize="14" textColor="#333333" text="加好友:" />
+        <input id="sell_addFriendInput${i + 1}" layout_gravity="center_vertical" text="${account.addFriend || ""}" textSize="14" w="110" h="auto" />
+        <spinner id="sell_price${i + 1}" layout_gravity="right|center_vertical" w="auto"  entries="最低|平价|最高" bg="#FFFFFF"/>
+    </horizontal>
+    <list id="sell_CangkuSoldList${i + 1}"  h="*">
+        <card  w="*" h="60" margin="0 5" cardElevation="1dp" foreground="?selectableItemBackground">
+            <horizontal gravity="center_vertical">
+                <frame id="sell_colorBar"  w="10" h="*" bg="#ff0000" />
+                <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                    <text id="sell_title" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                </vertical>
+                <button id="sell_sellAllButton" text="全部" textSize="14" w="60" layout_gravity="right|center_vertical" style="Widget.AppCompat.Button.Borderless" />
+                <input id="sell_input" text="{{this.sellNum || 0}}" layout_gravity="center_vertical" w="40" h="auto" inputType="numberSigned|number" />
+                <checkbox id="sell_done" marginLeft="10" marginRight="10" checked="{{this.done}}" />
+            </horizontal>
+        </card>
+    </list>
+</vertical>`;
+        ui.sell_Container.addView(ui.inflate(contentBlocks));
+        // log(contentBlocks)
+    }
+
+}
+
+// 创建默认商品列表的函数
+function createDefaultItemList() {
+    return [
+        { title: "炸药", sellNum: 0, done: false },
+        { title: "炸药桶", sellNum: 0, done: false },
+        { title: "铁铲", sellNum: 0, done: false },
+        { title: "十字镐", sellNum: 0, done: false },
+        { title: "斧头", sellNum: 0, done: false },
+        { title: "木锯", sellNum: 0, done: false },
+        { title: "土地契约", sellNum: 0, done: false },
+        { title: "木槌", sellNum: 0, done: false },
+        { title: "标桩", sellNum: 0, done: false },
+        { title: "盒钉", sellNum: 0, done: false },
+        { title: "螺钉", sellNum: 0, done: false },
+        { title: "镶板", sellNum: 0, done: false },
+        { title: "螺栓", sellNum: 0, done: false },
+        { title: "木板", sellNum: 0, done: false },
+        { title: "胶带", sellNum: 0, done: false }
+    ];
+}
+
+// 定义"应用到全部"按钮点击事件处理函数
+function applySellPlanToAllAccounts(index) {
+    // 获取当前账户的售卖列表数据源
+    var currentDataSource = allCangkuSoldLists["sell_CangkuSoldList" + index];
+
+    if (currentDataSource && Array.isArray(currentDataSource)) {
+        // 将当前账户的售卖计划应用到其他所有账户
+        for (var j = 1; j <= sell_accountList.length; j++) {
+            // 跳过当前账户自身
+            if (j !== index) {
+                var targetDataSource = allCangkuSoldLists["sell_CangkuSoldList" + j];
+
+                if (targetDataSource && Array.isArray(targetDataSource)) {
+                    // 应用售卖计划到目标账户
+                    for (var k = 0; k < currentDataSource.length && k < targetDataSource.length; k++) {
+                        targetDataSource[k].sellNum = currentDataSource[k].sellNum;
+                        targetDataSource[k].done = currentDataSource[k].done;
+                    }
+
+                    // 更新目标账户的UI
+                    if (ui["sell_CangkuSoldList" + j]) {
+                        ui["sell_CangkuSoldList" + j].setDataSource(targetDataSource);
+                    }
+                }
+            }
+        }
+
+        log("已将当前账户的售卖计划应用到其他所有账户");
+    } else {
+        toast("当前账户数据无效");
+    }
+}
+
+// 定义辅助函数，用于查找所有列表中具有相同标题的项目
+function findAllMatchingItems(title) {
+    var matchingItems = [];
+
+    // 遍历所有账户的售卖列表数据源
+    for (var i = 1; i <= sell_accountList.length; i++) {
+        // 获取当前账户的售卖列表数据源
+        var dataSource = allCangkuSoldLists["sell_CangkuSoldList" + i];
+
+        if (dataSource && Array.isArray(dataSource)) {
+            // 查找匹配的项目
+            for (var j = 0; j < dataSource.length; j++) {
+                if (dataSource[j].title === title) {
+                    matchingItems.push({
+                        listIndex: i,
+                        itemIndex: j,
+                        item: dataSource[j],
+                        dataSource: dataSource
+                    });
+                }
+            }
+        }
+    }
+
+    return matchingItems;
+}
+
+// 定义"添加项目"按钮点击事件处理函数
+function addNewItemToAllAccounts() {
+    // 弹出对话框让用户输入项目名称
+    dialogs.prompt("添加项目", "").then(function (title) {
+        if (title) {
+            // 遍历所有账户的售卖列表数据源
+            for (var i = 1; i <= sell_accountList.length; i++) {
+                // 获取当前账户的售卖列表数据源
+                var dataSource = allCangkuSoldLists["sell_CangkuSoldList" + i];
+
+                if (dataSource && Array.isArray(dataSource)) {
+                    // 创建新项目对象
+                    var newItem = {
+                        title: title,
+                        sellNum: 0,
+                        done: false
+                    };
+
+                    // 将新项目添加到数据源
+                    dataSource.push(newItem);
+
+                    // 更新UI
+                    if (ui["sell_CangkuSoldList" + i]) {
+                        ui["sell_CangkuSoldList" + i].setDataSource(dataSource);
+                    }
+                }
+            }
+
+            log("已为所有账户添加项目: " + title);
+        }
+    });
+}
+
 ui.layout(
-    <drawer id="drawer">
-        <vertical>
-            {/*页头*/}
-            <appbar id="appbar" bg="{{color}}">
-                <toolbar id="toolbar" title="卡通农场小助手" >
-                    <text id="log_icon" textColor="white" textSize="18sp" gravity="center" layout_gravity="right" marginRight="16" text="📝" />
-                </toolbar>
-                <tabs id="tabs" />
-            </appbar>
-            <viewpager id="viewpager">
-                {/* 首页 */}
-                <frame>
-                    <scroll>
-                        <vertical w="*" h="*" padding="16">
+    <frame>
+        <drawer id="drawer">
+            <vertical>
+                {/*页头*/}
+                <appbar id="appbar" bg="{{color}}" >
+                    <toolbar id="toolbar" title="卡通农场小助手" layout_height="50">
+                        <img id="log_icon" src="@drawable/ic_assignment_black_48dp" w="22" h="22" tint="white" gravity="center" layout_gravity="right" marginRight="16" />
+                    </toolbar>
+                    <tabs id="tabs" />
+                </appbar>
+                <viewpager id="viewpager">
+                    {/* 首页 */}
+                    <frame>
+                        <scroll>
+                            <vertical w="*" h="*" padding="16">
 
-                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="权限设置" textSize="16" textStyle="bold" marginBottom="8" />
-                                    <horizontal gravity="center_vertical" marginBottom="12">
-                                        {/*无障碍服务开关*/}
-                                        <text text="无障碍服务" textSize="14" w="100" marginRight="8" />
-                                        <Switch id="autoService" w="*" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical" marginBottom="12">
-                                        {/*截图权限获取开关*/}
-                                        <text text="截图权限" textSize="14" w="100" marginRight="8" />
-                                        <Switch id="requestScBtn" w="*" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical" marginBottom="12">
-                                        {/*浮动按钮开关*/}
-                                        <text text="浮动按钮" textSize="14" w="100" marginRight="8" />
-                                        <Switch id="win_switch" w="*" />
-                                    </horizontal>
-                                </vertical>
-                            </card>
-                            {/* 功能选择卡片 */}
-                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="功能设置" textSize="16" textStyle="bold" />
-
-                                    {/* 主功能选择 */}
-                                    <horizontal gravity="center_vertical">
-                                        <text text="选择功能：" textSize="14" w="80" marginRight="8" />
-                                        <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆"
-                                            w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                        <text id="helpIcon_functionSelect" text="?" textColor="#007AFF" textSize="18" marginRight="8" />
-                                    </horizontal>
-
-                                    {/* 作物选择 - 仅在刷地时显示 */}
-                                    <horizontal id="cropSelectContainer" gravity="center_vertical" visibility="visible">
-                                        <text text="种植作物：" textSize="14" w="80" marginRight="8" />
-                                        <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗"
-                                            w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                        <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
-                                        <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                    </horizontal>
-
-                                    {/* 商店售价 - 仅在刷地时显示*/}
-                                    <horizontal id="shopPriceContainer" gravity="center_vertical" visibility="visible">
-                                        <text text="商店售价：" textSize="14" w="80" marginRight="8" />
-                                        <spinner id="shopPrice" entries="最低|平价|最高" w="50" textSize="14" h="48" bg="#FFFFFF" />
-                                        <text text="保留数量:" textSize="14" w="80" marginLeft="20" />
-                                        <input id="ReservedQuantity" inputType="number" marginRight="8" hint="20" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                    </horizontal>
-
-                                    {/* 仓库售卖 - 仅在刷地时显示*/}
-                                    <horizontal id="CangkuSoldContainer" gravity="center_vertical" visibility="visible">
-                                        <text text="仓库售卖：" textSize="14" w="80" marginRight="8" />
-                                        <button id="cangkuSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
-                                        <text text="触发阈值:" textSize="14" w="80" marginRight="3" paddingLeft="20" />
-                                        <input id="CangkuSold_triggerNum" type="number" w="auto" h="48" text="10" marginLeft="5" marginRight="5" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                        <text text="~" textSize="14" w="auto" />
-                                        <input id="CangkuSold_targetNum" type="number" w="auto" h="48" text="25" marginLeft="5" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                    </horizontal>
-
-                                    {/* 汤姆 - 仅在刷地时显示*/}
-                                    <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="gone">
-                                        <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
-                                        <Switch id="tomSwitch" w="*" h="48" gravity="left|center" />
-                                    </horizontal>
-
-                                    {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
-                                    <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
-                                        <text text="物品类型：" textSize="14" w="80" marginRight="8" />
-                                        <spinner id="Tom_itemType" entries="货仓|粮仓" w="120" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
-                                        <input id="Tom_itemName" hint="物品名称" w="*" h="48" textSize="14" bg="#FFFFFF" />
-                                    </horizontal>
-
-                                    {/* 树木选择 - 仅在种树时显示 */}
-                                    <horizontal id="treeSelectContainer" gravity="center_vertical" visibility="gone">
-                                        <text text="种植树木：" textSize="14" w="80" marginRight="8" />
-                                        <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
-                                            w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                    </horizontal>
-
-                                    {/* 是否滑动 - 仅在种树时显示 */}
-                                    <horizontal id="treeShouldSwipe" gravity="center_vertical" visibility="gone">
-                                        <text text="是否自动滑动：" textSize="14" w="80" marginRight="8" />
-                                        <Switch id="treeShouldSwipeSwitch" w="*" h="48"
-                                            gravity="left|center" />
-                                    </horizontal>
-
-                                    <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2" visibility="gone">
-                                        <vertical padding="16">
-                                            {/* 账号标签列表显示 */}
-                                            <vertical id="addFriendsListDisplay" marginTop="8">
-                                                <text text="账号标签：" textSize="14" textStyle="bold" />
-                                            </vertical>
-                                            {/* 账号标签输入框 */}
-                                            <list id="addFriendsList" h="auto">
-                                                <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
-                                                    cardElevation="1dp" foreground="?selectableItemBackground">
-                                                    <horizontal gravity="center_vertical">
-                                                        <frame h="*" w="10" bg="#f27272" />
-                                                        <vertical padding="10 8" h="auto" w="0" layout_weight="1">
-                                                            <text id="addFriendstitle" text="{{this.addFriendstitle}}" textColor="#333333" textSize="16sp" maxLines="1" />
-                                                        </vertical>
-                                                        <checkbox id="addFriendsdone" marginLeft="4" marginRight="50" checked="{{this.addFriendsdone}}" />
-                                                    </horizontal>
-                                                </card>
-                                            </list>
-                                        </vertical>
-                                        <fab id="addFriend" w="50" h="50" src="@drawable/ic_add_black_48dp" scaleType="fitCenter"
-                                            margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
-                                    </card>
-
-                                </vertical>
-                            </card>
-
-                            {/* 操作按钮区 */}
-                            <horizontal gravity="center" marginTop="8">
-                                <button id="btnInstructions" text="使用须知" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
-                                <button id="btnLoadConfig" text="加载配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
-                                <button id="btnSave" text="保存配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" />
-                            </horizontal>
-
-                            <horizontal gravity="center" marginTop="16">
-                                <button id="btnStop" text="停止" w="100" h="48" textSize="16" color="#FFFFFF" backgroundTint="#FF9AA2" />
-                                <frame w="16" />
-                                <button id="btnStart" text="开始" w="216" h="48" textSize="16" color="#FFFFFF" backgroundTint="#4ECDC4" />
-                            </horizontal>
-                        </vertical>
-                    </scroll>
-                </frame>
-                {/* 账号信息 */}
-                <frame>
-                    <scroll>
-                        <vertical w="*" h="*" padding="16">
-                            {/* 账号设置卡片 */}
-                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="账号设置" textSize="16" textStyle="bold" />
-                                    <horizontal gravity="center_vertical">
-                                        <text text="切换账号：" textSize="14" w="100" marginRight="8" />
-                                        <Switch id="accountSwitch" w="*" h="48" />
-                                    </horizontal>
-
-                                    {/* 识别方式选择 */}
-                                    <horizontal gravity="center_vertical" marginTop="8">
-                                        <text text="识别方式：" textSize="14" w="100" marginRight="8" />
-                                        <radiogroup id="findAccountMethod" orientation="horizontal">
-                                            <radio id="findAccountMethod_image" checked="false" text="图片识别" />
-                                            <frame w="3" />
-                                            <radio id="findAccountMethod_text" checked="false" text="文字识别" />
-                                        </radiogroup>
-                                    </horizontal>
-
-                                    {/* 账号方式选择 */}
-                                    <horizontal gravity="center_vertical" marginTop="8">
-                                        <text text="切换账号方式：" textSize="14" w="100" marginRight="8" />
-                                        <radiogroup id="accountMethod" orientation="horizontal">
-                                            <radio id="accountMethod_email" checked="false" text="邮箱" />
-                                            <frame w="30" />
-                                            <radio id="accountMethod_save" checked="false" text="存档" />
-                                        </radiogroup>
-                                    </horizontal>
-
-                                    {/* 账号列表显示 */}
-                                    <vertical id="accountListDisplay" marginTop="8">
-                                        <text text="账号列表：" textSize="14" textStyle="bold" />
+                                <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="权限设置" textSize="16" textStyle="bold" marginBottom="8" />
+                                        <horizontal gravity="center_vertical" marginBottom="12">
+                                            {/*无障碍服务开关*/}
+                                            <text text="无障碍服务" textSize="14" w="100" marginRight="8" />
+                                            <Switch id="autoService" w="*" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical" marginBottom="12">
+                                            {/*截图权限获取开关*/}
+                                            <text text="截图权限" textSize="14" w="100" marginRight="8" />
+                                            <Switch id="requestScBtn" w="*" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical" marginBottom="12">
+                                            {/*浮动按钮开关*/}
+                                            <text text="浮动按钮" textSize="14" w="100" marginRight="8" />
+                                            <Switch id="win_switch" w="*" />
+                                        </horizontal>
                                     </vertical>
-                                    {/* 邮箱账号输入框 */}
-                                    <list id="AccountList" h="auto">
-                                        <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
-                                            cardElevation="1dp" foreground="?selectableItemBackground">
-                                            <horizontal gravity="center_vertical">
-                                                <frame h="*" w="10" bg="#f27272" />
-                                                <vertical padding="10 8" h="auto" w="0" layout_weight="1">
-                                                    <text id="title" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                                </card>
+                                {/* 功能选择卡片 */}
+                                <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="功能设置" textSize="16" textStyle="bold" />
+
+                                        {/* 主功能选择 */}
+                                        <horizontal gravity="center_vertical">
+                                            <text text="选择功能：" textSize="14" w="80" marginRight="8" />
+                                            <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|物品售卖"
+                                                w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                            <img id="helpIcon_functionSelect" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
+                                        </horizontal>
+
+                                        {/* 作物选择 - 仅在刷地时显示 */}
+                                        <horizontal id="cropSelectContainer" gravity="center_vertical" visibility="visible">
+                                            <text text="种植作物：" textSize="14" w="80" marginRight="8" />
+                                            <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗"
+                                                w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                            <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
+                                            <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                        </horizontal>
+
+                                        {/* 商店售价 - 仅在刷地时显示*/}
+                                        <horizontal id="shopPriceContainer" gravity="center_vertical" visibility="visible">
+                                            <text text="商店售价：" textSize="14" w="80" marginRight="8" />
+                                            <spinner id="shopPrice" entries="最低|平价|最高" w="50" textSize="14" h="48" bg="#FFFFFF" />
+                                            <text text="保留数量:" textSize="14" w="80" marginLeft="20" />
+                                            <input id="ReservedQuantity" inputType="number" marginRight="8" hint="20" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                        </horizontal>
+
+                                        {/* 仓库售卖 - 仅在刷地时显示*/}
+                                        <horizontal id="CangkuSoldContainer" gravity="center_vertical" visibility="visible">
+                                            <text text="仓库售卖：" textSize="14" w="80" marginRight="8" />
+                                            <button id="cangkuSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                            <text text="触发阈值:" textSize="14" w="80" marginRight="3" paddingLeft="20" />
+                                            <input id="CangkuSold_triggerNum" type="number" w="auto" h="48" text="10" marginLeft="5" marginRight="5" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                            <text text="~" textSize="14" w="auto" />
+                                            <input id="CangkuSold_targetNum" type="number" w="auto" h="48" text="25" marginLeft="5" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                        </horizontal>
+
+                                        {/* 汤姆 - 仅在刷地时显示*/}
+                                        <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="gone">
+                                            <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
+                                            <Switch id="tomSwitch" w="*" h="48" gravity="left|center" />
+                                        </horizontal>
+
+                                        {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
+                                        <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
+                                            <text text="物品类型：" textSize="14" w="80" marginRight="8" />
+                                            <spinner id="Tom_itemType" entries="货仓|粮仓" w="120" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
+                                            <input id="Tom_itemName" hint="物品名称" w="*" h="48" textSize="14" bg="#FFFFFF" />
+                                        </horizontal>
+
+                                        {/* 树木选择 - 仅在种树时显示 */}
+                                        <horizontal id="treeSelectContainer" gravity="center_vertical" visibility="gone">
+                                            <text text="种植树木：" textSize="14" w="80" marginRight="8" />
+                                            <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
+                                                w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                        </horizontal>
+
+                                        {/* 是否滑动 - 仅在种树时显示 */}
+                                        <horizontal id="treeShouldSwipe" gravity="center_vertical" visibility="gone">
+                                            <text text="是否自动滑动：" textSize="14" w="80" marginRight="8" />
+                                            <Switch id="treeShouldSwipeSwitch" w="*" h="48"
+                                                gravity="left|center" />
+                                        </horizontal>
+
+                                        <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2" visibility="gone">
+                                            <vertical padding="16">
+                                                {/* 账号标签列表显示 */}
+                                                <vertical id="addFriendsListDisplay" marginTop="8">
+                                                    <text text="账号标签：" textSize="14" textStyle="bold" />
                                                 </vertical>
-                                                <checkbox id="done" marginLeft="4" marginRight="40" checked="{{this.done}}" />
-                                            </horizontal>
+                                                {/* 账号标签输入框 */}
+                                                <list id="addFriendsList" h="auto">
+                                                    <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
+                                                        cardElevation="1dp" foreground="?selectableItemBackground">
+                                                        <horizontal gravity="center_vertical">
+                                                            <frame h="*" w="10" bg="#f27272" />
+                                                            <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                                                                <text id="addFriendstitle" text="{{this.addFriendstitle}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                                                            </vertical>
+                                                            <checkbox id="addFriendsdone" marginLeft="4" marginRight="50" checked="{{this.addFriendsdone}}" />
+                                                        </horizontal>
+                                                    </card>
+                                                </list>
+                                            </vertical>
+                                            <fab id="addFriend" w="50" h="50" src="@drawable/ic_add_black_48dp" scaleType="fitCenter"
+                                                margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
                                         </card>
-                                    </list>
-                                    {/* 存档账号输入框 */}
-                                    <list id="SaveAccountList" h="auto" visibility="gone">
-                                        <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
-                                            cardElevation="1dp" foreground="?selectableItemBackground">
-                                            <horizontal gravity="center_vertical">
-                                                <frame h="*" w="10" bg="#4CAF50" />
-                                                <vertical padding="10 8" h="auto" w="0" layout_weight="1">
-                                                    <text id="saveTitle" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
-                                                </vertical>
-                                                <button id="loadSaveAccount" text="加载" w="40" h="25" textSize="10" bg="#2196F3" textColor="#FFFFFF" marginRight="10" gravity="center" padding="0" />
-                                                <checkbox id="saveDone" marginLeft="4" marginRight="40" checked="{{this.done}}" />
-                                            </horizontal>
-                                        </card>
-                                    </list>
-                                </vertical>
-                            </card>
-                        </vertical>
-                    </scroll>
-                    <fab id="addAccount" w="auto" h="auto" src="@drawable/ic_add_black_48dp"
-                        margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
-                </frame>
-                {/* 参数配置 */}
-                <frame>
-                    <scroll>
-                        <vertical w="*" h="*" padding="16">
 
-                            {/* 基础设置卡片 - 使用按钮模拟单选 */}
-                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="基础设置" textSize="16" textStyle="bold" />
+                                        {/* 物品售卖 - 仅在物品售卖时显示*/}
+                                        <horizontal id="sell_itemSoldContainer" gravity="center_vertical" visibility="gone">
+                                            <text text="物品售卖：" textSize="14" w="80" marginRight="8" />
+                                            <button id="sell_itemSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                            <text text="清除粉丝：" textSize="14" w="80" marginLeft="20" />
+                                            <checkbox id="clearFans" checked="${configs.get('clearFans') || false}" />
+                                        </horizontal>
 
-                                    <horizontal gravity="center_vertical">
-                                        <text text="顶号延迟" textSize="14" w="120" marginRight="8" />
-                                        <input id="pauseTime" hint="5" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                        <text text="分钟" textSize="14" w="120" marginRight="8" />
-                                    </horizontal>
+                                    </vertical>
+                                </card>
 
-                                    <horizontal gravity="center_vertical">
-                                        <text text="寻找土地方法" textSize="14" w="120" marginRight="8" />
-                                        <radiogroup id="landFindMethod" orientation="horizontal">
-                                            <radio id="landFindMethod_shop" checked="false" text="商店" />
+                                {/* 操作按钮区 */}
+                                <horizontal gravity="center" marginTop="8">
+                                    <button id="btnInstructions" text="使用须知" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
+                                    <button id="btnLoadConfig" text="加载配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
+                                    <button id="btnSave" text="保存配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" />
+                                </horizontal>
+
+                                <horizontal gravity="center" marginTop="16">
+                                    <button id="btnStop" text="停止" w="100" h="48" textSize="16" color="#FFFFFF" backgroundTint="#FF9AA2" />
+                                    <frame w="16" />
+                                    <button id="btnStart" text="开始" w="216" h="48" textSize="16" color="#FFFFFF" backgroundTint="#4ECDC4" />
+                                </horizontal>
+                            </vertical>
+                        </scroll>
+                    </frame>
+                    {/* 账号信息 */}
+                    <frame>
+                        <scroll>
+                            <vertical w="*" h="*" padding="16">
+                                {/* 账号设置卡片 */}
+                                <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="账号设置" textSize="16" textStyle="bold" />
+                                        <horizontal gravity="center_vertical">
+                                            <text text="切换账号：" textSize="14" w="100" marginRight="8" />
+                                            <Switch id="accountSwitch" w="*" h="48" />
+                                        </horizontal>
+
+                                        {/* 识别方式选择 */}
+                                        <horizontal gravity="center_vertical" marginTop="8">
+                                            <text text="识别方式：" textSize="14" w="100" marginRight="8" />
+                                            <radiogroup id="findAccountMethod" orientation="horizontal">
+                                                <radio id="findAccountMethod_image" checked="false" text="图片识别" />
+                                                <frame w="3" />
+                                                <radio id="findAccountMethod_text" checked="false" text="文字识别" />
+                                            </radiogroup>
+                                        </horizontal>
+
+                                        {/* 账号方式选择 */}
+                                        <horizontal gravity="center_vertical" marginTop="8">
+                                            <text text="切换账号方式：" textSize="14" w="100" marginRight="8" />
+                                            <radiogroup id="accountMethod" orientation="horizontal">
+                                                <radio id="accountMethod_email" checked="false" text="邮箱" />
+                                                <frame w="30" />
+                                                <radio id="accountMethod_save" checked="false" text="存档" />
+                                            </radiogroup>
+                                        </horizontal>
+
+                                        {/* 账号列表显示 */}
+                                        <vertical id="accountListDisplay" marginTop="8">
+                                            <text text="账号列表：" textSize="14" textStyle="bold" />
+                                        </vertical>
+                                        {/* 邮箱账号输入框 */}
+                                        <list id="AccountList" h="auto">
+                                            <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
+                                                cardElevation="1dp" foreground="?selectableItemBackground">
+                                                <horizontal gravity="center_vertical">
+                                                    <frame h="*" w="10" bg="#f27272" />
+                                                    <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                                                        <text id="title" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                                                    </vertical>
+                                                    <checkbox id="done" marginLeft="4" marginRight="40" checked="{{this.done}}" />
+                                                </horizontal>
+                                            </card>
+                                        </list>
+                                        {/* 存档账号输入框 */}
+                                        <list id="SaveAccountList" h="auto" visibility="gone">
+                                            <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
+                                                cardElevation="1dp" foreground="?selectableItemBackground">
+                                                <horizontal gravity="center_vertical">
+                                                    <frame h="*" w="10" bg="#4CAF50" />
+                                                    <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                                                        <text id="saveTitle" text="{{this.title}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                                                    </vertical>
+                                                    <button id="loadSaveAccount" text="加载" w="40" h="25" textSize="10" bg="#2196F3" textColor="#FFFFFF" marginRight="10" gravity="center" padding="0" />
+                                                    <checkbox id="saveDone" marginLeft="4" marginRight="40" checked="{{this.done}}" />
+                                                </horizontal>
+                                            </card>
+                                        </list>
+                                    </vertical>
+                                </card>
+                            </vertical>
+                        </scroll>
+                        <fab id="addAccount" w="auto" h="auto" src="@drawable/ic_add_black_48dp"
+                            margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
+                    </frame>
+                    {/* 参数配置 */}
+                    <frame>
+                        <scroll>
+                            <vertical w="*" h="*" padding="16">
+
+                                {/* 基础设置卡片 - 使用按钮模拟单选 */}
+                                <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="基础设置" textSize="16" textStyle="bold" />
+
+                                        <horizontal gravity="center_vertical">
+                                            <text text="顶号延迟" textSize="14" w="120" marginRight="8" />
+                                            <input id="pauseTime" hint="5" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+
+                                        <horizontal gravity="center_vertical">
+                                            <text text="寻找土地方法" textSize="14" w="120" marginRight="8" />
+                                            <radiogroup id="landFindMethod" orientation="horizontal">
+                                                <radio id="landFindMethod_shop" checked="false" text="商店" />
+                                                <frame w="30" />
+                                                <radio id="landFindMethod_bread" checked="false" text="面包房" />
+                                            </radiogroup>
+                                        </horizontal>
+
+                                        <horizontal paddingTop="8">
+                                            <text text="坐标点击" textSize="14" w="auto" marginRight="8" />
+                                            <img id="helpIcon_coordClick" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
+                                        </horizontal>
+                                        <horizontal paddingTop="8">
+                                            <text text="截图权限坐标" textSize="14" marginRight="4" w="100" />
+                                            <text id="screenshotBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" paddingLeft="150" />
+                                        </horizontal>
+                                        <horizontal paddingTop="8">
+                                            <text text="换号坐标" textSize="14" marginRight="4" w="100" />
+                                            <text id="switchAccountBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" paddingLeft="150" />
+                                        </horizontal>
+
+                                    </vertical>
+                                </card>
+
+
+
+                                {/* 仓库升仓时间卡片 */}
+                                <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="仓库设置" textSize="16" textStyle="bold" />
+                                        {/* 仓库升仓 */}
+                                        <horizontal gravity="center_vertical">
+                                            <text text="自动升仓" textSize="14" w="120" marginRight="8" />
+                                            <checkbox id="shengcang_h" checked="false" text="货仓" />
                                             <frame w="30" />
-                                            <radio id="landFindMethod_bread" checked="false" text="面包房" />
-                                        </radiogroup>
-                                    </horizontal>
+                                            <checkbox id="shengcang_l" checked="false" text="粮仓" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="升仓间隔时间" textSize="14" w="120" marginRight="8" />
+                                            <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="仓库统计" textSize="14" w="120" marginRight="8" />
+                                            <Switch id="isCangkuStatistics" w="*" h="48" gravity="left|center" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="仓库统计间隔时间" textSize="14" w="120" marginRight="8" />
+                                            <input id="cangkuStatisticsTime" hint="300" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="仓库统计页数" textSize="14" w="120" marginRight="8" />
+                                            <input id="cangkuStatisticsPage" hint="2" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="页" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="推送方式" textSize="14" w="100" marginRight="8" />
+                                            <spinner id="serverPlatform" entries="Pushplus推送加|Server酱|WxPusher"
+                                                w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical" padding="8">
+                                            <text text="token" textSize="14" w="60" marginRight="12" textColor="#333333" />
+                                            <img id="eyeIcon" w="20dp" h="20dp" src="@drawable/ic_visibility_off_black_48dp" />
+                                            <input id="tokenInput" password="true" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" marginRight="8" gravity="center_vertical" visibility="visible" />
+                                            <input id="tokenInputPlain" password="false" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" visibility="gone" />
+                                        </horizontal>
+                                    </vertical>
+                                </card>
 
-                                    <horizontal paddingTop="8">
-                                        <text text="坐标点击" textSize="14" w="auto" marginRight="8" />
-                                        <text id="helpIcon_coordClick" text="?" textColor="#007AFF" textSize="18" marginRight="8" />
-                                    </horizontal>
-                                    <horizontal paddingTop="8">
-                                        <text text="截图权限坐标" textSize="14" marginRight="4" w="100" />
-                                        <text id="screenshotBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" paddingLeft="150" />
-                                    </horizontal>
-                                    <horizontal paddingTop="8">
-                                        <text text="换号坐标" textSize="14" marginRight="4" w="100" />
-                                        <text id="switchAccountBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" paddingLeft="150" />
-                                    </horizontal>
+                                {/* 坐标偏移卡片 */}
+                                <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="坐标偏移设置" textSize="16" textStyle="bold" />
 
-                                </vertical>
-                            </card>
+                                        {/* 土地坐标偏移 */}
+                                        <horizontal gravity="center_vertical">
+                                            <text text="土地坐标偏移：" textSize="14" w="120" marginRight="8" />
+                                            <input id="landOffsetX" hint="X:60" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                            <input id="landOffsetY" hint="Y:-30" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                        </horizontal>
+
+                                        {/* 商店坐标偏移 */}
+                                        <horizontal gravity="center_vertical">
+                                            <text text="商店坐标偏移：" textSize="14" w="120" marginRight="8" />
+                                            <input id="shopOffsetX" hint="X:-60" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                            <input id="shopOffsetY" hint="Y:-50" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                        </horizontal>
+                                        {/* 收割坐标偏移 */}
+                                        <horizontal gravity="center_vertical">
+                                            <text text="收割横向偏移：" textSize="14" w="120" marginRight="8" />
+                                            <input id="harvestX" hint="8" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
+                                            <text text="格" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="收割纵向偏移：" textSize="14" w="120" marginRight="8" />
+                                            <input id="harvestY" hint="1.5" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
+                                            <text text="格" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="收割重复次数：" textSize="14" w="120" marginRight="8" />
+                                            <input id="harvestRepeat" hint="3" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="次" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="收割操作用时：" textSize="14" w="120" marginRight="8" />
+                                            <input id="harvestTime" hint="5" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="秒" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+                                        {/* 初始土地偏移 */}
+                                        <horizontal gravity="center_vertical">
+                                            <text text="初始土地偏移：" textSize="14" w="120" marginRight="8" />
+                                            <input id="firstlandX" hint="X:20" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                            <input id="firstlandY" hint="Y:40" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="收割两指间距：" textSize="14" w="120" marginRight="8" />
+                                            <input id="distance" hint="75" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+
+                                        </horizontal>
+                                        {/* 仓库坐标偏移 */}
+                                        <horizontal gravity="center_vertical">
+                                            <text text="粮仓坐标偏移：" textSize="14" w="120" marginRight="8" />
+                                            <input id="liangcangOffsetX" hint="X:240" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                            <input id="liangcangOffsetY" hint="Y:0" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="货仓坐标偏移：" textSize="14" w="120" marginRight="8" />
+                                            <input id="huocangOffsetX" hint="X:340" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                            <input id="huocangOffsetY" hint="Y:-45" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="悬浮窗坐标：" textSize="14" w="120" marginRight="8" />
+                                            <input id="showTextX" hint="X:0(百分比)" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal|numberSigned" marginRight="8" />
+                                            <input id="showTextY" hint="Y:0.65(百分比)" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal|numberSigned" />
+                                        </horizontal>
+                                    </vertical>
+                                </card>
+
+                                {/* 照片路径卡片 */}
+                                <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="路径设置" textSize="16" textStyle="bold" marginBottom="8" />
+                                        <horizontal gravity="center_vertical">
+                                            <text text="脚本照片文件夹路径：" textSize="14" w="100" marginRight="8" />
+                                            <input id="photoPath" text="./res/pictures.1280_720" w="*" textSize="14" h="48" bg="#FFFFFF" />
+                                        </horizontal>
+                                        <horizontal gravity="center_vertical">
+                                            <text text="账号照片文件夹路径：" textSize="14" w="100" marginRight="8" />
+                                            <input id="accountImgPath" text="{{accountImgDir}}" w="*" textSize="14" h="auto" bg="#FFFFFF" />
+                                        </horizontal>
+                                    </vertical>
+                                </card>
+                            </vertical>
+                        </scroll>
+                    </frame>
+                    {/* 更多 */}
+                    <frame>
+                        <scroll>
+                            <vertical w="*" h="*" padding="16">
+
+                                {/* 主题颜色卡片 */}
+                                <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="主题颜色" textSize="16" textStyle="bold" marginBottom="8" />
+
+                                        {/* 主题颜色 */}
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="主题颜色：" textSize="14" w="100" marginRight="8" />
+                                            <spinner id="themeColor" entries="随机颜色|碧玉青|落日橙|翠竹绿|晴空蓝|胭脂粉|朱砂红|湖水蓝|紫罗兰|咖啡棕|烟雨灰"
+                                                w="*" textSize="14" textColor="{{color}}" h="48" bg="#FFFFFF" />
+                                        </horizontal>
+
+                                    </vertical>
+                                </card>
+
+                                {/* 运行设置卡片 */}
+                                <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="运行设置" textSize="16" textStyle="bold" marginBottom="8" />
+
+                                        {/* 使用shell命令重启游戏 */}
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="使用shell命令重启游戏:" textSize="14" w="auto" marginRight="8" />
+                                            <img id="helpIcon_restartWithShell" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginLeft="10" />
+                                            <Switch id="restartWithShell" checked="false" w="*" h="48" />
+                                        </horizontal>
+
+                                    </vertical>
+                                </card>
+
+                                {/* 设备信息卡片 */}
+                                <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="设备信息" textSize="16" textStyle="bold" marginBottom="8" />
+
+                                        {/* 屏幕分辨率 */}
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="分辨率：" textSize="14" w="100" marginRight="8" />
+                                            <text id="screenResolution" text=""
+                                                textSize="14" w="*" />
+                                        </horizontal>
+
+                                        {/* 屏幕密度 */}
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="DPI：" textSize="14" w="100" marginRight="8" />
+                                            <text id="screenDensity" text="{{context.getResources().getDisplayMetrics().densityDpi}}"
+                                                textSize="14" w="*" />
+                                        </horizontal>
+
+                                        {/* Root权限 */}
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="Root权限：" textSize="14" w="100" marginRight="8" />
+                                            <text id="rootStatus" text="{{checkRoot() ? '已获取' : '未获取'}}"
+                                                textSize="14" w="*" textColor="{{checkRoot() ? '#4CAF50' : '#F44336'}}" />
+                                        </horizontal>
+
+                                        {/* 品牌型号 */}
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="设备型号：" textSize="14" w="100" marginRight="8" />
+                                            <text id="deviceModel" text=""
+                                                textSize="14" w="*" />
+                                        </horizontal>
+
+                                        {/* Android版本 */}
+                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                            <text text="系统版本：" textSize="14" w="100" marginRight="8" />
+                                            <text id="androidVersion" text="Android {{device.release}}"
+                                                textSize="14" w="*" />
+                                        </horizontal>
+
+                                    </vertical>
+                                </card>
+
+                                {/* 分辨率设置卡片 */}
+                                <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
+                                    <vertical padding="16">
+                                        <text text="分辨率设置" textSize="16" textStyle="bold" marginBottom="8" />
+                                        <horizontal gravity="center_vertical" marginBottom="8" padding="8">
+                                            <button id="restoreResolutionBtn" text="恢复分辨率" textSize="13" w="100" marginRight="16" bg="#C8E6C9" textColor="#388E3C" style="Widget.AppCompat.Button.Colored" />
+                                            <button id="modifyResolutionBtn" text="修改分辨率" textSize="13" w="100" marginRight="8" bg="#BBDEFB" textColor="#1976D2" style="Widget.AppCompat.Button.Colored" />
+                                        </horizontal>
+                                    </vertical>
+                                </card>
+                            </vertical>
+                        </scroll>
+                    </frame>
+                </viewpager>
+            </vertical >
+            <vertical layout_gravity="left" bg="#ffffff" w="280">
+                <img w="280" h="200" scaleType="fitXY" src="file://{{currentPath}}/res/images/sidebar.png" />
+                <list id="menu">
+                    <horizontal bg="?selectableItemBackground" w="*">
+                        <img id="menuIcon" w="50" h="50" padding="16" src="{{this.icon}}" tint="{{color}}" />
+                        <text textColor="black" textSize="15sp" text="{{this.title}}" layout_gravity="center" />
+                    </horizontal>
+                </list>
+            </vertical>
+        </drawer >
 
 
+        <frame id="sell_frame" visibility="gone">
+            <vertical>
+                <appbar id="sell_appbar" bg="{{color}}">
+                    <toolbar id="sell_toolbar" >
+                        <img id="sell_exitButton" src="@drawable/ic_arrow_back_black_48dp" w="30" h="30" tint="#FFFFFF" />
+                        <text text="仓库售卖" textSize="20sp" textColor="#FFFFFF" gravity="center" paddingLeft="20" />
+                        <img id="helpIcon_sell" layout_gravity="center_vertical" src="@drawable/ic_help_outline_black_48dp" w="20" h="20" tint="#007AFF" marginLeft="30dp" />
+                        <img id="saveIcon_sell" layout_gravity="right|center_vertical" src="@drawable/ic_save_black_48dp" w="28" h="28" tint="#FFFFFF" marginRight="15dp" />
+                    </toolbar>
+                </appbar>
+                <horizontal>
 
-                            {/* 仓库升仓时间卡片 */}
-                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="仓库设置" textSize="16" textStyle="bold" />
-                                    {/* 仓库升仓 */}
-                                    <horizontal gravity="center_vertical">
-                                        <text text="自动升仓" textSize="14" w="120" marginRight="8" />
-                                        <checkbox id="shengcang_h" checked="false" text="货仓" />
-                                        <frame w="30" />
-                                        <checkbox id="shengcang_l" checked="false" text="粮仓" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="升仓间隔时间" textSize="14" w="120" marginRight="8" />
-                                        <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                        <text text="分钟" textSize="14" w="120" marginRight="8" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="仓库统计" textSize="14" w="120" marginRight="8" />
-                                        <Switch id="isCangkuStatistics" w="*" h="48" gravity="left|center" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="仓库统计间隔时间" textSize="14" w="120" marginRight="8" />
-                                        <input id="cangkuStatisticsTime" hint="300" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                        <text text="分钟" textSize="14" w="120" marginRight="8" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="仓库统计页数" textSize="14" w="120" marginRight="8" />
-                                        <input id="cangkuStatisticsPage" hint="2" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                        <text text="页" textSize="14" w="120" marginRight="8" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="推送方式" textSize="14" w="100" marginRight="8" />
-                                        <spinner id="serverPlatform" entries="Pushplus推送加|Server酱|WxPusher"
-                                            w="*" textSize="14" h="48" bg="#FFFFFF" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical" padding="8">
-                                        <text text="token" textSize="14" w="60" marginRight="12" textColor="#333333" />
-                                        <img id="eyeIcon" w="20dp" h="20dp" src="data:image/png;base64,{{icon.visibility_off}}" />
-                                        <input id="tokenInput" password="true" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" marginRight="8" gravity="center_vertical" visibility="visible" />
-                                        <input id="tokenInputPlain" password="false" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" visibility="gone" />
-                                    </horizontal>
-                                </vertical>
-                            </card>
-
-                            {/* 坐标偏移卡片 */}
-                            <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="坐标偏移设置" textSize="16" textStyle="bold" />
-
-                                    {/* 土地坐标偏移 */}
-                                    <horizontal gravity="center_vertical">
-                                        <text text="土地坐标偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="landOffsetX" hint="X:60" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                        <input id="landOffsetY" hint="Y:-30" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
-                                    </horizontal>
-
-                                    {/* 商店坐标偏移 */}
-                                    <horizontal gravity="center_vertical">
-                                        <text text="商店坐标偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="shopOffsetX" hint="X:-60" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                        <input id="shopOffsetY" hint="Y:-50" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
-                                    </horizontal>
-                                    {/* 收割坐标偏移 */}
-                                    <horizontal gravity="center_vertical">
-                                        <text text="收割横向偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="harvestX" hint="8" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
-                                        <text text="格" textSize="14" w="120" marginRight="8" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="收割纵向偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="harvestY" hint="1.5" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
-                                        <text text="格" textSize="14" w="120" marginRight="8" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="收割重复次数：" textSize="14" w="120" marginRight="8" />
-                                        <input id="harvestRepeat" hint="3" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                        <text text="次" textSize="14" w="120" marginRight="8" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="收割操作用时：" textSize="14" w="120" marginRight="8" />
-                                        <input id="harvestTime" hint="5" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                        <text text="秒" textSize="14" w="120" marginRight="8" />
-                                    </horizontal>
-                                    {/* 初始土地偏移 */}
-                                    <horizontal gravity="center_vertical">
-                                        <text text="初始土地偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="firstlandX" hint="X:20" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                        <input id="firstlandY" hint="Y:40" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="收割两指间距：" textSize="14" w="120" marginRight="8" />
-                                        <input id="distance" hint="75" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-
-                                    </horizontal>
-                                    {/* 仓库坐标偏移 */}
-                                    <horizontal gravity="center_vertical">
-                                        <text text="粮仓坐标偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="liangcangOffsetX" hint="X:240" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                        <input id="liangcangOffsetY" hint="Y:0" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="货仓坐标偏移：" textSize="14" w="120" marginRight="8" />
-                                        <input id="huocangOffsetX" hint="X:340" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                        <input id="huocangOffsetY" hint="Y:-45" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="悬浮窗坐标：" textSize="14" w="120" marginRight="8" />
-                                        <input id="showTextX" hint="X:0(百分比)" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal|numberSigned" marginRight="8" />
-                                        <input id="showTextY" hint="Y:0.65(百分比)" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal|numberSigned" />
-                                    </horizontal>
-                                </vertical>
-                            </card>
-
-                            {/* 照片路径卡片 */}
-                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="路径设置" textSize="16" textStyle="bold" marginBottom="8" />
-                                    <horizontal gravity="center_vertical">
-                                        <text text="脚本照片文件夹路径：" textSize="14" w="100" marginRight="8" />
-                                        <input id="photoPath" text="./res/pictures.1280_720" w="*" textSize="14" h="48" bg="#FFFFFF" />
-                                    </horizontal>
-                                    <horizontal gravity="center_vertical">
-                                        <text text="账号照片文件夹路径：" textSize="14" w="100" marginRight="8" />
-                                        <input id="accountImgPath" text="{{accountImgDir}}" w="*" textSize="14" h="auto" bg="#FFFFFF" />
-                                    </horizontal>
-                                </vertical>
-                            </card>
-                        </vertical>
-                    </scroll>
-                </frame>
-                {/* 更多 */}
-                <frame>
-                    <scroll>
-                        <vertical w="*" h="*" padding="16">
-
-                            {/* 主题颜色卡片 */}
-                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="主题颜色" textSize="16" textStyle="bold" marginBottom="8" />
-
-                                    {/* 主题颜色 */}
-                                    <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="主题颜色：" textSize="14" w="100" marginRight="8" />
-                                        <spinner id="themeColor" entries="随机颜色|碧玉青|落日橙|翠竹绿|晴空蓝|胭脂粉|朱砂红|湖水蓝|紫罗兰|咖啡棕|烟雨灰"
-                                            w="*" textSize="14" textColor="{{color}}" h="48" bg="#FFFFFF" />
-                                    </horizontal>
-
-                                </vertical>
-                            </card>
-
-                            {/* 运行设置卡片 */}
-                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="运行设置" textSize="16" textStyle="bold" marginBottom="8" />
-
-                                    {/* 使用shell命令重启游戏 */}
-                                    <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="使用shell命令重启游戏:" textSize="14" w="auto" marginRight="8" />
-                                        <text id="helpIcon_restartWithShell" text="?" textColor="#007AFF" textSize="18" marginLeft="10" />
-                                        <Switch id="restartWithShell" checked="false" w="*" h="48" />
-                                    </horizontal>
-
-                                </vertical>
-                            </card>
-
-                            {/* 设备信息卡片 */}
-                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="设备信息" textSize="16" textStyle="bold" marginBottom="8" />
-
-                                    {/* 屏幕分辨率 */}
-                                    <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="分辨率：" textSize="14" w="100" marginRight="8" />
-                                        <text id="screenResolution" text=""
-                                            textSize="14" w="*" />
-                                    </horizontal>
-
-                                    {/* 屏幕密度 */}
-                                    <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="DPI：" textSize="14" w="100" marginRight="8" />
-                                        <text id="screenDensity" text="{{context.getResources().getDisplayMetrics().densityDpi}}"
-                                            textSize="14" w="*" />
-                                    </horizontal>
-
-                                    {/* Root权限 */}
-                                    <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="Root权限：" textSize="14" w="100" marginRight="8" />
-                                        <text id="rootStatus" text="{{checkRoot() ? '已获取' : '未获取'}}"
-                                            textSize="14" w="*" textColor="{{checkRoot() ? '#4CAF50' : '#F44336'}}" />
-                                    </horizontal>
-
-                                    {/* 品牌型号 */}
-                                    <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="设备型号：" textSize="14" w="100" marginRight="8" />
-                                        <text id="deviceModel" text=""
-                                            textSize="14" w="*" />
-                                    </horizontal>
-
-                                    {/* Android版本 */}
-                                    <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="系统版本：" textSize="14" w="100" marginRight="8" />
-                                        <text id="androidVersion" text="Android {{device.release}}"
-                                            textSize="14" w="*" />
-                                    </horizontal>
-
-                                </vertical>
-                            </card>
-
-                            {/* 分辨率设置卡片 */}
-                            <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
-                                <vertical padding="16">
-                                    <text text="分辨率设置" textSize="16" textStyle="bold" marginBottom="8" />
-                                    <horizontal gravity="center_vertical" marginBottom="8" padding="8">
-                                        <button id="restoreResolutionBtn" text="恢复分辨率" textSize="13" w="100" marginRight="16" bg="#C8E6C9" textColor="#388E3C" style="Widget.AppCompat.Button.Colored" />
-                                        <button id="modifyResolutionBtn" text="修改分辨率" textSize="13" w="100" marginRight="8" bg="#BBDEFB" textColor="#1976D2" style="Widget.AppCompat.Button.Colored" />
-                                    </horizontal>
-                                </vertical>
-                            </card>
-                        </vertical>
-                    </scroll>
-                </frame>
-            </viewpager>
-        </vertical >
-        <vertical layout_gravity="left" bg="#ffffff" w="280">
-            <img w="280" h="200" scaleType="fitXY" src="file://{{currentPath}}/res/images/sidebar.png" />
-            <list id="menu">
-                <horizontal bg="?selectableItemBackground" w="*">
-                    <img id="menuIcon" w="50" h="50" padding="16" src="{{this.icon}}" tint="{{color}}" />
-                    <text textColor="black" textSize="15sp" text="{{this.title}}" layout_gravity="center" />
+                    <vertical id="sell_drawerArea" w="100" h="*" bg="#EEEEEE" padding="10dp">
+                        <list id="sell_accountList" h="500">
+                            <horizontal w="*" h="50" padding="10dp" bg="#FFFFFF" marginBottom="5dp">
+                                <text text="{{this.title}}" textSize="16sp" w="30" layout_weight="1" maxLines="1" />
+                                <checkbox id="sell_accountList_done" checked="{{this.done}}" />
+                            </horizontal>
+                        </list>
+                        <button id="sell_improtAccountListButton" text="导入" w="auto" h="45" />
+                    </vertical>
+                    <vertical w="*" h="*">
+                        <linear id="sell_Container" orientation="vertical" />
+                    </vertical>
                 </horizontal>
-            </list>
-        </vertical>
-    </drawer >
+            </vertical>
+        </frame>
+    </frame>
 );
 
 //设置滑动页面的标题
@@ -1164,6 +1464,18 @@ ui.emitter.on("options_item_selected", (e, item) => {
             break;
     }
     e.consumed = true;
+});
+
+// 处理返回键事件
+ui.emitter.on("back_pressed", () => {
+    // 如果在新界面，返回主界面
+    if (ui.sell_frame.getVisibility() === 0) {
+        ui.sell_frame.setVisibility(8); // 8 = GONE
+        ui.drawer.setVisibility(0); // 0 = VISIBLE
+        return true; // 消耗返回键事件，不退出脚本
+    }
+    // 在主界面时，返回键退出脚本
+    return false;
 });
 
 function downloadZip_dialogs() {
@@ -1582,6 +1894,7 @@ function updateButtonColors() {
     ui.statusBarColor(color);
     // 更新应用栏背景颜色
     ui.appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
+    ui.sell_appbar.setBackgroundColor(android.graphics.Color.parseColor(color));
 }
 //
 
@@ -2299,6 +2612,8 @@ function getConfig() {
                 y: configs.get("switchAccountY3")
             },
         },
+        clearFans: configs.get("clearFans"),
+        sell_accountList: configs.get("sell_accountList"),
     };
     return storedConfig;
 }
@@ -2351,6 +2666,7 @@ function saveConfig(con) {
         configs.put("cangkuStatisticsTime", con.cangkuStatisticsTime);
         configs.put("cangkuStatisticsPage", con.cangkuStatisticsPage);
         configs.put("treeShouldSwipe", con.treeShouldSwipe);
+        configs.put("clearFans", con.clearFans);
 
         // 存储粮仓和货仓偏移量
         configs.put("liangcangOffsetX", con.liangcangOffset.x);
@@ -2386,6 +2702,8 @@ function saveConfig(con) {
 
         configs.put("CangkuSold_triggerNum", con.CangkuSold_triggerNum);
         configs.put("CangkuSold_targetNum", con.CangkuSold_targetNum);
+
+        configs.put("sell_accountList", con.sell_accountList);
 
         // 存储其他配置项
         configs.put("restartWithShell", con.restartWithShell);
@@ -2497,7 +2815,7 @@ function validateConfig(config) {
 
     // 验证功能选择
     if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
-    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆"];
+    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆", "物品售卖"];
     if (config.selectedFunction.code < 0 || config.selectedFunction.code >= functionOptions.length) {
         config.selectedFunction.code = defaultConfig.selectedFunction.code;
     }
@@ -2573,6 +2891,11 @@ function validateConfig(config) {
     // 验证treeShouldSwipe
     if (config.treeShouldSwipe == undefined || typeof config.treeShouldSwipe !== "boolean") {
         config.treeShouldSwipe = defaultConfig.treeShouldSwipe;
+    }
+
+    // 验证清除粉丝
+    if (config.clearFans == undefined || typeof config.clearFans !== "boolean") {
+        config.clearFans = defaultConfig.clearFans;
     }
 
     // 验证粮仓坐标偏移
@@ -2898,7 +3221,8 @@ function getDefaultConfig() {
                 x: 0,
                 y: 0
             }
-        }
+        },
+        clearFans: false,
     };
 }
 
@@ -2926,6 +3250,9 @@ function loadConfigToUI(loadConfigFromFile = false) {
     ui['SaveAccountList'].setDataSource(SaveAccountList);
     AddFriendsList = config.addFriendsList
     ui['addFriendsList'].setDataSource(AddFriendsList);
+
+    ui.sell_accountList.setDataSource(sell_accountList);
+    generateContentBlocks(sell_accountList)
 
     // 设置顶号延迟
     ui.pauseTime.setText(String(config.pauseTime));
@@ -3040,6 +3367,8 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 设置是否自动滑动
     ui.treeShouldSwipeSwitch.setChecked(config.treeShouldSwipe);
+
+    ui.clearFans.setChecked(config.clearFans);
 
     // 加载汤姆相关配置
     if (config.tomFind.enabled !== undefined) {
@@ -3343,6 +3672,17 @@ function startButton() {
             });
             break;
 
+        case 4: // 物品售卖
+            stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./sell.js");
+                log("启动物品售卖引擎，ID: " + newEngine.id);
+
+            });
+            break;
+
         default:
             toast("未知功能", "long");
     }
@@ -3410,7 +3750,17 @@ function winStartButton() {
 
             });
             break;
-            
+
+        case 4: // 物品售卖
+            stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./sell.js");
+                log("启动物品售卖引擎，ID: " + newEngine.id);
+
+            });
+            break;
 
         default:
             toast("未知功能", "long");
@@ -3529,6 +3879,7 @@ function initUI() {
                 } else {
                     ui.tomItemContainer.attr("visibility", "gone");
                 }
+                ui.sell_itemSoldContainer.attr("visibility", "gone");
             } else if (selectedFunction === "种树") {
                 // 隐藏作物选择和汤姆开关，显示树木选择
                 ui.cropSelectContainer.attr("visibility", "gone");
@@ -3540,6 +3891,7 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
+                ui.sell_itemSoldContainer.attr("visibility", "gone");
             } else if (selectedFunction === "创新号") {
                 // 创新号
                 ui.cropSelectContainer.attr("visibility", "gone");
@@ -3551,6 +3903,7 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "visible");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
+                ui.sell_itemSoldContainer.attr("visibility", "gone");
             } else if (selectedFunction === "仅汤姆") {
                 // 仅汤姆
                 ui.cropSelectContainer.attr("visibility", "gone");
@@ -3562,6 +3915,19 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "visible");
+                ui.sell_itemSoldContainer.attr("visibility", "gone");
+            } else if (selectedFunction === "物品售卖") {
+                // 物品售卖
+                ui.cropSelectContainer.attr("visibility", "gone");
+                ui.shopPriceContainer.attr("visibility", "gone");
+                ui.CangkuSoldContainer.attr("visibility", "gone");
+                ui.tomSwitchContainer.attr("visibility", "gone");
+                ui.treeSelectContainer.attr("visibility", "gone");
+                ui.treeShouldSwipe.attr("visibility", "gone");
+                ui.addFriendsCard.attr("visibility", "gone");
+                // 隐藏汤姆相关控件
+                ui.tomItemContainer.attr("visibility", "gone");
+                ui.sell_itemSoldContainer.attr("visibility", "visible");
             }
 
 
@@ -3610,6 +3976,12 @@ function initUI() {
     ui.treeShouldSwipeSwitch.on("check", (checked) => {
         // 保存修改后的开关状态到配置
         configs.put("treeShouldSwipe", checked);
+    });
+
+    // 清除粉丝开关状态变化监听
+    ui.clearFans.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("clearFans", checked);
     });
 
     // 为itemType添加事件监听器
@@ -3712,6 +4084,19 @@ function initUI() {
         showCangkuSoldDialog();
     })
 
+    ui.sell_itemSoldBtn.on("click", () => {
+        // 隐藏主界面，显示物品售卖界面
+        ui.sell_frame.setVisibility(0); // 0 = VISIBLE
+        ui.drawer.setVisibility(8); // 8 = GONE
+    })
+
+    // 返回主界面按钮点击事件
+    ui.sell_exitButton.click(() => {
+        // 隐藏物品售卖界面，显示主界面
+        ui.sell_frame.setVisibility(8); // 8 = GONE
+        ui.drawer.setVisibility(0); // 0 = VISIBLE
+    });
+
     ui.helpIcon_coordClick.on("click", function () {
         dialogs.build({
             title: "坐标点击帮助",
@@ -3738,17 +4123,17 @@ function initUI() {
             title: "功能选择帮助",
             content: "选择功能右边的下拉菜单是能点的\n\n" +
                 "默认是刷地功能,点击刷地可选择其他功能\n\n" +
-                "刷地功能：\n"+
-                "- 应该不用解释\n\n"+
-                "种树功能：\n"+
-                "- 先启用浮动按钮,进入游戏后,在浮动按钮点击开始即可运行\n"+
-                "- 自动滑动当检测此页面”没有“可种植地块后,自动滑动屏幕,关闭可自行滑动调整\n\n"+
-                "创新号功能：\n"+
-                "-先新建一个号,确保进入游戏后是在最初的教程界面,点击开始,自动运行到5级\n"+
-                "-添加好友,新手教程结束后,根据输入的农场标签,自动添加农场好友\n\n"+
-                "仅汤姆：\n"+
-                "-先在上方账号信息一栏中选择是否切换账号并且勾选需要刷取的账号\n"+
-                "-在等待期间会回到主界面,并不是脚本掉了\n"+
+                "刷地功能：\n" +
+                "- 应该不用解释\n\n" +
+                "种树功能：\n" +
+                "- 先启用浮动按钮,进入游戏后,在浮动按钮点击开始即可运行\n" +
+                "- 自动滑动当检测此页面”没有“可种植地块后,自动滑动屏幕,关闭可自行滑动调整\n\n" +
+                "创新号功能：\n" +
+                "-先新建一个号,确保进入游戏后是在最初的教程界面,点击开始,自动运行到5级\n" +
+                "-添加好友,新手教程结束后,根据输入的农场标签,自动添加农场好友\n\n" +
+                "仅汤姆：\n" +
+                "-先在上方账号信息一栏中选择是否切换账号并且勾选需要刷取的账号\n" +
+                "-在等待期间会回到主界面,并不是脚本掉了\n" +
                 "当剩余时间小于60秒时,启动游戏\n",
             positive: "确定"
         }).show();
@@ -4024,13 +4409,13 @@ function initUI() {
             ui.tokenInputPlain.setText(token_storage.get("token", ""));
             ui.tokenInputPlain.attr("visibility", "visible"); // 显示普通输入框
             ui.tokenInput.attr("visibility", "gone"); // 隐藏密码输入框
-            ui.eyeIcon.attr("src", "data:image/png;base64," + icon.visibility);
+            ui.eyeIcon.attr("src", "@drawable/ic_visibility_black_48dp");
         } else {
             // 如果是显示模式，则切换为密码模式
             ui.tokenInput.setText(token_storage.get("token", ""));
             ui.tokenInputPlain.attr("visibility", "gone"); // 隐藏普通输入框
             ui.tokenInput.attr("visibility", "visible"); // 显示密码输入框
-            ui.eyeIcon.attr("src", "data:image/png;base64," + icon.visibility_off);
+            ui.eyeIcon.attr("src", "@drawable/ic_visibility_off_black_48dp");
         }
     });
 
@@ -4086,6 +4471,493 @@ function initUI() {
         configs.put("restartWithShell", checked);
     });
 
+    // 为账户列表项添加绑定事件，处理复选框点击
+    ui.sell_accountList.on("item_bind", function (itemView, itemHolder) {
+        // 绑定账户列表中复选框的点击事件
+        itemView.sell_accountList_done.on("check", function (checked) {
+            var item = itemHolder.item;
+            item.done = checked;
+        });
+    });
+
+    // 为账户列表项添加点击事件
+    ui.sell_accountList.on("item_click", function (item, i, itemView, listView) {
+        // 隐藏所有内容块
+        for (var j = 1; j <= sell_accountList.length; j++) {
+            var contentBlock = ui.findView("sell_contentBlock" + j);
+            if (contentBlock) {
+                contentBlock.setVisibility(android.view.View.GONE);
+            }
+        }
+
+        // 显示当前选中的内容块
+        var currentContentBlock = ui.findView("sell_contentBlock" + (i + 1));
+        if (currentContentBlock) {
+            currentContentBlock.setVisibility(android.view.View.VISIBLE);
+        }
+
+        // 更新标题文本为当前选中账户的标题
+        var pageTitle = ui.findView("sell_pageTitle" + (i + 1));
+        if (pageTitle) {
+            pageTitle.setText(item.title);
+        }
+    });
+
+    // 为每个账户的内容块添加"应用到全部"按钮的点击事件
+    for (var i = 1; i <= sell_accountList.length; i++) {
+        // 使用闭包确保正确的索引值
+        (function (index) {
+            var applyAllButton = ui.findView("sell_applyAllButton" + index);
+            if (applyAllButton) {
+                applyAllButton.on("click", function () {
+                    applySellPlanToAllAccounts(index);
+                });
+            }
+
+            // 为每个账户的内容块添加"添加项目"按钮的点击事件（添加到所有账户）
+            var addItemButton = ui.findView("sell_addItemButton" + index);
+            if (addItemButton) {
+                addItemButton.on("click", function () {
+                    addNewItemToAllAccounts();
+                });
+            }
+
+            // 设置当前账户的售卖价格
+            ui.findView("sell_price" + index).setSelection(sell_accountList[index - 1].price || 0);
+
+        })(i);
+    }
+
+    // 为每个账户的内容块设置数据源和事件处理
+    for (var i = 1; i <= sell_accountList.length; i++) {
+        // 确保数据源是一个有效的数组对象
+        var dataSource = allCangkuSoldLists["sell_CangkuSoldList" + i];
+        if (dataSource && Array.isArray(dataSource) && ui["sell_CangkuSoldList" + i]) {
+            // 设置数据源
+            ui["sell_CangkuSoldList" + i].setDataSource(dataSource);
+        } else {
+            // 如果数据源无效，提供一个默认的空数组
+            var defaultDataSource = createDefaultItemList();
+            allCangkuSoldLists["sell_CangkuSoldList" + i] = defaultDataSource;
+            if (ui["sell_CangkuSoldList" + i]) {
+                ui["sell_CangkuSoldList" + i].setDataSource(defaultDataSource);
+            }
+        }
+
+        // 使用闭包确保正确的索引值
+        (function (index) {
+            ui["sell_CangkuSoldList" + index].on("item_bind", function (itemView, itemHolder) {
+                // 绑定输入框文本变化事件
+                itemView.sell_input.addTextChangedListener(new android.text.TextWatcher({
+                    afterTextChanged: function (s) {
+                        var item = itemHolder.item;
+                        item.sellNum = parseInt(s.toString()) || 0;
+                    },
+                    beforeTextChanged: function (s, start, count, after) { },
+                    onTextChanged: function (s, start, before, count) { }
+                }));
+
+                itemView.sell_sellAllButton.on("click", function () {
+                    // 全部售卖
+                    itemView.sell_input.setText("-1");
+                    // 更新数据源
+                    var item = itemHolder.item;
+                    item.sellNum = -1;
+                });
+
+                // 绑定复选框点击事件
+                itemView.sell_done.on("check", function (checked) {
+                    var item = itemHolder.item;
+                    item.done = checked;
+                });
+
+                // 绑定项目点击事件，用于修改项目名称
+                itemView.setOnClickListener(new android.view.View.OnClickListener({
+                    onClick: function (view) {
+                        var item = itemHolder.item;
+                        // 弹出输入框让用户修改项目名称
+                        dialogs.prompt("修改项目名称", item.title, function (newTitle) {
+                            if (newTitle && newTitle != item.title) {
+                                // 查找所有具有相同标题的项目
+                                var matchingItems = findAllMatchingItems(item.title);
+
+                                // 更新所有匹配项目的标题
+                                for (var i = 0; i < matchingItems.length; i++) {
+                                    var match = matchingItems[i];
+                                    match.item.title = newTitle;
+
+                                    // 更新对应列表的UI
+                                    if (ui["sell_CangkuSoldList" + match.listIndex]) {
+                                        ui["sell_CangkuSoldList" + match.listIndex].setDataSource(match.dataSource);
+                                    }
+                                }
+
+                                log("已同步修改所有账户中的项目名称: " + newTitle);
+                            }
+                        });
+                    }
+                }));
+
+                // 绑定项目长按事件，用于删除项目
+                itemView.setOnLongClickListener(new android.view.View.OnLongClickListener({
+                    onLongClick: function (view) {
+                        var item = itemHolder.item;
+                        // 弹出确认对话框
+                        dialogs.confirm("删除项目", "确定要删除项目 \"" + item.title + "\" 吗？这将从所有账户中删除该项目。", function (confirmation) {
+                            if (confirmation) {
+                                // 查找所有具有相同标题的项目
+                                var matchingItems = findAllMatchingItems(item.title);
+
+                                // 从所有数据源中移除该项目
+                                for (var i = 0; i < matchingItems.length; i++) {
+                                    var match = matchingItems[i];
+                                    match.dataSource.splice(match.itemIndex, 1);
+
+                                    // 更新对应列表的UI
+                                    if (ui["sell_CangkuSoldList" + match.listIndex]) {
+                                        ui["sell_CangkuSoldList" + match.listIndex].setDataSource(match.dataSource);
+                                    }
+                                }
+
+                                log("已从所有账户中删除项目: " + item.title);
+                            }
+                        });
+                        return true; // 表示消费了这个长按事件
+                    }
+                }));
+            });
+        })(i);
+
+    }
+
+    // 为导入按钮添加点击事件
+    ui.sell_improtAccountListButton.on("click", function () {
+        // 从配置中获取accountList数据
+        var importedAccountList = configs.get("accountList");
+
+        if (importedAccountList && Array.isArray(importedAccountList) && importedAccountList.length > 0) {
+            // 清空现有的sell_accountList（除了第一个"当前"项）
+            sell_accountList.splice(1);
+
+            // 将导入的数据添加到sell_accountList中
+            for (var i = 0; i < importedAccountList.length; i++) {
+                sell_accountList.push({
+                    title: importedAccountList[i].title,
+                    done: false
+                });
+            }
+
+            // 更新UI数据源
+            ui.sell_accountList.setDataSource(sell_accountList);
+
+            // 清除容器中的现有内容
+            ui.sell_Container.removeAllViews();
+
+            // 重新生成内容块
+            generateContentBlocks(sell_accountList);
+
+            // 重新创建所有账户对应的仓库售卖列表数据源
+            // 创建新的对象而不是直接赋值空对象，避免引用问题
+            var newCangkuSoldLists = {};
+            // 保留已有的售卖计划数据，如果不存在则使用默认值
+            for (var i = 1; i <= sell_accountList.length; i++) {
+                // 检查是否已存在该账户的售卖列表数据
+                if (allCangkuSoldLists && allCangkuSoldLists["sell_CangkuSoldList" + i]) {
+                    // 保留已有的数据
+                    newCangkuSoldLists["sell_CangkuSoldList" + i] = allCangkuSoldLists["sell_CangkuSoldList" + i];
+                } else {
+                    // 使用默认值
+                    newCangkuSoldLists["sell_CangkuSoldList" + i] = createDefaultItemList();
+                }
+            }
+            // 安全地替换allCangkuSoldLists对象
+            allCangkuSoldLists = newCangkuSoldLists;
+
+            // 为每个账户的内容块重新设置数据源和事件处理
+            for (var i = 1; i <= sell_accountList.length; i++) {
+                // 使用闭包确保正确的索引值
+                (function (index) {
+                    // 确保数据源是一个有效的数组对象
+                    var dataSource = allCangkuSoldLists["sell_CangkuSoldList" + index];
+                    if (dataSource && Array.isArray(dataSource)) {
+                        // 设置数据源
+                        if (ui["sell_CangkuSoldList" + index]) {
+                            ui["sell_CangkuSoldList" + index].setDataSource(dataSource);
+                        }
+                    } else {
+                        // 如果数据源无效，提供一个默认的空数组
+                        var defaultDataSource = createDefaultItemList();
+                        allCangkuSoldLists["sell_CangkuSoldList" + index] = defaultDataSource;
+                        if (ui["sell_CangkuSoldList" + index]) {
+                            ui["sell_CangkuSoldList" + index].setDataSource(defaultDataSource);
+                        }
+                    }
+
+                    // 重新绑定事件处理
+                    if (ui["sell_CangkuSoldList" + index]) {
+                        ui["sell_CangkuSoldList" + index].on("item_bind", (function (listIndex) {
+                            return function (itemView, itemHolder) {
+                                // 绑定输入框文本变化事件
+                                itemView.sell_input.addTextChangedListener(new android.text.TextWatcher({
+                                    afterTextChanged: function (s) {
+                                        var item = itemHolder.item;
+                                        item.sellNum = parseInt(s.toString()) || 0;
+                                    },
+                                    beforeTextChanged: function (s, start, count, after) { },
+                                    onTextChanged: function (s, start, before, count) { }
+                                }));
+
+                                itemView.sell_sellAllButton.on("click", function () {
+                                    // 全部售卖
+                                    itemView.sell_input.setText("-1");
+                                    // 更新数据源
+                                    var item = itemHolder.item;
+                                    item.sellNum = -1;
+                                });
+
+                                // 绑定复选框点击事件
+                                itemView.sell_done.on("check", function (checked) {
+                                    var item = itemHolder.item;
+                                    item.done = checked;
+                                });
+
+                                // 绑定项目点击事件，用于修改项目名称
+                                itemView.setOnClickListener(new android.view.View.OnClickListener({
+                                    onClick: function (view) {
+                                        var item = itemHolder.item;
+                                        // 弹出输入框让用户修改项目名称
+                                        dialogs.prompt("修改项目名称", item.title, function (newTitle) {
+                                            if (newTitle && newTitle != item.title) {
+                                                // 查找所有具有相同标题的项目
+                                                var matchingItems = findAllMatchingItems(item.title);
+
+                                                // 更新所有匹配项目的标题
+                                                for (var i = 0; i < matchingItems.length; i++) {
+                                                    var match = matchingItems[i];
+                                                    match.item.title = newTitle;
+
+                                                    // 更新对应列表的UI
+                                                    if (ui["sell_CangkuSoldList" + match.listIndex]) {
+                                                        ui["sell_CangkuSoldList" + match.listIndex].setDataSource(match.dataSource);
+                                                    }
+                                                }
+
+                                                log("已同步修改所有账户中的项目名称: " + newTitle);
+                                            }
+                                        });
+                                    }
+                                }));
+
+                                // 绑定项目长按事件，用于删除项目
+                                itemView.setOnLongClickListener(new android.view.View.OnLongClickListener({
+                                    onLongClick: function (view) {
+                                        var item = itemHolder.item;
+                                        // 弹出确认对话框
+                                        dialogs.confirm("删除项目", "确定要删除项目 \"" + item.title + "\" 吗？这将从所有账户中删除该项目。", function (confirmation) {
+                                            if (confirmation) {
+                                                // 查找所有具有相同标题的项目
+                                                var matchingItems = findAllMatchingItems(item.title);
+
+                                                // 从所有数据源中移除该项目
+                                                for (var i = 0; i < matchingItems.length; i++) {
+                                                    var match = matchingItems[i];
+                                                    match.dataSource.splice(match.itemIndex, 1);
+
+                                                    // 更新对应列表的UI
+                                                    if (ui["sell_CangkuSoldList" + match.listIndex]) {
+                                                        ui["sell_CangkuSoldList" + match.listIndex].setDataSource(match.dataSource);
+                                                    }
+                                                }
+
+                                                log("已从所有账户中删除项目: " + item.title);
+                                            }
+                                        });
+                                        return true; // 表示消费了这个长按事件
+                                    }
+                                }));
+                            };
+                        })(index));
+                    }
+                })(i);
+            }
+
+            // 重新绑定账户列表项的点击事件
+            ui.sell_accountList.on("item_click", function (item, i, itemView, listView) {
+                // 隐藏所有内容块
+                for (var j = 1; j <= sell_accountList.length; j++) {
+                    var contentBlock = ui.findView("sell_contentBlock" + j);
+                    if (contentBlock) {
+                        contentBlock.setVisibility(android.view.View.GONE);
+                    }
+                }
+
+                // 显示当前选中的内容块
+                var currentContentBlock = ui.findView("sell_contentBlock" + (i + 1));
+                if (currentContentBlock) {
+                    currentContentBlock.setVisibility(android.view.View.VISIBLE);
+                }
+
+                // 更新标题文本为当前选中账户的标题
+                var pageTitle = ui.findView("sell_pageTitle" + (i + 1));
+                if (pageTitle) {
+                    pageTitle.setText(item.title);
+                }
+            });
+
+            // 为每个账户的内容块重新添加"应用到全部"按钮的点击事件
+            for (var i = 1; i <= sell_accountList.length; i++) {
+                // 使用闭包确保正确的索引值
+                (function (index) {
+                    var applyAllButton = ui.findView("sell_applyAllButton" + index);
+                    if (applyAllButton) {
+                        applyAllButton.on("click", function () {
+                            applySellPlanToAllAccounts(index);
+                        });
+                    }
+
+                    // 为每个账户的内容块重新添加"添加项目"按钮的点击事件（添加到所有账户）
+                    var addItemButton = ui.findView("sell_addItemButton" + index);
+                    if (addItemButton) {
+                        addItemButton.on("click", function () {
+                            addNewItemToAllAccounts();
+                        });
+                    }
+
+                    // 设置当前账户的售卖价格
+                    ui.findView("sell_price" + index).setSelection(sell_accountList[index - 1].price || 0);
+                })(i);
+            }
+
+            // 默认显示第一个账户的内容块
+            if (sell_accountList.length > 0) {
+                // 隐藏所有内容块
+                for (var j = 1; j <= sell_accountList.length; j++) {
+                    var contentBlock = ui.findView("sell_contentBlock" + j);
+                    if (contentBlock) {
+                        contentBlock.setVisibility(android.view.View.GONE);
+                    }
+                }
+
+                // 显示第一个账户的内容块
+                var firstContentBlock = ui.findView("sell_contentBlock1");
+                if (firstContentBlock) {
+                    firstContentBlock.setVisibility(android.view.View.VISIBLE);
+                }
+            }
+
+            toast("已成功导入账号列表");
+        } else {
+            toast("配置中没有找到账户列表数据");
+        }
+    });
+
+    // 为帮助图标添加点击事件
+    ui.helpIcon_sell.on("click", function () {
+        dialogs.build({
+            title: "仓库售卖帮助",
+            content: "在这里您可以设置仓库自动售卖功能：\n\n" +
+                "初次使用时点击导入按钮,即可导入邮箱账号。存档账号暂不支持(以后看心情,大概率不会做)\n\n" +
+                "左侧一列选择账号,选择'当前'即不切换账号,执行现在登录的账号\n\n" +
+                "应用到全部: 将本账号的售卖配置同步到其他所有账号\n\n" +
+                "添加项目: 在右侧售卖物品一栏添加售卖的物品\n\n" +
+                "单击项目修改名称,长按项目删除,点击全部按钮即售卖全部\n\n" +
+                "加好友: 输入农场标签,即可自动添加好友\n\n" +
+                "商店售价: 点击即可选择售卖的价格(最低|平价|最高)\n\n" +
+                "保存按钮在右上角\n\n" +
+                "修改后一定要保存!\n" + "修改后一定要保存!\n" + "修改后一定要保存!\n"
+
+            ,
+            positive: "确定"
+        }).show();
+    });
+
+    // 为保存图标添加点击事件
+    ui.saveIcon_sell.on("click", function () {
+        // 收集所有账户的信息
+        var allAccountInfo = [];
+
+        // 遍历所有账户
+        for (var i = 0; i < sell_accountList.length; i++) {
+            var accountIndex = i + 1;
+            var accountTitle = sell_accountList[i].title;
+            var accountDone = sell_accountList[i].done;
+            var accountAddFriend = ui.findView("sell_addFriendInput" + accountIndex).getText().toString().trim() || "";
+            var accountPrice = ui.findView("sell_price" + accountIndex).getSelectedItemPosition();
+
+            // 获取当前账户的售卖列表数据源
+            var sellListDataSource = allCangkuSoldLists["sell_CangkuSoldList" + accountIndex];
+
+            // 构建当前账户的售卖计划
+            var sellPlan = [];
+            if (sellListDataSource) {
+                for (var j = 0; j < sellListDataSource.length; j++) {
+                    var item = sellListDataSource[j];
+                    sellPlan.push({
+                        item: item.title,
+                        sellNum: item.sellNum !== undefined ? item.sellNum : 0,
+                        done: item.done
+                    });
+                }
+            }
+
+            // 添加到总信息中
+            allAccountInfo.push({
+                account: accountTitle,
+                addFriend: accountAddFriend,
+                done: accountDone,
+                sellPlan: sellPlan,
+                price: accountPrice
+            });
+        }
+
+
+        let data = allAccountInfo;
+        let output = []; // 用于存储所有输出内容
+
+        // 遍历所有账户
+        for (let account of data) {
+            if (!account.done) continue;
+
+            output.push("账户: " + account.account);
+            output.push("售卖计划:");
+
+            // 遍历销售计划
+            for (let plan of account.sellPlan) {
+                if (!plan.done) continue;
+                if (plan.sellNum !== 0) { // 只显示非零数量的项目
+                    sellNum = plan.sellNum == -1 ? "全部" : plan.sellNum;
+                    output.push(`${plan.item}: ${sellNum}`);
+                }
+            }
+            price = ["最低", "平价", "最高"];
+            output.push("价格: " + price[account.price]);
+            if (account.addFriend !== "") {
+                output.push("添加好友: " + account.addFriend);
+            }
+            output.push("--------------------");
+            if (account.account == "当前" && account.done == true) {
+                break;
+            }
+        }
+
+        var sell_dialog = dialogs.build({
+            title: "确认售卖计划",
+            content: output.join('\n'),
+            positive: "对的对的👌",
+            neutral: "不对不对🤔",
+            cancelable: true
+        });
+        sell_dialog.on("positive", function () {
+            configs.put("sell_accountList", allAccountInfo);
+            toast("已保存");
+        });
+        sell_dialog.show();
+   
+
+        // 输出格式化的信息到日志
+        // log(JSON.stringify(allAccountInfo, null, 2));
+        
+    });
 
 }
 

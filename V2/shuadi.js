@@ -70,7 +70,7 @@ function main_email() {
     if (!config.switchAccount || config.accountList.filter(account => account.done).length <= 1) { //不切换账号
         log("不切换账号，找耕地");
         module.huadong();
-        sleep(1100);
+        sleep(1200);
 
         //循环操作
         while (true) {

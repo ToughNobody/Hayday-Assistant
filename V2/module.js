@@ -19,23 +19,23 @@ let statistics = storages.create("statistics");
 const cropItemColor = {
     "小麦": {
         crop: ["#ffef14", [9, -32, "#d59b08"], [-8, 20, "#b56000"], [-32, 28, "#f3c107"], [29, 30, "#ffdf7c"]],
-        crop_sail: ["#fff212", [11, -13, "#fff209"], [20, -11, "#ffe506"], [-2, 11, "#d79a07"], [40, -2, "#fff00b"]]
+        crop_sell: ["#fff212", [11, -13, "#fff209"], [20, -11, "#ffe506"], [-2, 11, "#d79a07"], [40, -2, "#fff00b"]]
     },
     "玉米": {
         crop: ["#f8e605", [49, 31, "#ffdf7c"], [-31, 35, "#8f9504"], [33, -30, "#f8ef02"], [-17, -9, "#a5a905"]],
-        crop_sail: ["#efd104", [-17, -9, "#a3a905"], [-40, 58, "#818702"], [-38, 37, "#979c04"], [-14, 25, "#f4df35"], [37, -19, "#f4e009"], [5, 0, "#f7e715"]]
+        crop_sell: ["#efd104", [-17, -9, "#a3a905"], [-40, 58, "#818702"], [-38, 37, "#979c04"], [-14, 25, "#f4df35"], [37, -19, "#f4e009"], [5, 0, "#f7e715"]]
     },
     "胡萝卜": {
         crop: ["#ffd100", [24, 21, "#ffdf7c"], [33, -29, "#48951b"], [-31, 29, "#ff9700"], [-7, -7, "#ffe000"]],
-        crop_sail: ["#ffd500", [44, -34, "#87cc38"], [24, -7, "#40961f"], [40, -10, "#73bc30"], [-35, 45, "#ffa500"], [-14, 20, "#ffdc00"], [20, -2, "#ffad00"]]
+        crop_sell: ["#ffd500", [44, -34, "#87cc38"], [24, -7, "#40961f"], [40, -10, "#73bc30"], [-35, 45, "#ffa500"], [-14, 20, "#ffdc00"], [20, -2, "#ffad00"]]
     },
     "大豆": {
         crop: ["#eff083", [13, 32, "#ffdf7c"], [-33, 39, "#dde249"], [-32, -5, "#f1f278"], [19, -31, "#b1ba13"]],
-        crop_sail: ["#ebee6d", [-18, 39, "#9faa0f"], [44, -25, "#e4e863"], [-11, 2, "#dbe044"], [45, -15, "#b5bf17"], [69, -2, "#afba13"]]
+        crop_sell: ["#ebee6d", [-18, 39, "#9faa0f"], [44, -25, "#e4e863"], [-11, 2, "#dbe044"], [45, -15, "#b5bf17"], [69, -2, "#afba13"]]
     },
     "甘蔗": {
         crop: ["#fff0bf", [-22, -32, "#feedb6"], [2, -51, "#e5a430"], [46, -72, "#e69f17"], [52, -60, "#e69e19"], [58, -56, "#f5d252"], [62, -50, "#db8d15"]],
-        crop_sail: ["#ebab1c", [-30, 17, "#fbe7a8"], [-22, 20, "#ffefbd"], [-4, 56, "#fae5a1"], [2, 24, "#efb43f"], [46, -9, "#e49712"], [50, -5, "#f7dd87"], [56, 2, "#db8d15"]]
+        crop_sell: ["#ebab1c", [-30, 17, "#fbe7a8"], [-22, 20, "#ffefbd"], [-4, 56, "#fae5a1"], [2, 24, "#efb43f"], [46, -9, "#e49712"], [50, -5, "#f7dd87"], [56, 2, "#db8d15"]]
     }
 };
 
@@ -89,7 +89,7 @@ const ckNumColor = {
 const cropName = config.selectedCrop.text
 
 let crop = cropItemColor[cropName].crop;
-let crop_sail = cropItemColor[cropName].crop_sail;
+let crop_sell = cropItemColor[cropName].crop_sell;
 
 
 let randomOffset = 5; // 随机偏移量
@@ -1351,7 +1351,7 @@ function checkmenu() {
         showTip(`第 ${i + 1} 次检测: 未找到菜单，继续等待...`);
 
         // 寻找关闭
-        find_close(sc, ["except_jiazai"]);
+        if (i % 2 == 0) find_close(sc, ["except_jiazai"]);
     }
 
     // 超过最大重试次数
@@ -1363,7 +1363,116 @@ function checkmenu() {
     checkmenu();
 }
 
+function openFriendMenu() {
+    for (let i = 0; i < 6; i++) {
 
+        let sc = captureScreen();
+
+        if (matchColor([{ x: 146, y: 84, color: "#f4da4e" },
+        { x: 132, y: 106, color: "#fefdfc" }, { x: 346, y: 45, color: "#dfb479" },
+        { x: 1109, y: 76, color: "#f34853" }], sc)) {
+            log("已打开好友菜单")
+            break;
+        }
+
+        //好友簿
+        let friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
+        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
+        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
+        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }], sc)
+        if (friendMenu) {
+            log("已打开好友栏,点击好友簿")
+            click(255, 600);
+            sleep(200);
+            break;
+        }
+        //新版界面
+        let friendButton = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
+            [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+        if (friendButton) {
+            log("点击好友按钮")
+            click(friendButton.x + ran(), friendButton.y + ran());
+            sleep(200);
+        }
+        else {
+            //老板界面
+            friendButton = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
+                [-17, 18, "#a44900"], [11, 54, "#f7c342"],
+                [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+            if (friendButton) {
+                log("点击好友按钮")
+                click(friendButton.x + ran(), friendButton.y + ran());
+                sleep(200);
+            }
+        }
+
+        friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
+        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
+        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
+        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }])
+
+        if (friendMenu) click(255, 600);
+        sleep(200);
+        let addFriendMenu = null;
+        num = 0;
+
+        addFriendMenu = matchColor([{ x: 146, y: 84, color: "#f4da4e" },
+        { x: 132, y: 106, color: "#fefdfc" }, { x: 346, y: 45, color: "#dfb479" },
+        { x: 1109, y: 76, color: "#f34853" }])
+        if (addFriendMenu) {
+            log("已打开加好友菜单")
+            break;
+        }
+        sleep(300)
+    }
+}
+
+function addFriends(addFriendsList) {
+
+    openFriendMenu();
+    sleep(500);
+    if (matchColor([{ x: 371, y: 145, color: "#ffd158" }])) {
+        click(410, 150)
+        sleep(1000)
+    }
+    // 处理名称，确保每个名称都以#开头
+    let nameMap = addFriendsList.map(item => {
+        // 如果第一个字符不是#，则添加#
+        return item.charAt(0) === '#' ? item : '#' + item;
+    });
+
+    for (let name of nameMap) {
+        showTip("加好友" + name);
+        log("加好友" + name);
+        click(500, 260);
+        sleep(500);
+        setText(name);
+        sleep(500);
+        click(980, 250);
+        sleep(500);
+        if (matchColor([{ x: 719, y: 402, color: "#51cb30" }, { x: 863, y: 403, color: "#4dca2b" }])) {
+            click(780, 400);
+        }
+
+    }
+}
+
+function clearFans() {
+    openFriendMenu();
+    sleep(500)
+    if (matchColor([{ x: 790, y: 149, color: "#ffd158" }])) {
+        click(820, 150)
+        sleep(1000)
+    }
+    while (true) {
+        if (matchColor([{ x: 921, y: 322, color: "#f7b530" }])) {
+            click(880 + ran(), 320 + ran())
+            sleep(100);
+            click(880 + ran(), 320 + ran())
+        } else break;
+        sleep(1000);
+    }
+}
 
 
 
@@ -1858,7 +1967,7 @@ function tomToFind(tomPos) {
  */
 function findland(isclick = true) {
 
-    let pos_shop = findshop()
+    let pos_shop = findshop(true)
 
     if (pos_shop) {
         console.log("找到商店，点击耕地")
@@ -1890,12 +1999,12 @@ function findland(isclick = true) {
  * @description 该函数根据配置的查找方式（商店或面包房）定位对应位置
  *              主要用于辅助定位耕地位置
  */
-function findshop() {
+function findshop(silence = false) {
     console.log("找" + config.landFindMethod);
     let center;
     for (let i = 0; i < 5; i++) {
         try {
-            showTip("第 " + (i + 1) + " 次检测" + config.landFindMethod);
+            if (!silence) showTip("第 " + (i + 1) + " 次检测" + config.landFindMethod);
             if (config.landFindMethod == "商店") {
                 center = findimage(files.join(config.photoPath, "shop.png"), 0.6);
                 if (!center) {
@@ -1937,7 +2046,11 @@ function openshop() {
                 showTip("打开路边小店");
                 sleep(300);
                 click(findshop_1.x + config.shopOffset.x + ran(), findshop_1.y + config.shopOffset.y + ran());
-                return true; // 成功找到并点击
+                sleep(100)
+                if (matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
+
+                    return true; // 成功找到并点击
+                }
             }
 
             if (i < maxAttempts - 1) { // 如果不是最后一次尝试，就滑动重找
@@ -1945,7 +2058,7 @@ function openshop() {
                 showTip("未找到商店，尝试滑动重新寻找");
                 sleep(1000);
                 huadong();
-                sleep(1100);
+                sleep(1200);
             }
         }
     } catch (error) {
@@ -1968,7 +2081,7 @@ function openshop() {
 function findland_click() {
 
     huadong();
-    sleep(1100)
+    sleep(1200)
 
     let findland_click_pos = findland()
     if (findland_click_pos) {
@@ -1986,7 +2099,6 @@ function findland_click() {
 function harvest(center) {
     // 参数检查
     if (!center) {
-        console.log("错误：center坐标无效");
         return;
     }
 
@@ -2077,10 +2189,8 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
         let sc;
         if (screenImage) {
             sc = screenImage;
-            // console.log("使用传入的屏幕截图");
         } else {
             sc = captureScreen();
-            // console.log("使用自动截图");
         }
 
         if (!sc) {
@@ -2149,28 +2259,22 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
 
 }
 
-function harvest_wheat() {
+function harvest_wheat(sickle) {
 
-    sleep(1000)
-    let center_sickle = findMC(["#c6b65d", [-9, 9, "#b5984d"], [39, -1, "#ffdf7c"], [10, -62, "#f3f2f6"], [55, -72, "#e5e5e6"]]);
+    let sicklePoints = ["#c6b65d", [-9, 9, "#b5984d"], [39, -1, "#ffdf7c"], [10, -62, "#f3f2f6"], [55, -72, "#e5e5e6"]]
+    let center_sickle = sickle ? sickle : click_waitFor(null, null, sicklePoints)
     if (center_sickle) {
         console.log("找到镰刀,准备收割，坐标: " +
             center_sickle.x + "," + center_sickle.y);
         showTip("找到镰刀，准备收割");
+        harvest(center_sickle);
     } else {
         console.log("未找到镰刀");
         showTip("未找到镰刀");
     };
-    sleep(500);
-    try {
-        harvest(center_sickle);
-    } catch (e) {
-        console.error("收割harvest出错:", e);
-    }
-    sleep(300);
-    let sc = captureScreen();
-    find_close(sc);
-    sc.recycle();
+
+    find_close();
+
 }
 
 //收金币
@@ -2282,7 +2386,7 @@ function shop() {
         coin();
         sleep(500);
 
-        let wheat_sail_minNum = config.ReservedQuantity;//小麦售卖最低保存数量
+        let wheat_sell_minNum = config.ReservedQuantity;//小麦售卖最低保存数量
 
         // 检查是否还在商店界面
         if (!matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
@@ -2295,7 +2399,7 @@ function shop() {
             let sellPlan = shopStatistic();
             if (sellPlan) {
                 log("商店售卖计划:" + JSON.stringify(sellPlan))
-                shop_sail(sellPlan, cangkuItemColor)
+                shop_sell(sellPlan, cangkuItemColor)
             }
         }
 
@@ -2315,12 +2419,12 @@ function shop() {
                 console.log("点击粮仓按钮")
             }
 
-            let wheat_sail = findMC(crop_sail, null, [261, 122, 707 - 261, 688 - 122], 16);
+            let wheat_sell = findMC(crop_sell, null, [261, 122, 707 - 261, 688 - 122], 16);
 
-            if (!wheat_sail) {   //没找到售卖货架上的作物
+            if (!wheat_sell) {   //没找到售卖货架上的作物
                 sleep(100);
-                wheat_sail = findMC(crop_sail, null, [261, 122, 707 - 261, 688 - 122], 16);
-                if (!wheat_sail) {
+                wheat_sell = findMC(crop_sell, null, [261, 122, 707 - 261, 688 - 122], 16);
+                if (!wheat_sell) {
                     console.log("未识别到" + config.selectedCrop.text);
                     showTip("未识别到" + config.selectedCrop.text);
                     close();
@@ -2329,7 +2433,7 @@ function shop() {
             }
 
             // 识别数字
-            let region = [wheat_sail.x, wheat_sail.y, 130, 80]
+            let region = [wheat_sell.x, wheat_sell.y, 130, 80]
             sleep(100);//上架有残影，有时识别不到
             let wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
             if (wheat_num == "") {
@@ -2337,10 +2441,10 @@ function shop() {
                 wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
             }
 
-            let sellNum = Number(wheat_num) - Number(wheat_sail_minNum)
+            let sellNum = Number(wheat_num) - Number(wheat_sell_minNum)
             if (sellNum <= 0) {
-                console.log(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sail_minNum + "，结束售卖");
-                showTip(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sail_minNum + "，结束售卖");
+                console.log(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sell_minNum + "，结束售卖");
+                showTip(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sell_minNum + "，结束售卖");
                 log(config.selectedCrop.text + "数量不足，退出售卖");
                 if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
                     log("识别到售卖界面，点击叉叉")
@@ -2349,13 +2453,13 @@ function shop() {
                 break;
             }
 
-            console.log(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sail_minNum + "，可售卖" + sellNum);
-            showTip(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sail_minNum + "，可售卖" + sellNum);
+            console.log(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sell_minNum + "，可售卖" + sellNum);
+            showTip(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sell_minNum + "，可售卖" + sellNum);
             if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
                 log("识别到售卖界面，点击叉叉")
                 close();
             }
-            shop_sail([{ title: config.selectedCrop.text, num: sellNum }], { [config.selectedCrop.text]: crop_sail }, "left", config.shopPrice.code)
+            shop_sell([{ title: config.selectedCrop.text, num: sellNum }], { [config.selectedCrop.text]: crop_sell }, "left", config.shopPrice.code)
             break;
 
         }
@@ -2589,7 +2693,7 @@ function shopStatistic(sc) {
                         console.log(`第一次检测${itemName}为空，重新检测`);
                         showTip(`第一次检测${itemName}为空，重新检测`);
                         sleep(100);
-                        itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+                        itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
                     }
 
                     shopResult[itemName] = {
@@ -2778,8 +2882,8 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
  * @param {*} price 售卖价格,0为最低价格,2为最高价格
  * @returns 
  */
-function shop_sail(sellPlan, itemColor, pos, price = 2) {
-
+function shop_sell(sellPlan, itemColor, pos, price = 2) {
+    sleep(100);
     coin()
     for (let item of sellPlan) {    //遍历售卖计划中的每个物品
 
@@ -2787,7 +2891,7 @@ function shop_sail(sellPlan, itemColor, pos, price = 2) {
             if (item.num <= 0) {    //如果数量为0，跳出循环，继续下一个物品
                 break;
             }
-            let sailNum = item.num > 10 ? 10 : item.num;
+            let sellNum = item.num > 10 ? 10 : item.num;
 
             let kongxian = find_kongxian();
             if (!kongxian) {    //没有空闲货架
@@ -2811,33 +2915,47 @@ function shop_sail(sellPlan, itemColor, pos, price = 2) {
                 }
             }
 
-            let item_sail = findMC(itemColor[item.title], null, [261, 122, 707 - 261, 688 - 122], 16);
+            //如果打开搜索按钮，关闭搜索栏
+            if (matchColor([{ x: 262, y: 255, color: "#ebc784" }, { x: 284, y: 238, color: "#ffffca" },
+            { x: 701, y: 238, color: "#ffffca" }, { x: 701, y: 255, color: "#eac784" },
+            { x: 701, y: 280, color: "#e2d8bf" }, { x: 699, y: 292, color: "#fff9db" }])) {
+                click(260 + ran(), 110 + ran())
+                sleep(150);
+            }
 
-            if (!item_sail) {   //没找到售卖货架上的作物
-                for (let i = 0; i < 3; i++) {
-                    swipe(480, 660, 480, 145, 1000)
-                    sleep(30)
-                    click(480, 132)
-                    sleep(100)
-                    item_sail = findMC(itemColor[item.title], null, [261, 122, 707 - 261, 688 - 122], 16);
-                    if (item_sail) {
+            //如果有物品颜色
+            if (itemColor[item.title]) {
+                let item_sell = findMC(itemColor[item.title], null, [261, 122, 707 - 261, 688 - 122], 16);
+
+                if (!item_sell) {   //没找到售卖货架上的作物
+
+                    clickShopSearchButton(item.title);
+
+                    item_sell = findMC(itemColor[item.title], null, [261, 122, 707 - 261, 688 - 122], 16);
+                    if (item_sell) {
+                        log("找到" + item.title)
+                    }
+
+                    if (!item_sell) {
+                        console.log("未找到" + item.title + "，尝试下一个");
+                        showTip("未找到" + item.title + "，尝试下一个");
+                        click(1150 + ran(), 50 + ran())//点击叉号
                         break;
                     }
                 }
-                if (!item_sail) {
-                    console.log("未找到" + item.title + "，尝试下一个");
-                    showTip("未找到" + item.title + "，尝试下一个");
-                    click(1150 + ran(), 50 + ran())//点击叉号
-                    break;
-                }
-            }
 
-            //确定点击范围
-            let range1 = [-80, -60]
-            if (pos == "left") {
-                range1 = [10, 10]
+                //确定点击范围
+                let range1 = [-80, -60]
+                if (pos == "left") {
+                    range1 = [10, 10]
+                }
+                click(item_sell.x + range1[0] + ran(), item_sell.y + range1[1] + ran()); //点击物品
+            } else {//没有物品颜色
+
+                clickShopSearchButton(item.title);
+
+                click(380 + ran(), 350 + ran());
             }
-            click(item_sail.x + range1[0] + ran(), item_sail.y + range1[1] + ran()); //点击物品
 
             // 识别售卖数字
             sleep(100);
@@ -2864,17 +2982,17 @@ function shop_sail(sellPlan, itemColor, pos, price = 2) {
             }
 
             //确定售卖个数
-            let sailNum_difference = Number(sailNum) - Number(item_num);
-            log("售卖:", item.title, ",售卖差值：", sailNum_difference, ",本次售卖个数：", sailNum, ",识别个数：", item_num)
-            showTip("售卖:" + item.title + ",个数:" + sailNum)
-            if (sailNum_difference >= 0) {
-                for (let i = 0; i < sailNum_difference; i++) {
+            let sellNum_difference = Number(sellNum) - Number(item_num);
+            log("售卖:", item.title, ",售卖差值：", sellNum_difference, ",本次售卖个数：", sellNum, ",识别个数：", item_num)
+            showTip("售卖:" + item.title + ",个数:" + sellNum)
+            if (sellNum_difference >= 0) {
+                for (let i = 0; i < sellNum_difference; i++) {
                     click(1085 + ran(), 190 + ran());
                 }
             }
 
-            if (sailNum_difference < 0) {
-                for (let i = 0; i < -sailNum_difference; i++) {
+            if (sellNum_difference < 0) {
+                for (let i = 0; i < -sellNum_difference; i++) {
                     click(800 + ran(), 190 + ran());
                 }
             }
@@ -2891,12 +3009,126 @@ function shop_sail(sellPlan, itemColor, pos, price = 2) {
             console.log("上架");
             let itemIndex = sellPlan.findIndex(i => i.title === item.title);
             if (itemIndex !== -1) {
-                sellPlan[itemIndex].num -= sailNum;
+                sellPlan[itemIndex].num -= sellNum;
             }
             sleep(100);
         }
     }
 
+}
+
+function sellPlanValidate(sellPlan_original) {
+    try {
+        let kongxian = find_kongxian();
+        if (!kongxian) {    //没有空闲货架
+            console.log("未找到空闲货架,商店售卖结束");
+            showTip("未找到空闲货架,商店售卖结束");
+            return false;
+        }
+        //判断是否在货仓界面
+        if (matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
+            click(200 + ran(), 330 + ran());//点击售卖货仓按钮
+            sleep(100);
+            console.log("点击货仓按钮")
+        }
+
+        // 初始化检测结果
+        const shopResult = {};
+        const sellPlan = sellPlan_original.filter(itemName => itemName.sellNum !== 0 && itemName.done);
+
+
+        // 初始化所有物品状态为未检测
+        sellPlan.forEach(itemName => {
+            shopResult[itemName.item] = {
+                counts: 0,
+                position: [],
+                detected: false
+            };
+        });
+
+        // 开始检测
+
+        sellPlan.forEach(itemName => {
+
+            log(itemName.item)
+
+            clickShopSearchButton(itemName.item);
+
+            let position = { x: 462, y: 407 };
+            // 找到物品
+            let itemNum = 0;
+            let numRegion = [position.x - 80, position.y - 60, 90, 75];
+            itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+            // 如果第一次检测为空，再检测一遍
+            if (!itemNum || itemNum.trim() === "") {
+                console.log(`第一次检测${itemName.item}为空，重新检测`);
+                showTip(`第一次检测${itemName.item}为空，重新检测`);
+                sleep(100);
+                itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+            }
+
+
+            shopResult[itemName.item] = {
+                counts: itemNum ? itemNum : 0,
+                position: position,
+                detected: true
+            };
+            console.log(`${itemName.item} : ${itemNum}`);
+            showTip(`${itemName.item} : ${itemNum}`);
+
+        });
+
+
+        // 处理结果数据
+        var processedResult = {};
+
+        Object.keys(shopResult).forEach(itemName => {
+            const count = shopResult[itemName].counts || 0;
+
+            // 如果数量是纯数字，则直接转换为整数
+            // log(parseInt(count), sellPlan.find(item => item.item === itemName).sellNum)
+            // log(parseInt(Math.min(parseInt(count), sellPlan.find(item => item.item === itemName).sellNum)))
+            let sellPlanNum = sellPlan.find(item => item.item === itemName).sellNum
+            processedResult[itemName] = sellPlanNum >= 0 ? parseInt(Math.min(parseInt(count), sellPlanNum)) : parseInt(count);
+        });
+
+    } catch (error) {
+        log("仓库统计出错" + error);
+    } finally {
+        if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
+            click(1150 + ran(), 50 + ran())//点击叉号
+            log("商店统计(在售卖界面)：点击叉号")
+        }
+    }
+
+    let result1 = Object.entries(processedResult).map(([key, value]) => {
+        return { title: key, num: value };
+    });
+    return result1
+
+}
+
+function clickShopSearchButton(item) {
+    for (let i = 0; i < 3; i++) {
+        if (!matchColor([{ x: 262, y: 255, color: "#ebc784" }, { x: 284, y: 238, color: "#ffffca" },
+        { x: 701, y: 238, color: "#ffffca" }, { x: 701, y: 255, color: "#eac784" },
+        { x: 701, y: 280, color: "#e2d8bf" }, { x: 699, y: 292, color: "#fff9db" }])) {
+            click_waitFor([260 + ran(), 110 + ran()],
+                [{ x: 262, y: 255, color: "#ebc784" }, { x: 284, y: 238, color: "#ffffca" },
+                { x: 701, y: 238, color: "#ffffca" }, { x: 701, y: 255, color: "#eac784" },
+                { x: 701, y: 280, color: "#e2d8bf" }, { x: 699, y: 292, color: "#fff9db" }], null, 10)
+            sleep(100);
+        }
+        click(500 + ran(), 200 + ran());
+        sleep(100);
+        setText(item);
+        log("输入" + item)
+        sleep(150);
+
+        if (matchColor([{ x: 373, y: 479, color: "#fff9db" }, { x: 585, y: 481, color: "#fff9db" },
+        { x: 364, y: 597, color: "#fff9db" }, { x: 582, y: 608, color: "#fff9db" }])) return true;
+    }
+    return false;
 }
 
 /**
@@ -2961,6 +3193,34 @@ function find_close(screenshot1, action = null) {
 
             find_close();
             return "levelup";
+        }
+
+        //点开好友栏
+        let friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
+        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
+        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
+        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }], sc)
+        if (friendMenu) {
+            showTip("关闭好友栏");
+            log("关闭好友栏")
+            let friendButton = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
+                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc);
+            if (friendButton) {
+                log("点击好友按钮")
+                click(friendButton.x + ran(), friendButton.y + ran());
+                sleep(200);
+            }
+            else {
+                //老板界面
+                friendButton = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
+                    [-17, 18, "#a44900"], [11, 54, "#f7c342"],
+                    [37, 26, "#a54b00"]], sc);
+                if (friendButton) {
+                    log("点击好友按钮")
+                    click(friendButton.x + ran(), friendButton.y + ran());
+                    sleep(200);
+                }
+            }
         }
 
         //改善游戏体验界面
@@ -3547,7 +3807,7 @@ function shengcang() {
         //升粮仓
         if (config.shengcang_l) {
             sleep(100);
-            let isFindShop = findshop();
+            let isFindShop = findshop(true);
             if (isFindShop) {  //判断是否找到商店
                 console.log("点击粮仓");
                 showTip("点击粮仓");
@@ -3585,7 +3845,7 @@ function shengcang() {
         //升货仓
         if (config.shengcang_h) {
             sleep(100);
-            isFindShop = findshop();
+            let isFindShop = findshop(true);
             if (isFindShop) {  //判断是否找到商店
                 console.log("点击货仓");
                 showTip("点击货仓");
@@ -3789,8 +4049,7 @@ function plant_crop() {
     //种植
     console.log("准备种" + config.selectedCrop.text);
     showTip(`准备种${config.selectedCrop.text}`);
-    sleep(500)
-    let center_wheat = findMC(crop);
+    let center_wheat = click_waitFor(null, null, crop, 10);
     if (center_wheat) {
         console.log("找到" + config.selectedCrop.text + "，坐标: " +
             center_wheat.x + "," + center_wheat.y);
@@ -3824,8 +4083,7 @@ function plant_crop() {
                     }
                 }
 
-                sleep(1000);
-                center_wheat = findMC(crop);
+                center_wheat = click_waitFor(null, null, crop, 5);
                 if (center_wheat) {
                     break;
                 }
@@ -3854,10 +4112,9 @@ function plant_crop() {
     }
 }
 
-function harvest_crop() {
+function harvest_crop(center_sickle) {
     //收作物
-    let sc1 = captureScreen();
-    find_close(sc1);
+    find_close();
     sleep(200);
     let is_findland = findland();
     if (!is_findland) {
@@ -3865,7 +4122,7 @@ function harvest_crop() {
     }
     console.log("收割" + config.selectedCrop.text);
     showTip(`收割${config.selectedCrop.text}`);
-    harvest_wheat();
+    harvest_wheat(center_sickle);
 }
 
 //循环操作
@@ -3877,9 +4134,9 @@ function operation(Account) {
     //找耕地
     sleep(1500);
     if (find_close()) {
-        sleep(500);
+        sleep(200);
         find_close();
-        sleep(500);
+        sleep(200);
     }
 
     let center_land = findland();
@@ -3888,9 +4145,9 @@ function operation(Account) {
     if (!center_land) {
         console.log("未找到，重新寻找耕地");
         if (find_close()) {
-            sleep(500);
+            sleep(200);
             find_close();
-            sleep(500);
+            sleep(200);
         }
         findland_click();
     }
@@ -3914,13 +4171,13 @@ function operation(Account) {
         if (center_sickle) {
             console.log("找到镰刀，重新收割");
             //收作物
-            harvest_crop();
+            harvest_crop(center_sickle);
             //找耕地
             sleep(1500);
             if (find_close()) {
-                sleep(500);
+                sleep(200);
                 find_close();
-                sleep(500);
+                sleep(200);
             }
             let center_land = findland();
             console.log("寻找耕地");
@@ -3928,9 +4185,9 @@ function operation(Account) {
             if (!center_land) {
                 console.log("未找到，重新寻找耕地");
                 if (find_close()) {
-                    sleep(500);
+                    sleep(200);
                     find_close();
-                    sleep(500);
+                    sleep(200);
                 }
                 findland_click();
             }
@@ -3992,7 +4249,7 @@ function cangkuStatistics(maxPages = 2) {
         let lcCapacity = "0/0";
         let hcCapacity = "0/0";
         sleep(500);
-        let isFindShop = findshop();
+        let isFindShop = findshop(true);
         if (isFindShop) {  //判断是否找到商店
             console.log("点击粮仓");
             showTip("点击粮仓");
@@ -4019,7 +4276,7 @@ function cangkuStatistics(maxPages = 2) {
         }
 
         sleep(500);
-        isFindShop = findshop();
+        isFindShop = findshop(true);
         //判断是否找到商店
         if (!isFindShop) {  //未找到商店
             console.log("未找到商店");
@@ -4091,7 +4348,7 @@ function cangkuStatistics(maxPages = 2) {
                         console.log(`第一次检测${itemName}为空，重新检测`);
                         showTip(`第一次检测${itemName}为空，重新检测`);
                         sleep(100);
-                        itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.7);
+                        itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.7);
                     }
 
                     result[itemName] = {
@@ -4397,6 +4654,59 @@ function copy_shell(name, direction = "export") {
     }
 }
 
+/**
+ * 点击指定点或匹配颜色的点，最多重试max次
+ * @param {Array} point 点击的点坐标，[x, y]
+ * @param {Array} matchColorPoints matchColor数组
+ * @param {Array} MCPoints findMC数组
+ * @param {number} max 最大重试次数，默认10次
+ * @returns {boolean} 未识别到：返回false。识别到：传入MC返回坐标，传入matchColor返回true
+ */
+function click_waitFor(point, matchColorPoints, MCPoints, max = 10) {
+    if (point) click(point[0], point[1])
+    if (matchColorPoints) {
+        for (let i = 0; i < max; i++) {
+            if (matchColor(matchColorPoints)) return true
+            sleep(200);
+        }
+    } else if (MCPoints) {
+        for (let i = 0; i < max; i++) {
+            let pos = findMC(MCPoints)
+            if (pos) return pos
+            sleep(200);
+        }
+    }
+    return false;
+}
+
+function waitFor_click(point, matchColorPoints, MCPoints, max = 10) {
+    let find = false;
+    if (matchColorPoints) {
+        for (let i = 0; i < max; i++) {
+            if (matchColor(matchColorPoints)) {
+                find = true;
+                break;
+            }
+            sleep(200);
+        }
+    } else if (MCPoints) {
+        for (let i = 0; i < max; i++) {
+            let pos = findMC(MCPoints)
+            if (pos) {
+                if (!point) click(pos[0], pos[1])
+                find = true;
+                break;
+            }
+            sleep(200);
+        }
+    }
+    if (find && point) {
+        click(point[0], point[1])
+        return true;
+    };
+    return false;
+}
+
 // 模块导出
 module.exports = {
     // 工具函数
@@ -4416,6 +4726,8 @@ module.exports = {
     showDetails: showDetails,
     getDetails: getDetails,
     copy_shell: copy_shell,
+    click_waitFor: click_waitFor,
+    findFont: findFont,
 
     // 游戏界面检查
     checkmenu: checkmenu,
@@ -4433,6 +4745,10 @@ module.exports = {
     coin: coin,
     find_ad: find_ad,
     shop: shop,
+    shopStatistic: shopStatistic,
+    distributeSellQuantity: distributeSellQuantity,
+    shop_sell: shop_sell,
+    sellPlanValidate: sellPlanValidate,
 
     // 关闭和界面处理
     find_close: find_close,
@@ -4440,6 +4756,11 @@ module.exports = {
 
     // 账号切换
     switch_account: switch_account,
+
+    // 加好友
+    openFriendMenu: openFriendMenu,
+    addFriends: addFriends,
+    clearFans: clearFans,
 
     // 仓库相关
     shengcang: shengcang,
@@ -4462,15 +4783,21 @@ module.exports = {
     // 种树相关
     //汤姆相关
     tomOperation: tomOperation,
+    clickTom: clickTom,
     findTom: findTom,
+    tomToFind: tomToFind,
 
 
 
     // 全局变量
     config: config,
     crop: crop,
-    crop_sail: crop_sail,
+    crop_sell: crop_sell,
     appExternalDir: appExternalDir,
+
+    //颜色
+    cropItemColor: cropItemColor,
+    cangkuItemColor: cangkuItemColor,
 };
 
 

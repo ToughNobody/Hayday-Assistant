@@ -71,7 +71,7 @@ function suspendedWindow() {
             <card id="circle_window" w="40" h="40" cardCornerRadius="20dp" cardBackgroundColor="#ffffff" alpha="0.4"
                 margin="0 83 0 0" gravity="right" layout_gravity="left">
                 <horizontal gravity="center" w="40" h="40">
-                    <img id="floaty_icon" src="file://{{currentPath}}/res/images/icon_float.png" w="32" h="32" alpha="0.4" circle="true" gravity="center" layout_gravity="center" />
+                    <img id="floaty_icon" src="file://{{currentPath}}/res/logo.png" w="32" h="32" alpha="0.4" circle="true" gravity="center" layout_gravity="center" />
                 </horizontal>
             </card>
             <frame id="id_logo" w="150" h="210">
@@ -82,7 +82,7 @@ function suspendedWindow() {
                 </frame>
                 <frame id="id_1" w="44" h="44" margin="86 28 0 0" alpha="1">
                     <img w="44" h="44" src="#ee534f" circle="true" />
-                    <img w="28" h="28" src="data:image/png;base64,{{icon.content_cut}}" tint="#ffffff" gravity="center" layout_gravity="center" />
+                    <img w="28" h="28" src="@drawable/ic_photo_camera_black_48dp" tint="#ffffff" gravity="center" layout_gravity="center" />
                     <img id="id_1_click" w="*" h="*" src="#ffffff" circle="true" alpha="0" />
                 </frame>
                 <frame id="id_2" w="44" h="44" margin="0 83 0 0" alpha="1" gravity="right" layout_gravity="right">
