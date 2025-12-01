@@ -76,7 +76,7 @@ const ckNumColor = {
 const machineColor = {
     "乳品厂": [["#da3c15", [72, -80, "#d03814"], [-19, -15, "#e4dace"], [-49, -31, "#e2d8cb"], [-27, 43, "#7a462e"]],
     ["#da3d14", [16, -16, "#e4dacf"], [44, 8, "#d9cab9"], [-89, -48, "#da3c15"], [-5, 51, "#7d472f"]]],
-    "渔船": ["#aa694e",[25,8,"#b41919"],[24,-5,"#b9b9bc"],[-17,-6,"#723430"],[34,-13,"#498d9c"]]
+    "渔船": ["#aa694e", [25, 8, "#b41919"], [24, -5, "#b9b9bc"], [-17, -6, "#723430"], [34, -13, "#498d9c"]]
 }
 
 //作物颜色
@@ -2198,7 +2198,7 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
             picture = images.read(imagepath);
             if (!picture) {
                 if (!screenImage) sc.recycle(); // 只有不是传入的截图才回收
-                console.log("图片读取出错，请检查路径");
+                console.log("图片读取出错，请检查路径,当前传入路径:", imagepath);
                 return [];
             }
         } else {
@@ -2456,7 +2456,7 @@ function shop() {
                 log("识别到售卖界面，点击叉叉")
                 close();
             }
-            shop_sell([{ title: config.selectedCrop.text, num: sellNum }], { [config.selectedCrop.text]: crop_sell }, "left", config.shopPrice.code)
+            shop_sell([{ title: config.selectedCrop.text, num: sellNum }], { [config.selectedCrop.text]: crop_sell }, "粮仓", config.shopPrice.code)
             break;
 
         }
@@ -2503,7 +2503,7 @@ function shop() {
             if (!is_find_ad) {
                 const [x3, y3] = [288, 390];
                 const [x4, y4] = [1080, 390];
-                swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), 600);
+                swipe(x3 + ran(), y3 + ran(), x4 + ran(), y4 + ran(), 1000);
                 sleep(400);
                 is_find_ad = find_ad();
                 if (!is_find_ad) {
@@ -2537,45 +2537,50 @@ function shop() {
 
 /**
  * 查找空闲货架并点击
- * @param {number} attempts - 当前尝试次数
  * @param {number} maxAttempts - 最大尝试次数
  * @returns {boolean} - 是否成功找到空闲货架
  */
-function find_kongxian(attempts, maxAttempts = 5) {
+function find_kongxian(maxAttempts = 5) {
     let shopEnd = false;
-    let currentAttempts = attempts || 0;
+    let currentAttempts = 0;
+    let findCoin = false;
     // log("当前尝试次数: " + currentAttempts);
 
     while (true) {
         sleep(100);
         var kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130], 10);
-        if (!kongxian) {    //没有空闲货架
-            console.log("未找到空闲货架");
-            showTip("未找到空闲货架");
-
-            if (shopEnd || currentAttempts >= maxAttempts) { //如果右滑到顶了，且尝试次数超过最大次数，返回true
-                log("右滑到顶了");
-                showTip("右滑到顶了");
-                return false;
-            }
-
-            currentAttempts++;
-
-            const [x1, y1] = [960, 390];
-            const [x2, y2] = [288, 390];
-            swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), 600);
-            console.log("商店右滑")
-            sleep(200);
-            coin();
-            shopEnd = matchColor([{ x: 990, y: 292, color: "#cccccc" }]);
-            if (shopEnd) {
-                log("右滑到顶了");
-                showTip("右滑到顶了");
-                continue;
-            }
-        }
 
         if (kongxian) break;
+
+        if (!findCoin) {
+            coin();
+            findCoin = true;
+            continue;
+        }
+
+        console.log("未找到空闲货架");
+        showTip("未找到空闲货架");
+
+        if (shopEnd || currentAttempts >= maxAttempts) { //如果右滑到顶了，且尝试次数超过最大次数，返回false
+            log("右滑到顶了");
+            showTip("右滑到顶了");
+            return false;
+        }
+
+        currentAttempts++;
+
+        const [x1, y1] = [960, 390];
+        const [x2, y2] = [288, 390];
+        swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), 1000);
+        console.log("商店右滑")
+        sleep(300);
+        coin();
+        shopEnd = matchColor([{ x: 990, y: 292, color: "#cccccc" }]);
+        if (shopEnd) {
+            log("右滑到顶了");
+            showTip("右滑到顶了");
+            continue;
+        }
     }
 
     //有空闲货架点击上架
@@ -2586,6 +2591,22 @@ function find_kongxian(attempts, maxAttempts = 5) {
     sleep(200);
     return true;
 }
+
+function find_kongxian_until() {
+    do {
+        var kongxian = find_kongxian();
+        if (!kongxian) {
+            const [x1, y1] = [288, 390];
+            const [x2, y2] = [960, 390];
+            console.log("商店左滑")
+            for (let i = 0; i < 3; i++) {
+                swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), 150);
+                sleep(300)
+            }
+        }
+    } while (!kongxian);
+}
+
 
 /**
  * 售卖统计
@@ -2875,11 +2896,11 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
  * 售卖物品
  * @param {*} sellPlan 售卖计划,格式[{title:"物品名称",num:数量}]
  * @param {*} itemColor 物品颜色,格式{物品名称:颜色}
- * @param {*} pos 物品位置,"left"为基准点左上方向，即作物售卖
+ * @param {*} pos 物品类型，粮仓即作物售卖，默认货仓
  * @param {*} price 售卖价格,0为最低价格,2为最高价格
  * @returns 
  */
-function shop_sell(sellPlan, itemColor, pos, price = 2) {
+function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
     sleep(100);
     coin()
     for (let item of sellPlan) {    //遍历售卖计划中的每个物品
@@ -2890,22 +2911,26 @@ function shop_sell(sellPlan, itemColor, pos, price = 2) {
             }
             let sellNum = item.num > 10 ? 10 : item.num;
 
-            let kongxian = find_kongxian();
-            if (!kongxian) {    //没有空闲货架
-                console.log("未找到空闲货架,商店售卖结束");
-                showTip("未找到空闲货架,商店售卖结束");
-                return false;
+            if (configs.get("waitShelf" || false)) {
+                find_kongxian_until()
+            } else {
+                if (!find_kongxian()) {    //没有空闲货架
+                    console.log("未找到空闲货架,商店售卖结束");
+                    showTip("未找到空闲货架,商店售卖结束");
+                    return false;
+                }
             }
 
             //判断是否在货仓/粮仓界面
+            sleep(100)
             if (matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
-                if (pos != "left") {
+                if (pos == "货仓") {
                     click(200 + ran(), 330 + ran());//点击售卖货仓按钮
                     sleep(100);
                     console.log("点击货仓按钮")
                 }
             } else {
-                if (pos == "left") {
+                if (pos == "粮仓") {
                     click(200 + ran(), 200 + ran());//点击售卖粮仓按钮
                     sleep(100);
                     console.log("点击粮仓按钮")
@@ -4736,6 +4761,8 @@ module.exports = {
 
     // 商店相关
     coin: coin,
+    find_kongxian: find_kongxian,
+    find_kongxian_until: find_kongxian_until,
     find_ad: find_ad,
     shop: shop,
     shopStatistic: shopStatistic,

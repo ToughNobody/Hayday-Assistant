@@ -1,25 +1,25 @@
 {
-  "version": "2.1.8",
-  "description": "\n\nv2.1.8\n功能优化：\n优化建材的识别和数量识别\n\n修复Bug：\n修复保存配置失败Bug\n修复三位数物品识别错误Bug\n\n",
-  "zip_name": "卡通农场小助手v2.1.8.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.8/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.8.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.8/v2.1.8.zip",
+  "version": "2.1.9",
+  "description": "\n\nv2.1.9\n新增功能\n为物品售卖添加等待货架,当售卖时没有剩余空闲货架,且还没有全部售卖完成,会反复检查货架,等待卖出,再进行上架\n功能优化\n物品售卖界面添加右上角设置按钮,可以设置售卖方式,如售卖全部,售卖全部锯斧,售卖全部炸矿,售卖全部货仓,售卖全部粮仓,售卖全部扩地,售卖平均货仓,售卖平均粮仓,售卖平均扩地,导入,勾选全部账号,清空选择,恢复默认\n货架右滑速度降低\n\n",
+  "zip_name": "卡通农场小助手v2.1.9.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.9/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.9.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.9/v2.1.9.zip",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 60,
+      "versionCode": 61,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 60,
+      "versionCode": 61,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 60,
+      "versionCode": 61,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
     },

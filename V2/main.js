@@ -824,7 +824,7 @@ function applySellPlanToAllAccounts(index) {
             }
         }
 
-        log("已将当前账户的售卖计划应用到其他所有账户");
+        toastLog("已将当前账户的售卖计划应用到其他所有账户");
     } else {
         toast("当前账户数据无效");
     }
@@ -890,6 +890,296 @@ function addNewItemToAllAccounts() {
     });
 }
 
+// 定义导入账户列表的函数
+function importAccountList() {
+    // 从配置中获取accountList数据
+    var importedAccountList = configs.get("accountList");
+
+    if (importedAccountList && Array.isArray(importedAccountList) && importedAccountList.length > 0) {
+        // 清空现有的sell_accountList（除了第一个"当前"项）
+        sell_accountList.splice(1);
+
+        // 将导入的数据添加到sell_accountList中
+        for (var i = 0; i < importedAccountList.length; i++) {
+            sell_accountList.push({
+                title: importedAccountList[i].title,
+                done: false,
+                price: 0  // 添加默认价格属性
+            });
+        }
+
+        // 更新UI数据源
+        ui.sell_accountList.setDataSource(sell_accountList);
+
+        // 清除容器中的现有内容
+        ui.sell_Container.removeAllViews();
+
+        // 重新生成内容块
+        generateContentBlocks(sell_accountList);
+
+        // 重新创建所有账户对应的仓库售卖列表数据源
+        // 创建新的对象而不是直接赋值空对象，避免引用问题
+        var newCangkuSoldLists = {};
+        // 保留已有的售卖计划数据，如果不存在则使用默认值
+        for (var i = 1; i <= sell_accountList.length; i++) {
+            // 检查是否已存在该账户的售卖列表数据
+            if (allCangkuSoldLists && allCangkuSoldLists["sell_CangkuSoldList" + i]) {
+                // 保留已有的数据
+                newCangkuSoldLists["sell_CangkuSoldList" + i] = allCangkuSoldLists["sell_CangkuSoldList" + i];
+            } else {
+                // 使用默认值
+                newCangkuSoldLists["sell_CangkuSoldList" + i] = createDefaultItemList();
+            }
+        }
+        // 安全地替换allCangkuSoldLists对象
+        allCangkuSoldLists = newCangkuSoldLists;
+
+        // 为每个账户的内容块重新设置数据源和事件处理
+        for (var i = 1; i <= sell_accountList.length; i++) {
+            // 使用闭包确保正确的索引值
+            (function (index) {
+                // 确保数据源是一个有效的数组对象
+                var dataSource = allCangkuSoldLists["sell_CangkuSoldList" + index];
+                if (dataSource && Array.isArray(dataSource)) {
+                    // 设置数据源
+                    if (ui["sell_CangkuSoldList" + index]) {
+                        ui["sell_CangkuSoldList" + index].setDataSource(dataSource);
+                    }
+                } else {
+                    // 如果数据源无效，提供一个默认的空数组
+                    var defaultDataSource = createDefaultItemList();
+                    allCangkuSoldLists["sell_CangkuSoldList" + index] = defaultDataSource;
+                    if (ui["sell_CangkuSoldList" + index]) {
+                        ui["sell_CangkuSoldList" + index].setDataSource(defaultDataSource);
+                    }
+                }
+
+                // 重新绑定事件处理
+                if (ui["sell_CangkuSoldList" + index]) {
+                    ui["sell_CangkuSoldList" + index].on("item_bind", (function (listIndex) {
+                        return function (itemView, itemHolder) {
+                            // 绑定输入框文本变化事件
+                            itemView.sell_input.addTextChangedListener(new android.text.TextWatcher({
+                                afterTextChanged: function (s) {
+                                    var item = itemHolder.item;
+                                    item.sellNum = parseInt(s.toString()) || 0;
+                                },
+                                beforeTextChanged: function (s, start, count, after) { },
+                                onTextChanged: function (s, start, before, count) { }
+                            }));
+
+                            itemView.sell_sellAllButton.on("click", function () {
+                                // 全部售卖
+                                itemView.sell_input.setText("-1");
+                                // 更新数据源
+                                var item = itemHolder.item;
+                                item.sellNum = -1;
+                            });
+
+                            // 绑定复选框点击事件
+                            itemView.sell_done.on("check", function (checked) {
+                                var item = itemHolder.item;
+                                item.done = checked;
+                            });
+
+                            // 绑定项目点击事件，用于修改项目名称
+                            itemView.setOnClickListener(new android.view.View.OnClickListener({
+                                onClick: function (view) {
+                                    var item = itemHolder.item;
+                                    // 弹出输入框让用户修改项目名称
+                                    dialogs.prompt("修改项目名称", item.title, function (newTitle) {
+                                        if (newTitle && newTitle != item.title) {
+                                            // 查找所有具有相同标题的项目
+                                            var matchingItems = findAllMatchingItems(item.title);
+
+                                            // 更新所有匹配项目的标题
+                                            for (var i = 0; i < matchingItems.length; i++) {
+                                                var match = matchingItems[i];
+                                                match.item.title = newTitle;
+
+                                                // 更新对应列表的UI
+                                                if (ui["sell_CangkuSoldList" + match.listIndex]) {
+                                                    ui["sell_CangkuSoldList" + match.listIndex].setDataSource(match.dataSource);
+                                                }
+                                            }
+
+                                            log("已同步修改所有账户中的项目名称: " + newTitle);
+                                        }
+                                    });
+                                }
+                            }));
+
+                            // 绑定项目长按事件，用于删除项目
+                            itemView.setOnLongClickListener(new android.view.View.OnLongClickListener({
+                                onLongClick: function (view) {
+                                    var item = itemHolder.item;
+                                    // 弹出确认对话框
+                                    dialogs.confirm("删除项目", "确定要删除项目 \"" + item.title + "\" 吗？这将从所有账户中删除该项目。", function (confirmation) {
+                                        if (confirmation) {
+                                            // 查找所有具有相同标题的项目
+                                            var matchingItems = findAllMatchingItems(item.title);
+
+                                            // 从所有数据源中移除该项目
+                                            for (var i = 0; i < matchingItems.length; i++) {
+                                                var match = matchingItems[i];
+                                                match.dataSource.splice(match.itemIndex, 1);
+
+                                                // 更新对应列表的UI
+                                                if (ui["sell_CangkuSoldList" + match.listIndex]) {
+                                                    ui["sell_CangkuSoldList" + match.listIndex].setDataSource(match.dataSource);
+                                                }
+                                            }
+
+                                            log("已从所有账户中删除项目: " + item.title);
+                                        }
+                                    });
+                                    return true; // 表示消费了这个长按事件
+                                }
+                            }));
+                        };
+                    })(index));
+                }
+            })(i);
+        }
+
+        // 重新绑定账户列表项的点击事件
+        ui.sell_accountList.on("item_click", function (item, i, itemView, listView) {
+            // 隐藏所有内容块
+            for (var j = 1; j <= sell_accountList.length; j++) {
+                var contentBlock = ui.findView("sell_contentBlock" + j);
+                if (contentBlock) {
+                    contentBlock.setVisibility(android.view.View.GONE);
+                }
+            }
+
+            // 显示当前选中的内容块
+            var currentContentBlock = ui.findView("sell_contentBlock" + (i + 1));
+            if (currentContentBlock) {
+                currentContentBlock.setVisibility(android.view.View.VISIBLE);
+            }
+
+            // 更新标题文本为当前选中账户的标题
+            var pageTitle = ui.findView("sell_pageTitle" + (i + 1));
+            if (pageTitle) {
+                pageTitle.setText(item.title);
+            }
+        });
+
+        // 为每个账户的内容块重新添加"应用到全部"按钮的点击事件
+        for (var i = 1; i <= sell_accountList.length; i++) {
+            // 使用闭包确保正确的索引值
+            (function (index) {
+                var applyAllButton = ui.findView("sell_applyAllButton" + index);
+                if (applyAllButton) {
+                    applyAllButton.on("click", function () {
+                        applySellPlanToAllAccounts(index);
+                    }
+                    );
+                }
+
+                // 为每个账户的内容块重新添加"添加项目"按钮的点击事件（添加到所有账户）
+                var addItemButton = ui.findView("sell_addItemButton" + index);
+                if (addItemButton) {
+                    addItemButton.on("click", function () {
+                        addNewItemToAllAccounts();
+                    });
+                }
+                // 设置当前账户的售卖价格
+                var price = sell_accountList[index - 1].price;
+                if (price !== undefined && price !== null) {
+                    ui.findView("sell_price" + index).setSelection(price);
+                } else {
+                    // 如果价格未定义，则设置为默认值0
+                    ui.findView("sell_price" + index).setSelection(0);
+                }
+            })(i);
+        }
+
+        // 默认显示第一个账户的内容块
+        if (sell_accountList.length > 0) {
+            // 隐藏所有内容块
+            for (var j = 1; j <= sell_accountList.length; j++) {
+                var contentBlock = ui.findView("sell_contentBlock" + j);
+                if (contentBlock) {
+                    contentBlock.setVisibility(android.view.View.GONE);
+                }
+            }
+
+            // 显示第一个账户的内容块
+            var firstContentBlock = ui.findView("sell_contentBlock1");
+            if (firstContentBlock) {
+                firstContentBlock.setVisibility(android.view.View.VISIBLE);
+            }
+        }
+
+        toast("已成功导入账号列表");
+    } else {
+        toast("配置中没有找到账户列表数据");
+    }
+}
+
+// 根据不同类型设置物品售卖数量和状态的通用函数
+function setItemsForAllAccounts(itemTypes, sellNum, done) {
+    // 定义物品类型映射
+    const itemTypeMap = {
+        "锯斧": ["斧头", "木锯"],
+        "炸矿": ["炸药", "炸药桶", "铁铲", "十字镐"],
+        "货仓": ["螺栓", "木板", "胶带"],
+        "粮仓": ["盒钉", "螺钉", "镶板"],
+        "扩地": ["土地契约", "木槌", "标桩"],
+        "螺栓": ["螺栓"],
+        "木板": ["木板"],
+        "胶带": ["胶带"],
+        "盒钉": ["盒钉"],
+        "螺钉": ["螺钉"],
+        "镶板": ["镶板"],
+        "土地契约": ["土地契约"],
+        "木槌": ["木槌"],
+        "标桩": ["标桩"],
+        // 粮仓类与货仓类使用相同物品，只是在不同界面操作
+    };
+
+    // 获取要处理的物品列表
+    let targetItems = [];
+    if (typeof itemTypes === "string") {
+        // 如果是字符串类型，从映射中获取物品列表
+        targetItems = itemTypeMap[itemTypes] || [];
+    } else if (Array.isArray(itemTypes)) {
+        // 如果是数组类型，直接使用
+        targetItems = itemTypes;
+    }
+
+    // 如果没有指定物品列表，直接返回
+    if (targetItems.length === 0) {
+        return;
+    }
+
+    // 遍历所有账户
+    for (var i = 1; i <= sell_accountList.length; i++) {
+        var accountItemList = allCangkuSoldLists["sell_CangkuSoldList" + i];
+        if (accountItemList && Array.isArray(accountItemList)) {
+            // 遍历目标物品
+            for (var j = 0; j < targetItems.length; j++) {
+                var targetItem = targetItems[j];
+                // 在当前账户的物品列表中查找目标物品
+                for (var k = 0; k < accountItemList.length; k++) {
+                    if (accountItemList[k].title === targetItem) {
+                        // 设置售卖数量和状态
+                        accountItemList[k].sellNum = sellNum;
+                        accountItemList[k].done = done;
+                        break;
+                    }
+                }
+            }
+
+            // 更新UI
+            if (ui["sell_CangkuSoldList" + i]) {
+                ui["sell_CangkuSoldList" + i].setDataSource(accountItemList);
+            }
+        }
+    }
+}
+
 ui.layout(
     <frame>
         <drawer id="drawer">
@@ -941,37 +1231,39 @@ ui.layout(
                                         </horizontal>
 
                                         {/* 作物选择 - 仅在刷地时显示 */}
-                                        <horizontal id="cropSelectContainer" gravity="center_vertical" visibility="visible">
-                                            <text text="种植作物：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗"
-                                                w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                            <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
-                                            <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                        </horizontal>
+                                        <vertical id="cropSelectContainer" gravity="center_vertical" visibility="visible">
+                                            <horizontal gravity="center_vertical">
+                                                <text text="种植作物：" textSize="14" w="80" marginRight="8" />
+                                                <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗"
+                                                    w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                                <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
+                                                <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                            </horizontal>
 
-                                        {/* 商店售价 - 仅在刷地时显示*/}
-                                        <horizontal id="shopPriceContainer" gravity="center_vertical" visibility="visible">
-                                            <text text="商店售价：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="shopPrice" entries="最低|平价|最高" w="50" textSize="14" h="48" bg="#FFFFFF" />
-                                            <text text="保留数量:" textSize="14" w="80" marginLeft="20" />
-                                            <input id="ReservedQuantity" inputType="number" marginRight="8" hint="20" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                        </horizontal>
+                                            {/* 商店售价 - 仅在刷地时显示*/}
+                                            <horizontal gravity="center_vertical" >
+                                                <text text="商店售价：" textSize="14" w="80" marginRight="8" />
+                                                <spinner id="shopPrice" entries="最低|平价|最高" w="50" textSize="14" h="48" bg="#FFFFFF" />
+                                                <text text="保留数量:" textSize="14" w="80" marginLeft="20" />
+                                                <input id="ReservedQuantity" inputType="number" marginRight="8" hint="20" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                            </horizontal>
 
-                                        {/* 仓库售卖 - 仅在刷地时显示*/}
-                                        <horizontal id="CangkuSoldContainer" gravity="center_vertical" visibility="visible">
-                                            <text text="仓库售卖：" textSize="14" w="80" marginRight="8" />
-                                            <button id="cangkuSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
-                                            <text text="触发阈值:" textSize="14" w="80" marginRight="3" paddingLeft="20" />
-                                            <input id="CangkuSold_triggerNum" type="number" w="auto" h="48" text="10" marginLeft="5" marginRight="5" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                            <text text="~" textSize="14" w="auto" />
-                                            <input id="CangkuSold_targetNum" type="number" w="auto" h="48" text="25" marginLeft="5" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                        </horizontal>
+                                            {/* 仓库售卖 - 仅在刷地时显示*/}
+                                            <horizontal gravity="center_vertical">
+                                                <text text="仓库售卖：" textSize="14" w="80" marginRight="8" />
+                                                <button id="cangkuSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                <text text="触发阈值:" textSize="14" w="80" marginRight="3" paddingLeft="20" />
+                                                <input id="CangkuSold_triggerNum" type="number" w="auto" h="48" text="10" marginLeft="5" marginRight="5" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                                <text text="~" textSize="14" w="auto" />
+                                                <input id="CangkuSold_targetNum" type="number" w="auto" h="48" text="25" marginLeft="5" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                            </horizontal>
 
-                                        {/* 汤姆 - 仅在刷地时显示*/}
-                                        <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="gone">
-                                            <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
-                                            <Switch id="tomSwitch" w="*" h="48" gravity="left|center" />
-                                        </horizontal>
+                                            {/* 汤姆 - 仅在刷地时显示*/}
+                                            <horizontal id="tomSwitchContainer" gravity="center_vertical">
+                                                <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
+                                                <Switch id="tomSwitch" w="*" h="48" gravity="left|center" />
+                                            </horizontal>
+                                        </vertical>
 
                                         {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
                                         <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
@@ -981,18 +1273,20 @@ ui.layout(
                                         </horizontal>
 
                                         {/* 树木选择 - 仅在种树时显示 */}
-                                        <horizontal id="treeSelectContainer" gravity="center_vertical" visibility="gone">
-                                            <text text="种植树木：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
-                                                w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                        </horizontal>
+                                        <vertical id="treeSelectContainer" gravity="center_vertical" visibility="gone">
+                                            <horizontal gravity="center_vertical">
+                                                <text text="种植树木：" textSize="14" w="80" marginRight="8" />
+                                                <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
+                                                    w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                            </horizontal>
 
-                                        {/* 是否滑动 - 仅在种树时显示 */}
-                                        <horizontal id="treeShouldSwipe" gravity="center_vertical" visibility="gone">
-                                            <text text="是否自动滑动：" textSize="14" w="80" marginRight="8" />
-                                            <Switch id="treeShouldSwipeSwitch" w="*" h="48"
-                                                gravity="left|center" />
-                                        </horizontal>
+                                            {/* 是否滑动 - 仅在种树时显示 */}
+                                            <horizontal gravity="center_vertical">
+                                                <text text="是否自动滑动：" textSize="14" w="80" marginRight="8" />
+                                                <Switch id="treeShouldSwipeSwitch" w="*" h="48"
+                                                    gravity="left|center" />
+                                            </horizontal>
+                                        </vertical>
 
                                         <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2" visibility="gone">
                                             <vertical padding="16">
@@ -1019,12 +1313,18 @@ ui.layout(
                                         </card>
 
                                         {/* 物品售卖 - 仅在物品售卖时显示*/}
-                                        <horizontal id="sell_itemSoldContainer" gravity="center_vertical" visibility="gone">
-                                            <text text="物品售卖：" textSize="14" w="80" marginRight="8" />
-                                            <button id="sell_itemSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
-                                            <text text="清除粉丝：" textSize="14" w="80" marginLeft="20" />
-                                            <checkbox id="clearFans" checked="${configs.get('clearFans') || false}" />
-                                        </horizontal>
+                                        <vertical id="sell_itemSoldContainer" gravity="center_vertical" visibility="gone">
+                                            <horizontal gravity="center_vertical">
+                                                <text text="物品售卖：" textSize="14" w="80" marginRight="8" />
+                                                <button id="sell_itemSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                <text text="清除粉丝：" textSize="14" w="80" marginLeft="20" />
+                                                <checkbox id="clearFans" checked="${configs.get('clearFans') || false}" />
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical">
+                                                <text text="等待货架：" textSize="14" w="80" marginRight="8" />
+                                                <checkbox id="waitShelf" checked="${configs.get('waitShelf') || false}" />
+                                            </horizontal>
+                                        </vertical>
 
                                     </vertical>
                                 </card>
@@ -1401,6 +1701,7 @@ ui.layout(
                         <text text="仓库售卖" textSize="20sp" textColor="#FFFFFF" gravity="center" paddingLeft="20" />
                         <img id="helpIcon_sell" layout_gravity="center_vertical" src="@drawable/ic_help_outline_black_48dp" w="20" h="20" tint="#007AFF" marginLeft="30dp" />
                         <img id="saveIcon_sell" layout_gravity="right|center_vertical" src="@drawable/ic_save_black_48dp" w="28" h="28" tint="#FFFFFF" marginRight="15dp" />
+                        <img id="settingIcon_sell" layout_gravity="right|center_vertical" src="@drawable/ic_settings_black_48dp" w="28" h="28" tint="#FFFFFF" marginRight="15dp" />
                     </toolbar>
                 </appbar>
                 <horizontal>
@@ -2614,6 +2915,7 @@ function getConfig() {
         },
         clearFans: configs.get("clearFans"),
         sell_accountList: configs.get("sell_accountList"),
+        waitShelf: configs.get("waitShelf"),
     };
     return storedConfig;
 }
@@ -2667,6 +2969,7 @@ function saveConfig(con) {
         configs.put("cangkuStatisticsPage", con.cangkuStatisticsPage);
         configs.put("treeShouldSwipe", con.treeShouldSwipe);
         configs.put("clearFans", con.clearFans);
+        configs.put("waitShelf", con.waitShelf);
 
         // 存储粮仓和货仓偏移量
         configs.put("liangcangOffsetX", con.liangcangOffset.x);
@@ -2893,9 +3196,17 @@ function validateConfig(config) {
         config.treeShouldSwipe = defaultConfig.treeShouldSwipe;
     }
 
+    //验证售卖列表
+    if (!Array.isArray(config.sell_accountList)) config.sell_accountList = [];
+
     // 验证清除粉丝
     if (config.clearFans == undefined || typeof config.clearFans !== "boolean") {
         config.clearFans = defaultConfig.clearFans;
+    }
+
+    // 验证等待货架
+    if (config.waitShelf == undefined || typeof config.waitShelf !== "boolean") {
+        config.waitShelf = defaultConfig.waitShelf;
     }
 
     // 验证粮仓坐标偏移
@@ -3223,6 +3534,7 @@ function getDefaultConfig() {
             }
         },
         clearFans: false,
+        waitShelf: false,
     };
 }
 
@@ -3369,6 +3681,8 @@ function loadConfigToUI(loadConfigFromFile = false) {
     ui.treeShouldSwipeSwitch.setChecked(config.treeShouldSwipe);
 
     ui.clearFans.setChecked(config.clearFans);
+
+    ui.waitShelf.setChecked(config.waitShelf);
 
     // 加载汤姆相关配置
     if (config.tomFind.enabled !== undefined) {
@@ -3867,11 +4181,10 @@ function initUI() {
             if (selectedFunction === "刷地") {
                 // 显示作物选择和汤姆开关，隐藏树木选择
                 ui.cropSelectContainer.attr("visibility", "visible");
-                ui.shopPriceContainer.attr("visibility", "visible");
-                ui.CangkuSoldContainer.attr("visibility", "visible");
-                ui.tomSwitchContainer.attr("visibility", "visible");
+
+
                 ui.treeSelectContainer.attr("visibility", "gone");
-                ui.treeShouldSwipe.attr("visibility", "gone");
+
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 控制汤姆相关控件
                 if (ui.tomSwitch.isChecked()) {
@@ -3883,11 +4196,9 @@ function initUI() {
             } else if (selectedFunction === "种树") {
                 // 隐藏作物选择和汤姆开关，显示树木选择
                 ui.cropSelectContainer.attr("visibility", "gone");
-                ui.shopPriceContainer.attr("visibility", "gone");
-                ui.CangkuSoldContainer.attr("visibility", "gone");
-                ui.tomSwitchContainer.attr("visibility", "gone");
+
                 ui.treeSelectContainer.attr("visibility", "visible");
-                ui.treeShouldSwipe.attr("visibility", "visible");
+
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
@@ -3895,11 +4206,9 @@ function initUI() {
             } else if (selectedFunction === "创新号") {
                 // 创新号
                 ui.cropSelectContainer.attr("visibility", "gone");
-                ui.shopPriceContainer.attr("visibility", "gone");
-                ui.CangkuSoldContainer.attr("visibility", "gone");
-                ui.tomSwitchContainer.attr("visibility", "gone");
+
                 ui.treeSelectContainer.attr("visibility", "gone");
-                ui.treeShouldSwipe.attr("visibility", "gone");
+
                 ui.addFriendsCard.attr("visibility", "visible");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
@@ -3907,11 +4216,9 @@ function initUI() {
             } else if (selectedFunction === "仅汤姆") {
                 // 仅汤姆
                 ui.cropSelectContainer.attr("visibility", "gone");
-                ui.shopPriceContainer.attr("visibility", "gone");
-                ui.CangkuSoldContainer.attr("visibility", "gone");
-                ui.tomSwitchContainer.attr("visibility", "gone");
+
                 ui.treeSelectContainer.attr("visibility", "gone");
-                ui.treeShouldSwipe.attr("visibility", "gone");
+
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "visible");
@@ -3919,11 +4226,9 @@ function initUI() {
             } else if (selectedFunction === "物品售卖") {
                 // 物品售卖
                 ui.cropSelectContainer.attr("visibility", "gone");
-                ui.shopPriceContainer.attr("visibility", "gone");
-                ui.CangkuSoldContainer.attr("visibility", "gone");
-                ui.tomSwitchContainer.attr("visibility", "gone");
+
                 ui.treeSelectContainer.attr("visibility", "gone");
-                ui.treeShouldSwipe.attr("visibility", "gone");
+
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
@@ -3982,6 +4287,12 @@ function initUI() {
     ui.clearFans.on("check", (checked) => {
         // 保存修改后的开关状态到配置
         configs.put("clearFans", checked);
+    });
+
+    // 等待货架开关状态变化监听
+    ui.waitShelf.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("waitShelf", checked);
     });
 
     // 为itemType添加事件监听器
@@ -4123,18 +4434,30 @@ function initUI() {
             title: "功能选择帮助",
             content: "选择功能右边的下拉菜单是能点的\n\n" +
                 "默认是刷地功能,点击刷地可选择其他功能\n\n" +
-                "刷地功能：\n" +
+                "刷地功能:\n" +
                 "- 应该不用解释\n\n" +
-                "种树功能：\n" +
+                "种树功能:\n" +
                 "- 先启用浮动按钮,进入游戏后,在浮动按钮点击开始即可运行\n" +
                 "- 自动滑动当检测此页面”没有“可种植地块后,自动滑动屏幕,关闭可自行滑动调整\n\n" +
-                "创新号功能：\n" +
+                "创新号功能:\n" +
                 "-先新建一个号,确保进入游戏后是在最初的教程界面,点击开始,自动运行到5级\n" +
                 "-添加好友,新手教程结束后,根据输入的农场标签,自动添加农场好友\n\n" +
-                "仅汤姆：\n" +
+                "仅汤姆:\n" +
                 "-先在上方账号信息一栏中选择是否切换账号并且勾选需要刷取的账号\n" +
                 "-在等待期间会回到主界面,并不是脚本掉了\n" +
-                "当剩余时间小于60秒时,启动游戏\n",
+                "当剩余时间小于60秒时,启动游戏\n\n" +
+                "物品售卖:\n" +
+                "-清除粉丝:进入游戏主页时,先清除粉丝再进行售卖\n" +
+                "-等待货架:当售卖时没有剩余空闲货架,且还没有全部售卖完成,会反复检查货架,等待卖出,再进行上架\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "\n",
             positive: "确定"
         }).show();
     })
@@ -4522,8 +4845,16 @@ function initUI() {
                 });
             }
 
+            // 为每个账户的内容块添加"添加好友"按钮的点击事件（添加到所有账户）
+            // log(sell_accountList[index - 1])
             // 设置当前账户的售卖价格
-            ui.findView("sell_price" + index).setSelection(sell_accountList[index - 1].price || 0);
+            var price = sell_accountList[index - 1].price;
+            if (price !== undefined && price !== null) {
+                ui.findView("sell_price" + index).setSelection(price);
+            } else {
+                // 如果价格未定义，则设置为默认值0
+                ui.findView("sell_price" + index).setSelection(0);
+            }
 
         })(i);
     }
@@ -4632,223 +4963,7 @@ function initUI() {
 
     // 为导入按钮添加点击事件
     ui.sell_improtAccountListButton.on("click", function () {
-        // 从配置中获取accountList数据
-        var importedAccountList = configs.get("accountList");
-
-        if (importedAccountList && Array.isArray(importedAccountList) && importedAccountList.length > 0) {
-            // 清空现有的sell_accountList（除了第一个"当前"项）
-            sell_accountList.splice(1);
-
-            // 将导入的数据添加到sell_accountList中
-            for (var i = 0; i < importedAccountList.length; i++) {
-                sell_accountList.push({
-                    title: importedAccountList[i].title,
-                    done: false
-                });
-            }
-
-            // 更新UI数据源
-            ui.sell_accountList.setDataSource(sell_accountList);
-
-            // 清除容器中的现有内容
-            ui.sell_Container.removeAllViews();
-
-            // 重新生成内容块
-            generateContentBlocks(sell_accountList);
-
-            // 重新创建所有账户对应的仓库售卖列表数据源
-            // 创建新的对象而不是直接赋值空对象，避免引用问题
-            var newCangkuSoldLists = {};
-            // 保留已有的售卖计划数据，如果不存在则使用默认值
-            for (var i = 1; i <= sell_accountList.length; i++) {
-                // 检查是否已存在该账户的售卖列表数据
-                if (allCangkuSoldLists && allCangkuSoldLists["sell_CangkuSoldList" + i]) {
-                    // 保留已有的数据
-                    newCangkuSoldLists["sell_CangkuSoldList" + i] = allCangkuSoldLists["sell_CangkuSoldList" + i];
-                } else {
-                    // 使用默认值
-                    newCangkuSoldLists["sell_CangkuSoldList" + i] = createDefaultItemList();
-                }
-            }
-            // 安全地替换allCangkuSoldLists对象
-            allCangkuSoldLists = newCangkuSoldLists;
-
-            // 为每个账户的内容块重新设置数据源和事件处理
-            for (var i = 1; i <= sell_accountList.length; i++) {
-                // 使用闭包确保正确的索引值
-                (function (index) {
-                    // 确保数据源是一个有效的数组对象
-                    var dataSource = allCangkuSoldLists["sell_CangkuSoldList" + index];
-                    if (dataSource && Array.isArray(dataSource)) {
-                        // 设置数据源
-                        if (ui["sell_CangkuSoldList" + index]) {
-                            ui["sell_CangkuSoldList" + index].setDataSource(dataSource);
-                        }
-                    } else {
-                        // 如果数据源无效，提供一个默认的空数组
-                        var defaultDataSource = createDefaultItemList();
-                        allCangkuSoldLists["sell_CangkuSoldList" + index] = defaultDataSource;
-                        if (ui["sell_CangkuSoldList" + index]) {
-                            ui["sell_CangkuSoldList" + index].setDataSource(defaultDataSource);
-                        }
-                    }
-
-                    // 重新绑定事件处理
-                    if (ui["sell_CangkuSoldList" + index]) {
-                        ui["sell_CangkuSoldList" + index].on("item_bind", (function (listIndex) {
-                            return function (itemView, itemHolder) {
-                                // 绑定输入框文本变化事件
-                                itemView.sell_input.addTextChangedListener(new android.text.TextWatcher({
-                                    afterTextChanged: function (s) {
-                                        var item = itemHolder.item;
-                                        item.sellNum = parseInt(s.toString()) || 0;
-                                    },
-                                    beforeTextChanged: function (s, start, count, after) { },
-                                    onTextChanged: function (s, start, before, count) { }
-                                }));
-
-                                itemView.sell_sellAllButton.on("click", function () {
-                                    // 全部售卖
-                                    itemView.sell_input.setText("-1");
-                                    // 更新数据源
-                                    var item = itemHolder.item;
-                                    item.sellNum = -1;
-                                });
-
-                                // 绑定复选框点击事件
-                                itemView.sell_done.on("check", function (checked) {
-                                    var item = itemHolder.item;
-                                    item.done = checked;
-                                });
-
-                                // 绑定项目点击事件，用于修改项目名称
-                                itemView.setOnClickListener(new android.view.View.OnClickListener({
-                                    onClick: function (view) {
-                                        var item = itemHolder.item;
-                                        // 弹出输入框让用户修改项目名称
-                                        dialogs.prompt("修改项目名称", item.title, function (newTitle) {
-                                            if (newTitle && newTitle != item.title) {
-                                                // 查找所有具有相同标题的项目
-                                                var matchingItems = findAllMatchingItems(item.title);
-
-                                                // 更新所有匹配项目的标题
-                                                for (var i = 0; i < matchingItems.length; i++) {
-                                                    var match = matchingItems[i];
-                                                    match.item.title = newTitle;
-
-                                                    // 更新对应列表的UI
-                                                    if (ui["sell_CangkuSoldList" + match.listIndex]) {
-                                                        ui["sell_CangkuSoldList" + match.listIndex].setDataSource(match.dataSource);
-                                                    }
-                                                }
-
-                                                log("已同步修改所有账户中的项目名称: " + newTitle);
-                                            }
-                                        });
-                                    }
-                                }));
-
-                                // 绑定项目长按事件，用于删除项目
-                                itemView.setOnLongClickListener(new android.view.View.OnLongClickListener({
-                                    onLongClick: function (view) {
-                                        var item = itemHolder.item;
-                                        // 弹出确认对话框
-                                        dialogs.confirm("删除项目", "确定要删除项目 \"" + item.title + "\" 吗？这将从所有账户中删除该项目。", function (confirmation) {
-                                            if (confirmation) {
-                                                // 查找所有具有相同标题的项目
-                                                var matchingItems = findAllMatchingItems(item.title);
-
-                                                // 从所有数据源中移除该项目
-                                                for (var i = 0; i < matchingItems.length; i++) {
-                                                    var match = matchingItems[i];
-                                                    match.dataSource.splice(match.itemIndex, 1);
-
-                                                    // 更新对应列表的UI
-                                                    if (ui["sell_CangkuSoldList" + match.listIndex]) {
-                                                        ui["sell_CangkuSoldList" + match.listIndex].setDataSource(match.dataSource);
-                                                    }
-                                                }
-
-                                                log("已从所有账户中删除项目: " + item.title);
-                                            }
-                                        });
-                                        return true; // 表示消费了这个长按事件
-                                    }
-                                }));
-                            };
-                        })(index));
-                    }
-                })(i);
-            }
-
-            // 重新绑定账户列表项的点击事件
-            ui.sell_accountList.on("item_click", function (item, i, itemView, listView) {
-                // 隐藏所有内容块
-                for (var j = 1; j <= sell_accountList.length; j++) {
-                    var contentBlock = ui.findView("sell_contentBlock" + j);
-                    if (contentBlock) {
-                        contentBlock.setVisibility(android.view.View.GONE);
-                    }
-                }
-
-                // 显示当前选中的内容块
-                var currentContentBlock = ui.findView("sell_contentBlock" + (i + 1));
-                if (currentContentBlock) {
-                    currentContentBlock.setVisibility(android.view.View.VISIBLE);
-                }
-
-                // 更新标题文本为当前选中账户的标题
-                var pageTitle = ui.findView("sell_pageTitle" + (i + 1));
-                if (pageTitle) {
-                    pageTitle.setText(item.title);
-                }
-            });
-
-            // 为每个账户的内容块重新添加"应用到全部"按钮的点击事件
-            for (var i = 1; i <= sell_accountList.length; i++) {
-                // 使用闭包确保正确的索引值
-                (function (index) {
-                    var applyAllButton = ui.findView("sell_applyAllButton" + index);
-                    if (applyAllButton) {
-                        applyAllButton.on("click", function () {
-                            applySellPlanToAllAccounts(index);
-                        });
-                    }
-
-                    // 为每个账户的内容块重新添加"添加项目"按钮的点击事件（添加到所有账户）
-                    var addItemButton = ui.findView("sell_addItemButton" + index);
-                    if (addItemButton) {
-                        addItemButton.on("click", function () {
-                            addNewItemToAllAccounts();
-                        });
-                    }
-
-                    // 设置当前账户的售卖价格
-                    ui.findView("sell_price" + index).setSelection(sell_accountList[index - 1].price || 0);
-                })(i);
-            }
-
-            // 默认显示第一个账户的内容块
-            if (sell_accountList.length > 0) {
-                // 隐藏所有内容块
-                for (var j = 1; j <= sell_accountList.length; j++) {
-                    var contentBlock = ui.findView("sell_contentBlock" + j);
-                    if (contentBlock) {
-                        contentBlock.setVisibility(android.view.View.GONE);
-                    }
-                }
-
-                // 显示第一个账户的内容块
-                var firstContentBlock = ui.findView("sell_contentBlock1");
-                if (firstContentBlock) {
-                    firstContentBlock.setVisibility(android.view.View.VISIBLE);
-                }
-            }
-
-            toast("已成功导入账号列表");
-        } else {
-            toast("配置中没有找到账户列表数据");
-        }
+        importAccountList();
     });
 
     // 为帮助图标添加点击事件
@@ -4953,11 +5068,155 @@ function initUI() {
             toast("已保存");
         });
         sell_dialog.show();
-   
+
 
         // 输出格式化的信息到日志
         // log(JSON.stringify(allAccountInfo, null, 2));
-        
+
+    });
+
+    // 为设置图标添加点击事件
+    ui.settingIcon_sell.on("click", function () {
+        // 弹出选项对话框
+        dialogs.select("设置", ["售卖全部", "售卖全部    锯斧", "售卖全部    炸矿", "售卖全部    货仓", "售卖全部    粮仓", "售卖全部    扩地", "售卖平均    货仓", "售卖平均    粮仓", "售卖平均    扩地", "导入", "勾选全部账号", "清空选择", "恢复默认"])
+            .then(function (selectedIndex) {//0   1                 2                   3               4                5                   6               7                   8         9         10          11          12
+                if (selectedIndex >= 0) {
+                    // 可以在这里添加更多处理逻辑
+                    switch (selectedIndex) {
+                        case 0:
+                            // 售卖全部：将所有账号列表的所有物品售卖数量设置为-1并勾选
+                            for (var i = 1; i <= sell_accountList.length; i++) {
+                                var accountItemList = allCangkuSoldLists["sell_CangkuSoldList" + i];
+                                if (accountItemList && Array.isArray(accountItemList)) {
+                                    // 遍历当前账户的所有物品，恢复到默认状态
+                                    for (var j = 0; j < accountItemList.length; j++) {
+                                        accountItemList[j].sellNum = -1;
+                                        accountItemList[j].done = true;
+                                    }
+
+                                    // 更新UI
+                                    if (ui["sell_CangkuSoldList" + i]) {
+                                        ui["sell_CangkuSoldList" + i].setDataSource(accountItemList);
+                                    }
+                                }
+                            }
+                            // 勾选全部账号：将所有账号都设置为选中状态
+                            for (var i = 0; i < sell_accountList.length; i++) {
+                                sell_accountList[i].done = true;
+                            }
+                            ui.sell_accountList.setDataSource(sell_accountList);
+                            toastLog("已设置");
+                            break;
+                        case 1:
+                            // 售卖全部锯斧：将所有账号列表的斧头和木锯售卖数量设置为-1并勾选
+                            setItemsForAllAccounts("锯斧", -1, true);
+                            toastLog("已设置");
+                            break;
+                        case 2:
+                            // 售卖全部炸矿：将所有账号列表的炸药、炸药桶、铁铲、十字镐售卖数量设置为-1并勾选
+                            setItemsForAllAccounts("炸矿", -1, true);
+                            toastLog("已设置");
+                            break;
+                        case 3:
+                            // 售卖全部货仓：将所有账号列表的货仓相关物品售卖数量设置为-1并勾选
+                            setItemsForAllAccounts("货仓", -1, true);
+                            toastLog("已设置");
+                            break;
+                        case 4:
+                            // 售卖全部粮仓：将所有账号列表的粮仓相关物品售卖数量设置为-1并勾选
+                            setItemsForAllAccounts("粮仓", -1, true);
+                            toastLog("已设置");
+                            break;
+                        case 5:
+                            // 售卖全部扩地：将所有账号列表的扩地相关物品售卖数量设置为-1并勾选
+                            setItemsForAllAccounts("扩地", -1, true);
+                            toastLog("已设置");
+                            break;
+                        case 6:
+                            // 售卖平均货仓：将所有账号列表的货仓相关物品售卖数量设置为29并勾选
+                            setItemsForAllAccounts("螺栓", 29, true);
+                            setItemsForAllAccounts("木板", 30, true);
+                            setItemsForAllAccounts("胶带", 30, true);
+                            toastLog("已设置");
+                            break;
+                        case 7:
+                            // 售卖平均粮仓：将所有账号列表的粮仓相关物品售卖数量设置为30并勾选
+                            setItemsForAllAccounts("盒钉", 29, true);
+                            setItemsForAllAccounts("螺钉", 30, true);
+                            setItemsForAllAccounts("镶板", 30, true);
+                            toastLog("已设置");
+                            break;
+                        case 8:
+                            // 售卖平均扩地：将所有账号列表的扩地相关物品售卖数量设置为30并勾选
+                            setItemsForAllAccounts("土地契约", 29, true);
+                            setItemsForAllAccounts("木槌", 30, true);
+                            setItemsForAllAccounts("标桩", 30, true);
+                            toastLog("已设置");
+                            break;
+                        case 9:
+                            importAccountList()
+                            toastLog("导入");
+                            break;
+                        case 10:
+                            // 勾选全部账号：将所有账号都设置为选中状态
+                            for (var i = 0; i < sell_accountList.length; i++) {
+                                sell_accountList[i].done = true;
+                            }
+                            ui.sell_accountList.setDataSource(sell_accountList);
+                            toastLog("已勾选所有账号");
+                            break;
+                        case 11:
+                            // 清空选择：将所有账号列表的所有物品的勾选状态取消
+                            for (var i = 1; i <= sell_accountList.length; i++) {
+                                var accountItemList = allCangkuSoldLists["sell_CangkuSoldList" + i];
+                                if (accountItemList && Array.isArray(accountItemList)) {
+                                    // 遍历当前账户的所有物品，取消勾选状态
+                                    for (var j = 0; j < accountItemList.length; j++) {
+                                        accountItemList[j].done = false;
+                                    }
+
+                                    // 更新UI
+                                    if (ui["sell_CangkuSoldList" + i]) {
+                                        ui["sell_CangkuSoldList" + i].setDataSource(accountItemList);
+                                    }
+                                }
+                            }
+                            // 取消勾选全部账号：将所有账号都设置为未选中状态
+                            for (var i = 0; i < sell_accountList.length; i++) {
+                                sell_accountList[i].done = false;
+                            }
+                            ui.sell_accountList.setDataSource(sell_accountList);
+                            toastLog("已清空所有账号的物品选择");
+                            break;
+                        case 12:
+                            // 全部删除：将所有账号列表的所有物品恢复到默认状态（售卖数量为0，未勾选）
+                            for (var i = 1; i <= sell_accountList.length; i++) {
+                                var accountItemList = allCangkuSoldLists["sell_CangkuSoldList" + i];
+                                if (accountItemList && Array.isArray(accountItemList)) {
+                                    // 遍历当前账户的所有物品，恢复到默认状态
+                                    for (var j = 0; j < accountItemList.length; j++) {
+                                        accountItemList[j].sellNum = 0;
+                                        accountItemList[j].done = false;
+                                    }
+
+                                    // 更新UI
+                                    if (ui["sell_CangkuSoldList" + i]) {
+                                        ui["sell_CangkuSoldList" + i].setDataSource(accountItemList);
+                                    }
+                                }
+                            }
+                            // 取消勾选全部账号：将所有账号都设置为未选中状态
+                            for (var i = 0; i < sell_accountList.length; i++) {
+                                sell_accountList[i].done = false;
+                            }
+                            ui.sell_accountList.setDataSource(sell_accountList);
+                            toastLog("已将所有账号的物品恢复到默认状态");
+                            break;
+                    }
+                } else {
+
+                }
+            });
     });
 
 }
