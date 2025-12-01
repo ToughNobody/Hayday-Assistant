@@ -2703,7 +2703,7 @@ function saveConfig(con) {
         configs.put("CangkuSold_triggerNum", con.CangkuSold_triggerNum);
         configs.put("CangkuSold_targetNum", con.CangkuSold_targetNum);
 
-        configs.put("sell_accountList", con.sell_accountList);
+        configs.put("sell_accountList", con.sell_accountList || []);
 
         // 存储其他配置项
         configs.put("restartWithShell", con.restartWithShell);
@@ -4859,6 +4859,7 @@ function initUI() {
                 "初次使用时点击导入按钮,即可导入邮箱账号。存档账号暂不支持(以后看心情,大概率不会做)\n\n" +
                 "左侧一列选择账号,选择'当前'即不切换账号,执行现在登录的账号\n\n" +
                 "应用到全部: 将本账号的售卖配置同步到其他所有账号\n\n" +
+                "全部: 点击后售卖数量为-1,即为售卖全部该物品\n\n" +
                 "添加项目: 在右侧售卖物品一栏添加售卖的物品\n\n" +
                 "单击项目修改名称,长按项目删除,点击全部按钮即售卖全部\n\n" +
                 "加好友: 输入农场标签,即可自动添加好友\n\n" +
