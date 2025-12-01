@@ -1,25 +1,25 @@
 {
-  "version": "2.1.7",
-  "description": "\n\nv2.1.7\n新增功能：\n添加物品售卖功能\n\n功能优化：\n稍微缩短了种植和收割前的等待时间\n售卖时如果该物品不在这一页，则使用搜索，不再向下滑动寻找\n图片压缩体积,占用空间更小\n收割和种植时悬浮文字将显示当前操作步骤，不是检测商店了\n界面检测添加好友栏打开的界面判断\n\n修复Bug：\n检测主界面时的叉号重复点击\n\n",
-  "zip_name": "卡通农场小助手v2.1.7.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.7/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.7.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.7/v2.1.7.zip",
+  "version": "2.1.8",
+  "description": "\n\nv2.1.8\n功能优化：\n优化建材的识别和数量识别\n\n修复Bug：\n修复保存配置失败Bug\n修复三位数物品识别错误Bug\n\n",
+  "zip_name": "卡通农场小助手v2.1.8.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.8/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.8.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.8/v2.1.8.zip",
   "files": [
     {
       "name": "project.json",
-      "versionCode": 59,
+      "versionCode": 60,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/project.json",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/project.json"
     },
     {
       "name": "main.js",
-      "versionCode": 59,
+      "versionCode": 60,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/main.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/main.js"
     },
     {
       "name": "module.js",
-      "versionCode": 59,
+      "versionCode": 60,
       "gitee_url": "https://gitee.com/toughnobody/Hayday-Assistant/raw/main/V2/module.js",
       "github_url": "https://github.com/ToughNobody/Hayday-Assistant/raw/refs/heads/main/V2/module.js"
     },
