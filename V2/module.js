@@ -42,7 +42,7 @@ const cropItemColor = {
 //都取左上为基准点
 const cangkuItemColor = {
     "盒钉": ["#ce2410", [-1, -32, "#927059"], [42, -10, "#a27f65"], [-21, 64, "#c1c2c1"], [13, 13, "#f0e1c8"]],
-    "螺钉": ["#fffadc", [54, -11, "#596062"], [39, -19, "#f2f0f2"], [63, 4, "#d6d7d6"], [-20, 66, "#acb4b4"]],
+    "螺钉": ["#a7afb0",[19,-4,"#5b6161"],[11,-6,"#dadcda"],[16,-2,"#626a67"],[21,4,"#daddde"],[27,18,"#aeb4b5"],[-55,70,"#b3b8bf"],[-3,19,"#a9ada9"]],
     "镶板": ["#b57139", [8, -17, "#d2d2d2"], [-24, 32, "#c6824a"], [56, -16, "#8c5129"], [-1, 50, "#4f3221"]],
     "螺栓": ["#879092", [11, -19, "#eeeeee"], [-18, 68, "#5f6567"], [46, 1, "#7b8d8c"], [-13, 7, "#848e94"]],
     "木板": ["#fffadc", [58, -7, "#774321"], [-17, 37, "#724019"], [-36, 39, "#8a4e23"], [-25, 30, "#c67a38"]],
@@ -270,6 +270,17 @@ function checkRoot() {
 
 function restartgame() {
     try {
+
+        if (configs.get("returnDesktop", false)) {
+            home();
+            for (let i = 0; i < 15; i++) {
+                showTip("返回桌面后,等待" + (15 - i) + "秒后再打开游戏");
+                sleep(1000);
+            }
+            launch("com.supercell.hayday")
+            return;
+        }
+        
         home();
         sleep(100);
         let packageName = "com.supercell.hayday";
@@ -1019,16 +1030,12 @@ function verticalProjectionSegmentation(binaryArray, width, height, maxGap) {
                     segments.push({
                         pixels: charPixels,
                         num: countOnes,
+                        startX: startPos,
+                        endX: endPos,
+                        minY: minY,
+                        maxY: maxY,
                         width: charWidth,
                         height: charHeight,
-                        position: {
-                            startX: startPos,
-                            endX: endPos,
-                            width: charWidth,
-                            height: charHeight,
-                            minY: minY,
-                            maxY: maxY
-                        }
                     });
 
                     gapCount = 0; // 重置间隙计数
@@ -1075,21 +1082,89 @@ function verticalProjectionSegmentation(binaryArray, width, height, maxGap) {
             segments.push({
                 pixels: charPixels,
                 num: countOnes,
+                startX: startPos,
+                endX: endPos,
+                minY: minY,
+                maxY: maxY,
                 width: charWidth,
                 height: charHeight,
-                position: {
-                    startX: startPos,
-                    endX: endPos,
-                    width: charWidth,
-                    height: charHeight,
-                    minY: minY,
-                    maxY: maxY
-                }
             });
         }
     }
 
     return segments;
+}
+
+function simpleConnectedComponentAnalysis(binaryArray, width, height, minArea) {
+    if (minArea === undefined) minArea = 10;
+
+    let visited = Array(height).fill().map(() => Array(width).fill(false));
+    let regions = [];
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let index = y * width + x;
+
+            if (!visited[y][x] && binaryArray[index] === 1) {
+                let region = {
+                    minX: x, maxX: x,
+                    minY: y, maxY: y,
+                    pixelCount: 0
+                };
+
+                // 使用栈进行区域生长（避免递归深度限制）
+                let stack = [[x, y]];
+                visited[y][x] = true;
+
+                while (stack.length > 0) {
+                    let [cx, cy] = stack.pop();
+                    let cIndex = cy * width + cx;
+
+                    // 更新边界框
+                    region.minX = Math.min(region.minX, cx);
+                    region.maxX = Math.max(region.maxX, cx);
+                    region.minY = Math.min(region.minY, cy);
+                    region.maxY = Math.max(region.maxY, cy);
+                    region.pixelCount++;
+
+                    // 检查8邻域
+                    let directions = [
+                        [-1, -1], [-1, 0], [-1, 1],
+                        [0, -1], [0, 1],
+                        [1, -1], [1, 0], [1, 1]
+                    ];
+
+                    for (let [dx, dy] of directions) {
+                        let nx = cx + dx, ny = cy + dy;
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                            let nIndex = ny * width + nx;
+                            if (!visited[ny][nx] && binaryArray[nIndex] === 1) {
+                                visited[ny][nx] = true;
+                                stack.push([nx, ny]);
+                            }
+                        }
+                    }
+                }
+
+                if (region.pixelCount >= minArea) {
+                    regions.push({
+                        startX: region.minX,
+                        endX: region.maxX,
+                        minY: region.minY,
+                        maxY: region.maxY,
+                        width: region.maxX - region.minX + 1,
+                        height: region.maxY - region.minY + 1,
+                        area: region.pixelCount
+                    });
+                }
+            }
+        }
+    }
+
+    // 按x坐标排序
+    regions.sort((a, b) => a.startX - b.startX);
+
+    return regions;
 }
 
 function 分割识别(binaryImg, pngFiles, xiangsidu) {
@@ -1118,6 +1193,49 @@ function 分割识别(binaryImg, pngFiles, xiangsidu) {
     // 使用垂直投影分割法分割字符
     var segments = verticalProjectionSegmentation(binaryArray, width, height);
 
+    // 遍历segments，如果有width超过25的，采用simpleConnectedComponentAnalysis再分割
+    let newSegments = [];
+    for (let i = 0; i < segments.length; i++) {
+        let segment = segments[i];
+        // 如果宽度超过25，则使用连通域分析再次分割
+        if (segment.width > 25) {
+            // 创建该segment对应的二值化数组部分
+            let segmentBinaryArray = segment.pixels;
+            let segmentWidth = segment.width;
+            let segmentHeight = segment.height;
+            
+            // 使用连通域分析进行再次分割
+            let subRegions = simpleConnectedComponentAnalysis(segmentBinaryArray, segmentWidth, segmentHeight, 10);
+            
+            // 将子区域转换为segments格式并添加到newSegments中
+            for (let j = 0; j < subRegions.length; j++) {
+                let subRegion = subRegions[j];
+                // 调整坐标，使其相对于原始图像
+                newSegments.push({
+                    startX: segment.startX + subRegion.startX,
+                    endX: segment.startX + subRegion.endX,
+                    minY: segment.minY + subRegion.minY,
+                    maxY: segment.minY + subRegion.maxY,
+                    width: subRegion.width,
+                    height: subRegion.height
+                });
+            }
+        } else {
+            // 宽度不超过25的直接添加
+            newSegments.push({
+                startX: segment.startX,
+                endX: segment.endX,
+                minY: segment.minY,
+                maxY: segment.maxY,
+                width: segment.width,
+                height: segment.height
+            });
+        }
+    }
+    
+    // 使用新的segments替换原来的segments
+    segments = newSegments;
+
     // 用于存储最终结果的字符串
     let recognizedText = "";
 
@@ -1135,11 +1253,11 @@ function 分割识别(binaryImg, pngFiles, xiangsidu) {
         for (var i = 0; i < segments.length; i++) {
             var segment = segments[i];
 
-            // 调整字符切割区域，左右各增加3像素，但确保不超出图像范围
-            let x = Math.max(0, segment.position.startX - 3);
-            let y = segment.position.minY;
-            let w = Math.min(segment.position.width + 6, binaryImg.getWidth() - x);
-            let h = segment.position.height;
+            // 调整字符切割区域，上下左右各增加3像素，但确保不超出图像范围
+            let x = Math.max(0, segment.startX - 3);
+            let y = Math.max(0, segment.minY - 3);
+            let w = Math.min(segment.width + 6, binaryImg.getWidth() - x);
+            let h = Math.min(segment.height + 6, binaryImg.getHeight() - y);
             let image_clip_char = images.clip(binaryImg, x, y, w, h);
 
             let Match = null;
@@ -1207,7 +1325,7 @@ function findFont(sc, region, color, threshold = 16, FontLibrary, xiangsidu = 0.
         // 确定搜索区域
         region = region ? region : [0, 0, img.getWidth(), img.getHeight()];
         let image_clip = images.clip(img, region[0], region[1], region[2], region[3]);
-        // images.save(image_clip, "/sdcard/" + Date.now() + ".png");//测试用，截取识别部位图片
+        // images.save(image_clip, "/storage/emulated/0/$MuMu12Shared/Screenshots/字库/商店仓库统计/" + Date.now() + ".png");//测试用，截取识别部位图片
         threshold = threshold ? threshold : 16;
         let binaryImg = images.interval(image_clip, color, threshold);
 
@@ -2432,10 +2550,10 @@ function shop() {
             // 识别数字
             let region = [wheat_sell.x, wheat_sell.y, 130, 80]
             sleep(100);//上架有残影，有时识别不到
-            let wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+            let wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
             if (wheat_num == "") {
                 sleep(500)
-                wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+                wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
             }
 
             let sellNum = Number(wheat_num) - Number(wheat_sell_minNum)
@@ -2705,13 +2823,13 @@ function shopStatistic(sc) {
                     // 找到物品
                     let itemNum = 0;
                     let numRegion = [position.x, position.y, 130, 80];
-                    itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+                    itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
                     // 如果第一次检测为空，再检测一遍
                     if (!itemNum || itemNum.trim() === "") {
                         console.log(`第一次检测${itemName}为空，重新检测`);
                         showTip(`第一次检测${itemName}为空，重新检测`);
                         sleep(100);
-                        itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+                        itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
                     }
 
                     shopResult[itemName] = {
@@ -2911,7 +3029,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             }
             let sellNum = item.num > 10 ? 10 : item.num;
 
-            if (configs.get("waitShelf" || false)) {
+            if (configs.get("selectedFunction").code == 4 && configs.get("waitShelf" || false)) {
                 find_kongxian_until()
             } else {
                 if (!find_kongxian()) {    //没有空闲货架
@@ -3077,13 +3195,13 @@ function sellPlanValidate(sellPlan_original) {
             // 找到物品
             let itemNum = 0;
             let numRegion = [360, 330, 130, 80];
-            itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+            itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
             // 如果第一次检测为空，再检测一遍
             if (!itemNum || itemNum.trim() === "") {
                 console.log(`第一次检测${itemName.item}为空，重新检测`);
                 showTip(`第一次检测${itemName.item}为空，重新检测`);
                 sleep(100);
-                itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.7);
+                itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
             }
 
 
@@ -4360,13 +4478,13 @@ function cangkuStatistics(maxPages = 2) {
                     // 找到物品
                     let itemNum = 0;
                     let numRegion = [position.x, position.y, 130, 80];
-                    itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.7);
+                    itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
                     // 如果第一次检测为空，再检测一遍
                     if (!itemNum || itemNum.trim() === "") {
                         console.log(`第一次检测${itemName}为空，重新检测`);
                         showTip(`第一次检测${itemName}为空，重新检测`);
                         sleep(100);
-                        itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.7);
+                        itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
                     }
 
                     result[itemName] = {

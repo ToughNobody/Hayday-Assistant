@@ -147,8 +147,8 @@ try {
 }
 
 
-
-const currentPath = files.cwd();
+let selfPath = engines.myEngine().getSource().toString();
+const currentPath = selfPath.substring(0, selfPath.lastIndexOf("/"));
 // 获取应用专属外部目录的完整路径
 let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
 const configDir = files.join(appExternalDir, "configs");
@@ -565,7 +565,7 @@ function initColor() {
 // 从project.json中读取版本号
 function getAppVersion() {
     try {
-        let projectPath = files.cwd() + "/project.json";
+        let projectPath = currentPath + "/project.json";
         log("projectPath: " + projectPath)
         if (files.exists(projectPath)) {
             let projectContent = files.read(projectPath);
@@ -1614,10 +1614,17 @@ ui.layout(
                                         <text text="运行设置" textSize="16" textStyle="bold" marginBottom="8" />
 
                                         {/* 使用shell命令重启游戏 */}
-                                        <horizontal gravity="center_vertical" marginBottom="8">
+                                        <horizontal gravity="center_vertical">
                                             <text text="使用shell命令重启游戏:" textSize="14" w="auto" marginRight="8" />
                                             <img id="helpIcon_restartWithShell" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginLeft="10" />
                                             <Switch id="restartWithShell" checked="false" w="*" h="48" />
+                                        </horizontal>
+
+                                        {/* 不重启游戏,仅返回桌面 */}
+                                        <horizontal gravity="center_vertical">
+                                            <text text="不重启游戏,仅返回桌面:" textSize="14" w="auto" marginRight="8" />
+                                            <img id="helpIcon_returnDesktop" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginLeft="10" />
+                                            <Switch id="returnDesktop" checked="false" w="*" h="48" />
                                         </horizontal>
 
                                     </vertical>
@@ -1850,7 +1857,7 @@ function downloadZip_dialogs() {
                     toastLog("更新成功，即将重启应用...");
                     engines.stopAll();
                     events.on("exit", function () {
-                        engines.execScriptFile(files.cwd().substring(0, files.cwd().lastIndexOf("/")) + "/" + fileName.replace(".zip", "") + "/main.js");
+                        engines.execScriptFile(currentPath.substring(0, currentPath.lastIndexOf("/")) + "/" + fileName.replace(".zip", "") + "/main.js");
                     });
                 } else {
                     toastLog("更新失败，请重试");
@@ -1952,7 +1959,6 @@ function checkForUpdates(silence = false) {
                                 </vertical>
                             ),
                             positive: "下载压缩包",
-                            negative: "立即更新",
                             neutral: "稍后再说"
                         }).on("show", (dialog) => {
                             // 设置版本信息
@@ -2107,38 +2113,38 @@ function checkForUpdates(silence = false) {
                                     }
                                 });
                             });
-                        }).on("negative", () => {
-                            // 调用热更新模块 - 立即更新（增量更新）
-                            threads.start(() => {
-                                try {
-                                    // 加载热更新模块
-                                    let hotUpdate = require("./hot_update.js");
+                            // }).on("negative", () => {
+                            //     // 调用热更新模块 - 立即更新（增量更新）
+                            //     threads.start(() => {
+                            //         try {
+                            //             // 加载热更新模块
+                            //             let hotUpdate = require("./hot_update.js");
 
-                                    // 初始化热更新
-                                    hotUpdate.init({
-                                        version: result.version,
-                                        versionCode: projectData.versionCode,
-                                        files: result.files,
-                                        description: result.description,
-                                        updateSource: updateSource // 根据选择的源更新
-                                    });
+                            //             // 初始化热更新
+                            //             hotUpdate.init({
+                            //                 version: result.version,
+                            //                 versionCode: projectData.versionCode,
+                            //                 files: result.files,
+                            //                 description: result.description,
+                            //                 updateSource: updateSource // 根据选择的源更新
+                            //             });
 
-                                    // 执行增量更新
-                                    let success = hotUpdate.doIncrementalUpdate();
+                            //             // 执行增量更新
+                            //             let success = hotUpdate.doIncrementalUpdate();
 
-                                    if (success) {
-                                        toastLog("更新成功，即将重启应用...");
-                                        engines.stopAll();
-                                        events.on("exit", function () {
-                                            engines.execScriptFile(engines.myEngine().cwd() + "/main.js");
-                                        });
-                                    } else {
-                                        toastLog("更新失败，请重试");
-                                    }
-                                } catch (e) {
-                                    toastLog("热更新失败: " + e.message);
-                                }
-                            });
+                            //             if (success) {
+                            //                 toastLog("更新成功，即将重启应用...");
+                            //                 engines.stopAll();
+                            //                 events.on("exit", function () {
+                            //                     engines.execScriptFile(engines.myEngine().cwd() + "/main.js");
+                            //                 });
+                            //             } else {
+                            //                 toastLog("更新失败，请重试");
+                            //             }
+                            //         } catch (e) {
+                            //             toastLog("热更新失败: " + e.message);
+                            //         }
+                            //     });
                         }).on("positive", () => {
                             downloadZip_dialogs();
                         }).on("neutral", () => {
@@ -2885,6 +2891,7 @@ function getConfig() {
         CangkuSold_triggerNum: configs.get("CangkuSold_triggerNum", 10),
         CangkuSold_targetNum: configs.get("CangkuSold_targetNum", 25),
         restartWithShell: configs.get("restartWithShell", false),
+        returnDesktop: configs.get("returnDesktop", false),
         screenshotCoords: {
             coord1: {
                 x: configs.get("screenshotX1"),
@@ -3010,6 +3017,7 @@ function saveConfig(con) {
 
         // 存储其他配置项
         configs.put("restartWithShell", con.restartWithShell);
+        configs.put("returnDesktop", con.returnDesktop);
 
         // console.log("配置保存成功");
         return true;
@@ -3289,6 +3297,11 @@ function validateConfig(config) {
         config.restartWithShell = defaultConfig.restartWithShell;
     }
 
+    // 验证是否不重启游戏,仅返回桌面
+    if (typeof config.returnDesktop !== "boolean") {
+        config.returnDesktop = defaultConfig.returnDesktop;
+    }
+
     // 验证截图坐标配置
     if (!config.screenshotCoords) {
         config.screenshotCoords = defaultConfig.screenshotCoords;
@@ -3504,6 +3517,8 @@ function getDefaultConfig() {
         CangkuSold_targetNum: 25,
         // 是否使用shell命令重启游戏
         restartWithShell: false,
+        // 是否不重启游戏,仅返回桌面
+        returnDesktop: false,
         // 截图坐标配置
         screenshotCoords: {
             coord1: {
@@ -3705,6 +3720,9 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 设置是否使用shell命令重启游戏
     ui.restartWithShell.setChecked(config.restartWithShell);
 
+    // 设置是否不重启游戏,仅返回桌面
+    ui.returnDesktop.setChecked(config.returnDesktop);
+
     // 更新权限状态
     updateSwitchStatus();
 
@@ -3842,6 +3860,7 @@ function logCurrentConfig(config) {
     console.log("推送方式: " + config.serverPlatform.text);
     console.log("token: " + "骗你的,不会把token输出到日志,切勿泄漏个人token!!!");
     console.log("是否使用shell命令重启游戏: " + (config.restartWithShell ? "是" : "否"));
+    console.log("是否不重启游戏,仅返回桌面: " + (config.returnDesktop ? "是" : "否"));
     console.log("浮动按钮: " + (ui.win_switch.checked ? "是" : "否"));
     // console.log("主题颜色: " + config.themeColor.text);config
     console.log("====================");
@@ -4429,6 +4448,16 @@ function initUI() {
         }).show();
     })
 
+    ui.helpIcon_returnDesktop.on("click", function () {
+        dialogs.build({
+            title: "重启游戏帮助",
+            content: "开启后当需要重启游戏时,返回桌面,等待15秒再打开游戏\n\n" +
+                "防止在关闭游戏时出现错误\n\n"+
+                "如果你的重启有Bug,推荐开启",
+            positive: "确定"
+        }).show();
+    })
+
     ui.helpIcon_functionSelect.on("click", function () {
         dialogs.build({
             title: "功能选择帮助",
@@ -4792,6 +4821,11 @@ function initUI() {
     ui.restartWithShell.on("check", (checked) => {
         // 保存修改后的开关状态到配置
         configs.put("restartWithShell", checked);
+    });
+
+    ui.returnDesktop.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("returnDesktop", checked);
     });
 
     // 为账户列表项添加绑定事件，处理复选框点击
