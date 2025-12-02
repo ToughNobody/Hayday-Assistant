@@ -1894,7 +1894,8 @@ function checkForUpdates(silence = false) {
     threads.start(() => {
         try {
             // 读取project.json文件获取版本信息
-            let projectConfig = files.read('./project.json');
+            let projectPath = currentPath + "/project.json";
+            let projectConfig = files.read(projectPath);
             let projectData = JSON.parse(projectConfig);
             log("当前版本: " + projectData.versionName);
             log("当前版本代码: " + projectData.versionCode);
