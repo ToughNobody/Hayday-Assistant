@@ -8,6 +8,43 @@ let statistics = storages.create("statistics");
 let configs = storages.create("config"); // 创建配置存储对象
 let config
 
+
+let selfPath = engines.myEngine().getSource().toString();
+const currentPath = selfPath.substring(0, selfPath.lastIndexOf("/"));
+// 获取应用专属外部目录的完整路径
+let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
+const configDir = files.join(appExternalDir, "configs");
+const configPath = files.join(configDir, "config.json");
+const logDir = files.join(appExternalDir, "logs");
+const accountImgDir = files.join(appExternalDir, "accountImgs");
+const scPath = "/storage/emulated/0/$MuMu12Shared/Screenshots"
+// 确保目录存在
+files.ensureDir(configDir + "/1");  // 创建配置目录
+files.ensureDir(logDir + "/1");  // 创建日志目录
+files.ensureDir(scPath + "/1");  // 创建截图目录
+files.ensureDir(accountImgDir + "/1");  // 创建账号照片目录
+
+
+// 格式化日期为易读格式：YYYY-MM-DD_HH-mm-ss
+let now = new Date();
+let formatDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
+let logPath = files.join(logDir, `${formatDate}.txt`);
+
+
+// 确保日志目录存在
+files.ensureDir(logDir + "/1");
+
+// 监听控制台的所有输出
+console.globalEmitter.on("println", (log, level, levelString) => {
+    // 获取当前时间戳（只包含小时、分钟、秒钟）
+    let now = new Date();
+    let timestamp = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+    // 写入日志文件
+    files.append(logPath, `[${timestamp}] ${log}\n`);
+});
+
+
 // 首次加载标志位，用于忽略首次加载时的选择事件
 let isFirstLoad_cropSelect = true;
 
@@ -147,20 +184,7 @@ try {
 }
 
 
-let selfPath = engines.myEngine().getSource().toString();
-const currentPath = selfPath.substring(0, selfPath.lastIndexOf("/"));
-// 获取应用专属外部目录的完整路径
-let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
-const configDir = files.join(appExternalDir, "configs");
-const configPath = files.join(configDir, "config.json");
-const logDir = files.join(appExternalDir, "logs");
-const accountImgDir = files.join(appExternalDir, "accountImgs");
-const scPath = "/storage/emulated/0/$MuMu12Shared/Screenshots"
-// 确保目录存在
-files.ensureDir(configDir + "/1");  // 创建配置目录
-files.ensureDir(logDir + "/1");  // 创建日志目录
-files.ensureDir(scPath + "/1");  // 创建截图目录
-files.ensureDir(accountImgDir + "/1");  // 创建账号照片目录
+
 
 
 
@@ -489,25 +513,7 @@ function showSwitchAccountDialog() {
     dialog.show();
 }
 
-// 格式化日期为易读格式：YYYY-MM-DD_HH-mm-ss
-let now = new Date();
-let formatDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}`;
-let logPath = files.join(logDir, `${formatDate}.txt`);
 
-
-
-// 确保日志目录存在
-files.ensureDir(logDir + "/1");
-
-// 监听控制台的所有输出
-console.emitter.on("println", (log, level, levelString) => {
-    // 获取当前时间戳（只包含小时、分钟、秒钟）
-    let now = new Date();
-    let timestamp = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-
-    // 写入日志文件
-    files.append(logPath, `[${timestamp}] ${log}\n`);
-});
 
 // 颜色库
 const colorLibrary = [
@@ -2237,48 +2243,7 @@ ui.menu.on('item_bind', function (itemView, itemHolder) {
 ui.menu.on("item_click", item => {
     switch (item.title) {
         case "赏":
-            dialogs.build({
-                title: "🌟投喂作者🌟 ",
-                content: "真的吗真的吗真的吗\n" +
-                    "(ฅ´ω`ฅ)",
-                positive: "真的😍",
-                neutral: "逗你玩😝",
-            }).on("positive", () => {
-                toast("您的支持是我最大的动力！❤️")
-                // 创建悬浮窗显示二维码
-                let floatWindow = floaty.window(
-                    <vertical padding="10">
-                        <card w="*" h="*" cardCornerRadius="32" cardElevation="2" gravity="center">
-                            <vertical padding="8" bg="#afe2a7">
-                                <text text="感谢您的支持！" textSize="18" textStyle="bold" textColor="#333333" gravity="center" marginBottom="12" />
-                                <img src="file://{{currentPath}}/res/images/qrcode_wechat_reward.jpg" w="260" h="260" scaleType="fitXY" />
-                                <horizontal gravity="center" marginTop="12">
-                                    <button id="closeBtn" text="关闭" style="Widget.AppCompat.Button.Colored" textColor="#000000" w="120" marginRight="10" />
-                                    <button id="loveBtn" text="爱发电链接🔗" style="Widget.AppCompat.Button.Colored" textColor="#000000" w="120" marginRight="10" />
-                                </horizontal>
-                            </vertical>
-                        </card>
-                    </vertical>
-                );
-
-                // 设置悬浮窗位置，更靠左上方
-                floatWindow.setPosition(device.width / 10, device.height / 5);
-
-                // 爱发电按钮点击事件
-                floatWindow.loveBtn.on("click", () => {
-                    app.openUrl("https://afdian.com/a/ToughNobody");
-                    floatWindow.close();
-                });
-
-                // 关闭按钮点击事件
-                floatWindow.closeBtn.on("click", () => {
-                    floatWindow.close();
-                });
-
-
-            }).on("neutral", () => {
-                toast("我哭死！😭");
-            }).show();
+            showDonateDialog()
             break;
         case "群":
             dialogs.build({
@@ -2317,6 +2282,51 @@ ui.menu.on("item_click", item => {
 
     }
 })
+
+function showDonateDialog() {
+    dialogs.build({
+        title: "🌟投喂作者🌟 ",
+        content: "真的吗真的吗真的吗\n" +
+            "(ฅ´ω`ฅ)",
+        positive: "真的😍",
+        neutral: "逗你玩😝",
+    }).on("positive", () => {
+        toast("您的支持是我最大的动力！❤️")
+        // 创建悬浮窗显示二维码
+        let floatWindow = floaty.window(
+            <vertical padding="10">
+                <card w="*" h="*" cardCornerRadius="32" cardElevation="2" gravity="center">
+                    <vertical padding="8" bg="#afe2a7">
+                        <text text="感谢您的支持！" textSize="18" textStyle="bold" textColor="#333333" gravity="center" marginBottom="12" />
+                        <img src="file://{{currentPath}}/res/images/qrcode_wechat_reward.jpg" w="260" h="260" scaleType="fitXY" />
+                        <horizontal gravity="center" marginTop="12">
+                            <button id="closeBtn" text="关闭" style="Widget.AppCompat.Button.Colored" textColor="#000000" w="120" marginRight="10" />
+                            <button id="loveBtn" text="爱发电链接🔗" style="Widget.AppCompat.Button.Colored" textColor="#000000" w="120" marginRight="10" />
+                        </horizontal>
+                    </vertical>
+                </card>
+            </vertical>
+        );
+
+        // 设置悬浮窗位置，更靠左上方
+        floatWindow.setPosition(device.width / 10, device.height / 5);
+
+        // 爱发电按钮点击事件
+        floatWindow.loveBtn.on("click", () => {
+            app.openUrl("https://afdian.com/a/ToughNobody");
+            floatWindow.close();
+        });
+
+        // 关闭按钮点击事件
+        floatWindow.closeBtn.on("click", () => {
+            floatWindow.close();
+        });
+
+
+    }).on("neutral", () => {
+        toast("我哭死！😭");
+    }).show();
+}
 
 // 显示日志对话框函数
 function showLogDialog() {
@@ -4453,7 +4463,7 @@ function initUI() {
         dialogs.build({
             title: "重启游戏帮助",
             content: "开启后当需要重启游戏时,返回桌面,等待15秒再打开游戏\n\n" +
-                "防止在关闭游戏时出现错误\n\n"+
+                "防止在关闭游戏时出现错误\n\n" +
                 "如果你的重启有Bug,推荐开启",
             positive: "确定"
         }).show();
@@ -5254,6 +5264,11 @@ function initUI() {
             });
     });
 
+    let nobody_Config = configs.get("Nobody");
+    let showDonationDialogProbability = (nobody_Config && nobody_Config.showDonationDialogProbability) || 0.3;
+    if (Math.random() < showDonationDialogProbability) {
+        showDonateDialog();
+    }
 }
 
 /**
@@ -5269,5 +5284,6 @@ function updateSwitchStatus() {
 }
 // 初始化界面
 initUI();
+
 
 

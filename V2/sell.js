@@ -78,6 +78,8 @@ if (sell_accountList[0].done || sell_accountList.filter(account => account.done)
         log("商店售卖计划:" + JSON.stringify(sellPlan))
         module.shop_sell(sellPlan, cangkuItemColor, null, sell_accountList[0].price)
     }
+    sleep(100)
+    module.close();
 
 } else {
     log("切换账号");
@@ -110,6 +112,8 @@ if (sell_accountList[0].done || sell_accountList.filter(account => account.done)
             log("商店售卖计划:" + JSON.stringify(sellPlan))
             module.shop_sell(sellPlan, cangkuItemColor, null, account.price)
         }
+        sleep(100)
+        module.close();
 
     })
 }

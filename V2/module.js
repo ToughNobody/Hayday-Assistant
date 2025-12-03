@@ -42,7 +42,7 @@ const cropItemColor = {
 //都取左上为基准点
 const cangkuItemColor = {
     "盒钉": ["#ce2410", [-1, -32, "#927059"], [42, -10, "#a27f65"], [-21, 64, "#c1c2c1"], [13, 13, "#f0e1c8"]],
-    "螺钉": ["#a7afb0",[19,-4,"#5b6161"],[11,-6,"#dadcda"],[16,-2,"#626a67"],[21,4,"#daddde"],[27,18,"#aeb4b5"],[-55,70,"#b3b8bf"],[-3,19,"#a9ada9"]],
+    "螺钉": ["#a7afb0", [19, -4, "#5b6161"], [11, -6, "#dadcda"], [16, -2, "#626a67"], [21, 4, "#daddde"], [27, 18, "#aeb4b5"], [-55, 70, "#b3b8bf"], [-3, 19, "#a9ada9"]],
     "镶板": ["#b57139", [8, -17, "#d2d2d2"], [-24, 32, "#c6824a"], [56, -16, "#8c5129"], [-1, 50, "#4f3221"]],
     "螺栓": ["#879092", [11, -19, "#eeeeee"], [-18, 68, "#5f6567"], [46, 1, "#7b8d8c"], [-13, 7, "#848e94"]],
     "木板": ["#fffadc", [58, -7, "#774321"], [-17, 37, "#724019"], [-36, 39, "#8a4e23"], [-25, 30, "#c67a38"]],
@@ -57,6 +57,13 @@ const cangkuItemColor = {
     "铁铲": ["#e78d39", [15, -25, "#e57f33"], [-17, 35, "#bdc3c5"], [-35, 39, "#afb4b7"], [-39, 74, "#b1b8ba"]],
     "十字镐": ["#dedfde", [48, 10, "#8c9694"], [13, -21, "#92763d"], [-27, -2, "#e7e7e7"], [-24, 87, "#784f25"]],
 };
+
+//其他物品颜色
+const otherItemColor = {
+    "紫色连衣裙": ["#cd6fbf", [15, 18, "#fdd9f6"], [25, -7, "#e478cf"], [-29, 34, "#c0229a"], [3, 51, "#ecc1ea"], [-5, 44, "#d029ac"]],
+}
+
+const allItemColor = Object.assign({}, cangkuItemColor, otherItemColor);
 
 const ckNumColor = {
     "0": ["#fdfcfa", [1, -1, "#020201"], [0, 11, "#ffffff"], [0, 15, "#fcf9f5"], [1, 15, "#060504"], [-1, 24, "#040303"], [-3, 24, "#ffffff"], [-4, 29, "#090807"], [-7, 29, "#ffffff"], [-8, 32, "#0e0c0a"], [-11, 30, "#ffffff"], [-16, 28, "#ffffff"], [-18, 23, "#ffffff"], [-20, 9, "#ffffff"], [-10, -1, "#000000"], [-10, 3, "#231c12"], [-10, 7, "#a57f51"], [-10, 10, "#d4a369"], [-10, 13, "#bd915c"], [-10, 21, "#000000"]],
@@ -164,7 +171,8 @@ function findimage(imagepath, xiangsidu, sc = null, region = null) {
     try {
         picture = images.read(imagepath);
         if (!picture) {
-            toast("模板图片读取失败");
+            toast("模板图片读取失败,读取路径:" + imagepath);
+            log("模板图片读取失败,读取路径:" + imagepath);
             throw new Error("模板图片读取失败")
         }
 
@@ -280,7 +288,7 @@ function restartgame() {
             launch("com.supercell.hayday")
             return;
         }
-        
+
         home();
         sleep(100);
         let packageName = "com.supercell.hayday";
@@ -1203,10 +1211,10 @@ function 分割识别(binaryImg, pngFiles, xiangsidu) {
             let segmentBinaryArray = segment.pixels;
             let segmentWidth = segment.width;
             let segmentHeight = segment.height;
-            
+
             // 使用连通域分析进行再次分割
             let subRegions = simpleConnectedComponentAnalysis(segmentBinaryArray, segmentWidth, segmentHeight, 10);
-            
+
             // 将子区域转换为segments格式并添加到newSegments中
             for (let j = 0; j < subRegions.length; j++) {
                 let subRegion = subRegions[j];
@@ -1232,7 +1240,7 @@ function 分割识别(binaryImg, pngFiles, xiangsidu) {
             });
         }
     }
-    
+
     // 使用新的segments替换原来的segments
     segments = newSegments;
 
@@ -1474,6 +1482,10 @@ function checkmenu() {
     checkmenu();
 }
 
+/**
+ * 打开好友菜单
+ * @returns {boolean} - 如果成功打开好友菜单则返回 `true`，否则返回 `false`
+ */
 function openFriendMenu() {
     for (let i = 0; i < 6; i++) {
 
@@ -1536,6 +1548,51 @@ function openFriendMenu() {
         }
         sleep(300)
     }
+}
+
+/**
+ * 打开下方好友栏
+ * @returns {boolean} - 如果成功打开好友则返回 `true`，否则返回 `false`
+ */
+function openFriend() {
+
+    for (let i = 0; i < 6; i++) {//好友簿
+        let sc = captureScreen();
+        let friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
+        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
+        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
+        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }], sc)
+        if (!friendMenu) {
+            //新版界面
+            let friendButton = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
+                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+            if (friendButton) {
+                log("点击好友按钮")
+                click(friendButton.x + ran(), friendButton.y + ran());
+                sleep(200);
+            }
+            else {
+                //老板界面
+                friendButton = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
+                    [-17, 18, "#a44900"], [11, 54, "#f7c342"],
+                    [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+                if (friendButton) {
+                    log("点击好友按钮")
+                    click(friendButton.x + ran(), friendButton.y + ran());
+                    sleep(200);
+                }
+            }
+        }
+
+        friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
+        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
+        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
+        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }])
+
+        if (friendMenu) return true;
+        sleep(300)
+    }
+    return false;
 }
 
 function addFriends(addFriendsList) {
@@ -1622,8 +1679,8 @@ function huadong(right = false) {
     try {
         showTip("滑动寻找")
         //缩放
-        gestures([0, 200, [420 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]],
-            [0, 200, [1000 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]
+        gestures([0, 200, [420 + ran(), 150 + ran()], [860 + ran(), 150 + ran()]],
+            [0, 200, [1000 + ran(), 150 + ran()], [860 + ran(), 150 + ran()]
             ]);
         sleep(200);
         //缩放
@@ -1632,15 +1689,14 @@ function huadong(right = false) {
             ]);
         sleep(100);
         //左滑
-        swipe(300 + ran(), 125 + ran(), 980 + ran(), 720, 200);
+        swipe(300 + ran(), 150 + ran(), 980 + ran(), 720, 200);
         sleep(100)
         //左滑
-        swipe(300 + ran(), 125 + ran(), 980 + ran(), 720, 200);
+        swipe(300 + ran(), 150 + ran(), 980 + ran(), 720, 200);
         sleep(100)
         //下滑
         gesture(1000, [650 + ran(), 580 + ran()],
-            [630 + ran(), 270 + ran()],
-        );
+            [630 + ran(), 270 + ran()]);
         //右滑
         if (right) {
             sleep(100)
@@ -2179,11 +2235,7 @@ function openshop() {
     showTip("多次尝试后仍未找到商店");
     return false; // 表示未能成功打开商店
 };
-//     try {
-//         click(findshop_1.x + config.shopOffset.x, findshop_1.y + config.shopOffset.y)
-//     } catch (e) {
-//         console.log(e.message)
-//     }
+
 
 
 /**
@@ -3011,7 +3063,7 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
 }
 
 /**
- * 售卖物品
+ * 售卖物品,函数内自带coin()
  * @param {*} sellPlan 售卖计划,格式[{title:"物品名称",num:数量}]
  * @param {*} itemColor 物品颜色,格式{物品名称:颜色}
  * @param {*} pos 物品类型，粮仓即作物售卖，默认货仓
@@ -3154,6 +3206,11 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
 
 }
 
+/**
+ * 验证售卖计划是否有效
+ * @param {*} sellPlan_original 售卖计划,格式[{"item": "螺栓","sellNum": 10,"done": false},]
+ * @returns 有效售卖计划
+ */
 function sellPlanValidate(sellPlan_original) {
     try {
         coin();
@@ -3850,19 +3907,20 @@ function switch_account(Account) {
         let isEnd = false;
         let AccountIma = null;
         let AccountText = null;
-        if (config.findAccountMethod == "image") {
+        let findAccountMethod = configs.get("findAccountMethod", "ocr")
+        if (findAccountMethod == "image") {
             AccountIma = files.join(config.accountImgPath, Account + ".png");
             log("账号图片路径：" + AccountIma);
-        } else if (config.findAccountMethod == "ocr") {
+        } else if (findAccountMethod == "ocr") {
             AccountText = Account;
         }
         while (!found) {
             sleep(500);
             let is_find_Account = null;
-            if (config.findAccountMethod == "image") {
+            if (findAccountMethod == "image") {
                 is_find_Account = findimage(AccountIma, 0.9);
             };
-            if (config.findAccountMethod == "ocr") {
+            if (findAccountMethod == "ocr") {
                 is_find_Account = findText(AccountText, null, [640, 0, 1100 - 640, 720]);
             }
 
@@ -4863,7 +4921,10 @@ module.exports = {
     getDetails: getDetails,
     copy_shell: copy_shell,
     click_waitFor: click_waitFor,
+    waitFor_click: waitFor_click,
     findFont: findFont,
+    openFriendMenu: openFriendMenu,
+    openFriend: openFriend,
 
     // 游戏界面检查
     checkmenu: checkmenu,
@@ -4887,6 +4948,7 @@ module.exports = {
     distributeSellQuantity: distributeSellQuantity,
     shop_sell: shop_sell,
     sellPlanValidate: sellPlanValidate,
+    clickShopSearchButton: clickShopSearchButton,
 
     // 关闭和界面处理
     find_close: find_close,
@@ -4936,6 +4998,8 @@ module.exports = {
     //颜色
     cropItemColor: cropItemColor,
     cangkuItemColor: cangkuItemColor,
+    otherItemColor: otherItemColor,
+    allItemColor: allItemColor,
 };
 
 
