@@ -1,3 +1,25 @@
+
+照片文件夹 = "/storage/emulated/0/$MuMu12Shared/Screenshots/账号/好友图片/"
+
+let 主号 = "Nobody";
+let 主号农场名 = "000"
+let 小号 = "boooody";
+let 小号农场名 = "z1"
+
+sell = [{ item: "钻石戒指", sellNum: -1, "done": true }]
+
+//1  365
+//2  450
+//3  550
+//4  640
+
+
+let 大号点小号 = { x: 500, y: 640 };
+let 小号点大号 = { x: 500, y: 450 };
+
+
+
+
 // 导入module模块
 let module;
 try {
@@ -43,9 +65,12 @@ try {
     console.error("创建窗口失败:", error);
 }
 
+configs.put("findAccountMethod","ocr")
+
+
 function main() {
     module.checkmenu();
-    // module.switch_account("boooody0");
+    module.switch_account(主号);
     while (true) {
 
         sleep(500)
@@ -61,7 +86,7 @@ function main() {
         sleep(100)
         module.find_close();
         //这里账号名
-        module.switch_account("111");
+        module.switch_account(小号);
 
 
         module.openFriendMenu();
@@ -70,12 +95,10 @@ function main() {
         sleep(1000)
 
         //双击账号===========================这里坐标
-        click(500, 450)
-        sleep(100)
-        click(500, 450)
+        findFriend(主号农场名)
 
         sleep(500)
-        while (!friendButton()) { }
+        while (!friendButton()) {module.close() }
 
 
         module.huadong()
@@ -88,6 +111,13 @@ function main() {
         )
         //商店右滑
         sleep(1000)
+        if (module.matchColor([{x:332,y:64,color:"#dfb57a"},
+            {x:1119,y:67,color:"#ed424d"},{x:1120,y:109,color:"#f3c341"},
+            {x:629,y:407,color:"#ffeb3e"},{x:1091,y:252,color:"#fff9db"},
+            {x:923,y:599,color:"#f6b633"}])) {
+                toastLog("倒金币完成")
+                engines.myEngine().forceStop();
+            }
         const [x1, y1] = [960, 390];
         const [x2, y2] = [288, 390];
         swipe(x1 + module.ran(), y1 + module.ran(), x2 + module.ran(), y2 + module.ran(), 1000);
@@ -120,7 +150,7 @@ function main() {
 
         //切回大号买1金物品
         //这里账号
-        module.switch_account("boooody0");
+        module.switch_account(主号);
 
         sleep(1000);
         module.openFriendMenu();
@@ -130,9 +160,7 @@ function main() {
         sleep(1000)
 
         //双击账号===========================这里坐标
-        click(500, 550)
-        sleep(100)
-        click(500, 550)
+        findFriend(小号农场名)
 
         sleep(500)
         while (!friendButton()) { }
@@ -195,6 +223,7 @@ function friendButton() {
             return true;
         }
         sleep(1000)
+        module.close();
     }
 
 }
@@ -211,7 +240,7 @@ function openshop() {
                 sleep(300);
                 click(findshop_1.x + config.shopOffset.x + module.ran(), findshop_1.y + config.shopOffset.y + module.ran());
                 sleep(100)
-                if (module.matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
+                if (module.inShop()) {
 
                     return true; // 成功找到并点击
                 }
@@ -220,6 +249,7 @@ function openshop() {
             if (i < maxAttempts - 1) { // 如果不是最后一次尝试，就滑动重找
                 console.log("未找到商店，尝试滑动重新寻找");
                 module.showTip("未找到商店，尝试滑动重新寻找");
+                module.close();
                 sleep(1000);
                 module.huadong();
                 sleep(1200);
@@ -238,7 +268,7 @@ function findshop(silence = false) {
     let center;
     for (let i = 0; i < 5; i++) {
         try {
-            if (module.matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
+            if (module.inShop()) {
                 return true;
             }
             if (!silence) module.showTip("第 " + (i + 1) + " 次检测" + config.landFindMethod);
@@ -278,7 +308,60 @@ function ran() {
     return Math.random() * (2 * randomOffset) - randomOffset;
 }
 
-sell = [{ item: "紫色连衣裙", sellNum: -1, "done": true }]
+function findFriend(Account) {
+    const MAX_SCROLL_DOWN = 5; // 最多下滑5次
+
+    let found = false; // 是否找到目标
+    let scrollDownCount = 0; // 当前下滑次数
+    let isEnd = false;
+    let AccountIma = null;
+
+    AccountIma = files.join(照片文件夹, Account + ".png");
+    log("账号图片路径：" + AccountIma);
+    module.showTip("");
+    while (!found) {
+        sleep(500);
+        let is_find_Account = null;
+
+        is_find_Account = module.findimage(AccountIma, 0.9);
+
+        if (is_find_Account) { //如果找到账号名称，则点击
+            log(`找到账号${Account}`);
+            // module.showTip(`找到账号${Account}`);
+            sleep(500);
+            click(is_find_Account.x + module.ran(), is_find_Account.y + module.ran());
+            sleep(300);
+            click(is_find_Account.x + module.ran(), is_find_Account.y + module.ran());
+            sleep(300)
+            click(is_find_Account.x + module.ran(), is_find_Account.y + module.ran());
+            sleep(500);
+            found = true;
+            break;
+        }
+        if (scrollDownCount < MAX_SCROLL_DOWN) {
+            swipe(600, 630, 600, 350, 1000); // 下滑
+            scrollDownCount++;
+            log(`未找到账号，第 ${scrollDownCount} 次下滑...`);
+            // module.showTip(`未找到账号，第 ${scrollDownCount} 次下滑...`);
+            sleep(1500);
+
+            continue;
+        }
+
+        else if (scrollDownCount >= MAX_SCROLL_DOWN) {
+            log(`未找到账号，上滑回顶部...`);
+            // module.showTip("未找到账号，上滑回顶部");
+            swipe(600, 350, 600, 630, 300);
+            sleep(500)
+            swipe(600, 350, 600, 630, 300);
+            sleep(500)
+            scrollDownCount = 0;
+        }
+    }
+    return;
+}
+
+
 
 main();
 

@@ -384,7 +384,7 @@ function createWindow(position) {
                         <text
                             id="text"
                             singleLine="false"
-                            minWidth="100"
+                            minWidth="60"
                             w="auto"
                             maxWidth="500"
                             textSize="12"
@@ -583,7 +583,6 @@ function findText(targetText, sc, region) {
     try {
         let ocrResult = gmlkit.ocr(img, "zh")
         if (!ocrResult || !ocrResult.children) {
-            log("OCR识别结果:", ocrResult.text)
             return null;
         }
 
@@ -615,6 +614,9 @@ function findText(targetText, sc, region) {
                     x: centerX,
                     y: centerY
                 };
+            } else {
+                log("未找到目标文字: " + recognizedText);
+                log("OCR识别结果:", ocrResult.text)
             }
         }
         return null;
@@ -721,7 +723,7 @@ function findMC(checkPoints, screenshot, region, threshold = 16) {
     }
 }
 
-function findNum(sc, region, xiangsidu = 32) {
+function findNum_findMC(sc, region, xiangsidu = 32) {
     // 参数验证
     if (!sc || typeof sc.getWidth !== "function") {
         console.warn("findNum: 无效的截图参数");
@@ -2134,7 +2136,7 @@ function tomToFind(tomPos) {
  */
 function findland(isclick = true) {
 
-    let pos_shop = findshop(true)
+    let pos_shop = findshop(false);
 
     if (pos_shop) {
         console.log("找到商店，点击耕地")
@@ -2144,6 +2146,21 @@ function findland(isclick = true) {
             x: pos_shop.x + config.landOffset.x,
             y: pos_shop.y + config.landOffset.y,
         };
+
+        //滑动微调
+        if (center_land.x < 300 || center_land.y > 500 || center_land.y < 300) {
+            const [x, y] = [10, 40];
+            swipe(center_land.x + x, center_land.y + y, 644 + x, 460 + y, 300);
+            click(644 + x, 460 + y);
+
+            pos_shop = findshop(true);
+
+            center_land = {
+                x: pos_shop.x + config.landOffset.x,
+                y: pos_shop.y + config.landOffset.y,
+            };
+        }
+
         if (isclick) {
             try {
                 click(center_land.x, center_land.y); //100,-30
@@ -2214,8 +2231,7 @@ function openshop() {
                 sleep(300);
                 click(findshop_1.x + config.shopOffset.x + ran(), findshop_1.y + config.shopOffset.y + ran());
                 sleep(100)
-                if (matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
-
+                if (inShop()) {
                     return true; // 成功找到并点击
                 }
             }
@@ -2225,7 +2241,7 @@ function openshop() {
                 showTip("未找到商店，尝试滑动重新寻找");
                 sleep(1000);
                 huadong();
-                sleep(1200);
+                sleep(500);
             }
         }
     } catch (error) {
@@ -2244,7 +2260,7 @@ function openshop() {
 function findland_click() {
 
     huadong();
-    sleep(1200)
+    sleep(500)
 
     let findland_click_pos = findland()
     if (findland_click_pos) {
@@ -2542,6 +2558,30 @@ function find_ad() {
     }
 }
 
+/**
+ * 判断是否在商店主界面
+ * @returns {boolean} 是否在商店主界面
+ */
+function inShop() {
+    if (matchColor([{ x: 1161, y: 524, color: "#cb642c" }, { x: 1063, y: 618, color: "#eeae52" }, { x: 1032, y: 606, color: "#dab299" }])) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * 判断是否在商店售卖界面
+ * @returns {boolean} 是否在商店售卖界面
+ */
+function inShop_sell() {
+    if (matchColor([{ x: 1110, y: 378, color: "#fff9db" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 
 //商店售卖
@@ -2556,7 +2596,7 @@ function shop() {
         let wheat_sell_minNum = config.ReservedQuantity;//小麦售卖最低保存数量
 
         // 检查是否还在商店界面
-        if (!matchColor([{ x: 120, y: 70, color: "#fc5134" }, { x: 177, y: 76, color: "#fefefd" }, { x: 263, y: 72, color: "#fd5335" }])) {
+        if (!inShop()) {
             console.log("未检测到商店界面，可能已关闭");
             return;
         }
@@ -2613,7 +2653,7 @@ function shop() {
                 console.log(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sell_minNum + "，结束售卖");
                 showTip(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sell_minNum + "，结束售卖");
                 log(config.selectedCrop.text + "数量不足，退出售卖");
-                if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
+                if (inShop_sell()) {
                     log("识别到售卖界面，点击叉叉")
                     close();
                 }
@@ -2622,7 +2662,7 @@ function shop() {
 
             console.log(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sell_minNum + "，可售卖" + sellNum);
             showTip(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sell_minNum + "，可售卖" + sellNum);
-            if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
+            if (inShop_sell()) {
                 log("识别到售卖界面，点击叉叉")
                 close();
             }
@@ -2634,8 +2674,8 @@ function shop() {
         console.log("发布广告");
         showTip("发布广告");
         sleep(100);
-        if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
-            click(1150 + ran(), 50 + ran())//点击叉号
+        if (inShop_sell()) {
+            close();//点击叉号
             log("发布广告(在售卖界面)：点击叉号")
             sleep(100)
         }
@@ -2714,6 +2754,7 @@ function find_kongxian(maxAttempts = 5) {
     let shopEnd = false;
     let currentAttempts = 0;
     let findCoin = false;
+    showTip("");
     // log("当前尝试次数: " + currentAttempts);
 
     while (true) {
@@ -2936,8 +2977,8 @@ function shopStatistic(sc) {
     } catch (error) {
         log("仓库统计出错" + error);
     } finally {
-        if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
-            click(1150 + ran(), 50 + ran())//点击叉号
+        if (inShop_sell()) {
+            close()//点击叉号
             log("商店统计(在售卖界面)：点击叉号")
         }
     }
@@ -3072,6 +3113,11 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
  */
 function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
     sleep(100);
+    if (inShop_sell()) {
+        close();//点击叉号
+        log("商店售卖(在售卖界面)：点击叉号")
+        sleep(100)
+    }
     coin()
     for (let item of sellPlan) {    //遍历售卖计划中的每个物品
 
@@ -3288,8 +3334,8 @@ function sellPlanValidate(sellPlan_original) {
     } catch (error) {
         log("仓库统计出错" + error);
     } finally {
-        if (matchColor([{ x: 253, y: 107, color: "#ffffff" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
-            click(1150 + ran(), 50 + ran())//点击叉号
+        if (inShop_sell()) {
+            close();//点击叉号
             log("商店统计(在售卖界面)：点击叉号")
         }
     }
@@ -4306,6 +4352,11 @@ function plant_crop() {
     }
 }
 
+/**
+ * 收割作物
+ * @param {*} center_sickle 镰刀坐标
+ * @returns 如果成功收割返回true，第一块耕地已种植返回null
+ */
 function harvest_crop(center_sickle) {
     //收作物
     find_close();
@@ -4314,88 +4365,98 @@ function harvest_crop(center_sickle) {
     if (!is_findland) {
         findland_click();
     }
+    sleep(200);
+    if (findMC(["#fefdfc", [19, -4, "#fefdfb"], [30, 10, "#dab790"],
+        [44, 20, "#fac300"], [18, 57, "#f4be00"], [-12, 43, "#f7bd00"],
+        [4, 40, "#f9f6f3"], [9, 16, "#fcfbf9"], [-21, 33, "#faba00"]])) {//加速按钮
+        log("第一块耕地已种植");
+        showTip("第一块耕地已种植");
+        return null;
+    }
     console.log("收割" + config.selectedCrop.text);
     showTip(`收割${config.selectedCrop.text}`);
     harvest_wheat(center_sickle);
+    return true;
 }
 
 //循环操作
 function operation(Account) {
 
     //收作物
-    harvest_crop();
+    let is_harvest = harvest_crop();
 
-    //找耕地
-    sleep(1500);
-    if (find_close()) {
-        sleep(200);
-        find_close();
-        sleep(200);
-    }
-
-    let center_land = findland();
-    console.log("寻找耕地");
-    //找不到重新找耕地
-    if (!center_land) {
-        console.log("未找到，重新寻找耕地");
+    if (is_harvest) {//找耕地
+        sleep(1500);
         if (find_close()) {
             sleep(200);
             find_close();
             sleep(200);
         }
-        findland_click();
-    }
 
-    //种植作物
-    plant_crop();
-
-    sleep(500);
-    //缩放
-    gestures([0, 200, [420 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]],
-        [0, 200, [1000 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]
-        ]);
-    sleep(500);
-
-    //检测土地是否种植上
-    log("检测种植情况")
-    if (findland()) {
-        sleep(500);
-        let center_sickle = findMC(["#c6b65d", [-9, 9, "#b5984d"], [39, -1, "#ffdf7c"], [10, -62, "#f3f2f6"], [55, -72, "#e5e5e6"]]);
-        let center_wheat = findMC(crop);
-        if (center_sickle) {
-            console.log("找到镰刀，重新收割");
-            //收作物
-            harvest_crop(center_sickle);
-            //找耕地
-            sleep(1500);
+        let center_land = findland();
+        console.log("寻找耕地");
+        //找不到重新找耕地
+        if (!center_land) {
+            console.log("未找到，重新寻找耕地");
             if (find_close()) {
                 sleep(200);
                 find_close();
                 sleep(200);
             }
-            let center_land = findland();
-            console.log("寻找耕地");
-            //找不到重新找耕地
-            if (!center_land) {
-                console.log("未找到，重新寻找耕地");
+            findland_click();
+        }
+
+        //种植作物
+        plant_crop();
+
+        sleep(500);
+        //缩放
+        gestures([0, 200, [420 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]],
+            [0, 200, [1000 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]
+            ]);
+        sleep(500);
+
+        //检测土地是否种植上
+        log("检测种植情况")
+        if (findland()) {
+            sleep(500);
+            let center_sickle = findMC(["#c6b65d", [-9, 9, "#b5984d"], [39, -1, "#ffdf7c"], [10, -62, "#f3f2f6"], [55, -72, "#e5e5e6"]]);
+            let center_wheat = findMC(crop);
+            if (center_sickle) {
+                console.log("找到镰刀，重新收割");
+                //收作物
+                harvest_crop(center_sickle);
+                //找耕地
+                sleep(1500);
                 if (find_close()) {
                     sleep(200);
                     find_close();
                     sleep(200);
                 }
-                findland_click();
-            }
+                let center_land = findland();
+                console.log("寻找耕地");
+                //找不到重新找耕地
+                if (!center_land) {
+                    console.log("未找到，重新寻找耕地");
+                    if (find_close()) {
+                        sleep(200);
+                        find_close();
+                        sleep(200);
+                    }
+                    findland_click();
+                }
 
-            //种植作物
-            plant_crop();
-        };
-        if (center_wheat) {
-            log("找到" + config.selectedCrop.text + "重新种植");
-            //种植作物
-            plant_crop();
+                //种植作物
+                plant_crop();
+            };
+            if (center_wheat) {
+                log("找到" + config.selectedCrop.text + "重新种植");
+                //种植作物
+                plant_crop();
+            }
+        } else {
+            log("重新检测时，未找到耕地");
         }
-    } else {
-        log("重新检测时，未找到耕地");
     }
 
 
@@ -4450,10 +4511,10 @@ function cangkuStatistics(maxPages = 2) {
             click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
             sleep(500);
             if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入粮仓
-                lcCapacity = findNum(captureScreen(), [657, 58, 900 - 657, 117 - 58], 32).toString();
+                lcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
                 if (!lcCapacity) {
                     sleep(500);
-                    lcCapacity = findNum(captureScreen(), [657, 58, 900 - 657, 117 - 58], 32).toString()
+                    lcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
                 }
                 log("粮仓容量：" + lcCapacity);
                 showTip("粮仓容量：" + lcCapacity);
@@ -4492,10 +4553,10 @@ function cangkuStatistics(maxPages = 2) {
             return null
         }
 
-        hcCapacity = findNum(captureScreen(), [657, 58, 900 - 657, 117 - 58], 32).toString();
+        hcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
         if (!hcCapacity) {
             sleep(500);
-            hcCapacity = findNum(captureScreen(), [657, 58, 900 - 657, 117 - 58], 32).toString();
+            hcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
         }
         log("货仓容量：" + hcCapacity);
         showTip("货仓容量：" + hcCapacity);
@@ -4912,7 +4973,7 @@ module.exports = {
     findText: findText,
     matchColor: matchColor,
     findMC: findMC,
-    findNum: findNum,
+    findNum_findMC: findNum_findMC,
     huadong: huadong,
     createWindow: createWindow,
     closeWindow: closeWindow,
@@ -4949,6 +5010,8 @@ module.exports = {
     shop_sell: shop_sell,
     sellPlanValidate: sellPlanValidate,
     clickShopSearchButton: clickShopSearchButton,
+    inShop: inShop,
+    inShop_sell: inShop_sell,
 
     // 关闭和界面处理
     find_close: find_close,

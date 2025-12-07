@@ -1517,7 +1517,7 @@ ui.layout(
                                         <horizontal gravity="center_vertical">
                                             <text text="土地坐标偏移：" textSize="14" w="120" marginRight="8" />
                                             <input id="landOffsetX" hint="X:60" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                            <input id="landOffsetY" hint="Y:-30" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                            <input id="landOffsetY" hint="Y:-20" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
                                         </horizontal>
 
                                         {/* 商店坐标偏移 */}
@@ -1551,7 +1551,7 @@ ui.layout(
                                         <horizontal gravity="center_vertical">
                                             <text text="初始土地偏移：" textSize="14" w="120" marginRight="8" />
                                             <input id="firstlandX" hint="X:20" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
-                                            <input id="firstlandY" hint="Y:40" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
+                                            <input id="firstlandY" hint="Y:0" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
                                             <text text="收割两指间距：" textSize="14" w="120" marginRight="8" />
@@ -3469,7 +3469,7 @@ function getDefaultConfig() {
         landFindMethod: "商店",
         landOffset: {
             x: 60,
-            y: -30
+            y: -20
         },
         shopOffset: {
             x: -60,
@@ -3478,7 +3478,7 @@ function getDefaultConfig() {
 
         firstland: {
             x: 20,
-            y: 40
+            y: 0
         },
         distance: 75,
         harvestTime: 5,
