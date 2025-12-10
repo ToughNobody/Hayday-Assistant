@@ -629,7 +629,7 @@ function findText(targetText, sc, region) {
 
 
 
-function matchColor(checkPoints = [], screenshot, xiangsidu = 16) {
+function matchColor(checkPoints = [], screenshot, xiangsidu = 8) {
     // 参数验证
     if (!Array.isArray(checkPoints) || checkPoints.length === 0) {
         console.warn("checkPoints必须是非空数组");
@@ -637,6 +637,7 @@ function matchColor(checkPoints = [], screenshot, xiangsidu = 16) {
     }
 
     let sc = screenshot || captureScreen();
+    let xiangsidu = xiangsidu || 8;
     let screenWidth = sc.width;
     let screenHeight = sc.height;
     let allMatch = true;
@@ -1787,7 +1788,8 @@ function tomOperation(Account) {
             timeStorage.put(tomIsWorkName, null);
         } else if (tomState === false) {
             timeStorage.put(tomIsWorkName, false);
-        } else {
+        } else if (tomState === undefined) { }
+        else {
             let tomTimeSecend = tomState.hours * 60 * 60 + tomState.minutes * 60 + tomState.seconds;
             //设定计时器
             let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
@@ -1949,8 +1951,22 @@ function tomToFind(tomPos) {
             click(x, y);
             sleep(500);
             //点击搜索
-            if (!matchColor([{ x: 440, y: 255, color: "#ffffca" }, { x: 750, y: 252, color: "#ffffca" }])) click(410 + ran(), 140 + ran()); sleep(500);
-            sleep(500);
+
+            if (!matchColor([{ x: 730, y: 253, color: "#ffffca" }, { x: 452, y: 226, color: "#ffffca" }], null, 6)) {//相似度6不能高了
+                let searchButton = findMC(["#ffffff", [7, -6, "#f7d400"],
+                    [7, -16, "#ffffff"], [-11, -3, "#f8c900"], [-6, 8, "#ffffff"],
+                    [7, 12, "#f4c700"], [3, 33, "#fefef4"]])
+                if (searchButton) {
+                    log("点击搜索按钮")
+                    click(searchButton.x + ran(), searchButton.y + ran())
+                    sleep(500);
+                } else {
+                    log("未找到搜索按钮");
+                    showTip("未找到搜索按钮");
+                    findNum++
+                    continue;
+                }
+            }
             //点击输入框
             click(590 + ran(), 240 + ran());
             log("输入搜索内容:" + config.tomFind.text);
@@ -2278,13 +2294,16 @@ function findland_click() {
 function harvest(center) {
     // 参数检查
     if (!center) {
-        return;
+        return false;
     }
 
     //重复次数
     let rows = config.harvestRepeat;
 
     let center_land = findland(false);
+    if (!center_land) {
+        return false;
+    }
     // 定义偏移量
     // 左移
     const L = {
@@ -5049,6 +5068,7 @@ module.exports = {
     clickTom: clickTom,
     findTom: findTom,
     tomToFind: tomToFind,
+    tomMenu: tomMenu,
 
 
 
