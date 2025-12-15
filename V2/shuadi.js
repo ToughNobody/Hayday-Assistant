@@ -85,11 +85,11 @@ function main_email() {
             //执行仓库统计
             if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0 && !module.getTimerState("cangkuStatisticsTime")) {
                 //进行仓库统计
-                let rowData = module.cangkuStatistics(config.cangkuStatisticsPage);
+                let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
                 //将仓库统计结果转换为表格数据
-                let rowContentData = module.creatContentData("账号", rowData);
+                let rawContentData = module.creatContentData("账号", rawData);
                 //在表格前后加入标题，合计列
-                let contentData = module.rowContentData2(rowContentData);
+                let contentData = module.rawContentData2(rawContentData);
                 //推送
                 module.pushTo(contentData);
                 module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
@@ -127,7 +127,7 @@ function main_email() {
             let cangkuStatisticsForEach = false;
 
             //设定初始仓库数据
-            let rowContentData = statistics.get("rowContentData") || null;
+            let rawContentData = null;
 
             //判断是否需要升仓
             if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
@@ -165,10 +165,9 @@ function main_email() {
                 //仓库统计
                 if (cangkuStatisticsForEach) {
                     //执行仓库统计
-                    let rowData = module.cangkuStatistics(config.cangkuStatisticsPage);
+                    let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
                     //将仓库统计结果转换为表格数据
-                    rowContentData = module.creatContentData(`账号${account.title}`, rowData, rowContentData);
-                    statistics.put("rowContentData", rowContentData);
+                    rawContentData = module.creatContentData(`账号${account.title}`, rawData, rawContentData);
                 }
                 while (true) {
                     // 获取下一个账号的计时器状态
@@ -199,12 +198,11 @@ function main_email() {
                 console.error("showDetails error:", error);
             }
             ;
-            if (cangkuStatisticsForEach && rowContentData) {
+            if (cangkuStatisticsForEach && rawContentData) {
                 //在表格前后加入标题，合计列
-                let contentData = module.rowContentData2(rowContentData);
+                let contentData = module.rawContentData2(rawContentData);
                 //推送
                 module.pushTo(contentData);
-                statistics.remove("rowContentData");
             }
         }
 
@@ -392,7 +390,7 @@ function main_save() {
         let cangkuStatisticsForEach = false;
 
         //设定初始仓库数据
-        let rowContentData = statistics.get("rowContentData") || null;
+        let rawContentData = null;
 
         //判断是否需要升仓
         if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
@@ -452,10 +450,9 @@ function main_save() {
             //仓库统计
             if (cangkuStatisticsForEach) {
                 //执行仓库统计
-                let rowData = module.cangkuStatistics(config.cangkuStatisticsPage);
+                let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
                 //将仓库统计结果转换为表格数据
-                rowContentData = module.creatContentData(`账号${currentAccount.title}`, rowData, rowContentData);
-                statistics.put("rowContentData", rowContentData);
+                rawContentData = module.creatContentData(`账号${currentAccount.title}`, rawData, rawContentData);
             }
             while (true) {
                 // 获取下一个账号的计时器状态
@@ -485,12 +482,11 @@ function main_save() {
                 console.error("showDetails error:", error);
             }
 
-            if (cangkuStatisticsForEach && rowContentData) {
+            if (cangkuStatisticsForEach && rawContentData) {
                 //在表格前后加入标题，合计列
-                let contentData = module.rowContentData2(rowContentData);
+                let contentData = module.rawContentData2(rawContentData);
                 //推送
                 module.pushTo(contentData);
-                statistics.remove("rowContentData");
             }
 
         })

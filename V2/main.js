@@ -1194,6 +1194,7 @@ ui.layout(
                 <appbar id="appbar" bg="{{color}}" >
                     <toolbar id="toolbar" title="卡通农场小助手" layout_height="50">
                         <img id="log_icon" src="@drawable/ic_assignment_black_48dp" w="22" h="22" tint="white" gravity="center" layout_gravity="right" marginRight="16" />
+                        <img id="announcement_icon" src="@drawable/ic_notifications_black_48dp" w="22" h="22" tint="white" gravity="center" layout_gravity="right" marginRight="16" />
                     </toolbar>
                     <tabs id="tabs" />
                 </appbar>
@@ -1752,6 +1753,10 @@ ui.log_icon.on("click", () => {
     app.startActivity("console")
 });
 
+ui.announcement_icon.on("click", () => {
+    showAnnouncement(false);
+});
+
 
 //创建选项菜单(右上角)
 ui.emitter.on("create_options_menu", menu => {
@@ -1791,6 +1796,36 @@ ui.emitter.on("back_pressed", () => {
     // 在主界面时，返回键退出脚本
     return false;
 });
+
+function showAnnouncement(silence = false) {
+    threads.start(() => {
+        try {
+            let announcementUrl = "https://gitee.com/ToughNobody/Hayday-Assistant/raw/main/announcement.json";
+            let response = http.get(announcementUrl);
+            log("公告响应状态码: " + response.statusCode);
+            if (response.statusCode == 200) {
+                let result = response.body.json();
+
+                if (silence && configs.get("ignoreAnnouncement") == result.version) {
+                    return;
+                }
+
+                ui.run(() => {
+                    dialogs.build({
+                        title: "公告",
+                        content: result.content,
+                        positive: "知道了",
+                        neutral: "不再提示"
+                    }).on("neutral", () => {
+                        configs.put("ignoreAnnouncement", result.version);
+                    }).show();
+                })
+            }
+        } catch (e) {
+            log("显示公告时出错: " + e);
+        }
+    });
+}
 
 function downloadZip_dialogs() {
     // 弹出选择下载源的选项弹窗
@@ -1916,21 +1951,13 @@ function checkForUpdates(silence = false) {
                 }
             });
             log("HTTP响应状态码: " + response.statusCode);
-            let responseBodyString = "";
+            let responseBodyString = response.body.string()
             if (!silence) {
-                responseBodyString = response.body.string();
                 log("HTTP响应内容: " + responseBodyString);
             }
 
             if (response.statusCode == 200) {
-                let result;
-                if (!silence) {
-                    // 如果已经读取了响应体字符串，则解析该字符串
-                    result = JSON.parse(responseBodyString);
-                } else {
-                    // 否则直接从响应体获取JSON
-                    result = response.body.json();
-                }
+                let result = JSON.parse(responseBodyString);
 
                 // 检查result对象和version字段是否存在
                 if (!result || !result.version) {
@@ -1941,6 +1968,10 @@ function checkForUpdates(silence = false) {
 
                 let latestVersion = result.version;
                 log("最新版本: " + latestVersion);
+
+                if (configs.get("ignoreVersion") == latestVersion) {
+                    if (silence) return
+                }
 
                 // 比较版本号
                 let compareResult = compareVersions(projectData.versionName, latestVersion);
@@ -1955,7 +1986,7 @@ function checkForUpdates(silence = false) {
                             customView: ui.inflate(
                                 <vertical padding="16">
                                     <text id="versionInfo" textSize="14sp" textColor="#333333" marginTop="8" />
-                                    <text textSize="14sp" textColor="#ef9a9a" marginTop="8" text="强烈建议使用“下载压缩包”方式更新!!!" />
+                                    <checkbox id="ignoreVersionCheck" textSize="14sp" textColor="#ef9a9a" marginTop="8" text="忽略此版本" checked={Boolean(configs.get("ignoreVersion"))} />
                                     <text id="updateContent" textSize="14sp" textColor="#333333" marginTop="16" />
                                     <text id="giteeResult" textSize="12sp" textColor="#666666" marginTop="8" text="Gitee: 未检测" />
                                     <text id="githubResult" textSize="12sp" textColor="#666666" marginTop="4" text="Github: 未检测" />
@@ -1976,6 +2007,14 @@ function checkForUpdates(silence = false) {
                             // 设置更新内容
                             let updateContent = "更新内容: " + (result.description || "无更新说明");
                             dialog.getView().updateContent.setText(updateContent);
+
+                            // 忽略此版本
+                            dialog.getView().ignoreVersionCheck.on("check", (checked) => {
+                                if (checked) {
+                                    // 忽略此版本，不进行更新
+                                    configs.put("ignoreVersion", latestVersion);
+                                } else configs.put("ignoreVersion", null);
+                            });
 
                             // 单选框选择事件
                             dialog.getView().githubRadio.on("check", (checked) => {
@@ -3740,35 +3779,59 @@ function loadConfigToUI(loadConfigFromFile = false) {
 }
 
 function stopOtherEngines(stopAll = false) {
-    log("开始停止" + (stopAll ? "所有" : "其他") + "引擎");
+    threads.start(() => {
+        log("开始停止" + (stopAll ? "所有" : "其他") + "引擎");
 
-    while (engines.all().length > 1) {
-        let engineArray = engines.all();
-        let engine0 = engines.myEngine();
-        // 遍历引擎数组
-        for (let i = 0; i < engineArray.length; i++) {
-            let engine = engineArray[i];
-            // 如果当前引擎是主引擎，则跳过
-            if (!stopAll && engine === engine0) {
-                continue;
+        let maxAttempts = 10; // 防止无限循环
+        let attempts = 0;
+
+        while (engines.all().length > 1 && attempts < maxAttempts) {
+            attempts++;
+            let engineArray = engines.all();
+            let engine0 = engines.myEngine();
+            let stopped = false;
+
+            // 创建需要停止的引擎列表，避免在遍历时修改数组
+            let enginesToStop = [];
+            for (let i = 0; i < engineArray.length; i++) {
+                let engine = engineArray[i];
+                // 如果当前引擎是主引擎，则跳过
+                if (!stopAll && engine === engine0) {
+                    continue;
+                }
+                enginesToStop.push(engine);
             }
 
-            try {
-                engine.forceStop();
-                // 从引擎数组中移除已停止的引擎
-                engineArray.splice(i, 1);
-                log(`已停止引擎(ID: ${engine.id})`);
-            } catch (e) {
-                log(`停止引擎失败(ID: ${engine.id}): ${e}`);
+            // 停止收集到的引擎
+            for (let i = 0; i < enginesToStop.length; i++) {
+                let engine = enginesToStop[i];
+                try {
+                    engine.forceStop();
+                    log(`已停止引擎(ID: ${engine.id})`);
+                    stopped = true;
+                } catch (e) {
+                    log(`停止引擎失败(ID: ${engine.id}): ${e}`);
+                }
+            }
+
+            // 如果没有引擎被停止，跳出循环防止无限循环
+            if (!stopped && enginesToStop.length > 0) {
+                log("无法停止引擎，跳出循环");
+                break;
+            }
+
+            // 短暂等待以确保引擎完全停止
+            if (enginesToStop.length > 0) {
+                sleep(100);
             }
         }
-    }
 
-    // 如果包含主引擎且成功停止了所有引擎，可以退出程序
-    if (stopAll) {
-        log("所有引擎已停止，退出程序");
-        engines.myEngine().forceStop();
-    }
+        // 如果包含主引擎且成功停止了所有引擎，可以退出程序
+        if (stopAll) {
+            log("所有引擎已停止，退出程序");
+            engines.myEngine().forceStop();
+        }
+    });
 }
 
 
@@ -4145,6 +4208,9 @@ ui.btnStart.click(startButton);
  * 初始化界面
  */
 function initUI() {
+    // 公告
+    showAnnouncement(true);
+
     // 检查更新
     checkForUpdates(true);
 
@@ -4514,7 +4580,7 @@ function initUI() {
     ui.tokenInput.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            token_storage.put("token", s.toString());
+            token_storage.put("token", s.toString().trim());
         },
         afterTextChanged: function (s) { }
     }));
@@ -4523,7 +4589,7 @@ function initUI() {
     ui.tokenInputPlain.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            token_storage.put("token", s.toString());
+            token_storage.put("token", s.toString().trim());
         },
         afterTextChanged: function (s) { }
     }));

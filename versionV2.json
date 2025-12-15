@@ -1,7 +1,7 @@
 {
-  "version": "2.1.13",
-  "description": "\n\nv2.1.13\n\nBug修复:\n修复种地时点击土地后找不到商店的报错\n修复更新后汤姆功能出错问题\n\n",
-  "zip_name": "卡通农场小助手v2.1.13.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.13/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.13.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.13/v2.1.13.zip"
+  "version": "2.1.14",
+  "description": "\n\nv2.1.14\n\nBug修复\n修复仓库售卖时，仓库容量为四位数时的识别错误\n修复收割时，镰刀位置点击错误的问题\n修复仓库统计的变量未定义错误\n\n新增功能\n添加忽略此版本选项\n添加公告栏\n\n功能优化\n优化关闭脚本功能\ntoken输入后会自动删除两边的空白符\n\n",
+  "zip_name": "卡通农场小助手v2.1.14.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.14/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.14.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.14/v2.1.14.zip"
 }

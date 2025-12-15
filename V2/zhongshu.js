@@ -126,19 +126,19 @@ function sousuo() {
 
     sleep(500);
     //找到搜索框，直接点击搜索
-    if (module.matchColor([{ x: 52, y: 55, color: "#ffffff" }, { x: 36, y: 44, color: "#f7ce00" }, { x: 84, y: 147, color: "#ffffca" }]) ||
-        module.matchColor([{ x: 40, y: 49, color: "#ffffff" }, { x: 30, y: 39, color: "#f8cb00" }, { x: 98, y: 120, color: "#ffffca" }])) {
+    if (module.matchColor([{ x: 52, y: 55, color: "#ffffff" }, { x: 36, y: 44, color: "#f7ce00" }, { x: 84, y: 147, color: "#ffffca" }],null,6) ||
+        module.matchColor([{ x: 40, y: 49, color: "#ffffff" }, { x: 30, y: 39, color: "#f8cb00" }, { x: 98, y: 120, color: "#ffffca" }],null,6)) {
         click(320 + module.ran(), 150 + module.ran());  //点击搜索框
         module.showTip("点击搜索框");
         log("点击搜索框");
         return true;
     }
     //未找到搜索框，寻找搜索按钮
-    else if (module.matchColor([{ x: 48, y: 55, color: "#ffffff" }, { x: 33, y: 46, color: "#f9ca00" }, { x: 107, y: 47, color: "#deb475" }]) ||
-        module.matchColor([{ x: 40, y: 51, color: "#ffffff" }, { x: 29, y: 45, color: "#f8c500" }, { x: 97, y: 46, color: "#ddb274" }])) {
+    else if (module.matchColor([{ x: 48, y: 55, color: "#ffffff" }, { x: 33, y: 46, color: "#f9ca00" }, { x: 107, y: 47, color: "#deb475" }],null,6) ||
+        module.matchColor([{ x: 40, y: 51, color: "#ffffff" }, { x: 29, y: 45, color: "#f8c500" }, { x: 97, y: 46, color: "#ddb274" }],null,6)) {
         click(45 + module.ran(), 50 + module.ran());
         sleep(500);
-        if (module.matchColor([{ x: 52, y: 55, color: "#ffffff" }, { x: 36, y: 44, color: "#f7ce00" }, { x: 84, y: 147, color: "#ffffca" }])) {
+        if (module.matchColor([{ x: 52, y: 55, color: "#ffffff" }, { x: 36, y: 44, color: "#f7ce00" }, { x: 84, y: 147, color: "#ffffca" }],null,6)) {
             click(320 + module.ran(), 150 + module.ran());
             module.showTip("点击搜索框");
             log("点击搜索框");

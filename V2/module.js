@@ -2459,7 +2459,7 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
 
 function harvest_wheat(sickle) {
 
-    let sicklePoints = ["#c6b65d", [-9, 9, "#b5984d"], [39, -1, "#ffdf7c"], [10, -62, "#f3f2f6"], [55, -72, "#e5e5e6"]]
+    let sicklePoints = ["#b9a952",[-20,16,"#a68a44"],[-5,-50,"#e6e5ec"],[54,-67,"#dfdde3"],[77,34,"#ffdf7c"],[71,8,"#ffdf7c"],[51,28,"#ffdf7c"]]
     let center_sickle = sickle ? sickle : click_waitFor(null, null, sicklePoints)
     if (center_sickle) {
         console.log("找到镰刀,准备收割，坐标: " +
@@ -2582,7 +2582,7 @@ function find_ad() {
  * @returns {boolean} 是否在商店主界面
  */
 function inShop() {
-    if (matchColor([{ x: 1161, y: 524, color: "#cb642c" }, { x: 1063, y: 618, color: "#eeae52" }, { x: 1032, y: 606, color: "#dab299" }])) {
+    if (matchColor([{ x: 1161, y: 524, color: "#cb642c" }, { x: 1063, y: 618, color: "#eeae52" }, { x: 1032, y: 606, color: "#dab299" }],null,16)) {
         return true;
     } else {
         return false;
@@ -2859,7 +2859,7 @@ function shopStatistic(sc) {
         }
 
         sc = sc || captureScreen();
-        let capacity_result = findFont(sc, [679, 53, 814 - 679, 103 - 53], "#FFFFFF", 8, Font.FontLibrary_ShopCapacity, 0.9);
+        let capacity_result = findFont(sc, [659, 56, 854 - 659, 100 - 56], "#FFFFFF", 8, Font.FontLibrary_ShopCapacity, 0.9);
         log(capacity_result);
 
         // 提取 '/' 两边的数字并计算差值
@@ -4072,7 +4072,7 @@ function shengcang() {
                 showTip("点击粮仓");
                 click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
                 sleep(500);
-                if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入粮仓
+                if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }],null,16)) {  //判断是否进入粮仓
                     click(700 + ran(), 625 + ran());
                     sleep(500);
                     if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
@@ -4113,7 +4113,7 @@ function shengcang() {
                 if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入货仓
                     click(700 + ran(), 625 + ran());
                     sleep(500);
-                    if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
+                    if (matchColor([{ x: 932, y: 414, color: "#69b850" }],null,16)) {  //判断是否可以升级
                         click(932 + ran(), 408 + ran());//点击升级
                         sleep(500);
                         find_close();
@@ -4400,6 +4400,7 @@ function harvest_crop(center_sickle) {
 
 //循环操作
 function operation(Account) {
+    sleep(200);
 
     //收作物
     let is_harvest = harvest_crop();
@@ -4439,7 +4440,7 @@ function operation(Account) {
         log("检测种植情况")
         if (findland()) {
             sleep(500);
-            let center_sickle = findMC(["#c6b65d", [-9, 9, "#b5984d"], [39, -1, "#ffdf7c"], [10, -62, "#f3f2f6"], [55, -72, "#e5e5e6"]]);
+            let center_sickle = findMC(["#b9a952",[-20,16,"#a68a44"],[-5,-50,"#e6e5ec"],[54,-67,"#dfdde3"],[77,34,"#ffdf7c"],[71,8,"#ffdf7c"],[51,28,"#ffdf7c"]]);
             let center_wheat = findMC(crop);
             if (center_sickle) {
                 console.log("找到镰刀，重新收割");
@@ -4529,7 +4530,7 @@ function cangkuStatistics(maxPages = 2) {
             showTip("点击粮仓");
             click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
             sleep(500);
-            if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入粮仓
+            if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }],null,16)) {  //判断是否进入粮仓
                 lcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
                 if (!lcCapacity) {
                     sleep(500);
@@ -4565,7 +4566,7 @@ function cangkuStatistics(maxPages = 2) {
         sleep(500);
 
         //判断是否进入货仓
-        if (!matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //未进入粮仓
+        if (!matchColor([{ x: 1140, y: 66, color: "#ee434e" }],null,16)) {  //未进入粮仓
             console.log("未进入货仓");
             showTip("未进入货仓");
             find_close();
@@ -4697,28 +4698,30 @@ function cangkuStatistics(maxPages = 2) {
  * 
  * @param {*} accountName 账号名称
  * @param {*} data 统计数据
- * @param {*} rowTable 表头
+ * @param {*} rawTable 表头
  * @returns 加上添加的这一列的表格
  */
-function creatContentData(accountName, data, rowTable) {
+function creatContentData(accountName, data, rawTable) {
     try {
-        if (!data) return rawTable;
+        
         // 初始化表格（只有表头和分隔线）
-        let rowContentData = null;
-        if (!rowTable) {
-            rowContentData = "|         |\n|:--------:|\n";
+        let rawContentData = null;
+        if (!rawTable) {
+            rawContentData = "|         |\n|:--------:|\n";
 
             // 物品列表（确保顺序一致）
             const itemNames = ["粮仓容量", "货仓容量", "盒钉", "螺钉", "镶板", "螺栓", "木板", "胶带", "土地契约", "木槌", "标桩", "斧头", "木锯", "炸药", "炸药桶", "铁铲", "十字镐"];
 
             // 初始化所有物品行
             for (let item of itemNames) {
-                rowContentData += `| ${item}      |\n`;
+                rawContentData += `| ${item}      |\n`;
             }
-        } else rowContentData = rowTable;
+        } else rawContentData = rawTable;
+
+        if (!data) return rawContentData;
 
         // 分割现有表格的每一行
-        let lines = rowContentData.split("\n");
+        let lines = rawContentData.split("\n");
 
         // 更新表头行（添加新账号列）
         lines[0] += `   ${accountName}   |`;
@@ -4735,11 +4738,11 @@ function creatContentData(accountName, data, rowTable) {
                 lines[i] += `   ${itemCount}   |`;
             }
             // 重新组合表格
-            rowContentData = lines.join("\n");
+            rawContentData = lines.join("\n");
         } catch (error) {
             log(error);
         }
-        return rowContentData;
+        return rawContentData;
     } catch (error) {
         log(error);
     }
@@ -4748,13 +4751,13 @@ function creatContentData(accountName, data, rowTable) {
 
 /**
  * 为表格的每一行计算并添加行总计列
- * @param {string} rowContentData 表格数据，以换行符分隔行，以|分隔列
+ * @param {string} rawContentData 表格数据，以换行符分隔行，以|分隔列
  * @returns {string} 添加了总计列的表格数据
  */
-function rowContentData2(rowContentData) {
+function rawContentData2(rawContentData) {
     try {
         // 按行分割数据
-        let lines = rowContentData.split("\n");
+        let lines = rawContentData.split("\n");
 
         // 更新表头，添加"总计"列
         lines[0] += ` 总计 |`;
@@ -5050,7 +5053,7 @@ module.exports = {
 
     //推送相关
     creatContentData: creatContentData,
-    rowContentData2: rowContentData2,
+    rawContentData2: rawContentData2,
     pushTo: pushTo,
 
     // 计时器

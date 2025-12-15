@@ -1,12 +1,19 @@
 
+//改此处============================
+
 照片文件夹 = "/storage/emulated/0/$MuMu12Shared/Screenshots/账号/好友图片/"
 
 let 主号 = "Nobody";
-let 主号农场名 = "000"
+let 主号农场名 = "000"   //照片名称
+
 let 小号 = "boooody";
 let 小号农场名 = "z1"
 
-sell = [{ item: "钻石戒指", sellNum: -1, "done": true }]
+let 导金币物品 = "钻石戒指"   //照片名称
+
+//==================================
+
+sell = [{ item: 导金币物品, sellNum: -1, "done": true }]
 
 //1  365
 //2  450
@@ -14,8 +21,8 @@ sell = [{ item: "钻石戒指", sellNum: -1, "done": true }]
 //4  640
 
 
-let 大号点小号 = { x: 500, y: 640 };
-let 小号点大号 = { x: 500, y: 450 };
+// let 大号点小号 = { x: 500, y: 640 };
+// let 小号点大号 = { x: 500, y: 450 };
 
 
 
