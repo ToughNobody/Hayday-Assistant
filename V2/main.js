@@ -1232,7 +1232,7 @@ ui.layout(
                                         {/* 主功能选择 */}
                                         <horizontal gravity="center_vertical">
                                             <text text="选择功能：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|物品售卖"
+                                            <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|物品售卖|倒金币"
                                                 w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                             <img id="helpIcon_functionSelect" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
                                         </horizontal>
@@ -1330,6 +1330,30 @@ ui.layout(
                                             <horizontal gravity="center_vertical">
                                                 <text text="等待货架：" textSize="14" w="80" marginRight="8" />
                                                 <checkbox id="waitShelf" checked="${configs.get('waitShelf') || false}" />
+                                            </horizontal>
+                                        </vertical>
+
+                                        {/* 倒金币 - 仅在倒金币时显示 */}
+                                        <vertical id="coinContainer" gravity="center_vertical" visibility="gone">
+                                            <horizontal gravity="center_vertical">
+                                                <text text="主号:" textSize="14" w="auto" marginRight="10" />
+                                                <input id="coin_mainAccount" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
+                                                <text text="照片名:" textSize="14" w="auto" />
+                                                <input id="coin_mainAccount_picName" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical">
+                                                <text text="小号:" textSize="14" w="auto" marginRight="10" />
+                                                <input id="coin_subAccount" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
+                                                <text text="照片名:" textSize="14" w="auto" />
+                                                <input id="coin_subAccount_picName" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical">
+                                                <text text="倒金币物品:" textSize="14" w="auto" marginRight="10" />
+                                                <input id="coin_item" marginRight="8" w="*" h="48" textSize="14" bg="#FFFFFF" />
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical">
+                                                <text text="照片文件夹路径:" textSize="14" w="auto" marginRight="10" />
+                                                <input id="coin_picDirPath" marginRight="8" w="*" h="auto" textSize="14" bg="#FFFFFF" />
                                             </horizontal>
                                         </vertical>
 
@@ -1535,7 +1559,7 @@ ui.layout(
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
                                             <text text="收割纵向偏移：" textSize="14" w="120" marginRight="8" />
-                                            <input id="harvestY" hint="1.5" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
+                                            <input id="harvestY" hint="3.5" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal" marginRight="8" />
                                             <text text="格" textSize="14" w="120" marginRight="8" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
@@ -1556,7 +1580,8 @@ ui.layout(
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
                                             <text text="收割两指间距：" textSize="14" w="120" marginRight="8" />
-                                            <input id="distance" hint="75" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                            <input id="distanceX" hint="0" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
+                                            <input id="distanceY" hint="75" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberSigned|numberDecimal" marginRight="8" />
 
                                         </horizontal>
                                         {/* 仓库坐标偏移 */}
@@ -2900,7 +2925,8 @@ function getConfig() {
             x: configs.get("firstlandX"),
             y: configs.get("firstlandY")
         },
-        distance: configs.get("distance"),
+        distanceX: configs.get("distanceX"),
+        distanceY: configs.get("distanceY"),
         matureTime: configs.get("matureTime"),
         harvestTime: configs.get("harvestTime"),
         harvestX: configs.get("harvestX"),
@@ -2973,6 +2999,12 @@ function getConfig() {
         clearFans: configs.get("clearFans"),
         sell_accountList: configs.get("sell_accountList"),
         waitShelf: configs.get("waitShelf"),
+        coin_mainAccount: configs.get("coin_mainAccount"),
+        coin_mainAccount_picName: configs.get("coin_mainAccount_picName"),
+        coin_subAccount: configs.get("coin_subAccount"),
+        coin_subAccount_picName: configs.get("coin_subAccount_picName"),
+        coin_item: configs.get("coin_item"),
+        coin_picDirPath: configs.get("coin_picDirPath"),
     };
     return storedConfig;
 }
@@ -3005,7 +3037,8 @@ function saveConfig(con) {
         configs.put("firstlandX", con.firstland.x);
         configs.put("firstlandY", con.firstland.y);
 
-        configs.put("distance", con.distance);
+        configs.put("distanceX", con.distanceX);
+        configs.put("distanceY", con.distanceY);
         configs.put("matureTime", con.matureTime);
         configs.put("harvestTime", con.harvestTime);
         configs.put("harvestX", con.harvestX);
@@ -3064,6 +3097,14 @@ function saveConfig(con) {
         configs.put("CangkuSold_targetNum", con.CangkuSold_targetNum);
 
         configs.put("sell_accountList", con.sell_accountList || []);
+
+        //倒金币
+        configs.put("coin_mainAccount", con.coin_mainAccount);
+        configs.put("coin_mainAccount_picName", con.coin_mainAccount_picName);
+        configs.put("coin_subAccount", con.coin_subAccount);
+        configs.put("coin_subAccount_picName", con.coin_subAccount_picName);
+        configs.put("coin_item", con.coin_item);
+        configs.put("coin_picDirPath", con.coin_picDirPath);
 
         // 存储其他配置项
         configs.put("restartWithShell", con.restartWithShell);
@@ -3124,7 +3165,8 @@ function validateConfig(config) {
 
     config.firstland.x = config.firstland.x != undefined ? Number(config.firstland.x) : defaultConfig.firstland.x;
     config.firstland.y = config.firstland.y != undefined ? Number(config.firstland.y) : defaultConfig.firstland.y;
-    config.distance = config.distance != undefined ? Number(config.distance) : defaultConfig.distance;
+    config.distanceX = config.distanceX != undefined ? Number(config.distanceX) : defaultConfig.distanceX;
+    config.distanceY = config.distanceY != undefined ? Number(config.distanceY) : defaultConfig.distanceY;
 
     // 验证matureTime
     if (config.matureTime == undefined || isNaN(config.matureTime) || config.matureTime < 0) {
@@ -3176,7 +3218,7 @@ function validateConfig(config) {
 
     // 验证功能选择
     if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
-    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆", "物品售卖"];
+    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆", "物品售卖", "倒金币"];
     if (config.selectedFunction.code < 0 || config.selectedFunction.code >= functionOptions.length) {
         config.selectedFunction.code = defaultConfig.selectedFunction.code;
     }
@@ -3464,9 +3506,22 @@ function validateConfig(config) {
                 }
             }
         }
-
-
     }
+
+    // 设置倒金币主账号
+    if (!config.coin_mainAccount || (config.coin_mainAccount && config.coin_mainAccount.length == 0)) config.coin_mainAccount = defaultConfig.coin_mainAccount;
+    // 设置倒金币主账号照片名称
+    if (!config.coin_mainAccount_picName || (config.coin_mainAccount_picName && config.coin_mainAccount_picName.length == 0)) config.coin_mainAccount_picName = defaultConfig.coin_mainAccount_picName;
+    // 设置倒金币小号账号
+    if (!config.coin_subAccount || (config.coin_subAccount && config.coin_subAccount.length == 0)) config.coin_subAccount = defaultConfig.coin_subAccount;
+    // 设置倒金币小号账号照片名称
+    if (!config.coin_subAccount_picName || (config.coin_subAccount_picName && config.coin_subAccount_picName.length == 0)) config.coin_subAccount_picName = defaultConfig.coin_subAccount_picName;
+    // 设置倒金币物品
+    if (!config.coin_item || (config.coin_item && config.coin_item.length == 0)) config.coin_item = defaultConfig.coin_item;
+    // 设置倒金币照片文件夹路径
+    if (!config.coin_picDirPath || (config.coin_picDirPath && config.coin_picDirPath.length == 0)) config.coin_picDirPath = defaultConfig.coin_picDirPath;
+
+
 
     // 其他验证...
     if (!config.photoPath || (config.photoPath && config.photoPath.length == 0)) config.photoPath = "./res/pictures.1280_720"
@@ -3519,10 +3574,11 @@ function getDefaultConfig() {
             x: 20,
             y: 0
         },
-        distance: 75,
+        distanceX: 0,
+        distanceY: 75,
         harvestTime: 5,
         harvestX: 8,
-        harvestY: 1.5,
+        harvestY: 3.5,
         harvestRepeat: 3,
         showText: {
             x: 0,
@@ -3600,6 +3656,13 @@ function getDefaultConfig() {
         },
         clearFans: false,
         waitShelf: false,
+        // 倒金币相关配置
+        coin_mainAccount: "",
+        coin_mainAccount_picName: "",
+        coin_subAccount: "",
+        coin_subAccount_picName: "",
+        coin_item: "",
+        coin_picDirPath: "",
     };
 }
 
@@ -3694,7 +3757,8 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 设置收割偏移
     ui.firstlandX.setText(String(config.firstland.x));
     ui.firstlandY.setText(String(config.firstland.y));
-    ui.distance.setText(String(config.distance));
+    ui.distanceX.setText(String(config.distanceX));
+    ui.distanceY.setText(String(config.distanceY));
     ui.harvestTime.setText(String(config.harvestTime));
     ui.harvestX.setText(String(config.harvestX));
     ui.harvestY.setText(String(config.harvestY));
@@ -3766,6 +3830,19 @@ function loadConfigToUI(loadConfigFromFile = false) {
     if (config.tomFind.text !== undefined) {
         ui.Tom_itemName.setText(config.tomFind.text);
     }
+
+    // 设置倒金币主账号
+    ui.coin_mainAccount.setText(config.coin_mainAccount);
+    // 设置倒金币主账号照片名称
+    ui.coin_mainAccount_picName.setText(config.coin_mainAccount_picName);
+    // 设置倒金币小号账号
+    ui.coin_subAccount.setText(config.coin_subAccount);
+    // 设置倒金币小号账号照片名称
+    ui.coin_subAccount_picName.setText(config.coin_subAccount_picName);
+    // 设置倒金币物品
+    ui.coin_item.setText(config.coin_item);
+    // 设置倒金币照片文件夹路径
+    ui.coin_picDirPath.setText(config.coin_picDirPath);
 
     // 设置是否使用shell命令重启游戏
     ui.restartWithShell.setChecked(config.restartWithShell);
@@ -4090,6 +4167,17 @@ function startButton() {
             });
             break;
 
+        case 5: //倒金币
+            stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./coin.js");
+                log("启动倒金币引擎，ID: " + newEngine.id);
+
+            });
+            break;
+
         default:
             toast("未知功能", "long");
     }
@@ -4165,6 +4253,17 @@ function winStartButton() {
                 sleep(100);
                 let newEngine = engines.execScriptFile("./sell.js");
                 log("启动物品售卖引擎，ID: " + newEngine.id);
+
+            });
+            break;
+
+        case 5: //倒金币
+            stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./coin.js");
+                log("启动倒金币引擎，ID: " + newEngine.id);
 
             });
             break;
@@ -4289,6 +4388,8 @@ function initUI() {
                     ui.tomItemContainer.attr("visibility", "gone");
                 }
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
+                // 隐藏倒金币相关控件
+                ui.coinContainer.attr("visibility", "gone");
             } else if (selectedFunction === "种树") {
                 // 隐藏作物选择和汤姆开关，显示树木选择
                 ui.cropSelectContainer.attr("visibility", "gone");
@@ -4299,6 +4400,8 @@ function initUI() {
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
+                // 隐藏倒金币相关控件
+                ui.coinContainer.attr("visibility", "gone");
             } else if (selectedFunction === "创新号") {
                 // 创新号
                 ui.cropSelectContainer.attr("visibility", "gone");
@@ -4309,6 +4412,8 @@ function initUI() {
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
+                // 隐藏倒金币相关控件
+                ui.coinContainer.attr("visibility", "gone");
             } else if (selectedFunction === "仅汤姆") {
                 // 仅汤姆
                 ui.cropSelectContainer.attr("visibility", "gone");
@@ -4319,6 +4424,8 @@ function initUI() {
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "visible");
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
+                // 隐藏倒金币相关控件
+                ui.coinContainer.attr("visibility", "gone");
             } else if (selectedFunction === "物品售卖") {
                 // 物品售卖
                 ui.cropSelectContainer.attr("visibility", "gone");
@@ -4329,6 +4436,20 @@ function initUI() {
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
                 ui.sell_itemSoldContainer.attr("visibility", "visible");
+                // 隐藏倒金币相关控件
+                ui.coinContainer.attr("visibility", "gone");
+            } else if (selectedFunction === "倒金币") {
+                // 倒金币
+                ui.cropSelectContainer.attr("visibility", "gone");
+
+                ui.treeSelectContainer.attr("visibility", "gone");
+
+                ui.addFriendsCard.attr("visibility", "gone");
+                // 隐藏汤姆相关控件
+                ui.tomItemContainer.attr("visibility", "gone");
+                ui.sell_itemSoldContainer.attr("visibility", "gone");
+                // 显示倒金币相关控件
+                ui.coinContainer.attr("visibility", "visible");
             }
 
 
@@ -4661,11 +4782,20 @@ function initUI() {
     }));
 
     // 为收割两指间距输入框添加变化监听
-    ui.distance.addTextChangedListener(new android.text.TextWatcher({
+    ui.distanceX.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
         onTextChanged: function (s, start, before, count) {
-            // 保存输入的distance到配置
-            configs.put("distance", Number(s));
+            // 保存输入的distanceX到配置
+            configs.put("distanceX", Number(s));
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    ui.distanceY.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            // 保存输入的distanceY到配置
+            configs.put("distanceY", Number(s));
         },
         afterTextChanged: function (s) { }
     }));
@@ -4890,9 +5020,53 @@ function initUI() {
         afterTextChanged: function (s) {
             // 保存修改后的目标阈值到配置
             configs.put("CangkuSold_targetNum", Number(s));
-            log("目标阈值: " + Number(s));
         }
     }));
+
+    // 倒金币主账号监听
+    ui.coin_mainAccount.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的倒金币主账号到配置
+            configs.put("coin_mainAccount", s.toString());
+        }
+    }));
+    // 倒金币主账号照片名称监听
+    ui.coin_mainAccount_picName.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的倒金币主账号照片名称到配置
+            configs.put("coin_mainAccount_picName", s.toString());
+        }
+    }));
+    // 倒金币小号账号监听
+    ui.coin_subAccount.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的倒金币小号账号到配置
+            configs.put("coin_subAccount", s.toString());
+        }
+    }));
+    // 倒金币小号账号照片名称监听
+    ui.coin_subAccount_picName.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的倒金币小号账号照片名称到配置
+            configs.put("coin_subAccount_picName", s.toString());
+        }
+    }));
+    // 倒金币物品监听
+    ui.coin_item.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的倒金币物品到配置
+            configs.put("coin_item", s.toString());
+        }
+    }));
+    // 倒金币照片文件夹路径监听
+    ui.coin_picDirPath.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的倒金币照片文件夹路径到配置
+            configs.put("coin_picDirPath", s.toString());
+        }
+    }));
+// /storage/emulated/0/$MuMu12Shared/Screenshots/账号/好友图片/
+    
 
     // 是否使用shell命令重启游戏监听
     ui.restartWithShell.on("check", (checked) => {

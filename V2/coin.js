@@ -1,32 +1,4 @@
 
-//改此处============================
-
-照片文件夹 = "/storage/emulated/0/$MuMu12Shared/Screenshots/账号/好友图片/"
-
-let 主号 = "Nobody";
-let 主号农场名 = "000"   //照片名称
-
-let 小号 = "boooody";
-let 小号农场名 = "z1"
-
-let 导金币物品 = "钻石戒指"   //照片名称
-
-//==================================
-
-sell = [{ item: 导金币物品, sellNum: -1, "done": true }]
-
-//1  365
-//2  450
-//3  550
-//4  640
-
-
-// let 大号点小号 = { x: 500, y: 640 };
-// let 小号点大号 = { x: 500, y: 450 };
-
-
-
-
 // 导入module模块
 let module;
 try {
@@ -53,15 +25,41 @@ try {
         exit();
     }
 }
-// let module = require("/storage/emulated/0/脚本/卡通农场小助手/module.js");
 
 //全局
-
 let config = module.config;
 let configs = storages.create("config");
 let cangkuItemColor = module.cangkuItemColor;
 let otherItemColor = module.otherItemColor;
 let allItemColor = module.allItemColor;
+
+//改此处============================
+
+照片文件夹 = config.coin_picDirPath
+
+let 主号 = config.coin_mainAccount;
+let 主号农场名 = config.coin_mainAccount_picName   //照片名称
+
+let 小号 = config.coin_subAccount;
+let 小号农场名 = config.coin_subAccount_picName     //照片名称
+
+let 导金币物品 = config.coin_item   
+
+//==================================
+
+sell = [{ item: 导金币物品, sellNum: -1, "done": true }]
+
+//1  365
+//2  450
+//3  550
+//4  640
+
+
+// let 大号点小号 = { x: 500, y: 640 };
+// let 小号点大号 = { x: 500, y: 450 };
+
+
+// let module = require("/storage/emulated/0/脚本/卡通农场小助手/module.js");
 
 // 启动自动点击权限请求
 module.autoSc();
@@ -72,7 +70,7 @@ try {
     console.error("创建窗口失败:", error);
 }
 
-configs.put("findAccountMethod","ocr")
+// configs.put("findAccountMethod","ocr")
 
 
 function main() {
@@ -105,7 +103,7 @@ function main() {
         findFriend(主号农场名)
 
         sleep(500)
-        while (!friendButton()) {module.close() }
+        while (!friendButton()) { module.close() }
 
 
         module.huadong()
@@ -118,13 +116,13 @@ function main() {
         )
         //商店右滑
         sleep(1000)
-        if (module.matchColor([{x:332,y:64,color:"#dfb57a"},
-            {x:1119,y:67,color:"#ed424d"},{x:1120,y:109,color:"#f3c341"},
-            {x:629,y:407,color:"#ffeb3e"},{x:1091,y:252,color:"#fff9db"},
-            {x:923,y:599,color:"#f6b633"}])) {
-                toastLog("倒金币完成")
-                engines.myEngine().forceStop();
-            }
+        if (module.matchColor([{ x: 332, y: 64, color: "#dfb57a" },
+        { x: 1119, y: 67, color: "#ed424d" }, { x: 1120, y: 109, color: "#f3c341" },
+        { x: 629, y: 407, color: "#ffeb3e" }, { x: 1091, y: 252, color: "#fff9db" },
+        { x: 923, y: 599, color: "#f6b633" }])) {
+            toastLog("倒金币完成")
+            engines.myEngine().forceStop();
+        }
         const [x1, y1] = [960, 390];
         const [x2, y2] = [288, 390];
         swipe(x1 + module.ran(), y1 + module.ran(), x2 + module.ran(), y2 + module.ran(), 1000);
@@ -156,7 +154,7 @@ function main() {
         module.find_close();
 
         //切回大号买1金物品
-        //这里账号
+
         module.switch_account(主号);
 
         sleep(1000);
@@ -166,7 +164,7 @@ function main() {
         click(550, 150)
         sleep(1000)
 
-        //双击账号===========================这里坐标
+        //双击账号
         findFriend(小号农场名)
 
         sleep(500)
@@ -328,6 +326,17 @@ function findFriend(Account) {
     module.showTip("");
     while (!found) {
         sleep(500);
+
+        let addFriendMenu = module.matchColor([{ x: 146, y: 84, color: "#f4da4e" },
+        { x: 132, y: 106, color: "#fefdfc" }, { x: 346, y: 45, color: "#dfb479" },
+        { x: 1109, y: 76, color: "#f34853" }])
+        if (!addFriendMenu) {
+            module.openFriendMenu();
+            sleep(500)
+            click(550, 150)
+            sleep(1000)
+        }
+
         let is_find_Account = null;
 
         is_find_Account = module.findimage(AccountIma, 0.9);

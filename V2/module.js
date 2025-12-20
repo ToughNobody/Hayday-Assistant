@@ -16,6 +16,7 @@ let token_storage = storages.create("token_storage");
 let timeStorage = storages.create("times");
 let statistics = storages.create("statistics");
 
+//crop_sell 识别 130,80
 const cropItemColor = {
     "小麦": {
         crop: ["#ffef14", [9, -32, "#d59b08"], [-8, 20, "#b56000"], [-32, 28, "#f3c107"], [29, 30, "#ffdf7c"]],
@@ -34,10 +35,12 @@ const cropItemColor = {
         crop_sell: ["#ebee6d", [-18, 39, "#9faa0f"], [44, -25, "#e4e863"], [-11, 2, "#dbe044"], [45, -15, "#b5bf17"], [69, -2, "#afba13"]]
     },
     "甘蔗": {
-        crop: ["#fff0bf", [-22, -32, "#feedb6"], [2, -51, "#e5a430"], [46, -72, "#e69f17"], [52, -60, "#e69e19"], [58, -56, "#f5d252"], [62, -50, "#db8d15"]],
+        crop: ["#f3cf44", [19, -32, "#eaad1d"], [31, -15, "#f7db67"], [-45, 13, "#f9e8b6"], [-31, 34, "#ffefbd"]],
         crop_sell: ["#ebab1c", [-30, 17, "#fbe7a8"], [-22, 20, "#ffefbd"], [-4, 56, "#fae5a1"], [2, 24, "#efb43f"], [46, -9, "#e49712"], [50, -5, "#f7dd87"], [56, 2, "#db8d15"]]
     }
 };
+
+let sicklePoints = ["#b9a952", [-20, 16, "#a68a44"], [-5, -50, "#e6e5ec"], [54, -67, "#dfdde3"], [77, 34, "#ffdf7c"], [71, 8, "#ffdf7c"], [51, 28, "#ffdf7c"]]
 
 //都取左上为基准点
 const cangkuItemColor = {
@@ -166,14 +169,21 @@ function autoSc() {
  * }
  */
 function findimage(imagepath, xiangsidu, sc = null, region = null) {
-    let screen = sc || captureScreen();
+    let screen = null;
     let picture = null;
+    
     try {
+        screen = sc || captureScreen();
+        if (!screen) {
+            console.log("截图失败");
+            return null;
+        }
+        
         picture = images.read(imagepath);
         if (!picture) {
             toast("模板图片读取失败,读取路径:" + imagepath);
             log("模板图片读取失败,读取路径:" + imagepath);
-            throw new Error("模板图片读取失败")
+            return null;
         }
 
         // 如果指定了区域参数，则只在区域内搜索
@@ -199,8 +209,12 @@ function findimage(imagepath, xiangsidu, sc = null, region = null) {
         return null;
     } finally {
         // 确保资源回收
-        if (!sc && screen) screen.recycle(); // 只有自己创建的截图才回收
-        if (picture) picture.recycle();
+        try {
+            if (!sc && screen) screen.recycle(); // 只有自己创建的截图才回收
+            if (picture) picture.recycle();
+        } catch (recycleError) {
+            log("资源回收出错: " + recycleError);
+        }
     }
 }
 
@@ -2289,16 +2303,16 @@ function findland_click() {
 /**
  * 收割作物
  * @param {Object} center - 收割中心点坐标 {x: number, y: number}
- * @param {number} [rows=6] - 收割行数
+ * @param {number} [rows=3] - 收割行数
  */
 function harvest(center) {
     // 参数检查
     if (!center) {
         return false;
     }
-
+    log("开始收割，坐标: " + center.x + "," + center.y);
     //重复次数
-    let rows = config.harvestRepeat;
+    let rows = config.harvestRepeat || 3
 
     let center_land = findland(false);
     if (!center_land) {
@@ -2317,12 +2331,14 @@ function harvest(center) {
     };
     // 换行
     const S = {
-        x: (config.harvestY + 2) * 36,
-        y: (config.harvestY + 2) * -18
+        x: (config.harvestY) * 36,
+        y: (config.harvestY) * -18
     };
 
     let pos1 = [config.firstland.x, config.firstland.y]
-    let pos2 = config.distance
+    let pos2X = config.distanceX
+    let pos2Y = config.distanceY
+
     // 初始土地坐标计算
     let pos_land = {
         x: center_land.x + pos1[0],
@@ -2340,11 +2356,18 @@ function harvest(center) {
     let startX = pos_land.x;
     let startY = pos_land.y;
 
+    // // 第一组手势路径点
+    // let firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x, pos_land.y)];
+
+    // // 第二组手势路径点（Y偏移）
+    // let secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
+
     // 第一组手势路径点
     let firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x, pos_land.y)];
 
     // 第二组手势路径点（Y偏移）
-    let secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x, pos_land.y + pos2)];
+    let secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
+
 
     for (let i = 0; i < rows; i++) {
 
@@ -2358,9 +2381,9 @@ function harvest(center) {
 
         // 添加当前行的三个点（左移、换行、右移）带Y偏移
         secondGroup.push(
-            safe(startX + L.x, startY + L.y + pos2),
-            safe(startX + L.x + S.x, startY + L.y + S.y + pos2),
-            safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y + pos2)
+            safe(startX + L.x + pos2X, startY + L.y + pos2Y),
+            safe(startX + L.x + S.x + pos2X, startY + L.y + S.y + pos2Y),
+            safe(startX + L.x + S.x + R.x + pos2X, startY + L.y + S.y + R.y + pos2Y)
         );
         startX = safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)[0];
         startY = safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)[1];
@@ -2382,9 +2405,11 @@ function harvest(center) {
  * @returns {Array} 匹配到的坐标点数组
  */
 function findimages(imagepath, xiangsidu, max_number, screenImage) {
+    let sc = null;
+    let picture = null;
+    
     try {
         // 如果没有传入屏幕截图，则使用默认截图功能
-        let sc;
         if (screenImage) {
             sc = screenImage;
         } else {
@@ -2397,7 +2422,6 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
         }
 
         // 判断传入的是路径还是图片对象
-        let picture;
         if (typeof imagepath === "string") {
             // 如果是字符串，当作文件路径处理
             picture = images.read(imagepath);
@@ -2440,27 +2464,33 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
             console.log("多图识别调用：未找到目标");
         }
 
-        // 如果是通过路径读取的图片，才需要回收
-        if (typeof imagepath === "string") {
-            picture.recycle();
-        }
-
-        // 如果不是传入的截图，才需要回收
-        if (!screenImage) {
-            sc.recycle();
-        }
+        return results1;
     } catch (error) {
         log(error);
-    }
+        return [];
+    } finally {
+        // 确保资源得到释放
+        try {
+            // 如果是通过路径读取的图片，才需要回收
+            if (typeof imagepath === "string" && picture) {
+                picture.recycle();
+            }
 
-    return results1;
+            // 如果不是传入的截图，才需要回收
+            if (!screenImage && sc) {
+                sc.recycle();
+            }
+        } catch (recycleError) {
+            log("资源回收出错: " + recycleError);
+        }
+    }
 
 }
 
 function harvest_wheat(sickle) {
 
-    let sicklePoints = ["#b9a952",[-20,16,"#a68a44"],[-5,-50,"#e6e5ec"],[54,-67,"#dfdde3"],[77,34,"#ffdf7c"],[71,8,"#ffdf7c"],[51,28,"#ffdf7c"]]
-    let center_sickle = sickle ? sickle : click_waitFor(null, null, sicklePoints)
+
+    let center_sickle = sickle || click_waitFor(null, null, sicklePoints, 10, 8)
     if (center_sickle) {
         console.log("找到镰刀,准备收割，坐标: " +
             center_sickle.x + "," + center_sickle.y);
@@ -2582,7 +2612,7 @@ function find_ad() {
  * @returns {boolean} 是否在商店主界面
  */
 function inShop() {
-    if (matchColor([{ x: 1161, y: 524, color: "#cb642c" }, { x: 1063, y: 618, color: "#eeae52" }, { x: 1032, y: 606, color: "#dab299" }],null,16)) {
+    if (matchColor([{ x: 1161, y: 524, color: "#cb642c" }, { x: 1063, y: 618, color: "#eeae52" }, { x: 1032, y: 606, color: "#dab299" }], null, 16)) {
         return true;
     } else {
         return false;
@@ -3214,25 +3244,29 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             // 识别售卖数字
             sleep(100);
             let item_num
-            if (matchColor([{ x: 1103, y: 214, color: "#b6b6b6" }, { x: 799, y: 216, color: "#f4bd00" }])) {
-                item_num = 10
-            } else if (matchColor([{ x: 799, y: 214, color: "#bababa" }, { x: 1101, y: 212, color: "#f8b900" }]) ||
-                matchColor([{ x: 801, y: 215, color: "#bababa" }, { x: 1101, y: 211, color: "#b7b7b7" }])) {
-                item_num = 1
-            } else {
-                let region2 = [829, 168, 941 - 829, 250 - 168]
-                item_num = findFont(null, region2, "#FFFFFF", 8, Font.FontLibrary_ShopSoldNum, 0.9);
-                log("识别售卖个数" + item_num)
-                if (item_num == "" || item_num == 0) {
-                    sleep(500)
+
+            for (let i = 0; i < 5; i++) {
+                if (matchColor([{ x: 1103, y: 214, color: "#b6b6b6" }, { x: 799, y: 216, color: "#f4bd00" }])) {
+                    item_num = 10
+                } else if (matchColor([{ x: 799, y: 214, color: "#bababa" }, { x: 1101, y: 212, color: "#f8b900" }]) ||
+                    matchColor([{ x: 801, y: 215, color: "#bababa" }, { x: 1101, y: 211, color: "#b7b7b7" }])) {
+                    item_num = 1
+                } else {
+                    let region2 = [829, 168, 941 - 829, 250 - 168]
                     item_num = findFont(null, region2, "#FFFFFF", 8, Font.FontLibrary_ShopSoldNum, 0.9);
-                    log("第二次识别售卖个数" + item_num)
-                    if (item_num == "") {
-                        console.log("未识别到售卖数字,售卖下一个物品");
-                        showTip("未识别到售卖数字,售卖下一个物品");
-                        break;
+                    log("识别售卖个数" + item_num)
+                    if (item_num == "" || item_num == 0) {
+                        sleep(100);
+                        continue;
                     }
+                    break;
                 }
+            }
+
+            if (item_num == "" || item_num == 0) {
+                log("未识别到售卖数字,售卖下一个物品")
+                showTip("未识别到售卖数字,售卖下一个物品")
+                break;
             }
 
             //确定售卖个数
@@ -4072,7 +4106,7 @@ function shengcang() {
                 showTip("点击粮仓");
                 click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
                 sleep(500);
-                if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }],null,16)) {  //判断是否进入粮仓
+                if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }], null, 16)) {  //判断是否进入粮仓
                     click(700 + ran(), 625 + ran());
                     sleep(500);
                     if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
@@ -4113,7 +4147,7 @@ function shengcang() {
                 if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入货仓
                     click(700 + ran(), 625 + ran());
                     sleep(500);
-                    if (matchColor([{ x: 932, y: 414, color: "#69b850" }],null,16)) {  //判断是否可以升级
+                    if (matchColor([{ x: 932, y: 414, color: "#69b850" }], null, 16)) {  //判断是否可以升级
                         click(932 + ran(), 408 + ran());//点击升级
                         sleep(500);
                         find_close();
@@ -4308,7 +4342,8 @@ function plant_crop() {
     //种植
     console.log("准备种" + config.selectedCrop.text);
     showTip(`准备种${config.selectedCrop.text}`);
-    let center_wheat = click_waitFor(null, null, crop, 10);
+    sleep(100)
+    let center_wheat = click_waitFor(null, null, crop, 10, 12);
     if (center_wheat) {
         console.log("找到" + config.selectedCrop.text + "，坐标: " +
             center_wheat.x + "," + center_wheat.y);
@@ -4440,10 +4475,11 @@ function operation(Account) {
         log("检测种植情况")
         if (findland()) {
             sleep(500);
-            let center_sickle = findMC(["#b9a952",[-20,16,"#a68a44"],[-5,-50,"#e6e5ec"],[54,-67,"#dfdde3"],[77,34,"#ffdf7c"],[71,8,"#ffdf7c"],[51,28,"#ffdf7c"]]);
+            let center_sickle = findMC(sicklePoints, null, null, 8);
             let center_wheat = findMC(crop);
             if (center_sickle) {
-                console.log("找到镰刀，重新收割");
+                console.log("找到镰刀，重新收割,坐标: " +
+                    center_sickle.x + "," + center_sickle.y);
                 //收作物
                 harvest_crop(center_sickle);
                 //找耕地
@@ -4530,7 +4566,7 @@ function cangkuStatistics(maxPages = 2) {
             showTip("点击粮仓");
             click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
             sleep(500);
-            if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }],null,16)) {  //判断是否进入粮仓
+            if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }], null, 16)) {  //判断是否进入粮仓
                 lcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
                 if (!lcCapacity) {
                     sleep(500);
@@ -4566,7 +4602,7 @@ function cangkuStatistics(maxPages = 2) {
         sleep(500);
 
         //判断是否进入货仓
-        if (!matchColor([{ x: 1140, y: 66, color: "#ee434e" }],null,16)) {  //未进入粮仓
+        if (!matchColor([{ x: 1140, y: 66, color: "#ee434e" }], null, 16)) {  //未进入粮仓
             console.log("未进入货仓");
             showTip("未进入货仓");
             find_close();
@@ -4703,7 +4739,7 @@ function cangkuStatistics(maxPages = 2) {
  */
 function creatContentData(accountName, data, rawTable) {
     try {
-        
+
         // 初始化表格（只有表头和分隔线）
         let rawContentData = null;
         if (!rawTable) {
@@ -4939,16 +4975,17 @@ function copy_shell(name, direction = "export") {
  * @param {number} max 最大重试次数，默认10次
  * @returns {boolean} 未识别到：返回false。识别到：传入MC返回坐标，传入matchColor返回true
  */
-function click_waitFor(point, matchColorPoints, MCPoints, max = 10) {
+function click_waitFor(point, matchColorPoints, MCPoints, max = 10, xiangsidu) {
+    xiangsidu = xiangsidu || null
     if (point) click(point[0], point[1])
     if (matchColorPoints) {
         for (let i = 0; i < max; i++) {
-            if (matchColor(matchColorPoints)) return true
+            if (matchColor(matchColorPoints, null, xiangsidu)) return true
             sleep(200);
         }
     } else if (MCPoints) {
         for (let i = 0; i < max; i++) {
-            let pos = findMC(MCPoints)
+            let pos = findMC(MCPoints, null, null, xiangsidu)
             if (pos) return pos
             sleep(200);
         }
@@ -4956,11 +4993,12 @@ function click_waitFor(point, matchColorPoints, MCPoints, max = 10) {
     return false;
 }
 
-function waitFor_click(point, matchColorPoints, MCPoints, max = 10) {
+function waitFor_click(point, matchColorPoints, MCPoints, max = 10, xiangsidu) {
+    xiangsidu = xiangsidu || null
     let find = false;
     if (matchColorPoints) {
         for (let i = 0; i < max; i++) {
-            if (matchColor(matchColorPoints)) {
+            if (matchColor(matchColorPoints, null, xiangsidu)) {
                 find = true;
                 break;
             }
@@ -4968,7 +5006,7 @@ function waitFor_click(point, matchColorPoints, MCPoints, max = 10) {
         }
     } else if (MCPoints) {
         for (let i = 0; i < max; i++) {
-            let pos = findMC(MCPoints)
+            let pos = findMC(MCPoints, null, null, xiangsidu)
             if (pos) {
                 if (!point) click(pos[0], pos[1])
                 find = true;

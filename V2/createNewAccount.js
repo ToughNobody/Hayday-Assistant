@@ -297,10 +297,11 @@ function findJiaSuBtn() {
     while (num < 15) {
         let sc = captureScreen();
 
-        // 尝试查找两种加速按钮
+        // 尝试查找三种加速按钮
         const patterns = [
             ["#ffffff", [-86, 58, "#ffffff"], [-195, 59, "#ffffff"], [-80, 30, "#1966af"], [-445, 32, "#ffffff"]],
-            ["#fcfaf8", [33, 24, "#fab402"], [-25, 14, "#f8be02"], [70, -5, "#fffbdd"], [-1, -27, "#fffffd"], [5, 57, "#fffff6"]]
+            ["#fcfaf8", [33, 24, "#fab402"], [-25, 14, "#f8be02"], [70, -5, "#fffbdd"], [-1, -27, "#fffffd"], [5, 57, "#fffff6"]],
+            ["#fdfaf8", [-11, 4, "#dcba94"], [2, -14, "#fffdfd"], [-21, -9, "#fbd212"], [13, -3, "#dab289"], [-4, 43, "#fffff5"]]  //小加速按钮
         ];
 
         for (let pattern of patterns) {
@@ -342,14 +343,14 @@ function dingdan() {
     let dingdan = null;
     let num = 0;
     while (num < 10) {
-        dingdan = module.matchColor([{ x: 491, y: 74, color: "#ddb374" },
-        { x: 805, y: 70, color: "#d4a66b" }, { x: 1098, y: 158, color: "#fcd05c" },
-        { x: 1132, y: 54, color: "#ec404b" }]);
+        dingdan = module.matchColor([{ x: 248, y: 96, color: "#fdca43" },
+        { x: 318, y: 61, color: "#dfb578" }, { x: 1077, y: 68, color: "#eb3f49" },
+        { x: 976, y: 103, color: "#fdca43" }]);
         if (dingdan) break;
         sleep(1000);
         num++;
     }
-    click(1060, 610);
+    click(950, 620);
     return true;
 }
 
@@ -489,37 +490,38 @@ function jiazai() {
 
 function findGLG() {
     try {
-        let glg = null;
-        let num = 0;
-        let pos = null;
-        module.showTip("找格雷格");
-        log("找格雷格");
-        // 尝试查找两种
-        const Patterns = [
-            ["#742f34", [-12, -24, "#ca7233"], [-12, -13, "#b3816c"]],
-            ["#7d3439", [-2, -25, "#e39845"], [-5, -38, "#ebb7a2"]]
-        ];
 
-        // 持续查找直到找到格雷格
-        while (num < 5) {
-            glg = module.findMC(Patterns[0]) ||
-                module.findMC(Patterns[1]);
-            sleep(1000);
-            num++;
-            if (glg) {
-                num = 0;
-                pos = { x: glg.x, y: glg.y };
-                module.showTip("点击格雷格");
-                log("点击格雷格");
-                click(pos.x, pos.y);
-                // log(pos)
-                sleep(2000);
-                if (clickDuihua()) break;
-                continue;
-            }
-            continue;
-        }
-        return pos;
+        // let glg = null;
+        // let num = 0;
+        // let pos = null;
+        // module.showTip("找格雷格");
+        // log("找格雷格");
+        // // 尝试查找两种
+        // const Patterns = [
+        //     ["#742f34", [-12, -24, "#ca7233"], [-12, -13, "#b3816c"]],
+        //     ["#7d3439", [-2, -25, "#e39845"], [-5, -38, "#ebb7a2"]]
+        // ];
+
+        // // 持续查找直到找到格雷格
+        // while (num < 5) {
+        //     glg = module.findMC(Patterns[0]) ||
+        //         module.findMC(Patterns[1]);
+        //     sleep(1000);
+        //     num++;
+        //     if (glg) {
+        //         num = 0;
+        //         pos = { x: glg.x, y: glg.y };
+        //         module.showTip("点击格雷格");
+        //         log("点击格雷格");
+        //         click(pos.x, pos.y);
+        //         // log(pos)
+        //         sleep(2000);
+        //         if (clickDuihua()) break;
+        //         continue;
+        //     }
+        //     continue;
+        // }
+        // return pos;
     } catch (error) {
         console.error("findGLG函数出错:", error);
         return null;
@@ -539,9 +541,12 @@ function main() {
         sleep(1000);
         harvestAll(findSickle());
         sleep(1000);
+
+        click(940, 420);
+        let wheatColor = ["#ffee15", [31, 27, "#ffdf7c"], [73, 56, "#ffdf7c"], [50, 51, "#ffdf7c"], [35, -7, "#fee203"], [-22, 27, "#ffe406"]]
         findArrow();
-        sleep(1000);
-        plantCrop(["#ffef14", [9, -32, "#d59b08"], [-8, 20, "#b56000"], [-32, 28, "#f3c107"], [29, 30, "#ffdf7c"]]);
+        plantCrop(wheatColor);
+
         sleep(1000);
         //买鸡
         buy(2, [860, 310]);
@@ -623,14 +628,18 @@ function main() {
         levelup();
         sleep(9000);
         //格雷格
-        if (!findGLG()) {
+        while (true) {
             gestures([0, 100, [630, 377]],
-                [0, 100, [630, 377]],
+                [0, 100, [677, 300]],
                 [0, 100, [830, 260]],
                 [0, 100, [838, 375]],
                 [0, 100, [735, 434]],
                 [0, 100, [712, 305]],
                 [0, 100, [818, 437]]);
+            sleep(1000);
+            if (module.matchColor([{ x: 536, y: 125, color: "#f4eada" },
+            { x: 1151, y: 149, color: "#f4ebde" }, { x: 517, y: 506, color: "#f3e7c7" },
+            { x: 1166, y: 502, color: "#f3e8c8" }])) break;
         }
         clickDuihua();
         findArrow(true, 80);//点击好友按钮
