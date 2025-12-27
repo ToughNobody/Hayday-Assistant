@@ -28,7 +28,8 @@ try {
 //全局
 
 let config = module.config;
-let cangkuItemColor = module.cangkuItemColor;
+// let cangkuItemColor = module.cangkuItemColor;
+let allItemColor = module.allItemColor;
 
 let timeStorage = storages.create("times");
 let statistics = storages.create("statistics");
@@ -76,7 +77,7 @@ if (sell_accountList[0].done || sell_accountList.filter(account => account.done)
     let sellPlan = module.sellPlanValidate(sell_accountList[0].sellPlan);
     if (sellPlan) {
         log("商店售卖计划:" + JSON.stringify(sellPlan))
-        module.shop_sell(sellPlan, cangkuItemColor, null, sell_accountList[0].price)
+        module.shop_sell(sellPlan, allItemColor, null, sell_accountList[0].price)
     }
     sleep(100)
     module.close();
@@ -110,7 +111,7 @@ if (sell_accountList[0].done || sell_accountList.filter(account => account.done)
         let sellPlan = module.sellPlanValidate(account.sellPlan);
         if (sellPlan) {
             log("商店售卖计划:" + JSON.stringify(sellPlan))
-            module.shop_sell(sellPlan, cangkuItemColor, null, account.price)
+            module.shop_sell(sellPlan, allItemColor, null, account.price)
         }
         sleep(100)
         module.close();

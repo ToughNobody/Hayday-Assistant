@@ -222,7 +222,8 @@ function showCangkuSoldDialog() {
             <horizontal paddingLeft="10dp" paddingTop="10dp" >
                 <text textSize="18sp" textColor="#333333" text="仓库售卖" />
                 <img id="helpIcon_CangkuSold" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginLeft="10dp" />
-                <Switch id="CangkuSoldSwitch" paddingLeft="160dp" checked="{{isCangkuSold}}" />
+                <View w="0" h="0" layout_weight="1" />
+                <Switch id="CangkuSoldSwitch" checked="{{isCangkuSold}}" />
             </horizontal>
             <horizontal>
                 <text textSize="15sp" textColor="#333333" text="排序" marginLeft="10dp" />
@@ -1207,20 +1208,23 @@ ui.layout(
                                 <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
                                     <vertical padding="16">
                                         <text text="权限设置" textSize="16" textStyle="bold" marginBottom="8" />
-                                        <horizontal gravity="center_vertical" marginBottom="12">
+                                        <horizontal gravity="center_vertical" marginBottom="4">
                                             {/*无障碍服务开关*/}
                                             <text text="无障碍服务" textSize="14" w="100" marginRight="8" />
-                                            <Switch id="autoService" w="*" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="autoService" />
                                         </horizontal>
-                                        <horizontal gravity="center_vertical" marginBottom="12">
+                                        <horizontal gravity="center_vertical" marginBottom="4">
                                             {/*截图权限获取开关*/}
                                             <text text="截图权限" textSize="14" w="100" marginRight="8" />
-                                            <Switch id="requestScBtn" w="*" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="requestScBtn" />
                                         </horizontal>
-                                        <horizontal gravity="center_vertical" marginBottom="12">
+                                        <horizontal gravity="center_vertical" marginBottom="4">
                                             {/*浮动按钮开关*/}
                                             <text text="浮动按钮" textSize="14" w="100" marginRight="8" />
-                                            <Switch id="win_switch" w="*" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="win_switch" />
                                         </horizontal>
                                     </vertical>
                                 </card>
@@ -1268,7 +1272,8 @@ ui.layout(
                                             {/* 汤姆 - 仅在刷地时显示*/}
                                             <horizontal id="tomSwitchContainer" gravity="center_vertical">
                                                 <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
-                                                <Switch id="tomSwitch" w="*" h="48" gravity="left|center" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <Switch id="tomSwitch" />
                                             </horizontal>
                                         </vertical>
 
@@ -1290,8 +1295,8 @@ ui.layout(
                                             {/* 是否滑动 - 仅在种树时显示 */}
                                             <horizontal gravity="center_vertical">
                                                 <text text="是否自动滑动：" textSize="14" w="80" marginRight="8" />
-                                                <Switch id="treeShouldSwipeSwitch" w="*" h="48"
-                                                    gravity="left|center" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <Switch id="treeShouldSwipeSwitch" />
                                             </horizontal>
                                         </vertical>
 
@@ -1385,7 +1390,8 @@ ui.layout(
                                         <text text="账号设置" textSize="16" textStyle="bold" />
                                         <horizontal gravity="center_vertical">
                                             <text text="切换账号：" textSize="14" w="100" marginRight="8" />
-                                            <Switch id="accountSwitch" w="*" h="48" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="accountSwitch" />
                                         </horizontal>
 
                                         {/* 识别方式选择 */}
@@ -1453,7 +1459,7 @@ ui.layout(
 
                                 {/* 基础设置卡片 - 使用按钮模拟单选 */}
                                 <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                    <vertical padding="16">
+                                    <vertical padding="16" w="*">
                                         <text text="基础设置" textSize="16" textStyle="bold" />
 
                                         <horizontal gravity="center_vertical">
@@ -1463,12 +1469,27 @@ ui.layout(
                                         </horizontal>
 
                                         <horizontal gravity="center_vertical">
-                                            <text text="寻找土地方法" textSize="14" w="120" marginRight="8" />
+                                            <text text="寻找土地方法" textSize="14" w="100" marginRight="8" />
                                             <radiogroup id="landFindMethod" orientation="horizontal">
                                                 <radio id="landFindMethod_shop" checked="false" text="商店" />
                                                 <frame w="30" />
                                                 <radio id="landFindMethod_bread" checked="false" text="面包房" />
                                             </radiogroup>
+                                        </horizontal>
+
+                                        <horizontal gravity="center_vertical">
+                                            <text text="金币收取方式" textSize="14" w="100" marginRight="8" />
+                                            <radiogroup id="coinCollectionMethod" orientation="horizontal">
+                                                <radio id="coinCollect_all" checked="true" text="一键收取" />
+                                                <frame w="2" />
+                                                <radio id="coinCollect_single" checked="false" text="逐个点击" />
+                                            </radiogroup>
+                                        </horizontal>
+
+                                        <horizontal gravity="center_vertical" w="*">
+                                            <text text="收割时双指同步：" textSize="14" w="120" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <checkbox id="syncHarvest" checked="false" />
                                         </horizontal>
 
                                         <horizontal paddingTop="8">
@@ -1477,11 +1498,13 @@ ui.layout(
                                         </horizontal>
                                         <horizontal paddingTop="8">
                                             <text text="截图权限坐标" textSize="14" marginRight="4" w="100" />
-                                            <text id="screenshotBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" paddingLeft="150" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <text id="screenshotBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" />
                                         </horizontal>
                                         <horizontal paddingTop="8">
                                             <text text="换号坐标" textSize="14" marginRight="4" w="100" />
-                                            <text id="switchAccountBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" paddingLeft="150" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <text id="switchAccountBtn" text="设置" textSize="14" textColor="#2196F3" marginRight="4" layout_gravity="right" />
                                         </horizontal>
 
                                     </vertical>
@@ -1507,7 +1530,8 @@ ui.layout(
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
                                             <text text="仓库统计" textSize="14" w="120" marginRight="8" />
-                                            <Switch id="isCangkuStatistics" w="*" h="48" gravity="left|center" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="isCangkuStatistics" gravity="left|center" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
                                             <text text="仓库统计间隔时间" textSize="14" w="120" marginRight="8" />
@@ -1525,7 +1549,7 @@ ui.layout(
                                                 w="*" textSize="14" h="48" bg="#FFFFFF" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical" padding="8">
-                                            <text text="token" textSize="14" w="60" marginRight="12" textColor="#333333" />
+                                            <text text="token" textSize="14" w="60" marginRight="12" />
                                             <img id="eyeIcon" w="20dp" h="20dp" src="@drawable/ic_visibility_off_black_48dp" />
                                             <input id="tokenInput" password="true" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" marginRight="8" gravity="center_vertical" visibility="visible" />
                                             <input id="tokenInputPlain" password="false" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" visibility="gone" />
@@ -1600,6 +1624,7 @@ ui.layout(
                                             <input id="showTextX" hint="X:0(百分比)" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal|numberSigned" marginRight="8" />
                                             <input id="showTextY" hint="Y:0.65(百分比)" w="60" textSize="14" h="40" bg="#FFFFFF" inputType="numberDecimal|numberSigned" />
                                         </horizontal>
+
                                     </vertical>
                                 </card>
 
@@ -1646,17 +1671,19 @@ ui.layout(
                                         <text text="运行设置" textSize="16" textStyle="bold" marginBottom="8" />
 
                                         {/* 使用shell命令重启游戏 */}
-                                        <horizontal gravity="center_vertical">
+                                        <horizontal gravity="center_vertical" paddingBottom="16">
                                             <text text="使用shell命令重启游戏:" textSize="14" w="auto" marginRight="8" />
                                             <img id="helpIcon_restartWithShell" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginLeft="10" />
-                                            <Switch id="restartWithShell" checked="false" w="*" h="48" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="restartWithShell" checked="false" />
                                         </horizontal>
 
                                         {/* 不重启游戏,仅返回桌面 */}
-                                        <horizontal gravity="center_vertical">
+                                        <horizontal gravity="center_vertical" paddingBottom="16">
                                             <text text="不重启游戏,仅返回桌面:" textSize="14" w="auto" marginRight="8" />
                                             <img id="helpIcon_returnDesktop" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginLeft="10" />
-                                            <Switch id="returnDesktop" checked="false" w="*" h="48" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="returnDesktop" checked="false" />
                                         </horizontal>
 
                                     </vertical>
@@ -2913,6 +2940,8 @@ function getConfig() {
         ReservedQuantity: configs.get("ReservedQuantity"),
         pauseTime: configs.get("pauseTime"),
         landFindMethod: configs.get("landFindMethod"),
+        coinCollectionMethod: configs.get("coinCollectionMethod"),
+        syncHarvest: configs.get("syncHarvest"),
         landOffset: {
             x: configs.get("landOffsetX"),
             y: configs.get("landOffsetY")
@@ -3028,6 +3057,8 @@ function saveConfig(con) {
         configs.put("ReservedQuantity", con.ReservedQuantity);
         configs.put("pauseTime", con.pauseTime);
         configs.put("landFindMethod", con.landFindMethod);
+        configs.put("coinCollectionMethod", con.coinCollectionMethod);
+        configs.put("syncHarvest", con.syncHarvest);
 
         // 存储偏移量配置
         configs.put("landOffsetX", con.landOffset.x);
@@ -3215,6 +3246,13 @@ function validateConfig(config) {
 
     // 验证查找土地方式
     if (config.landFindMethod != "商店" && config.landFindMethod != "面包房") config.landFindMethod = defaultConfig.landFindMethod;
+
+    if (config.coinCollectionMethod != "一键收取" && config.coinCollectionMethod != "逐个点击") config.coinCollectionMethod = defaultConfig.coinCollectionMethod;
+
+    // 验证syncHarvest
+    if (config.syncHarvest == undefined || typeof config.syncHarvest !== "boolean") {
+        config.syncHarvest = defaultConfig.syncHarvest;
+    }
 
     // 验证功能选择
     if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
@@ -3560,7 +3598,9 @@ function getDefaultConfig() {
         },
         ReservedQuantity: 20, // 默认保留数量为20
         pauseTime: 5, // 默认顶号延迟为5分钟
-        landFindMethod: "商店",
+        landFindMethod: "商店", // 默认使用商店查找
+        coinCollectionMethod: "一键收取", // 默认使用一键收取金币
+        syncHarvest: false, // 默认不开启同步
         landOffset: {
             x: 60,
             y: -20
@@ -3733,6 +3773,16 @@ function loadConfigToUI(loadConfigFromFile = false) {
     } else {
         ui.landFindMethod_bread.setChecked(true);
     }
+
+    // 设置金币收取方式
+    if (config.coinCollectionMethod == "一键收取") {
+        ui.coinCollect_all.setChecked(true);
+    } else {
+        ui.coinCollect_single.setChecked(true);
+    }
+
+    // 设置同步收割
+    ui.syncHarvest.setChecked(config.syncHarvest);
 
     // 设置账号识别方式
     if (config.findAccountMethod == "image") {
@@ -3995,10 +4045,12 @@ function logCurrentConfig(config) {
     console.log("触发阈值：" + config.CangkuSold_triggerNum);
     console.log("目标阈值：" + config.CangkuSold_targetNum);
     console.log("地块查找方法: " + config.landFindMethod);
+    console.log("金币收取方式: " + config.coinCollectionMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
     console.log("切换账号方式: " + config.accountMethod);
     console.log("顶号延迟: " + config.pauseTime + "分钟");
     console.log("账号识别方式: " + config.findAccountMethod);
+    console.log("同步收割: " + (config.syncHarvest ? "是" : "否"));
     console.log("土地偏移: (" + config.landOffset.x + ", " + config.landOffset.y + ")");
     console.log("商店偏移: (" + config.shopOffset.x + ", " + config.shopOffset.y + ")");
     console.log("收割横向偏移: " + config.harvestX + "格");
@@ -4334,6 +4386,15 @@ function initUI() {
         configs.put("landFindMethod", selectedText);
     });
 
+    // 绑定金币收取方式单选框事件
+    ui.coinCollectionMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
+        // 获取被选中的单选框
+        let selectedRadioButton = radioGroup.findViewById(isCheckedId);
+        // 获取被选中的单选框的文字内容
+        let selectedText = selectedRadioButton.getText();
+        configs.put("coinCollectionMethod", selectedText);
+    });
+
     // 绑定账号识别方式单选框事件
     ui.findAccountMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
         // 获取被选中的单选框
@@ -4486,6 +4547,12 @@ function initUI() {
     ui.shengcang_l.on("check", (checked) => {
         // 保存修改后的开关状态到配置
         configs.put("shengcang_l", checked);
+    });
+
+    // 同步收割开关状态变化监听
+    ui.syncHarvest.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("syncHarvest", checked);
     });
 
     // 仓库统计开关状态变化监听
@@ -5065,8 +5132,8 @@ function initUI() {
             configs.put("coin_picDirPath", s.toString());
         }
     }));
-// /storage/emulated/0/$MuMu12Shared/Screenshots/账号/好友图片/
-    
+    // /storage/emulated/0/$MuMu12Shared/Screenshots/账号/好友图片/
+
 
     // 是否使用shell命令重启游戏监听
     ui.restartWithShell.on("check", (checked) => {

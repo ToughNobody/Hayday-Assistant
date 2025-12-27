@@ -4,6 +4,7 @@
 //全局
 
 const Font = require("./img_Base64.js");
+const color_lib = require("./color_lib.js");
 const timerMap = new Map();
 
 
@@ -17,82 +18,28 @@ let timeStorage = storages.create("times");
 let statistics = storages.create("statistics");
 
 //crop_sell 识别 130,80
-const cropItemColor = {
-    "小麦": {
-        crop: ["#ffef14", [9, -32, "#d59b08"], [-8, 20, "#b56000"], [-32, 28, "#f3c107"], [29, 30, "#ffdf7c"]],
-        crop_sell: ["#fff212", [11, -13, "#fff209"], [20, -11, "#ffe506"], [-2, 11, "#d79a07"], [40, -2, "#fff00b"]]
-    },
-    "玉米": {
-        crop: ["#f8e605", [49, 31, "#ffdf7c"], [-31, 35, "#8f9504"], [33, -30, "#f8ef02"], [-17, -9, "#a5a905"]],
-        crop_sell: ["#efd104", [-17, -9, "#a3a905"], [-40, 58, "#818702"], [-38, 37, "#979c04"], [-14, 25, "#f4df35"], [37, -19, "#f4e009"], [5, 0, "#f7e715"]]
-    },
-    "胡萝卜": {
-        crop: ["#ffd100", [24, 21, "#ffdf7c"], [33, -29, "#48951b"], [-31, 29, "#ff9700"], [-7, -7, "#ffe000"]],
-        crop_sell: ["#ffd500", [44, -34, "#87cc38"], [24, -7, "#40961f"], [40, -10, "#73bc30"], [-35, 45, "#ffa500"], [-14, 20, "#ffdc00"], [20, -2, "#ffad00"]]
-    },
-    "大豆": {
-        crop: ["#eff083", [13, 32, "#ffdf7c"], [-33, 39, "#dde249"], [-32, -5, "#f1f278"], [19, -31, "#b1ba13"]],
-        crop_sell: ["#ebee6d", [-18, 39, "#9faa0f"], [44, -25, "#e4e863"], [-11, 2, "#dbe044"], [45, -15, "#b5bf17"], [69, -2, "#afba13"]]
-    },
-    "甘蔗": {
-        crop: ["#f3cf44", [19, -32, "#eaad1d"], [31, -15, "#f7db67"], [-45, 13, "#f9e8b6"], [-31, 34, "#ffefbd"]],
-        crop_sell: ["#ebab1c", [-30, 17, "#fbe7a8"], [-22, 20, "#ffefbd"], [-4, 56, "#fae5a1"], [2, 24, "#efb43f"], [46, -9, "#e49712"], [50, -5, "#f7dd87"], [56, 2, "#db8d15"]]
-    }
-};
+const cropItemColor = color_lib.cropItemColor;
 
-let sicklePoints = ["#b9a952", [-20, 16, "#a68a44"], [-5, -50, "#e6e5ec"], [54, -67, "#dfdde3"], [77, 34, "#ffdf7c"], [71, 8, "#ffdf7c"], [51, 28, "#ffdf7c"]]
+let sicklePoints = color_lib.sicklePoints;
 
 //都取左上为基准点
-const cangkuItemColor = {
-    "盒钉": ["#ce2410", [-1, -32, "#927059"], [42, -10, "#a27f65"], [-21, 64, "#c1c2c1"], [13, 13, "#f0e1c8"]],
-    "螺钉": ["#a7afb0", [19, -4, "#5b6161"], [11, -6, "#dadcda"], [16, -2, "#626a67"], [21, 4, "#daddde"], [27, 18, "#aeb4b5"], [-55, 70, "#b3b8bf"], [-3, 19, "#a9ada9"]],
-    "镶板": ["#b57139", [8, -17, "#d2d2d2"], [-24, 32, "#c6824a"], [56, -16, "#8c5129"], [-1, 50, "#4f3221"]],
-    "螺栓": ["#879092", [11, -19, "#eeeeee"], [-18, 68, "#5f6567"], [46, 1, "#7b8d8c"], [-13, 7, "#848e94"]],
-    "木板": ["#fffadc", [58, -7, "#774321"], [-17, 37, "#724019"], [-36, 39, "#8a4e23"], [-25, 30, "#c67a38"]],
-    "胶带": ["#c7ced4", [11, 5, "#533a2a"], [-5, 38, "#5d402e"], [-13, 63, "#5a6564"], [55, 12, "#d2dcdd"]],
-    "土地契约": ["#f0f0e8", [38, -20, "#7a89bd"], [-33, -4, "#8492bd"], [-14, 53, "#f7f5e7"], [-18, 63, "#6b7bb5"]],
-    "木槌": ["#c78822", [30, -8, "#f1e5ab"], [-6, -26, "#d2a331"], [-27, 70, "#dcba3c"], [-5, 10, "#d19b2c"]],
-    "标桩": ["#ca1e20", [10, -25, "#e7c37b"], [-30, 61, "#e2bb67"], [8, 12, "#d11c1c"], [7, -15, "#d0963b"]],
-    "斧头": ["#987d3e", [18, -19, "#e7e6ec"], [45, -5, "#ffffff"], [-41, 57, "#ae974b"], [-14, 19, "#b29a4f"]],
-    "木锯": ["#fffadc", [-12, 66, "#b05200"], [71, -14, "#bb5d04"], [-2, 32, "#e5e5ed"], [44, -10, "#ebecf4"]],
-    "炸药": ["#f75131", [33, -18, "#ff925a"], [-30, 34, "#ffb658"], [-26, 42, "#423818"], [39, -7, "#dd180e"]],
-    "炸药桶": ["#d30f08", [28, 12, "#efd7ce"], [32, -9, "#f25034"], [-28, 1, "#eeb926"], [-42, 49, "#a25b13"]],
-    "铁铲": ["#e78d39", [15, -25, "#e57f33"], [-17, 35, "#bdc3c5"], [-35, 39, "#afb4b7"], [-39, 74, "#b1b8ba"]],
-    "十字镐": ["#dedfde", [48, 10, "#8c9694"], [13, -21, "#92763d"], [-27, -2, "#e7e7e7"], [-24, 87, "#784f25"]],
-};
+const cangkuItemColor = color_lib.cangkuItemColor;
 
 //其他物品颜色
-const otherItemColor = {
-    "紫色连衣裙": ["#cd6fbf", [15, 18, "#fdd9f6"], [25, -7, "#e478cf"], [-29, 34, "#c0229a"], [3, 51, "#ecc1ea"], [-5, 44, "#d029ac"]],
-}
+const otherItemColor = color_lib.otherItemColor;
 
-const allItemColor = Object.assign({}, cangkuItemColor, otherItemColor);
+const allItemColor = color_lib.allItemColor;
 
-const ckNumColor = {
-    "0": ["#fdfcfa", [1, -1, "#020201"], [0, 11, "#ffffff"], [0, 15, "#fcf9f5"], [1, 15, "#060504"], [-1, 24, "#040303"], [-3, 24, "#ffffff"], [-4, 29, "#090807"], [-7, 29, "#ffffff"], [-8, 32, "#0e0c0a"], [-11, 30, "#ffffff"], [-16, 28, "#ffffff"], [-18, 23, "#ffffff"], [-20, 9, "#ffffff"], [-10, -1, "#000000"], [-10, 3, "#231c12"], [-10, 7, "#a57f51"], [-10, 10, "#d4a369"], [-10, 13, "#bd915c"], [-10, 21, "#000000"]],
-    "1": ["#ede6dc", [1, 0, "#110f0d"], [0, 16, "#d7cdbf"], [0, 36, "#a99e8f"], [-1, 42, "#fffefe"], [0, 43, "#1c1916"], [0, 44, "#000000"], [-7, 42, "#fdfcf9"], [-7, 44, "#1c1916"], [-7, 29, "#fdfcfa"], [-7, 17, "#fefdfb"], [-7, 8, "#fefdfc"], [-7, 7, "#fffefe"], [-10, 6, "#fffefd"], [-10, 10, "#000000"], [-13, 7, "#000000"], [-10, 2, "#fffefd"], [-10, -1, "#000000"], [-8, 0, "#fbf8f4"], [-8, -2, "#010100"]],
-    "2": ["#fefdfc", [1, -1, "#070706"], [0, 9, "#f6f2eb"], [1, 9, "#0d0c0a"], [-2, 34, "#ffffff"], [-2, 29, "#ffffff"], [-2, 27, "#070706"], [-10, 27, "#fdfcf9"], [-8, 27, "#403b34"], [-17, 35, "#fffefe"], [-19, 35, "#000000"], [-16, 24, "#fefefd"], [-18, 24, "#000000"], [-11, 16, "#fffffe"], [-7, 5, "#faf6f1"], [-8, 5, "#020201"], [-18, -1, "#fefefd"], [-18, 2, "#000000"], [-9, 2, "#000000"], [-7, 1, "#faf6f1"]],
-    "3": ["#f8f3ed", [1, 0, "#161411"], [-1, 14, "#000000"], [-4, 14, "#fffffe"], [-3, 14, "#a89e8e"], [1, 28, "#f6f2ea"], [2, 28, "#0d0c0a"], [-4, 35, "#ffffff"], [-18, 35, "#fdfbf9"], [-19, 33, "#000000"], [-15, 30, "#d9cfc1"], [-15, 29, "#020201"], [-11, 22, "#000000"], [-11, 19, "#ffffff"], [-12, 13, "#f9f6f0"], [-12, 11, "#000000"], [-11, 3, "#020201"], [-11, 1, "#fefdfc"], [-18, -1, "#fffefd"], [-18, 2, "#1b1816"]],
-    "4": ["#f2ece3", [1, 0, "#9b9182"], [1, -1, "#0f0e0c"], [0, 8, "#000000"], [0, 6, "#f0e9e0"], [-1, 17, "#0f0d0b"], [-2, 17, "#e7ded2"], [-9, 17, "#efe8de"], [-10, 17, "#010100"], [-10, 6, "#ffffff"], [-11, 9, "#000000"], [-20, 5, "#fefcfb"], [-20, 8, "#020201"], [-12, -3, "#fdfbf8"], [-11, -3, "#312e28"], [-10, -3, "#020201"], [-9, -3, "#fbf7f2"], [-10, -9, "#f6f1e9"], [-10, -6, "#24211c"], [-12, -23, "#fffffe"]],
-    "5": ["#fcfaf7", [1, 0, "#141310"], [0, 4, "#fbf8f4"], [0, 7, "#161411"], [-8, 9, "#141210"], [-9, 9, "#ffffff"], [-8, 16, "#fbf8f3"], [-8, 14, "#141210"], [2, 26, "#f3ede3"], [3, 26, "#110f0d"], [-2, 39, "#ffffff"], [-2, 42, "#020201"], [-11, 42, "#ffffff"], [-18, 40, "#e3dbce"], [-19, 40, "#030201"], [-12, 23, "#fffefe"], [-13, 25, "#0f0e0c"], [-16, 0, "#fcfaf6"], [-18, 0, "#030302"], [-16, 12, "#fefdfb"]],
-    "6": ["#ffffff", [-1, 6, "#ffffff"], [-3, 10, "#ffffff"], [-6, 13, "#ffffff"], [-12, 13, "#ffffff"], [-17, 10, "#ffffff"], [-20, 7, "#ffffff"], [-21, 2, "#ffffff"], [-21, -4, "#ffffff"], [-20, -10, "#ffffff"], [-18, -17, "#ffffff"], [-13, -22, "#ffffff"], [-9, -26, "#ffffff"], [-5, -18, "#000000"], [-9, -15, "#000000"], [-15, -6, "#ffffff"], [-10, -7, "#ffffff"], [-11, 1, "#000000"]],
-    "7": ["#efe8df", [1, 0, "#110f0d"], [-5, 18, "#1d1a17"], [-6, 18, "#f6f0e8"], [-9, 31, "#110f0d"], [-10, 30, "#fdfbf8"], [-15, 39, "#000000"], [-15, 36, "#ffffff"], [-18, 34, "#fefdfc"], [-19, 31, "#000000"], [-15, 23, "#faf6f0"], [-16, 22, "#000000"], [-13, 17, "#f8f3ec"], [-14, 16, "#000000"], [-8, 3, "#f8f3ed"], [-10, 3, "#080706"], [-20, 1, "#fefdfb"], [-20, 3, "#0f0d0b"], [-20, -5, "#f9f5f0"], [-21, -7, "#110e09"]],
-    "8": ["#fbf9f5", [1, 0, "#12110e"], [0, 11, "#060504"], [-1, 11, "#71685c"], [-2, 11, "#ffffff"], [0, 20, "#f6f1e9"], [1, 20, "#110f0d"], [-8, 20, "#fefcfa"], [-10, 20, "#000000"], [-14, 18, "#1d1a17"], [-15, 17, "#fffefd"], [-12, 11, "#ffffff"], [-12, 15, "#ffffff"], [-12, 17, "#13110e"], [-11, -1, "#060504"], [-8, -1, "#fefdfb"], [-15, 0, "#ffffff"], [-22, 11, "#fefdfc"], [-24, 12, "#000000"], [-23, 20, "#fffefe"]],
-    "9": ["#fbf8f4", [1, 0, "#090807"], [-1, 11, "#fdfcf9"], [0, 11, "#171613"], [-4, 20, "#fbf7f3"], [-4, 22, "#221f1a"], [-17, 28, "#fefefd"], [-18, 30, "#040303"], [-16, 22, "#fcfaf6"], [-15, 19, "#000000"], [-14, 13, "#000000"], [-14, 11, "#fbf8f4"], [-10, 12, "#000000"], [-9, 12, "#f9f4ee"], [-23, -3, "#fffefe"], [-25, -3, "#010100"], [-16, -5, "#fefdfc"], [-14, -5, "#020201"], [-11, -5, "#000000"], [-8, -5, "#fffffe"]],
-    "/": ["#faf6f1", [1, -1, "#13110e"], [-6, -3, "#f5efe8"], [-8, -3, "#000000"], [-9, 3, "#f7f3ed"], [-10, 3, "#24201c"], [-14, 14, "#f7f2eb"], [-16, 14, "#020101"], [-21, 30, "#fcfaf6"], [-23, 30, "#010100"], [-25, 39, "#fdfaf8"], [-27, 39, "#000000"], [-27, 44, "#fefdfc"], [-27, 47, "#000000"], [-22, 46, "#ffffff"], [-19, 46, "#010100"], [-14, 30, "#ffffff"], [-11, 30, "#000000"], [-4, 9, "#fefdfc"], [-2, 9, "#040303"]]
-}
+const ckNumColor = color_lib.ckNumColor;
 
 //先竖着放，后横着放
-const machineColor = {
-    "乳品厂": [["#da3c15", [72, -80, "#d03814"], [-19, -15, "#e4dace"], [-49, -31, "#e2d8cb"], [-27, 43, "#7a462e"]],
-    ["#da3d14", [16, -16, "#e4dacf"], [44, 8, "#d9cab9"], [-89, -48, "#da3c15"], [-5, 51, "#7d472f"]]],
-    "渔船": ["#aa694e", [25, 8, "#b41919"], [24, -5, "#b9b9bc"], [-17, -6, "#723430"], [34, -13, "#498d9c"]]
-}
+const machineColor = color_lib.machineColor;
 
 //作物颜色
 const cropName = config.selectedCrop.text
 
 let crop = cropItemColor[cropName].crop;
+let crop_plant = cropItemColor[cropName].crop_plant;
 let crop_sell = cropItemColor[cropName].crop_sell;
 
 
@@ -171,14 +118,14 @@ function autoSc() {
 function findimage(imagepath, xiangsidu, sc = null, region = null) {
     let screen = null;
     let picture = null;
-    
+
     try {
         screen = sc || captureScreen();
         if (!screen) {
             console.log("截图失败");
             return null;
         }
-        
+
         picture = images.read(imagepath);
         if (!picture) {
             toast("模板图片读取失败,读取路径:" + imagepath);
@@ -628,11 +575,10 @@ function findText(targetText, sc, region) {
                     x: centerX,
                     y: centerY
                 };
-            } else {
-                log("未找到目标文字: " + recognizedText);
-                log("OCR识别结果:", ocrResult.text)
             }
         }
+        log("未找到目标文字: " + targetText);
+        log("OCR识别结果:", ocrResult.text)
         return null;
     } catch (error) {
 
@@ -1634,10 +1580,8 @@ function addFriends(addFriendsList) {
         setText(name);
         sleep(500);
         click(980, 250);
-        sleep(500);
-        if (matchColor([{ x: 719, y: 402, color: "#51cb30" }, { x: 863, y: 403, color: "#4dca2b" }])) {
-            click(780, 400);
-        }
+        sleep(100);
+        waitFor_click([780, 400], [{ x: 719, y: 402, color: "#51cb30" }, { x: 863, y: 403, color: "#4dca2b" }], null, 10, 16);
 
     }
 }
@@ -1650,7 +1594,7 @@ function clearFans() {
         sleep(1000)
     }
     while (true) {
-        if (matchColor([{ x: 921, y: 322, color: "#f7b530" }])) {
+        if (click_waitFor(null, [{ x: 921, y: 322, color: "#f7b530" }], null, 10, 16)) {
             click(880 + ran(), 320 + ran())
             sleep(100);
             click(880 + ran(), 320 + ran())
@@ -1696,8 +1640,8 @@ function huadong(right = false) {
     try {
         showTip("滑动寻找")
         //缩放
-        gestures([0, 200, [420 + ran(), 150 + ran()], [860 + ran(), 150 + ran()]],
-            [0, 200, [1000 + ran(), 150 + ran()], [860 + ran(), 150 + ran()]
+        gestures([0, 200, [420 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]],
+            [0, 200, [1000 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]
             ]);
         sleep(200);
         //缩放
@@ -1705,12 +1649,17 @@ function huadong(right = false) {
             [0, 200, [1000 + ran(), 250 + ran()], [860 + ran(), 250 + ran()]
             ]);
         sleep(100);
+        //右滑
+        swipe(600 + ran(), 300 + ran(), 550 + ran(), 250 + ran(), 100);
+        sleep(50)
         //左滑
-        swipe(300 + ran(), 150 + ran(), 980 + ran(), 720, 200);
-        sleep(100)
+        swipe(250 + ran(), 150 + ran(), 980 + ran(), 720, 200);
+        sleep(200)
         //左滑
-        swipe(300 + ran(), 150 + ran(), 980 + ran(), 720, 200);
-        sleep(100)
+        if (right) {
+            swipe(300 + ran(), 150 + ran(), 980 + ran(), 720, 200);
+            sleep(200)
+        }
         //下滑
         gesture(1000, [650 + ran(), 580 + ran()],
             [630 + ran(), 270 + ran()]);
@@ -1723,6 +1672,44 @@ function huadong(right = false) {
 
     } catch (error) {
         log(error)
+    }
+}
+
+function huadong_zuoshang() {
+    //缩放
+    gestures([0, 200, [420 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]],
+        [0, 200, [1000 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]
+        ]);
+    sleep(200);
+    //缩放
+    gestures([0, 200, [420 + ran(), 250 + ran()], [860 + ran(), 250 + ran()]],
+        [0, 200, [1000 + ran(), 250 + ran()], [860 + ran(), 250 + ran()]
+        ]);
+    sleep(100);
+    //右滑
+    swipe(600 + ran(), 300 + ran(), 550 + ran(), 250 + ran(), 100);
+    sleep(50)
+    //左滑
+    swipe(250 + ran(), 150 + ran(), 980 + ran(), 720, 200);
+    sleep(200)
+}
+
+function find_yuchuan() {
+    for (let i = 0; i < 10; i++) {
+        showTip("第" + (i + 1) + "次寻找渔船");
+
+        let sc = captureScreen();
+        if (matchColor([{ x: 887, y: 125, color: "#498d9c" }, { x: 823, y: 155, color: "#498d9c" }], sc, 16)) {
+            log("已到左上角,确定固定位置")
+            return { x: 470, y: 305 }
+        }
+        let yuchuan1 = findMC(machineColor["渔船"][0], sc, null, 16);
+        let yuchuan2 = findMC(machineColor["渔船"][1], sc, null, 16);
+        log("渔船定位",yuchuan1, yuchuan2)
+        if (yuchuan1 || yuchuan2) {
+            return yuchuan1 || yuchuan2;
+        }
+        sleep(500);
     }
 }
 
@@ -1905,6 +1892,12 @@ function clickTom() {
 }
 
 function tomMenu() {
+    //汤姆剩余时间不足2小时
+    let menu5 = findMC(["#ee5f34", [59, 5, "#ff6133"], [104, 7, "#fd6133"], [-39, -83, "#f3e8c9"], [-43, -207, "#f4eadb"]])
+    if (menu5) {
+        log("汤姆剩余时间不足2小时")
+        return "没有雇佣汤姆"
+    }
     //寻找页面
     let menu1 = matchColor([{ x: 405, y: 145, color: "#ffffff" },
     { x: 363, y: 221, color: "#423a35" }, { x: 356, y: 318, color: "#ffd158" },
@@ -1987,11 +1980,84 @@ function tomToFind(tomPos) {
             showTip("输入搜索内容:" + config.tomFind.text);
             sleep(500);
             setText(config.tomFind.text); //输入搜索内容
+            sleep(150)
+            if (!images.findColorInRegion(captureScreen(), "#753e36", 442, 210, 752 - 442, 263 - 210)) {
+                log("文字未输入成功")
+                showTip("文字未输入成功");
+                findNum++
+                continue;
+            }
+
             //点击物品
-            sleep(500);
-            if (matchColor([{ x: 504, y: 439, color: "#fff9db" }, { x: 677, y: 433, color: "#fff9db" },
-            { x: 506, y: 497, color: "#fff9db" }, { x: 670, y: 503, color: "#fff9db" },
-            { x: 489, y: 566, color: "#fff9db" }, { x: 684, y: 567, color: "#fff9db" }])) click(500 + ran(), 360 + ran())
+            sleep(350);
+            let firstPos = [500, 360]
+            let step = [160, 70]
+            let firstcolorPos = [{ x: 480, y: 340 }, { x: 482, y: 382 }, { x: 502, y: 360 }, { x: 532, y: 346 }, { x: 543, y: 378 }]
+            let color = "#fff9db"
+            let isFind = false;
+            let notFind = false;
+
+            //如果搜索后第二格没有物品
+            if (matchColor([{ x: 637, y: 338, color: "#fff9db" }, { x: 665, y: 360, color: "#fff9db" }, { x: 631, y: 388, color: "#fff9db" }, { x: 695, y: 390, color: "#fff9db" }, { x: 690, y: 342, color: "#fff9db" }])) {
+                isFind = true;
+                click(firstPos[0] + ran(), firstPos[1] + ran())
+            } else {
+                for (let j = 0; j < 2; j++) {
+                    if (isFind || notFind) {
+                        break;
+                    }
+                    for (let i = 0; i < 6; i++) {
+                        if (isFind || notFind) {
+                            break;
+                        }
+
+                        if (!matchColor([{ x: firstcolorPos[0].x + i % 2 * step[0], y: firstcolorPos[0].y + Math.floor(i / 2) * step[1], color: color },
+                        { x: firstcolorPos[1].x + i % 2 * step[0], y: firstcolorPos[1].y + Math.floor(i / 2) * step[1], color: color },
+                        { x: firstcolorPos[2].x + i % 2 * step[0], y: firstcolorPos[2].y + Math.floor(i / 2) * step[1], color: color },
+                        { x: firstcolorPos[3].x + i % 2 * step[0], y: firstcolorPos[3].y + Math.floor(i / 2) * step[1], color: color },
+                        { x: firstcolorPos[4].x + i % 2 * step[0], y: firstcolorPos[4].y + Math.floor(i / 2) * step[1], color: color }])) {
+                            click(firstPos[0] + i % 2 * step[0], firstPos[1] + Math.floor(i / 2) * step[1]);
+                            sleep(150);
+                            if (allItemColor[config.tomFind.text]) {
+                                log("物品:" + config.tomFind.text + "颜色在颜色库中")
+                                //检测右侧框内物品
+                                let pos = findMC(allItemColor[config.tomFind.text], null, [845, 234, 1015 - 845, 384 - 234]);
+                                if (pos) {
+                                    isFind = true;
+                                }
+                            }
+                            if (!isFind) {
+                                let img1 = images.clip(captureScreen(), 820, 277, 1039 - 820, 410 - 277)
+                                try {
+                                    let itemText = paddle.ocrText(img1);
+                                    if (itemText.includes(config.tomFind.text)) {
+                                        isFind = true;
+                                    }
+                                } catch (error) {
+                                    log(error)
+                                } finally {
+                                    img1.recycle()
+                                }
+                            }
+                        } else {
+                            log("第" + (j * 6 + i + 1) + "格为空")
+                            notFind = true;
+                            break;
+                        }
+                    }
+
+                    if (!isFind) {
+                        swipe(590, 560, 590, 325, 500)
+                        sleep(10)
+                        click(590, 325)
+                    }
+                }
+            }
+
+            if (!isFind) {
+                log("没找到该物品,点击第一个物品")
+                click(500 + ran(), 360 + ran())
+            }
 
             // 点击 开始寻找 按钮
             sleep(500);
@@ -2356,18 +2422,22 @@ function harvest(center) {
     let startX = pos_land.x;
     let startY = pos_land.y;
 
-    // // 第一组手势路径点
-    // let firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x, pos_land.y)];
+    let firstGroup, secondGroup
+    if (configs.get("syncHarvest")) {
+        // 第一组手势路径点
+        firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x, pos_land.y)];
 
-    // // 第二组手势路径点（Y偏移）
-    // let secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
+        // 第二组手势路径点（Y偏移）
+        secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
 
-    // 第一组手势路径点
-    let firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x, pos_land.y)];
+    } else {
+        // 第一组手势路径点
+        firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x, pos_land.y)];
 
-    // 第二组手势路径点（Y偏移）
-    let secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
+        // 第二组手势路径点（Y偏移）
+        secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
 
+    }
 
     for (let i = 0; i < rows; i++) {
 
@@ -2393,7 +2463,11 @@ function harvest(center) {
     // log(L, R, S)
     // log(firstGroup, secondGroup)
     // log(config.harvestRepeat, config.harvestX, config.harvestY)
-    gestures(firstGroup, secondGroup);
+    try {
+        gestures(firstGroup, secondGroup);
+    } catch (error) {
+        log("收割手势出错" + error)
+    }
 }
 
 /**
@@ -2407,7 +2481,7 @@ function harvest(center) {
 function findimages(imagepath, xiangsidu, max_number, screenImage) {
     let sc = null;
     let picture = null;
-    
+
     try {
         // 如果没有传入屏幕截图，则使用默认截图功能
         if (screenImage) {
@@ -2490,7 +2564,7 @@ function findimages(imagepath, xiangsidu, max_number, screenImage) {
 function harvest_wheat(sickle) {
 
 
-    let center_sickle = sickle || click_waitFor(null, null, sicklePoints, 10, 8)
+    let center_sickle = sickle || click_waitFor(null, null, sicklePoints, 10, 16)
     if (center_sickle) {
         console.log("找到镰刀,准备收割，坐标: " +
             center_sickle.x + "," + center_sickle.y);
@@ -2562,16 +2636,25 @@ function coin() {
             showTip("有" + allcenters.length + "个金币可以收")
         }
 
-        // 使用gestures一次性点击所有金币位置
-        if (allcenters.length > 0) {
-            let gesturePoints = [];
+        if (configs.get("coinCollectionMethod") == "一键收取") {
+            // 使用gestures一次性点击所有金币位置
+            if (allcenters.length > 0) {
+                let gesturePoints = [];
+                allcenters.forEach(target => {
+                    let pos = [48, 60];
+                    gesturePoints.push([0, 100, [target.x + pos[0] + ran(), target.y + pos[1] + ran()]]);
+                });
+
+                gestures.apply(null, gesturePoints);
+                sleep(1000);
+            }
+        } else {
+            // 逐个点击金币位置
             allcenters.forEach(target => {
                 let pos = [48, 60];
-                gesturePoints.push([0, 100, [target.x + pos[0] + ran(), target.y + pos[1] + ran()]]);
+                click(target.x + pos[0] + ran(), target.y + pos[1] + ran());
             });
-
-            gestures.apply(null, gesturePoints);
-            sleep(1000);
+            if (allcenters.length > 0) sleep(1000)
         }
     } catch (error) {
         log(error);
@@ -2655,7 +2738,7 @@ function shop() {
             let sellPlan = shopStatistic();
             if (sellPlan) {
                 log("商店售卖计划:" + JSON.stringify(sellPlan))
-                shop_sell(sellPlan, cangkuItemColor)
+                shop_sell(sellPlan, allItemColor)
             }
         }
 
@@ -3348,16 +3431,35 @@ function sellPlanValidate(sellPlan_original) {
 
             clickShopSearchButton(itemName.item);
 
-            // 找到物品
+            // 搜索物品后
+            let detected = true
             let itemNum = 0;
             let numRegion = [360, 330, 130, 80];
-            itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
-            // 如果第一次检测为空，再检测一遍
-            if (!itemNum || itemNum.trim() === "") {
-                console.log(`第一次检测${itemName.item}为空，重新检测`);
-                showTip(`第一次检测${itemName.item}为空，重新检测`);
-                sleep(100);
+
+            let itemPos = null;
+            //搜索后，如果颜色库有该物品
+            if (allItemColor[itemName.item]) {
+                //如果搜索后第二格有物品（弃）
+                // !matchColor([{ x: 559, y: 318, color: "#fff9db" }, { x: 598, y: 349, color: "#fff9db" }, { x: 634, y: 320, color: "#fff9db" }, { x: 631, y: 378, color: "#fff9db" }, { x: 561, y: 383, color: "#fff9db" }])
+                itemPos = findMC(allItemColor[itemName.item], null, [261, 122, 707 - 261, 688 - 122], 16)
+
+                if (itemPos) {
+                    numRegion = [itemPos.x, itemPos.y, 130, 80];
+                } else {
+                    log("搜索后未找到该物品" + itemName.item)
+                    detected = false;
+                }
+            }
+
+            if (detected) {
                 itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
+                // 如果第一次检测为空，再检测一遍
+                if (!itemNum || itemNum.trim() === "") {
+                    console.log(`第一次检测${itemName.item}为空，重新检测`);
+                    showTip(`第一次检测${itemName.item}为空，重新检测`);
+                    sleep(100);
+                    itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
+                }
             }
 
 
@@ -3417,8 +3519,7 @@ function clickShopSearchButton(item) {
         log("输入" + item)
         sleep(150);
 
-        if (matchColor([{ x: 373, y: 479, color: "#fff9db" }, { x: 585, y: 481, color: "#fff9db" },
-        { x: 364, y: 597, color: "#fff9db" }, { x: 582, y: 608, color: "#fff9db" }])) return true;
+        if (images.findColorInRegion(captureScreen(), "#78433a", 288, 158, 707 - 288, 238 - 158)) return true;
     }
     return false;
 }
@@ -4279,7 +4380,7 @@ function plantCrop() {
         console.log("准备种" + config.selectedCrop.text);
         showTip(`准备种${config.selectedCrop.text}`);
         sleep(500)
-        let center_wheat = findMC(crop);
+        let center_wheat = findMC(crop_plant);
         if (center_wheat) {
             console.log("找到" + config.selectedCrop.text + "，坐标: " +
                 center_wheat.x + "," + center_wheat.y);
@@ -4299,7 +4400,7 @@ function plantCrop() {
                         [31, 4, "#fdbb00"], [32, 30, "#fffcf0"], [-18, 1, "#fac400"], [-25, 3, "#fcbb00"]]);
                     click(next_button.x + ran(), next_button.y + ran());
                     sleep(1000);
-                    center_wheat = findMC(crop);
+                    center_wheat = findMC(crop_plant);
                     if (center_wheat) {
                         break;
                     }
@@ -4343,7 +4444,7 @@ function plant_crop() {
     console.log("准备种" + config.selectedCrop.text);
     showTip(`准备种${config.selectedCrop.text}`);
     sleep(100)
-    let center_wheat = click_waitFor(null, null, crop, 10, 12);
+    let center_wheat = click_waitFor(null, null, crop_plant, 10, 12);
     if (center_wheat) {
         console.log("找到" + config.selectedCrop.text + "，坐标: " +
             center_wheat.x + "," + center_wheat.y);
@@ -4377,7 +4478,7 @@ function plant_crop() {
                     }
                 }
 
-                center_wheat = click_waitFor(null, null, crop, 5);
+                center_wheat = click_waitFor(null, null, crop_plant, 5);
                 if (center_wheat) {
                     break;
                 }
@@ -4475,8 +4576,8 @@ function operation(Account) {
         log("检测种植情况")
         if (findland()) {
             sleep(500);
-            let center_sickle = findMC(sicklePoints, null, null, 8);
-            let center_wheat = findMC(crop);
+            let center_sickle = findMC(sicklePoints, null, null, 16);
+            let center_wheat = findMC(crop_plant);
             if (center_sickle) {
                 console.log("找到镰刀，重新收割,坐标: " +
                     center_sickle.x + "," + center_sickle.y);
@@ -5035,6 +5136,7 @@ module.exports = {
     findMC: findMC,
     findNum_findMC: findNum_findMC,
     huadong: huadong,
+    huadong_zuoshang: huadong_zuoshang,
     createWindow: createWindow,
     closeWindow: closeWindow,
     showTip: showTip,
@@ -5046,6 +5148,9 @@ module.exports = {
     findFont: findFont,
     openFriendMenu: openFriendMenu,
     openFriend: openFriend,
+
+    //寻找相关
+    find_yuchuan: find_yuchuan,
 
     // 游戏界面检查
     checkmenu: checkmenu,
@@ -5116,6 +5221,7 @@ module.exports = {
     // 全局变量
     config: config,
     crop: crop,
+    crop_plant: crop_plant,
     crop_sell: crop_sell,
     appExternalDir: appExternalDir,
 

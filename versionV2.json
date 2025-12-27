@@ -1,7 +1,7 @@
 {
-  "version": "2.1.15",
-  "description": "\n\nv2.1.15\nBug修复\n修复纵向收割偏移参数设置问题\n修复创新号功能由于游戏更新导致的运行错误\n\n功能优化\n双指间距添加x轴参数，用于调整双指横向间距\n提升售卖速度\n\n新增功能\n将倒金币添加至UI，具体功能已实\n\n\n",
-  "zip_name": "卡通农场小助手v2.1.15.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.15/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.15.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.15/v2.1.15.zip"
+  "version": "2.1.16",
+  "description": "\n\nv2.1.16\n\nBug修复\n\n修复OCR识别账号的日志输出错误\n\n收割手势使用try包裹\n\n修复添加好友时，点击搜索后由于加载较慢导致的错误\n\n功能优化\n\n优化种植时的作物检测\n\n添加收割时双指同步选项，启用后双指收割运动时上下两指会同步移动\n\n将颜色数据与module.js分离。添加部分物品的颜色库，用于找色时的物品识别。具体物品颜色请查看color_lib.js文件\n\n物品售卖时，如果颜色库中存在该物品颜色，使用找色寻找该物品，找不到时视为0个。颜色库中没有默认检测第一个物品\n\n汤姆寻找时，如果搜索后只有一个物品，点击第一个物品。如果有多个物品，颜色库中有该物品，先使用找色寻找该物品，找不到时使用文字识别右侧文字，判断是否匹配。都不匹配时点击第一个物品\n\nUI界面的开关按钮点击部位优化\n\n优化搜索物品的判定\n\n优化初始时的滑动手势，避免点到其他机器等物品\n\n添加金币收取方式选项，默认一键收取，可切换为逐个点\n\n",
+  "zip_name": "卡通农场小助手v2.1.16.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.1.16/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.1.16.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.1.16/v2.1.16.zip"
 }
