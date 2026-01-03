@@ -67,7 +67,7 @@ function main_email() {
     sleep(100);
     module.checkmenu();
     sleep(500);
-    if (!config.switchAccount || config.accountList.filter(account => account.done).length <= 1) { //不切换账号
+    if (!config.switchAccount || config.accountList.filter(Account => Account.done).length <= 1) { //不切换账号
         log("不切换账号，找耕地");
         module.huadong();
         sleep(500);
@@ -120,7 +120,7 @@ function main_email() {
         while (true) {
 
             //新建账号列表
-            const doneAccountsList = config.accountList.filter(account => account.done === true);
+            const doneAccountsList = config.accountList.filter(Account => Account.done === true);
 
             //是否升仓，是否仓库统计
             let shengcangForEach = false;
@@ -139,24 +139,23 @@ function main_email() {
                 cangkuStatisticsForEach = true;
                 module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
             }
-            doneAccountsList.forEach(account => {
-                if (timeStorage.get("nextAccountToChange") && timeStorage.get("nextAccountToChange") != account.title) {
+            doneAccountsList.forEach(Account => {
+                if (timeStorage.get("nextAccountToChange") && timeStorage.get("nextAccountToChange") != Account.title) {
                     log("存储中存在下一个要切换的账号:" + timeStorage.get("nextAccountToChange"))
                     return;
                 }
 
-                module.switch_account(account.title);
-                log("============当前账号: " + account.title + "============");
+                module.switch_account(Account.title);
+                log("============当前账号: " + Account.title + "============");
                 module.huadong();
-                // log("等待作物成熟");
 
                 // 计算下一个账号的信息
-                let nextAccountIndex = (doneAccountsList.indexOf(account) + 1) % doneAccountsList.length;
+                let nextAccountIndex = (doneAccountsList.indexOf(Account) + 1) % doneAccountsList.length;
                 let nextAccount = doneAccountsList[nextAccountIndex];
                 let nextTimerName = nextAccount.title + "计时器";
                 timeStorage.put("nextAccountToChange", nextAccount.title);
 
-                module.operation(account.title); //执行刷地，售卖
+                module.operation(Account); //执行刷地，售卖
 
                 //升仓
                 if (shengcangForEach) {
@@ -167,7 +166,7 @@ function main_email() {
                     //执行仓库统计
                     let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
                     //将仓库统计结果转换为表格数据
-                    rawContentData = module.creatContentData(`账号${account.title}`, rawData, rawContentData);
+                    rawContentData = module.creatContentData(`账号${Account.title}`, rawData, rawContentData);
                 }
                 while (true) {
                     // 获取下一个账号的计时器状态
@@ -363,7 +362,7 @@ function main_save() {
             return null;
         } else {
             console.log("成功复制账号文件: " + account);
-            // timeStorage.put("currentAccount", account); // 更新当前账号
+            timeStorage.put("currentAccount", account); // 更新当前账号
             return account;
         }
     }

@@ -17,11 +17,6 @@ let token_storage = storages.create("token_storage");
 let timeStorage = storages.create("times");
 let statistics = storages.create("statistics");
 
-//crop_sell 识别 130,80
-const cropItemColor = color_lib.cropItemColor;
-
-let sicklePoints = color_lib.sicklePoints;
-
 //都取左上为基准点
 const cangkuItemColor = color_lib.cangkuItemColor;
 
@@ -34,6 +29,12 @@ const ckNumColor = color_lib.ckNumColor;
 
 //先竖着放，后横着放
 const machineColor = color_lib.machineColor;
+
+//crop_sell 识别 130,80
+const cropItemColor = color_lib.cropItemColor;
+
+let sicklePoints = allItemColor["镰刀"];
+
 
 //作物颜色
 const cropName = config.selectedCrop.text
@@ -647,6 +648,7 @@ function findMC(checkPoints, screenshot, region, threshold = 16) {
     // 分离基准色和相对点
     const firstColor = checkPoints[0];
     const colors = checkPoints.slice(1);
+    threshold = threshold || 16;
 
     // 处理截图
     let img = null;
@@ -671,6 +673,7 @@ function findMC(checkPoints, screenshot, region, threshold = 16) {
 
     try {
         const result = images.findMultiColors(img, firstColor, colors, findOptions);
+        // log(findOptions)
         return result ? { x: result.x, y: result.y } : null;
     } catch (e) {
         console.error("执行多点找色失败:", e.message);
@@ -1287,25 +1290,29 @@ function 分割识别(binaryImg, pngFiles, xiangsidu) {
  * @returns 识别结果
  */
 function findFont(sc, region, color, threshold = 16, FontLibrary, xiangsidu = 0.6, mode) {
+    let img = null;
+    let image_clip = null;
+    let binaryImg = null;
+    let templates1 = [];
+
     try {
         // 参数验证
-        let img = sc || captureScreen();
+        img = sc || captureScreen();
 
         let pngFiles = Object.entries(FontLibrary).map(([key, value]) => ({ key, value }));
 
         // 确定搜索区域
         region = region ? region : [0, 0, img.getWidth(), img.getHeight()];
-        let image_clip = images.clip(img, region[0], region[1], region[2], region[3]);
+        image_clip = images.clip(img, region[0], region[1], region[2], region[3]);
         // images.save(image_clip, "/storage/emulated/0/$MuMu12Shared/Screenshots/字库/商店仓库统计/" + Date.now() + ".png");//测试用，截取识别部位图片
         threshold = threshold ? threshold : 16;
-        let binaryImg = images.interval(image_clip, color, threshold);
+        binaryImg = images.interval(image_clip, color, threshold);
 
-        if (mode == "tom") {
+        if (mode == "clip") {
             let pngFiles1 = pngFiles.filter(entry => ["小时", "分", "秒"].includes(entry.key));
             let pngFiles2 = pngFiles.filter(entry => !["小时", "分", "秒"].includes(entry.key));
 
             // 预先转换所有Base64图像
-            let templates1 = [];
             for (let font of pngFiles1) {
                 let image_base64 = font.value;
                 let template = images.fromBase64(image_base64);
@@ -1323,7 +1330,7 @@ function findFont(sc, region, color, threshold = 16, FontLibrary, xiangsidu = 0.
                 let result = null;
                 try { result = images.findImage(image_clip_char, template, { threshold: xiangsidu }); }
                 catch (e) {
-                    console.error("图像识别失败(Tom):", e);
+                    console.error("图像识别失败(clip):", e);
                     result = null;
                 }
                 if (result) {
@@ -1338,12 +1345,18 @@ function findFont(sc, region, color, threshold = 16, FontLibrary, xiangsidu = 0.
                     });
                 }
                 image_clip_char.recycle();
+                template.recycle(); // 回收template资源
             };
 
             // 将Match按startx排序
             Match.sort(function (a, b) {
                 return a.startx - b.startx;
             });
+
+            if (Match.length == 0) {
+                log("未识别到字符:match长度为0")
+                return "";
+            }
 
             let recognizedText = "";
 
@@ -1366,7 +1379,7 @@ function findFont(sc, region, color, threshold = 16, FontLibrary, xiangsidu = 0.
                     char += "?"; // 未识别的字符用?代替
                 }
                 // log(recognizedText)
-                // 回收字符图像资源
+                // 回收资源
                 image_clip_char_min.recycle();
             }
 
@@ -1377,14 +1390,37 @@ function findFont(sc, region, color, threshold = 16, FontLibrary, xiangsidu = 0.
         // 调用分割识别函数
         let recognizedText = 分割识别(binaryImg, pngFiles, xiangsidu);
 
-        // 回收资源
-        binaryImg.recycle();
-        image_clip.recycle();
-
         return recognizedText;
     } catch (error) {
         console.error("findFont识别失败:", error);
         return "";
+    } finally {
+        // 在finally块中回收所有图片资源
+        try {
+            if (binaryImg && typeof binaryImg.recycle === 'function') {
+                binaryImg.recycle();
+            }
+            if (image_clip && typeof image_clip.recycle === 'function') {
+                image_clip.recycle();
+            }
+        } catch (e) {
+            console.error("回收图片资源失败:", e);
+        }
+    }
+}
+
+/**
+ * 识别剩余时间,通过识别加速按钮位置确定时间文本位置
+ * @returns {string} - 识别到的时间字符串，格式为 "HH小时MM分SS秒"
+ */
+function findFont_remainingTime() {
+    //识别剩余时间
+    let jiasu = click_waitFor(null, null, allItemColor["jiasuButton"], 5, 16, 200);
+    if (jiasu) {
+        let region0 = [jiasu.x - 351, jiasu.y + 27, jiasu.x - 147, jiasu.y + 88];
+        let region = [region0[0], region0[1], region0[2] - region0[0], region0[3] - region0[1]];
+        let result = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_timeRemaining, 0.8, mode = "clip");
+        return result || "";
     }
 }
 
@@ -1577,7 +1613,7 @@ function addFriends(addFriendsList) {
         log("加好友" + name);
         click(500, 260);
         sleep(500);
-        setText(name);
+        setText_inGame(name);
         sleep(500);
         click(980, 250);
         sleep(100);
@@ -1662,7 +1698,7 @@ function huadong(right = false) {
         }
         //下滑
         gesture(1000, [650 + ran(), 580 + ran()],
-            [630 + ran(), 270 + ran()]);
+            [630 + ran(), 250 + ran()]);
         //右滑
         if (right) {
             sleep(100)
@@ -1694,6 +1730,10 @@ function huadong_zuoshang() {
     sleep(200)
 }
 
+/**
+ * 寻找渔船,视角需在左上角
+ * @returns 渔船坐标,未找到返回false
+ */
 function find_yuchuan() {
     for (let i = 0; i < 10; i++) {
         showTip("第" + (i + 1) + "次寻找渔船");
@@ -1705,13 +1745,493 @@ function find_yuchuan() {
         }
         let yuchuan1 = findMC(machineColor["渔船"][0], sc, null, 16);
         let yuchuan2 = findMC(machineColor["渔船"][1], sc, null, 16);
-        log("渔船定位",yuchuan1, yuchuan2)
+        log("渔船定位", yuchuan1, yuchuan2)
         if (yuchuan1 || yuchuan2) {
             return yuchuan1 || yuchuan2;
         }
         sleep(500);
     }
+
+    log("未找到渔船")
+    return false;
+
 }
+
+function huadong_pond() {
+    //缩放
+    gestures([0, 200, [300 + ran(), 120 + ran()], [710 + ran(), 120 + ran()]],
+        [0, 200, [1000 + ran(), 120 + ran()], [710 + ran(), 120 + ran()]
+        ]);
+    sleep(100);
+
+    //右滑
+    swipe(920 + ran(), 100 + ran(), 250 + ran(), 350, 100);
+    sleep(300)
+
+    //缩放
+    gestures([0, 200, [420 + ran(), 250 + ran()], [710 + ran(), 250 + ran()]],
+        [0, 200, [1000 + ran(), 250 + ran()], [710 + ran(), 250 + ran()]
+        ]);
+    sleep(100);
+
+    //右滑
+    swipe(920 + ran(), 100 + ran(), 250 + ran(), 350, 100);
+    sleep(300)
+
+}
+
+/**
+ * 点击指定鱼塘,点击后无等待时间
+ * @param {*} pondNum 鱼塘编号
+ * @param {*} huadong 是否滑动视角到右上角
+ */
+function find_fishPond(pondNum, huadong = false) {
+    if (huadong) {
+        huadong_pond()
+    }
+    if (pondNum == 1) {
+        click(320 + ran(), 350 + ran())
+    } else if (pondNum == 2) {
+        //上部中间
+        swipe(220 + ran(), 120 + ran(), 900 + ran(), 120 + ran(), 500)
+        sleep(10)
+        click(900 + ran(), 120 + ran())
+        sleep(100)
+
+        click(680 + ran(), 270 + ran())
+    } else if (pondNum == 3) {
+        //上部中间
+        swipe(220 + ran(), 120 + ran(), 900 + ran(), 120 + ran(), 500)
+        sleep(10)
+        click(900 + ran(), 120 + ran())
+        sleep(100)
+
+        click(350 + ran(), 405 + ran())
+    } else if (pondNum == 4) {
+        //左滑到顶再下滑
+        swipe(200 + ran(), 170 + ran(), 1000 + ran(), 175 + ran(), 100)
+        sleep(300)
+        swipe(820 + ran(), 480 + ran(), 300 + ran(), 100 + ran(), 800)
+        sleep(10);
+        click(300 + ran(), 100 + ran())
+        sleep(100)
+
+        click(440 + ran(), 280 + ran())
+    } else if (pondNum == 5) {
+        //左滑到顶再右下滑
+        swipe(200 + ran(), 170 + ran(), 1000 + ran(), 175 + ran(), 100)
+        sleep(300)
+        swipe(820 + ran(), 480 + ran(), 300 + ran(), 100 + ran(), 800)
+        sleep(10);
+        click(300 + ran(), 100 + ran())
+        sleep(100)
+
+        click(780 + ran(), 370 + ran())
+    } else if (pondNum == 6) {
+        //直接下滑一段距离
+        swipe(790 + ran(), 360 + ran(), 950 + ran(), 100 + ran(), 500)
+        sleep(10)
+        click(950 + ran(), 100 + ran())
+        sleep(100)
+
+        click(390 + ran(), 600 + ran())
+    } else if (pondNum == 7) {
+        click(380 + ran(), 600 + ran())
+    } else if (pondNum == 8) {
+        //直接下滑一段距离
+        swipe(790 + ran(), 360 + ran(), 950 + ran(), 100 + ran(), 500)
+        sleep(10)
+        click(950 + ran(), 100 + ran())
+        sleep(100)
+
+        click(890 + ran(), 380 + ran())
+    } else if (pondNum == 9) {
+        //直接下滑到顶
+        swipe(530, 610, 500, 100, 200)
+        sleep(400)
+
+        click(600 + ran(), 200 + ran())
+    } else if (pondNum == 10) {
+        //下滑两段
+        swipe(790 + ran(), 360 + ran(), 950 + ran(), 100 + ran(), 500)
+        sleep(10)
+        click(950 + ran(), 100 + ran())
+        sleep(100)
+        swipe(720 + ran(), 515 + ran(), 900 + ran(), 100 + ran(), 500)
+        sleep(10)
+        click(900 + ran(), 100 + ran())
+        sleep(100)
+
+        click(310 + ran(), 400 + ran())
+    } else if (pondNum == 11) {
+        //左滑到顶再下滑
+        swipe(240 + ran(), 620 + ran(), 1000 + ran(), 120 + ran(), 100)
+        sleep(300)
+
+        click(960 + ran(), 250 + ran())
+
+    } else if (pondNum == 12) {
+        //左滑到顶再下滑
+        swipe(240 + ran(), 620 + ran(), 1000 + ran(), 120 + ran(), 100)
+        sleep(400)
+
+        click(615 + ran(), 110 + ran())
+    } else if (pondNum == 13) {
+        //左滑到顶再下滑
+        swipe(240 + ran(), 620 + ran(), 1000 + ran(), 120 + ran(), 100)
+        sleep(400)
+
+        click(550 + ran(), 300 + ran())
+    } else if (pondNum == 14) {
+        //左滑到顶再下滑
+        swipe(240 + ran(), 620 + ran(), 1000 + ran(), 120 + ran(), 100)
+        sleep(400)
+
+        click(825 + ran(), 500 + ran())
+    } else if (pondNum == 15) {
+        //直接下滑到顶
+        swipe(530, 610, 500, 100, 200)
+        sleep(400)
+
+        click(300 + ran(), 430 + ran())
+    } else if (pondNum == 16) {
+        //鸭毛
+        //垂直下滑一段距离
+        swipe(780 + ran(), 370 + ran(), 775 + ran(), 50 + ran(), 500)
+        sleep(10)
+        click(775 + ran(), 50 + ran())
+        sleep(100)
+
+        click(1000 + ran(), 460 + ran())
+    }
+}
+
+/**
+ * 视角需在右上角
+ * 点击织网机，收集并制作
+ * @returns {boolean} 是否成功点击织网机
+ */
+function click_netMaker() {
+    for (let i = 0; i < 15; i++) {
+        let open = findMC(allItemColor["普通渔网"])
+        if (open) {
+            log("已打开织网机")
+            return true
+        } else {
+            if (matchColor([{ x: 291, y: 564, color: "#fffadb" }, { x: 771, y: 669, color: "#fff9d7" },
+            { x: 1035, y: 569, color: "#fffad8" }, { x: 1229, y: 306, color: "#fffdeb" },
+            { x: 1171, y: 88, color: "#ed414c" }, { x: 1126, y: 94, color: "#fbbe34" }])) {
+                log("没有解锁织网机")
+                showTip("没有解锁织网机")
+                return false;
+            }
+        }
+        click(1022 + ran(), 190 + ran())
+
+        sleep(300);
+    }
+    return false
+}
+
+/**
+ * 视角需在右上角
+ * 点击生产栏位，生产物品
+ * @param {string} itemName 物品名称
+ * @returns {boolean} 是否成功点击生产栏位
+ */
+function netMaker_produce(itemName) {
+    if (!itemName || !allItemColor[itemName]) {
+        log("错误：未提供物品名称或物品名称不存在", itemName);
+        return false;
+    }
+    itemColor = allItemColor[itemName]
+    let item = findMC(itemColor)
+    for (let i = 0; i < 15; i++) {
+        if (item) {
+            swipe(item.x + ran(), item.y + ran(), 1022 + ran(), 190 + ran(), 300)
+            if (click_waitFor(null, null, allItemColor["生产栏位已满"], 5, 16, 100)) {
+                log("生产栏位已满")
+                showTip("生产栏位已满")
+                return true
+            }
+        }
+    }
+}
+
+/**
+ * 视角需在右上角,不需要在龙虾池内
+ * @returns {boolean} 是否成功点击龙虾网
+ */
+function collect_lobster() {
+    click(950 + ran(), 310 + ran())
+    sleep(100);
+    let net = click_waitFor(null, null, allItemColor["龙虾网"])
+    if (net) {
+        let L = { x: -200, y: 0 }
+        let R = { x: -L.x, y: -L.y }
+        let S = { x: 0, y: -25 }
+
+        let pos1 = [1065, 250]
+        let pos2 = [1065, 420]
+        let pos3 = [(pos1[0] + pos2[0]) / 2, (pos1[1] + pos2[1]) / 2]
+
+        let group1 = [0, 3000, [net.x, net.y], pos3, pos1]
+        let group2 = [0, 3000, [net.x, net.y], pos3, pos2]
+        let harvestGroup1 = getHarvestGroup(group1, L, R, S, 3)
+        let harvestGroup2 = getHarvestGroup(group2, L, R, S, 3)
+        try {
+            gestures(harvestGroup1, harvestGroup2);
+        } catch (error) {
+            log(error)
+        }
+        return true
+    }
+}
+
+/**
+ * 视角无需确定,会滑动到顶部
+ * 点击小鸭沙龙,收集鸭毛
+ * @returns {boolean} 是否成功收获鸭毛
+ */
+function collect_duckSalon() {
+    let salon
+    for (let i = 0; i < 3; i++) {
+        find_fishPond(16, true)
+        sleep(500);
+        salon = click_waitFor(null, null, allItemColor["鸭毛梳"])
+        if (salon) break;
+    }
+    if (salon) {
+        1130, 500
+        let L = { x: -240, y: 0 }
+        let R = { x: -L.x, y: -L.y }
+        let S = { x: 0, y: -25 }
+
+        let pos1 = [1130, 280]
+        let pos2 = [1130, 500]
+        let pos3 = [(pos1[0] + pos2[0]) / 2, (pos1[1] + pos2[1]) / 2]
+
+        let group1 = [0, 3000, [salon.x, salon.y], pos3, pos1]
+        let group2 = [0, 3000, [salon.x, salon.y], pos3, pos2]
+        let harvestGroup1 = getHarvestGroup(group1, L, R, S, 3)
+        let harvestGroup2 = getHarvestGroup(group2, L, R, S, 3)
+        try {
+            gestures(harvestGroup1, harvestGroup2);
+        } catch (error) {
+            log(error)
+        }
+        return true
+    } else {
+        log("未找到鸭毛梳")
+        return false
+    }
+}
+
+/**
+ * 需点开鱼塘
+ * @param {string} itemName 物品名称
+ * @returns {boolean} 是否成功点击织网机
+ */
+function put_net(itemName) {
+    for (let i = 0; i < 10; i++) {
+        sleep(300)
+        let item = findMC(allItemColor[itemName])
+        if (item) {
+            swipe(item.x + ran(), item.y + ran(), item.x + 70 + ran(), item.y + 170 + ran(), 200);
+            return true;
+        } else {
+            let next_button = click_waitFor(null, null, allItemColor["nextButton"])
+            if (next_button) {
+                click(next_button.x + ran(), next_button.y + ran())
+                sleep(200)
+            } else {
+                log("未找到nextButton")
+                return false;
+            }
+        }
+    }
+    return false;
+}
+
+function pond_operation(Account) {
+    let accountName = Account.title;
+    let pondTimerName = accountName ? accountName + "鱼塘计时器" : "鱼塘计时器";
+    let pondTime = getTimerState(pondTimerName);
+    if (pondTime) {
+        let hours = Math.floor(pondTime / 3600);
+        let minutes = Math.floor(pondTime / 60) % 60;
+        let seconds = pondTime % 60;
+        let timeText = hours > 0 ? `${hours}时${minutes}分${seconds}秒` : minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+        details = `鱼塘最短剩余时间: ${timeText}`;
+        log(details);
+        showTip(details);
+        return true
+    }
+
+    //
+
+    log("========== 鱼塘 ==========");
+    sleep(100);
+    find_close();
+    sleep(100);
+    log("开始寻找渔船")
+    showTip("开始寻找渔船")
+
+    let yuchuanPos = null
+    for (let i = 0; i < 2; i++) {
+        huadong_zuoshang();
+        yuchuanPos = find_yuchuan();
+        if (yuchuanPos) {
+            click(yuchuanPos.x + ran(), yuchuanPos.y + ran());
+            let enter = false;
+            for (let j = 0; j < 3; j++) {
+                sleep(1000);
+                let sc = captureScreen();
+                //新版界面
+                let allMatch = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
+                    [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+
+                //老板界面
+                let allMatch2 = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
+                    [-17, 18, "#a44900"], [11, 54, "#f7c342"],
+                    [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+
+                let homebtn = findMC(["#62d365", [-5, -12, "#c787db"], [1, 11, "#55cf58"]],
+                    screenshot = sc, [0, 600, 240, 110]);
+
+                if ((allMatch || allMatch2) && homebtn) {
+                    log(`第 ${i + 1} 次检测: 已进入鱼塘`);
+                    showTip(`第 ${i + 1} 次检测: 已进入鱼塘`);
+                    enter = true;
+                    break;
+                }
+                log(`第 ${i + 1} 次检测: 未进入鱼塘`)
+                showTip(`第 ${i + 1} 次检测: 未进入鱼塘`)
+            }
+            if (!enter) {
+                log("未进入鱼塘,结束本次鱼塘")
+                showTip("未进入鱼塘,结束本次鱼塘")
+                return false;
+            }
+            break;
+        }
+    }
+    if (!yuchuanPos) {
+        log("未找到渔船,结束本次鱼塘")
+        showTip("未找到渔船,结束本次鱼塘")
+        return false;
+    }
+
+    sleep(1500);
+    let pondNum = Account.pond.ponds
+    let allItem = { "鱼片": "普通渔网", "龙虾尾": "捕虾笼", "鸭毛": "捕鸭器" }
+    let item = Account.pond.name
+    let itemName = allItem[item];
+    let Times = [];
+
+    let netMaker = null
+
+    if (item == "鱼片") {
+        Times.push(20 * 60 * 60)//20小时
+        huadong_pond()
+        netMaker = click_netMaker()
+        netMaker_produce(itemName)
+    } else if (item == "龙虾尾") {
+        Times.push(6 * 60 * 60)//6小时
+        huadong_pond()
+        collect_lobster()
+        sleep(500);
+        huadong_pond()
+        netMaker = click_netMaker()
+        netMaker_produce(itemName)
+    } else if (item == "鸭毛") {
+        Times.push(3 * 60 * 60)//3小时
+        collect_duckSalon()
+        sleep(500);
+        huadong_pond()
+        netMaker = click_netMaker()
+        netMaker_produce(itemName)
+    }
+
+    if (!netMaker) {
+        log("未解锁织网机,结束本次鱼塘")
+        showTip("未解锁织网机,结束本次鱼塘")
+        return false;
+    }
+
+    for (let num of pondNum) {
+
+        log(`执行${num}号鱼塘`)
+        showTip(`执行${num}号鱼塘`)
+        find_fishPond(num, true);
+        sleep(300);
+        let pondIsEmpty = false
+        let pondIsOccupied = false
+
+        if (findMC(allItemColor["红色鱼饵"]) || findMC(allItemColor["nextButton"])) {
+            log(num + "号鱼塘为空")
+            showTip(num + "号鱼塘为空")
+            pondIsEmpty = true
+        } else if (findMC(allItemColor["jiasuButton"])) {
+            log(num + "号鱼塘正在冷却")
+            showTip(num + "号鱼塘正在冷却")
+            pondIsOccupied = true
+
+            //识别剩余时间
+            let remainingTime = findFont_remainingTime()
+
+            if (remainingTime) {
+                log(remainingTime)
+                showTip(remainingTime)
+                let time = extractTime(remainingTime);
+                Times.push(time.hours * 60 * 60 + time.minutes * 60 + time.seconds)
+            }
+        } else if (item == "鱼片") {
+            log("点击渔网")
+            showTip("点击渔网")
+            sleep(1000);
+            click(640 + ran(), 360 + ran())
+            sleep(500)
+            click(640 + ran(), 360 + ran())
+            sleep(500)
+        }
+
+        if (pondIsOccupied) {
+            log(num + "号鱼塘正在冷却,跳过撒网")
+            showTip(num + "号鱼塘正在冷却,跳过撒网")
+            continue;
+        }
+
+        if (!(findMC(allItemColor["红色鱼饵"]) || findMC(allItemColor["nextButton"])) && !pondIsOccupied) {
+            log("未检测到放置渔网界面")
+            showTip("未检测到放置渔网界面")
+            find_fishPond(num, true);
+        }
+
+        if (!pondIsEmpty) {
+            sleep(500)
+            find_fishPond(num, true);
+        }
+        put_net(itemName)
+
+        sleep(500)
+
+        if (matchColor([{ x: 330, y: 103, color: "#d4a366" },
+        { x: 340, y: 76, color: "#ddb376" }, { x: 1117, y: 66, color: "#ee444e" },
+        { x: 1093, y: 216, color: "#fff9db" }, { x: 850, y: 586, color: "#f5d155" }])) {
+            log("资源不足")
+            showTip("资源不足")
+            click(1120 + ran(), 70 + ran())
+            break;
+        }
+    }
+
+    let minTime = Times.sort((a, b) => a - b)[0]
+    log(`最小时间: ${minTime}秒`)
+    timer(pondTimerName, minTime)
+
+}
+
 
 function find_baozhi() {
     for (let i = 0; i < 20; i++) {
@@ -1748,9 +2268,10 @@ function find_youxiang() {
 }
 
 function tomOperation(Account) {
-    let currentTomTimerName = Account ? Account + "Tom计时器" : "Tom计时器";
+    let accountName = Account.title || Account
+    let currentTomTimerName = accountName ? accountName + "Tom计时器" : "Tom计时器";
 
-    let tomIsWorkName = Account ? Account + "TomIsWork" : "TomIsWork"
+    let tomIsWorkName = accountName ? accountName + "TomIsWork" : "TomIsWork"
     let tom_isWork = timeStorage.get(tomIsWorkName) !== null;//是否在工作
 
     //如果汤姆在休息，输出剩余时间
@@ -1773,8 +2294,12 @@ function tomOperation(Account) {
         return false;
     }
 
-    if ((config.tomFind.enabled || config.selectedFunction.code == 3) && !tomTime && tom_isWork) {    //汤姆
+    if ((config.tomFind.enabled || config.selectedFunction.code == 3) && Account.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
         log("========== 汤姆 ==========");
+
+        let findItemType = Account.tomFind.type || config.tomFind.type;
+        let findItem = Account.tomFind.text || config.tomFind.text;
+
         sleep(100)
         find_close();
         sleep(100);
@@ -1782,7 +2307,7 @@ function tomOperation(Account) {
         sleep(350)
         let tomPos = clickTom();
         sleep(500);
-        let tomState = tomToFind(tomPos);
+        let tomState = tomToFind(tomPos, findItemType, findItem);
         if (tomState === null) {
             log("未雇佣汤姆");
             showTip("未雇佣汤姆");
@@ -1793,11 +2318,11 @@ function tomOperation(Account) {
         else {
             let tomTimeSecend = tomState.hours * 60 * 60 + tomState.minutes * 60 + tomState.seconds;
             //设定计时器
-            let timerName = Account ? Account + "Tom计时器" : "Tom计时器";
+            let timerName = accountName ? accountName + "Tom计时器" : "Tom计时器";
             timer(timerName, tomTimeSecend);
             timeStorage.put(tomIsWorkName, true);
         }
-        if (config.switchAccount === false) {//不换账号滑动回去
+        if (config.switchAccount === false && !selectedFunction.code == 3) {//不换账号并且不是仅汤姆滑动回去
             sleep(500);
             swipe(600 - 350 + ran(), 580 - 200 + ran(), 600 + ran(), 580 + ran(), 1000);
         }
@@ -1935,10 +2460,12 @@ function tomMenu() {
 /**
  * 
  * @param {*} tomPos 汤姆坐标
+ * @param {*} findItemType 查找类型
+ * @param {*} findItem 查找内容
  * @returns 找到返回休息时间，休息返回剩余时间，未雇佣返回null，未找到返回false
  * @description 点击汤姆后进行操作，需自行设置计时器
  */
-function tomToFind(tomPos) {
+function tomToFind(tomPos, findItemType, findItem) {
 
     //第一次点击汤姆
     function tom_operation1() {
@@ -1947,9 +2474,9 @@ function tomToFind(tomPos) {
             // 根据类型确定点击坐标
             let x = 365 + ran();
             let y = 340 + ran();
-            if (config.tomFind.type == "粮仓") {
+            if (findItemType == "粮仓") {
                 y = 246 + ran();
-            } else if (config.tomFind.type != "货仓") {
+            } else if (findItemType != "货仓") {
                 // 默认情况也点击货仓位置
                 y = 340 + ran();
             }
@@ -1976,10 +2503,10 @@ function tomToFind(tomPos) {
             }
             //点击输入框
             click(590 + ran(), 240 + ran());
-            log("输入搜索内容:" + config.tomFind.text);
-            showTip("输入搜索内容:" + config.tomFind.text);
+            log("输入搜索内容:" + findItem);
+            showTip("输入搜索内容:" + findItem);
             sleep(500);
-            setText(config.tomFind.text); //输入搜索内容
+            setText_inGame(findItem); //输入搜索内容
             sleep(150)
             if (!images.findColorInRegion(captureScreen(), "#753e36", 442, 210, 752 - 442, 263 - 210)) {
                 log("文字未输入成功")
@@ -2018,10 +2545,10 @@ function tomToFind(tomPos) {
                         { x: firstcolorPos[4].x + i % 2 * step[0], y: firstcolorPos[4].y + Math.floor(i / 2) * step[1], color: color }])) {
                             click(firstPos[0] + i % 2 * step[0], firstPos[1] + Math.floor(i / 2) * step[1]);
                             sleep(150);
-                            if (allItemColor[config.tomFind.text]) {
-                                log("物品:" + config.tomFind.text + "颜色在颜色库中")
+                            if (allItemColor[findItem]) {
+                                log("物品:" + findItem + "颜色在颜色库中")
                                 //检测右侧框内物品
-                                let pos = findMC(allItemColor[config.tomFind.text], null, [845, 234, 1015 - 845, 384 - 234]);
+                                let pos = findMC(allItemColor[findItem], null, [845, 234, 1015 - 845, 384 - 234]);
                                 if (pos) {
                                     isFind = true;
                                 }
@@ -2030,7 +2557,7 @@ function tomToFind(tomPos) {
                                 let img1 = images.clip(captureScreen(), 820, 277, 1039 - 820, 410 - 277)
                                 try {
                                     let itemText = paddle.ocrText(img1);
-                                    if (itemText.includes(config.tomFind.text)) {
+                                    if (itemText.includes(findItem)) {
                                         isFind = true;
                                     }
                                 } catch (error) {
@@ -2135,7 +2662,7 @@ function tomToFind(tomPos) {
             if (tomMenu() == "等待" || tomMenu() == "没有雇佣汤姆") {
                 log("成功收取物品");
                 showTip("成功收取物品");
-                let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "tom");
+                let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "clip");
                 let tomTimeStr_fixed = tomTimeStr.replace(/(\d*)小时/, function (match, p1) {
                     // 如果没有数字或者数字不是1，则替换为1
                     if (p1 === "" || p1 !== "1") {
@@ -2186,7 +2713,7 @@ function tomToFind(tomPos) {
                 tom_operation2(tomPos, true);
             } else if (tom_menu == "等待") {
                 findNum = 0;
-                let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "tom");
+                let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "clip");
                 let tomTimeStr_fixed = tomTimeStr.replace(/(\d*)小时/, function (match, p1) {
                     // 如果没有数字或者数字不是1，则替换为1
                     if (p1 === "" || p1 !== "1") {
@@ -2367,6 +2894,43 @@ function findland_click() {
 }
 
 /**
+ * 
+ * @param {*} group [0,harvestTime,[x,y],[x,y]]
+ * @param {*} L 左移 {x: number, y: number}
+ * @param {*} R 右移 {x: number, y: number}
+ * @param {*} S 换行 {x: number, y: number}
+ * @param {*} rows 行数,执行次数
+ * @returns {Array} 包含所有点的数组，每个点都是[x, y]格式
+ */
+function getHarvestGroup(group, L, R, S, rows) {
+    if (!group || group.length < 3) {
+        log("getHarvestGroup参数错误,group不能为空且长度必须大于等于3")
+        return false
+    }
+    const safe = (x, y) => [
+        Math.max(0, Math.min(x, 1280 - 1)),
+        Math.max(0, Math.min(y, 720 - 1))
+    ];
+
+    let originalGroup = group
+    let lastIndex = originalGroup.length - 1
+    let startX = originalGroup[lastIndex][0]
+    let startY = originalGroup[lastIndex][1]
+    for (let i = 0; i < rows; i++) {
+        // 添加当前行的三个点（左移、换行、右移）
+        originalGroup.push(
+            safe(startX + L.x, startY + L.y),
+            safe(startX + L.x + S.x, startY + L.y + S.y),
+            safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)
+        );
+
+        startX = safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)[0];
+        startY = safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)[1];
+    }
+    return originalGroup
+}
+
+/**
  * 收割作物
  * @param {Object} center - 收割中心点坐标 {x: number, y: number}
  * @param {number} [rows=3] - 收割行数
@@ -2423,40 +2987,49 @@ function harvest(center) {
     let startY = pos_land.y;
 
     let firstGroup, secondGroup
-    if (configs.get("syncHarvest")) {
-        // 第一组手势路径点
-        firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x, pos_land.y)];
 
-        // 第二组手势路径点（Y偏移）
-        secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
+    let harvestMode = configs.get("harvestMode", 0)
+    if (harvestMode === 0) {
+        if (configs.get("syncHarvest")) {
+            // 第一组手势路径点
+            firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x, pos_land.y)];
 
-    } else {
-        // 第一组手势路径点
-        firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x, pos_land.y)];
+            // 第二组手势路径点（Y偏移）
+            secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
 
-        // 第二组手势路径点（Y偏移）
-        secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
+        } else {
+            // 第一组手势路径点
+            firstGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x, pos_land.y)];
 
-    }
+            // 第二组手势路径点（Y偏移）
+            secondGroup = [0, harvestTime, safe(center.x, center.y), safe(pos_land.x + pos2X, pos_land.y + pos2Y)];
 
-    for (let i = 0; i < rows; i++) {
+        }
 
-        // 添加当前行的三个点（左移、换行、右移）
-        firstGroup.push(
-            safe(startX + L.x, startY + L.y),
-            safe(startX + L.x + S.x, startY + L.y + S.y),
-            safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)
-        );
+        for (let i = 0; i < rows; i++) {
+
+            // 添加当前行的三个点（左移、换行、右移）
+            firstGroup.push(
+                safe(startX + L.x, startY + L.y),
+                safe(startX + L.x + S.x, startY + L.y + S.y),
+                safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)
+            );
 
 
-        // 添加当前行的三个点（左移、换行、右移）带Y偏移
-        secondGroup.push(
-            safe(startX + L.x + pos2X, startY + L.y + pos2Y),
-            safe(startX + L.x + S.x + pos2X, startY + L.y + S.y + pos2Y),
-            safe(startX + L.x + S.x + R.x + pos2X, startY + L.y + S.y + R.y + pos2Y)
-        );
-        startX = safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)[0];
-        startY = safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)[1];
+            // 添加当前行的三个点（左移、换行、右移）带Y偏移
+            secondGroup.push(
+                safe(startX + L.x + pos2X, startY + L.y + pos2Y),
+                safe(startX + L.x + S.x + pos2X, startY + L.y + S.y + pos2Y),
+                safe(startX + L.x + S.x + R.x + pos2X, startY + L.y + S.y + R.y + pos2Y)
+            );
+            startX = safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)[0];
+            startY = safe(startX + L.x + S.x + R.x, startY + L.y + S.y + R.y)[1];
+        }
+    } else if (harvestMode === 1) {
+        let group1 = [0, harvestTime, safe(center.x, center.y), safe(center.x - pos2X / 2, center.y - pos2Y / 2), safe(pos_land.x - pos2X / 2, pos_land.y - pos2Y / 2)];
+        let group2 = [0, harvestTime, safe(center.x, center.y), safe(center.x + pos2X / 2, center.y + pos2Y / 2), safe(pos_land.x + pos2X / 2, pos_land.y + pos2Y / 2)];
+        firstGroup = getHarvestGroup(group1, L, R, S, rows)
+        secondGroup = getHarvestGroup(group2, L, R, S, rows)
     }
 
     // 执行手势
@@ -3515,7 +4088,7 @@ function clickShopSearchButton(item) {
         }
         click(500 + ran(), 200 + ran());
         sleep(100);
-        setText(item);
+        setText_inGame(item);
         log("输入" + item)
         sleep(150);
 
@@ -3550,14 +4123,16 @@ function find_close(screenshot1, action = null) {
         }
 
         //进入小镇，鱼塘，其他农场
-        let homebtn1 = findMC(["#62d365", [-5, -12, "#c787db"], [1, 11, "#55cf58"]],
-            screenshot = sc, [0, 600, 240, 110]);
-        if (homebtn1) {
-            click(homebtn1.x - 30 + ran(), homebtn1.y + ran());
-            console.log("当前在其他界面，回到主界面");
-            showTip("当前在其他界面，回到主界面");
-            checkmenu();
-            return true;
+        if (!action || !action.includes("except_homeBtn")) {
+            let homeBtn = findMC(["#62d365", [-5, -12, "#c787db"], [1, 11, "#55cf58"]],
+                screenshot = sc, [0, 600, 240, 110]);
+            if (homeBtn) {
+                click(homeBtn.x - 30 + ran(), homeBtn.y + ran());
+                console.log("当前在其他界面，回到主界面");
+                showTip("当前在其他界面，回到主界面");
+                checkmenu();
+                return true;
+            }
         }
 
         //升级
@@ -3614,6 +4189,7 @@ function find_close(screenshot1, action = null) {
                     sleep(200);
                 }
             }
+            return true;
         }
 
         //改善游戏体验界面
@@ -3625,6 +4201,7 @@ function find_close(screenshot1, action = null) {
             log("改善游戏体验界面");
             showTip("改善游戏体验界面");
             click(930 + ran(), 570 + ran());
+            return true;
         }
 
         //进入设计节界面
@@ -3657,6 +4234,7 @@ function find_close(screenshot1, action = null) {
             createWindow(config.showText);
             sleep(100);
             showTip("进入设计节界面");
+            return true;
         }
 
         //进入加载界面
@@ -3666,6 +4244,7 @@ function find_close(screenshot1, action = null) {
             { x: 867, y: 546, color: "#7ec8ed" }, { x: 861, y: 587, color: "#c7e3e8" }], sc);
             if (jiazai) {
                 checkmenu();
+                return true;
             }
         }
 
@@ -3835,10 +4414,18 @@ function jiaocheng() {
                 { x: 1096, y: 599, color: "#6ab952" }, { x: 1123, y: 559, color: "#73be52" },
                 { x: 1097, y: 541, color: "#f7e160" }, { x: 1149, y: 597, color: "#f7c439" },
                 { x: 1065, y: 624, color: "#f7c13c" }], sc);
+                let duihua = matchColor([{ x: 530, y: 128, color: "#f4eada" },
+                { x: 1154, y: 126, color: "#f4ebdf" }, { x: 521, y: 488, color: "#f2e7c8" },
+                { x: 1147, y: 502, color: "#f3e7c8" }])
                 if (daocaoren) {
                     log("识别到稻草人，点击");
                     showTip("识别到稻草人，点击");
                     click(1055 + ran(), 600 + ran());
+                    i = 0; //重置i
+                } else if (duihua) {
+                    log("识别到对话，点击");
+                    showTip("识别到对话，点击");
+                    click(1055 + ran(), 600 + ran())
                     i = 0; //重置i
                 } else if (greenButton) {
                     log("点击绿色按钮");
@@ -3900,7 +4487,7 @@ function switch_account(Account) {
             showTip("切换账号" + Account);
             sleep(100)
 
-            find_close();
+            find_close(null, "except_homeBtn");
             sleep(100);
 
             //点击换号1
@@ -3954,9 +4541,9 @@ function switch_account(Account) {
                     if (num < 3) {
                         num++;
                         console.log(`未识别到切换账号1按钮，重试第${num}次`);
-                        find_close();
+                        find_close(null, "except_homeBtn");
                         sleep(200);
-                        find_close();
+                        find_close(null, "except_homeBtn");
                         continue;
                     } else {
                         console.log("超过最大尝试次数，重进游戏");
@@ -4007,9 +4594,9 @@ function switch_account(Account) {
                             num++;
                             console.log(`未识别到切换账号2按钮，重试第${num}次`);
                             sleep(3000);
-                            find_close();
+                            find_close(null, "except_homeBtn");
                             sleep(200);
-                            find_close();
+                            find_close(null, "except_homeBtn");
                             continue;
                         } else {
                             console.log("超过最大尝试次数，重进游戏");
@@ -4051,9 +4638,9 @@ function switch_account(Account) {
                         num++;
                         console.log(`未识别到切换账号3按钮，重试第${num}次`);
                         sleep(3000);
-                        find_close();
+                        find_close(null, "except_homeBtn");
                         sleep(200);
-                        find_close();
+                        find_close(null, "except_homeBtn");
                         continue;
                     } else {
                         console.log("超过最大尝试次数，重进游戏");
@@ -4127,7 +4714,6 @@ function switch_account(Account) {
             if (is_find_Account) { //如果找到账号名称，则点击
                 log(`找到账号${Account}`);
                 showTip(`找到账号${Account}`);
-                sleep(500);
                 click(is_find_Account.x + ran(), is_find_Account.y + ran());
                 sleep(500);
                 found = true;
@@ -4186,7 +4772,7 @@ function switch_account(Account) {
     } finally {
         // 确保关闭所有可能的弹窗
         sleep(200);
-        find_close();
+        find_close(null, "except_homeBtn");
     }
 }
 
@@ -4387,17 +4973,13 @@ function plantCrop() {
         } else {
             console.log("未找到" + config.selectedCrop.text);
             showTip("未找到" + config.selectedCrop.text);
-            let next_button = findMC(["#ffffff", [17, -1, "#ffffff"], [31, 0, "#fdbe00"], [10, 12, "#ffffff"],
-                [-13, 12, "#ffffff"], [-11, -15, "#ffffff"], [-3, -17, "#f5dd38"], [-2, 23, "#f5c200"],
-                [31, 4, "#fdbb00"], [32, 30, "#fffcf0"], [-18, 1, "#fac400"], [-25, 3, "#fcbb00"]]);
+            let next_button = findMC(allItemColor["nextButton"]);
 
             if (next_button) {
                 let maxTries = 10;
                 let tries = 0;
                 while (tries < maxTries && next_button) {
-                    next_button = findMC(["#ffffff", [17, -1, "#ffffff"], [31, 0, "#fdbe00"], [10, 12, "#ffffff"],
-                        [-13, 12, "#ffffff"], [-11, -15, "#ffffff"], [-3, -17, "#f5dd38"], [-2, 23, "#f5c200"],
-                        [31, 4, "#fdbb00"], [32, 30, "#fffcf0"], [-18, 1, "#fac400"], [-25, 3, "#fcbb00"]]);
+                    next_button = findMC(allItemColor["nextButton"]);
                     click(next_button.x + ran(), next_button.y + ran());
                     sleep(1000);
                     center_wheat = findMC(crop_plant);
@@ -4451,19 +5033,13 @@ function plant_crop() {
     } else {
         console.log("未找到" + config.selectedCrop.text);
         showTip("未找到" + config.selectedCrop.text);
-        let next_button = findMC(["#ffffff", [11, 2, "#f4d200"],
-            [21, -1, "#ffffff"], [33, 2, "#fbbd00"], [42, 11, "#fefeef"],
-            [6, 30, "#f3bc00"], [7, 46, "#fefef4"], [-17, 4, "#fac000"],
-            [-30, 14, "#fefeef"], [2, -16, "#f4db35"]]);
+        let next_button = findMC(allItemColor["nextButton"]);
 
         if (next_button) {
             let maxTries = 10;
             let tries = 0;
             while (tries < maxTries && next_button) {
-                next_button = findMC(["#ffffff", [11, 2, "#f4d200"],
-                    [21, -1, "#ffffff"], [33, 2, "#fbbd00"], [42, 11, "#fefeef"],
-                    [6, 30, "#f3bc00"], [7, 46, "#fefef4"], [-17, 4, "#fac000"],
-                    [-30, 14, "#fefeef"], [2, -16, "#f4db35"]]);
+                next_button = findMC(allItemColor["nextButton"]);
                 if (next_button) {
                     click(next_button.x + ran(), next_button.y + ran());
                     log("点击下一页按钮");
@@ -4536,6 +5112,7 @@ function harvest_crop(center_sickle) {
 
 //循环操作
 function operation(Account) {
+    let accountName = Account.title || Account
     sleep(200);
 
     //收作物
@@ -4619,7 +5196,7 @@ function operation(Account) {
 
     //设定计时器
     let cropTime = config.matureTime * 60 - config.harvestTime; //成熟时间-收割时间
-    let timerName = Account ? Account + "计时器" : config.selectedCrop.text;
+    let timerName = accountName ? accountName + "计时器" : config.selectedCrop.text;
     timer(timerName, cropTime);
 
     //打开路边小店
@@ -4636,8 +5213,12 @@ function operation(Account) {
     console.log("============开始售卖系列操作===============")
     shop();
 
-    if (config.tomFind.enabled) {
+    if (config.tomFind.enabled && Account.tomFind.enabled) {
         tomOperation(Account);
+    }
+
+    if (config.pond.enabled && Account.pond.enabled) {
+        pond_operation(Account);
     }
 
 }
@@ -4939,42 +5520,49 @@ function rawContentData2(rawContentData) {
     }
 }
 
-
+function setText_inGame(text) {
+    if (currentPackage() == "org.autojs.autoxjs.v7") {
+        log("当前在autoxjs,禁用setText")
+        return false;
+    }
+    setText(text);
+    return true;
+}
 
 function pushTo(contentData) {
     let title = "卡通农场小助手仓库统计"; //推送标题
     let response = null;
-    log(config.serverPlatform.text, title, contentData)
+    log(configs.get("serverPlatform").text, title, contentData)
     try {
         //pushplus推送加
-        if (config.serverPlatform.code == 0) {
+        if (configs.get("serverPlatform").code == 0) {
             let url = "http://www.pushplus.plus/send"
             response = http.post(url, {
-                token: token_storage.get("token", ""),
+                token: configs.get("token", ""),
                 title: title,
                 content: contentData,
                 template: "markdown"
             });
         }
         // server酱推送
-        else if (config.serverPlatform.code == 1) {
-            let url = "https://sctapi.ftqq.com/" + token_storage.get("token", "") + ".send"
+        else if (configs.get("serverPlatform").code == 1) {
+            let url = "https://sctapi.ftqq.com/" + configs.get("token", "") + ".send"
             response = http.post(url, {
                 title: title,
                 desp: contentData,
             });
         }
         // wxpusher推送
-        else if (config.serverPlatform.code == 2) {
+        else if (configs.get("serverPlatform").code == 2) {
             let url = "https://wxpusher.zjiecode.com/api/send/message/simple-push"
             response = http.postJson(url, {
                 "content": contentData,
                 "summary": title,
                 "contentType": 3,
-                "spt": token_storage.get("token", ""),
+                "spt": configs.get("token", ""),
             });
         }
-        else if (config.serverPlatform.code == 3) {
+        else if (configs.get("serverPlatform").code == 3) {
 
         }
     } catch (error) {
@@ -5076,25 +5664,25 @@ function copy_shell(name, direction = "export") {
  * @param {number} max 最大重试次数，默认10次
  * @returns {boolean} 未识别到：返回false。识别到：传入MC返回坐标，传入matchColor返回true
  */
-function click_waitFor(point, matchColorPoints, MCPoints, max = 10, xiangsidu) {
+function click_waitFor(point, matchColorPoints, MCPoints, max = 10, xiangsidu, sleepTime = 200) {
     xiangsidu = xiangsidu || null
     if (point) click(point[0], point[1])
     if (matchColorPoints) {
         for (let i = 0; i < max; i++) {
             if (matchColor(matchColorPoints, null, xiangsidu)) return true
-            sleep(200);
+            sleep(sleepTime);
         }
     } else if (MCPoints) {
         for (let i = 0; i < max; i++) {
             let pos = findMC(MCPoints, null, null, xiangsidu)
             if (pos) return pos
-            sleep(200);
+            sleep(sleepTime);
         }
     }
     return false;
 }
 
-function waitFor_click(point, matchColorPoints, MCPoints, max = 10, xiangsidu) {
+function waitFor_click(point, matchColorPoints, MCPoints, max = 10, xiangsidu, sleepTime = 200) {
     xiangsidu = xiangsidu || null
     let find = false;
     if (matchColorPoints) {
@@ -5103,7 +5691,7 @@ function waitFor_click(point, matchColorPoints, MCPoints, max = 10, xiangsidu) {
                 find = true;
                 break;
             }
-            sleep(200);
+            sleep(sleepTime);
         }
     } else if (MCPoints) {
         for (let i = 0; i < max; i++) {
@@ -5113,7 +5701,7 @@ function waitFor_click(point, matchColorPoints, MCPoints, max = 10, xiangsidu) {
                 find = true;
                 break;
             }
-            sleep(200);
+            sleep(sleepTime);
         }
     }
     if (find && point) {
@@ -5149,8 +5737,15 @@ module.exports = {
     openFriendMenu: openFriendMenu,
     openFriend: openFriend,
 
-    //寻找相关
+    //鱼塘相关
     find_yuchuan: find_yuchuan,
+    huadong_pond: huadong_pond,
+    find_fishPond: find_fishPond,
+    click_netMaker: click_netMaker,
+    netMaker_produce: netMaker_produce,
+    collect_lobster: collect_lobster,
+    collect_duckSalon: collect_duckSalon,
+    put_net: put_net,
 
     // 游戏界面检查
     checkmenu: checkmenu,
@@ -5163,6 +5758,7 @@ module.exports = {
     findland_click: findland_click,
     harvest: harvest,
     harvest_wheat: harvest_wheat,
+    getHarvestGroup: getHarvestGroup,
 
     // 商店相关
     coin: coin,

@@ -158,7 +158,7 @@ function sousuo() {
 function setTreeText() {
     if (sousuo()) {
         sleep(500);
-        setText(config.selectedTree.text); //输入搜索内容
+        module.setText_inGame(config.selectedTree.text); //输入搜索内容
         log("输入" + config.selectedTree.text);
         module.showTip("输入" + config.selectedTree.text);
         sleep(500);
@@ -181,7 +181,7 @@ function setTreeText() {
         // find_close();
         log("未找到搜索，再次寻找");
         if (sousuo()) {
-            setText(config.selectedTree.text); //输入搜索内容
+            module.setText_inGame(config.selectedTree.text); //输入搜索内容
             if (module.matchColor([{ x: 45, y: 59, color: "#ffffff" }, { x: 142, y: 151, color: "#ffffca" }, { x: 478, y: 316, color: "#ffc837" }])) {
                 return true;  //成功搜索到
             }
