@@ -74,7 +74,22 @@ function main_email() {
 
         //循环操作
         while (true) {
-            module.operation();
+            let AccountConfig = {
+                "title": "",
+                "done": true,
+                "tomFind": {
+                    "enabled": config.tomFind.enabled,
+                    "type": config.tomFind.type,
+                    "code": config.tomFind.code,
+                    "text": config.tomFind.text
+                },
+                "pond": {
+                    "enabled": true,
+                    "name": config.pond.name,
+                    "ponds": config.pond.ponds
+                }
+            };
+            module.operation(AccountConfig);
             log("等待作物成熟");
 
             //执行升仓
@@ -94,6 +109,12 @@ function main_email() {
                 module.pushTo(contentData);
                 module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
             }
+
+            module.find_close();
+            sleep(500);
+            module.huadong();
+            sleep(500);
+            module.findland(false)
 
             while (true) {
                 // 获取计时器剩余时间
@@ -440,7 +461,7 @@ function main_save() {
 
             module.huadong();
 
-            module.operation(currentAccount.title); //执行刷地，售卖
+            module.operation(currentAccount); //执行刷地，售卖
 
             //升仓
             if (shengcangForEach) {

@@ -335,7 +335,11 @@ function showCangkuSoldDialog() {
                 "   - 勾选复选框表示参与售卖\n" +
                 "   - 取消勾选表示不参与售卖\n\n" +
                 "4. 售卖逻辑：\n" +
-                "   - ",
+                "   - 优先级 ：物品按优先级分组，优先级数值越小越优先售卖\n"+
+                "   - 分组处理 ：同一优先级的物品视为一个组，按优先级从高到低依次处理\n"+
+                "   - 组内分配 :\n"+
+                "   - 如果当前优先级组的总库存 ≤ 剩余售卖额度，则该组所有物品全部售卖\n"+
+                "   - 如果当前优先级组的总库存 > 剩余售卖额度，则按各物品库存比例分配剩余售卖额度\n",
             positive: "确定"
         }).show();
     });
@@ -1297,6 +1301,28 @@ ui.layout(
                                             <Switch id="pondSwitch" />
                                         </horizontal>
 
+                                        {/* 鱼塘编号和鱼类名称 - 仅在鱼塘开关开启时显示 */}
+                                        <vertical id="pondItemContainer" gravity="center_vertical" visibility="gone">
+                                            {/* 鱼塘编号设置 */}
+                                            <horizontal gravity="center_vertical" marginBottom="12">
+                                                <text text="鱼塘编号：" textSize="14" w="80" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <button id="pond_number" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                            </horizontal>
+
+                                            {/* 显示开启的鱼塘编号 */}
+                                            <horizontal gravity="center_vertical" marginBottom="12">
+                                                <text text="已开启鱼塘:" textSize="14" w="80" marginRight="8" />
+                                                <text id="pond_numbers_display" text="" textSize="14" textColor="#666666" />
+                                            </horizontal>
+
+                                            {/* 鱼塘物品类型 */}
+                                            <horizontal gravity="center_vertical" marginBottom="12">
+                                                <text text="鱼塘物品类型：" textSize="14" w="120" marginRight="8" />
+                                                <spinner id="pond_fish_item_type" entries="鱼片|龙虾尾|鸭毛" w="150" textSize="14" h="48" bg="#FFFFFF" />
+                                            </horizontal>
+                                        </vertical>
+
                                         {/* 树木选择 - 仅在种树时显示 */}
                                         <vertical id="treeSelectContainer" gravity="center_vertical" visibility="gone">
                                             <horizontal gravity="center_vertical">
@@ -1486,6 +1512,12 @@ ui.layout(
                                             <text text="顶号延迟" textSize="14" w="120" marginRight="8" />
                                             <input id="pauseTime" hint="5" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
                                             <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                        </horizontal>
+
+                                        <horizontal gravity="center_vertical">
+                                            <text text="首次雇佣汤姆界面是否选择确定" textSize="14" w="120" marginRight="8" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <checkbox id="tom_FirstHire" checked="false" />
                                         </horizontal>
 
                                         <horizontal gravity="center_vertical">
@@ -1854,6 +1886,7 @@ ui.layout(
                             <vertical padding="16">
                                 <horizontal marginBottom="16">
                                     <text text="功能设置" textSize="16" textStyle="bold" />
+                                    <img id="helpIcon_account_config" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
                                     <View w="0" h="0" layout_weight="1" />
                                     <text id="current_account_name" text="" textSize="14" textColor="#666666" />
                                 </horizontal>
@@ -1992,28 +2025,8 @@ ui.accountConfigBtn.on("click", () => {
     ui.account_config_frame.setVisibility(0); // 0 = VISIBLE
 
     // 确保每个账号都有完整的设置字段
-    accountList = accountList.map(account => {
-        if (!account.tomFind) {
-            account.tomFind = {
-                enabled: true, // 默认开启汤姆
-                type: "货仓",
-                code: 0,
-                text: ""
-            };
-        }
-        if (!account.pond) {
-            account.pond = {
-                enabled: true, // 默认开启鱼塘
-                name: "鱼片",
-                ponds: [1, 2] // 默认选择1号和2号鱼塘
-            };
-        }
-        // 确保pond.ponds存在
-        if (!account.pond.ponds) {
-            account.pond.ponds = [1, 2];
-        }
-        return account;
-    });
+    accountList = validateAccountSettings(accountList);
+
 
     // 保存更新后的账号列表
     configs.put("accountList", accountList);
@@ -2081,6 +2094,63 @@ ui.account_config_settingsButton.on("click", () => {
             }
         });
 });
+
+// 验证账号设置的函数
+function validateAccountSettings(accountList) {
+    return accountList.map(account => {
+        // 验证并初始化tomFind对象
+        if (!account.tomFind || typeof account.tomFind !== 'object') {
+            account.tomFind = {
+                enabled: true, // 默认开启汤姆
+                type: "货仓",
+                code: 0,
+                text: ""
+            };
+        } else {
+            // 验证tomFind的每个字段
+            if (typeof account.tomFind.enabled !== 'boolean') {
+                account.tomFind.enabled = true;
+            }
+            if (typeof account.tomFind.type !== 'string') {
+                account.tomFind.type = "货仓";
+            }
+            if (typeof account.tomFind.code !== 'number') {
+                account.tomFind.code = 0;
+            }
+            if (typeof account.tomFind.text !== 'string') {
+                account.tomFind.text = "";
+            }
+        }
+
+        // 验证并初始化pond对象
+        if (!account.pond || typeof account.pond !== 'object') {
+            account.pond = {
+                enabled: true, // 默认开启鱼塘
+                name: "鱼片",
+                ponds: [1, 2] // 默认选择1号和2号鱼塘
+            };
+        } else {
+            // 验证pond的每个字段
+            if (typeof account.pond.enabled !== 'boolean') {
+                account.pond.enabled = true;
+            }
+            if (typeof account.pond.name !== 'string') {
+                account.pond.name = "鱼片";
+            }
+            if (!Array.isArray(account.pond.ponds)) {
+                account.pond.ponds = [1, 2];
+            } else {
+                // 确保pond.ponds中的元素都是数字
+                account.pond.ponds = account.pond.ponds.filter(pondNum => typeof pondNum === 'number');
+                // 如果过滤后为空，设置默认值
+                if (account.pond.ponds.length === 0) {
+                    account.pond.ponds = [1, 2];
+                }
+            }
+        }
+        return account;
+    });
+}
 
 // 加载账号配置
 function loadAccountConfig(accountName) {
@@ -3100,7 +3170,18 @@ function loadSaveAccountListFromConfig(config_save) {
         if (folderNameMap[account.title]) {
             orderedSaveAccountList.push({
                 title: account.title,
-                done: account.done !== undefined ? account.done : true
+                done: account.done !== undefined ? account.done : true,
+                tomFind: account.tomFind || {
+                    enabled: true,
+                    type: "货仓",
+                    code: 0,
+                    text: ""
+                },
+                pond: account.pond || {
+                    enabled: true,
+                    name: "鱼片",
+                    ponds: [1, 2]
+                }
             });
             // 从映射中移除已处理的文件夹
             delete folderNameMap[account.title];
@@ -3111,7 +3192,18 @@ function loadSaveAccountListFromConfig(config_save) {
     Object.keys(folderNameMap).forEach(name => {
         orderedSaveAccountList.push({
             title: name,
-            done: true
+            done: true,
+            tomFind: {
+                enabled: true,
+                type: "货仓",
+                code: 0,
+                text: ""
+            },
+            pond: {
+                enabled: true,
+                name: "鱼片",
+                ponds: [1, 2]
+            }
         });
     });
 
@@ -3362,7 +3454,18 @@ ui['addAccount'].on('click', () => {
             if (title && title.trim() !== '') {
                 dataList.push({
                     title: title.trim(),
-                    done: true
+                    done: true,
+                    tomFind: {
+                        enabled: true,
+                        type: "货仓",
+                        code: 0,
+                        text: ""
+                    },
+                    pond: {
+                        enabled: true,
+                        name: "鱼片",
+                        ponds: [1, 2]
+                    }
                 });
                 ui[listName].adapter.notifyDataSetChanged();
 
@@ -3469,6 +3572,7 @@ function getConfig() {
         landFindMethod: configs.get("landFindMethod"),
         coinCollectionMethod: configs.get("coinCollectionMethod"),
         syncHarvest: configs.get("syncHarvest"),
+        tom_FirstHire: configs.get("tom_FirstHire"),
         landOffset: {
             x: configs.get("landOffsetX"),
             y: configs.get("landOffsetY")
@@ -3520,7 +3624,9 @@ function getConfig() {
             text: configs.get("Tom_itemName")
         },
         pond: {
-            enabled: configs.get("pond_enabled")
+            enabled: configs.get("pond_enabled"),
+            name: configs.get("pond_itemName"),
+            ponds: configs.get("pond_ponds")
         },
         CangkuSoldList: configs.get("CangkuSoldList", CangkuSoldList),
         isCangkuSold: configs.get("isCangkuSold", false),
@@ -3590,6 +3696,7 @@ function saveConfig(con) {
         configs.put("landFindMethod", con.landFindMethod);
         configs.put("coinCollectionMethod", con.coinCollectionMethod);
         configs.put("syncHarvest", con.syncHarvest);
+        configs.put("tom_FirstHire", con.tom_FirstHire);
 
         // 存储偏移量配置
         configs.put("landOffsetX", con.landOffset.x);
@@ -3641,6 +3748,8 @@ function saveConfig(con) {
 
         // 存储鱼塘配置
         configs.put("pond_enabled", con.pond.enabled);
+        configs.put("pond_itemName", con.pond.name);
+        configs.put("pond_ponds", con.pond.ponds);
 
         // 存储截图坐标
         configs.put("screenshotX1", con.screenshotCoords.coord1.x);
@@ -3789,6 +3898,11 @@ function validateConfig(config) {
         config.syncHarvest = defaultConfig.syncHarvest;
     }
 
+    // 验证tom_FirstHire
+    if (config.tom_FirstHire == undefined || typeof config.tom_FirstHire !== "boolean") {
+        config.tom_FirstHire = defaultConfig.tom_FirstHire;
+    }
+
     // 验证功能选择
     if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
     const functionOptions = ["刷地", "种树", "创新号", "仅汤姆", "物品售卖", "倒金币"];
@@ -3933,9 +4047,26 @@ function validateConfig(config) {
         config.tomFind.text = defaultConfig.tomFind.text;
     }
 
+    // 验证鱼塘配置
     if (!config.pond) config.pond = defaultConfig.pond;
     if (typeof config.pond.enabled !== "boolean") {
         config.pond.enabled = defaultConfig.pond.enabled;
+    }
+    const pondItemOptions = ["鱼片", "龙虾尾", "鸭毛"];
+    if (typeof config.pond.name !== "string" || !pondItemOptions.includes(config.pond.name)) {
+        config.pond.name = defaultConfig.pond.name;
+    }
+    if (!Array.isArray(config.pond.ponds)) {
+        config.pond.ponds = defaultConfig.pond.ponds;
+    } else {
+        // 过滤出有效的鱼塘编号（1-15）
+        config.pond.ponds = config.pond.ponds.filter(pond =>
+            typeof pond === "number" && pond >= 1 && pond <= 15
+        );
+        // 如果过滤后为空，使用默认值
+        if (config.pond.ponds.length === 0) {
+            config.pond.ponds = defaultConfig.pond.ponds;
+        }
     }
 
     // 验证是否已出售商品列表
@@ -4203,8 +4334,11 @@ function getDefaultConfig() {
             code: 0,
             text: ""
         },
+        tom_FirstHire: false, // 首次雇佣汤姆界面是否确定
         pond: {
-            enabled: false
+            enabled: false,
+            name: "鱼片",
+            ponds: [1, 2]
         },
         CangkuSoldList: CangkuSoldList,
         isCangkuSold: false,
@@ -4273,8 +4407,12 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 初始化颜色
     initColor();
 
-    AccountList = config.accountList
+    // 确保每个账号都有完整的设置字段
+    AccountList = validateAccountSettings(config.accountList);
+
     ui['AccountList'].setDataSource(AccountList);
+    // 保存更新后的账号列表
+    configs.put("accountList", AccountList);
     SaveAccountList = loadSaveAccountListFromConfig(config.saveAccountList);
     ui['SaveAccountList'].setDataSource(SaveAccountList);
     AddFriendsList = config.addFriendsList
@@ -4332,6 +4470,9 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 设置同步收割
     ui.syncHarvest.setChecked(config.syncHarvest);
+
+    // 设置首次雇佣汤姆界面是否确定
+    ui.tom_FirstHire.setChecked(config.tom_FirstHire);
 
     // 设置账号识别方式
     if (config.findAccountMethod == "image") {
@@ -4425,6 +4566,21 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 加载鱼塘相关配置
     if (config.pond.enabled !== undefined) {
         ui.pondSwitch.setChecked(config.pond.enabled);
+        // 根据开关状态控制pondItemContainer的可见性
+        ui.pondItemContainer.attr("visibility", config.pond.enabled ? "visible" : "gone");
+    }
+
+    // 加载鱼塘物品类型
+    if (config.pond.name !== undefined) {
+        const fishItemIndex = ["鱼片", "龙虾尾", "鸭毛"].indexOf(config.pond.name);
+        if (fishItemIndex >= 0) {
+            ui.pond_fish_item_type.setSelection(fishItemIndex);
+        }
+    }
+
+    // 加载已开启的鱼塘编号
+    if (config.pond.ponds !== undefined) {
+        ui.pond_numbers_display.setText(config.pond.ponds.join(","));
     }
 
     if (config.tomFind.type !== undefined) {
@@ -5078,6 +5234,12 @@ function initUI() {
                 } else {
                     ui.tomItemContainer.attr("visibility", "gone");
                 }
+                // 控制鱼塘相关控件 - 只有在鱼塘开关打开时才显示
+                if (ui.pondSwitch.isChecked()) {
+                    ui.pondItemContainer.attr("visibility", "visible");
+                } else {
+                    ui.pondItemContainer.attr("visibility", "gone");
+                }
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
                 // 隐藏倒金币相关控件
                 ui.coinContainer.attr("visibility", "gone");
@@ -5093,6 +5255,8 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
+                // 隐藏鱼塘相关控件
+                ui.pondItemContainer.attr("visibility", "gone");
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
                 // 隐藏倒金币相关控件
                 ui.coinContainer.attr("visibility", "gone");
@@ -5108,6 +5272,8 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "visible");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
+                // 隐藏鱼塘相关控件
+                ui.pondItemContainer.attr("visibility", "gone");
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
                 // 隐藏倒金币相关控件
                 ui.coinContainer.attr("visibility", "gone");
@@ -5123,6 +5289,8 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 显示汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "visible");
+                // 隐藏鱼塘相关控件
+                ui.pondItemContainer.attr("visibility", "gone");
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
                 // 隐藏倒金币相关控件
                 ui.coinContainer.attr("visibility", "gone");
@@ -5138,6 +5306,8 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
+                // 隐藏鱼塘相关控件
+                ui.pondItemContainer.attr("visibility", "gone");
                 ui.sell_itemSoldContainer.attr("visibility", "visible");
                 // 隐藏倒金币相关控件
                 ui.coinContainer.attr("visibility", "gone");
@@ -5153,6 +5323,8 @@ function initUI() {
                 ui.addFriendsCard.attr("visibility", "gone");
                 // 隐藏汤姆相关控件
                 ui.tomItemContainer.attr("visibility", "gone");
+                // 隐藏鱼塘相关控件
+                ui.pondItemContainer.attr("visibility", "gone");
                 ui.sell_itemSoldContainer.attr("visibility", "gone");
                 // 显示倒金币相关控件
                 ui.coinContainer.attr("visibility", "visible");
@@ -5182,6 +5354,147 @@ function initUI() {
     ui.pondSwitch.on("check", (checked) => {
         // 保存修改后的开关状态到配置
         configs.put("pond_enabled", checked);
+        // 根据当前选择的功能和开关状态控制pondItemContainer的可见性
+        const currentFunction = ui.functionSelect.getSelectedItem().toString();
+        if (currentFunction === "刷地") {
+            ui.pondItemContainer.attr("visibility", checked ? "visible" : "gone");
+        } else {
+            ui.pondItemContainer.attr("visibility", "gone");
+        }
+    });
+
+    // 鱼塘物品类型选择事件
+    ui.pond_fish_item_type.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            // 获取鱼塘物品名称
+            let fishItemTypes = ["鱼片", "龙虾尾", "鸭毛"];
+            let selectedFishItem = fishItemTypes[position];
+            // 保存选择的鱼塘物品类型到配置
+            configs.put("pond_itemName", selectedFishItem);
+        },
+        onNothingSelected: function (parent) {
+            // 空处理
+        }
+    }));
+
+    // 鱼塘编号设置按钮点击事件
+    ui.pond_number.on("click", function () {
+        // 获取当前配置的鱼塘编号
+        let pondNumbers = config.pond.ponds || [];
+
+        // 创建自定义对话框布局
+        let customView = ui.inflate(
+            <vertical padding="16">
+                <text text="选择鱼塘编号" textSize="16" textStyle="bold" marginBottom="16" />
+                <vertical h="*" paddingBottom="16">
+                    <horizontal>
+                        <vertical gravity="center_vertical" w="0" layout_weight="1">
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_1" />
+                                <text text="1号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_2" />
+                                <text text="2号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_3" />
+                                <text text="3号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_4" />
+                                <text text="4号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_5" />
+                                <text text="5号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_6" />
+                                <text text="6号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_7" />
+                                <text text="7号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_8" />
+                                <text text="8号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                        </vertical>
+                        <vertical gravity="center_vertical" w="0" layout_weight="1">
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_9" />
+                                <text text="9号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_10" />
+                                <text text="10号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_11" />
+                                <text text="11号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_12" />
+                                <text text="12号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_13" />
+                                <text text="13号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_14" />
+                                <text text="14号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pond_15" />
+                                <text text="15号鱼塘" textSize="14" marginLeft="8" />
+                            </horizontal>
+                        </vertical>
+                    </horizontal>
+                </vertical>
+            </vertical>
+        );
+
+        // 根据当前配置设置checkbox的初始状态
+        for (let i = 1; i <= 15; i++) {
+            customView[`pond_${i}`].setChecked(pondNumbers.includes(i));
+        }
+
+        // 创建对话框
+        let dialog = dialogs.build({
+            customView: customView,
+            positive: "确定",
+            negative: "取消",
+            wrapInScrollView: true,
+            cancelable: true
+        });
+
+        // 为确定按钮添加点击事件
+        dialog.on("positive", function () {
+            // 收集选中的鱼塘编号
+            let selectedPonds = [];
+            for (let i = 1; i <= 15; i++) {
+                if (customView[`pond_${i}`].isChecked()) {
+                    selectedPonds.push(i);
+                }
+            }
+
+            // 更新当前配置的鱼塘编号
+            config.pond.ponds = selectedPonds;
+
+            // 保存修改后的配置
+            configs.put("pond_ponds", selectedPonds);
+
+            // 更新已开启的鱼塘编号显示
+            ui.pond_numbers_display.setText(selectedPonds.join(","));
+
+            toast("鱼塘编号设置成功");
+        });
+
+        // 显示对话框
+        dialog.show();
     });
 
     // 账号开关状态变化监听
@@ -5204,6 +5517,12 @@ function initUI() {
     ui.syncHarvest.on("check", (checked) => {
         // 保存修改后的开关状态到配置
         configs.put("syncHarvest", checked);
+    });
+
+    // 首次雇佣汤姆界面是否确定开关状态变化监听
+    ui.tom_FirstHire.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("tom_FirstHire", checked);
     });
 
     // 仓库统计开关状态变化监听
@@ -5380,28 +5699,40 @@ function initUI() {
             content: "选择功能右边的下拉菜单是能点的\n\n" +
                 "默认是刷地功能,点击刷地可选择其他功能\n\n" +
                 "刷地功能:\n" +
-                "- 应该不用解释\n\n" +
+                "- 保留数量: 售卖时保留作物的数量,默认是20。如果当次未种植,可为下一次种植留种\n" +
+                "- 此处的汤姆开关和鱼塘开关是总开关,这里不打开,账号配置里即使打开也不执行\n" +
+                "- 如果账号配置已经设置了汤姆和鱼塘信息,会优先执行账号配置中的设置,否则执行此页面设置\n\n" +
                 "种树功能:\n" +
                 "- 先启用浮动按钮,进入游戏后,在浮动按钮点击开始即可运行\n" +
                 "- 自动滑动当检测此页面”没有“可种植地块后,自动滑动屏幕,关闭可自行滑动调整\n\n" +
                 "创新号功能:\n" +
-                "-先新建一个号,确保进入游戏后是在最初的教程界面,点击开始,自动运行到5级\n" +
-                "-添加好友,新手教程结束后,根据输入的农场标签,自动添加农场好友\n\n" +
+                "- 先新建一个号,确保进入游戏后是在最初的教程界面,点击开始,自动运行到5级\n" +
+                "- 添加好友,新手教程结束后,根据输入的农场标签,自动添加农场好友\n\n" +
                 "仅汤姆:\n" +
-                "-先在上方账号信息一栏中选择是否切换账号并且勾选需要刷取的账号\n" +
-                "-在等待期间会回到主界面,并不是脚本掉了\n" +
+                "- 先在上方账号信息一栏中选择是否切换账号并且勾选需要刷取的账号\n" +
+                "- 在等待期间会回到主界面,并不是脚本掉了\n" +
                 "当剩余时间小于60秒时,启动游戏\n\n" +
                 "物品售卖:\n" +
-                "-清除粉丝:进入游戏主页时,先清除粉丝再进行售卖\n" +
-                "-等待货架:当售卖时没有剩余空闲货架,且还没有全部售卖完成,会反复检查货架,等待卖出,再进行上架\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "\n" +
-                "\n" +
+                "- 清除粉丝:进入游戏主页时,先清除粉丝再进行售卖\n" +
+                "- 等待货架:当售卖时没有剩余空闲货架,且还没有全部售卖完成,会反复检查货架,等待卖出,再进行上架\n\n" +
+                "倒金币(使用文档有配图):\n" +
+                "- 主号和小号：和账号信息一栏中的账号相同\n" +
+                "- 照片名：在照片文件夹路径下的照片名称。这里的照片需要时在好友簿中的截图。\n" +
+                "- 倒金币物品：倒金币时使用的物品,越贵越好\n" +
+                "- 照片文件夹路径：存放照片的位置,可以随意设置。\n" +
+                "- 倒金币的账号最好不要参加游戏内的全球活动,参加后其他的非好友也可进入你的农场,可能会偷你的1金物品\n\n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
+                "- \n" +
                 "\n",
             positive: "确定"
         }).show();
@@ -5414,6 +5745,19 @@ function initUI() {
                 "2. 手势2: 手势1的改良版,双指先向两侧展开,使双指中点移动到第一块土地,然后执行横向收割。优点是漏第一块地的概率大大降低。\n更改为手势2强烈建议将'初始土地偏移'改为(40,30)并将'收割两指间距'改为(75,125)\n\n" +
                 "3. '收割时双指同步'只针对手势1,手势2本身双指就是同步的\n",
 
+            positive: "确定"
+        }).show();
+    })
+
+    ui.helpIcon_account_config.on("click", function () {
+        dialogs.build({
+            title: "账号配置帮助",
+            content: "- 汤姆和鱼塘的总开关在脚本主页,当主页的开关打开后这里才有效\n\n"+
+            "- 当这里的汤姆和鱼塘配置与主页配置不同时,优先选择这里的配置\n\n"+
+            "- 当主页没有配置相关信息,会使用这里的配置\n\n"+
+            "- \n\n"+
+            "- \n\n"+
+            "- \n\n",
             positive: "确定"
         }).show();
     })

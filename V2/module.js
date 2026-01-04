@@ -1741,7 +1741,7 @@ function find_yuchuan() {
         let sc = captureScreen();
         if (matchColor([{ x: 887, y: 125, color: "#498d9c" }, { x: 823, y: 155, color: "#498d9c" }], sc, 16)) {
             log("已到左上角,确定固定位置")
-            return { x: 470, y: 305 }
+            return { x: 508, y: 329 }
         }
         let yuchuan1 = findMC(machineColor["渔船"][0], sc, null, 16);
         let yuchuan2 = findMC(machineColor["渔船"][1], sc, null, 16);
@@ -2084,7 +2084,7 @@ function pond_operation(Account) {
         if (yuchuanPos) {
             click(yuchuanPos.x + ran(), yuchuanPos.y + ran());
             let enter = false;
-            for (let j = 0; j < 3; j++) {
+            for (let j = 0; j < 30; j++) {
                 sleep(1000);
                 let sc = captureScreen();
                 //新版界面
@@ -2100,13 +2100,13 @@ function pond_operation(Account) {
                     screenshot = sc, [0, 600, 240, 110]);
 
                 if ((allMatch || allMatch2) && homebtn) {
-                    log(`第 ${i + 1} 次检测: 已进入鱼塘`);
-                    showTip(`第 ${i + 1} 次检测: 已进入鱼塘`);
+                    log(`第 ${j + 1} 次检测: 已进入鱼塘`);
+                    showTip(`第 ${j + 1} 次检测: 已进入鱼塘`);
                     enter = true;
                     break;
                 }
-                log(`第 ${i + 1} 次检测: 未进入鱼塘`)
-                showTip(`第 ${i + 1} 次检测: 未进入鱼塘`)
+                log(`第 ${j + 1} 次检测: 未进入鱼塘`)
+                showTip(`第 ${j + 1} 次检测: 未进入鱼塘`)
             }
             if (!enter) {
                 log("未进入鱼塘,结束本次鱼塘")
@@ -2194,11 +2194,13 @@ function pond_operation(Account) {
             sleep(500)
             click(640 + ran(), 360 + ran())
             sleep(500)
+        } else if (findMC(allItemColor["可供收集"])) {
+            pondIsOccupied = true
         }
 
         if (pondIsOccupied) {
-            log(num + "号鱼塘正在冷却,跳过撒网")
-            showTip(num + "号鱼塘正在冷却,跳过撒网")
+            log(num + "号鱼塘被占用,跳过撒网")
+            showTip(num + "号鱼塘被占用,跳过撒网")
             continue;
         }
 
@@ -2322,7 +2324,7 @@ function tomOperation(Account) {
             timer(timerName, tomTimeSecend);
             timeStorage.put(tomIsWorkName, true);
         }
-        if (config.switchAccount === false && !selectedFunction.code == 3) {//不换账号并且不是仅汤姆滑动回去
+        if (config.switchAccount === false && !config.selectedFunction.code == 3) {//不换账号并且不是仅汤姆滑动回去
             sleep(500);
             swipe(600 - 350 + ran(), 580 - 200 + ran(), 600 + ran(), 580 + ran(), 1000);
         }
@@ -2451,6 +2453,12 @@ function tomMenu() {
     { x: 605, y: 528, color: "#efc462" }, { x: 997, y: 300, color: "#f4e9d0" }])
     if (menu4) {
         return "选择数量"
+    }
+
+    let menu6 = matchColor([{ x: 935, y: 274, color: "#f4ebdc" }, { x: 926, y: 369, color: "#f4e8c9" },
+    { x: 938, y: 512, color: "#f5c041" }, { x: 621, y: 504, color: "#f6c344" }])
+    if (menu6) {
+        return "第一次"
     }
 
     //没有找到符合的页面
@@ -2659,7 +2667,8 @@ function tomToFind(tomPos, findItemType, findItem) {
         while (findNum < 3) {
             sleep(1000);
             click(tomPos.x, tomPos.y);
-            if (tomMenu() == "等待" || tomMenu() == "没有雇佣汤姆") {
+            let tom_menu = tomMenu();
+            if (tom_menu == "等待" || tom_menu == "没有雇佣汤姆") {
                 log("成功收取物品");
                 showTip("成功收取物品");
                 let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "clip");
@@ -2732,6 +2741,19 @@ function tomToFind(tomPos, findItemType, findItem) {
                 log("没有雇佣汤姆");
                 showTip("没有雇佣汤姆");
                 click(1200 + ran(), 400 + ran());
+                isfindTom = true;
+                return null;
+            } else if (tom_menu == "第一次") {
+                findNum = 0;
+                log("第一次雇佣汤姆");
+                showTip("第一次雇佣汤姆");
+                if (config.tom_firstHire) {
+                    click(760 + ran(), 500 + ran())
+                    sleep(1000);
+                    let tomTime = tom_find(tomPos);
+                    return tomTime;
+                }
+                else click(1100 + ran(), 450 + ran());
                 isfindTom = true;
                 return null;
             }
@@ -4130,6 +4152,7 @@ function find_close(screenshot1, action = null) {
                 click(homeBtn.x - 30 + ran(), homeBtn.y + ran());
                 console.log("当前在其他界面，回到主界面");
                 showTip("当前在其他界面，回到主界面");
+                sleep(1000);
                 checkmenu();
                 return true;
             }
@@ -4890,6 +4913,8 @@ function timer(timer_Name, seconds = 120) {
             duration: duration,
             endTime: endTime
         });
+        log(`已启动计时器: ${timer_Name}，倒计时 ${seconds} 秒`);
+
     } catch (e) {
         console.error("timer函数出错:", e);
         showTip("计时器操作出错，已跳过");
@@ -5102,7 +5127,17 @@ function harvest_crop(center_sickle) {
         [4, 40, "#f9f6f3"], [9, 16, "#fcfbf9"], [-21, 33, "#faba00"]])) {//加速按钮
         log("第一块耕地已种植");
         showTip("第一块耕地已种植");
-        return null;
+        //识别剩余时间
+        let remainingTime = findFont_remainingTime()
+        let remainingTimeSecond = null;
+
+        if (remainingTime) {
+            log(remainingTime)
+            showTip(remainingTime)
+            let time = extractTime(remainingTime);
+            remainingTimeSecond = time.hours * 60 * 60 + time.minutes * 60 + time.seconds
+        }
+        return remainingTimeSecond;
     }
     console.log("收割" + config.selectedCrop.text);
     showTip(`收割${config.selectedCrop.text}`);
@@ -5112,13 +5147,13 @@ function harvest_crop(center_sickle) {
 
 //循环操作
 function operation(Account) {
-    let accountName = Account.title || Account
+    let accountName = Account ? Account.title : "账号";
     sleep(200);
 
     //收作物
     let is_harvest = harvest_crop();
 
-    if (is_harvest) {//找耕地
+    if (is_harvest === true) {//找耕地
         sleep(1500);
         if (find_close()) {
             sleep(200);
@@ -5195,7 +5230,7 @@ function operation(Account) {
 
 
     //设定计时器
-    let cropTime = config.matureTime * 60 - config.harvestTime; //成熟时间-收割时间
+    let cropTime = typeof is_harvest === "number" ? is_harvest : config.matureTime * 60 - config.harvestTime; //成熟时间-收割时间
     let timerName = accountName ? accountName + "计时器" : config.selectedCrop.text;
     timer(timerName, cropTime);
 
