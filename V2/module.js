@@ -1793,7 +1793,7 @@ function find_fishPond(pondNum, huadong = false) {
         click(320 + ran(), 350 + ran())
     } else if (pondNum == 2) {
         //上部中间
-        swipe(220 + ran(), 120 + ran(), 900 + ran(), 120 + ran(), 500)
+        swipe(320 + ran(), 220 + ran(), 1000 + ran(), 220 + ran(), 500)
         sleep(10)
         click(900 + ran(), 120 + ran())
         sleep(100)
@@ -1801,7 +1801,7 @@ function find_fishPond(pondNum, huadong = false) {
         click(680 + ran(), 270 + ran())
     } else if (pondNum == 3) {
         //上部中间
-        swipe(220 + ran(), 120 + ran(), 900 + ran(), 120 + ran(), 500)
+        swipe(320 + ran(), 220 + ran(), 1000 + ran(), 220 + ran(), 500)
         sleep(10)
         click(900 + ran(), 120 + ran())
         sleep(100)
@@ -1819,7 +1819,7 @@ function find_fishPond(pondNum, huadong = false) {
         click(440 + ran(), 280 + ran())
     } else if (pondNum == 5) {
         //左滑到顶再右下滑
-        swipe(200 + ran(), 170 + ran(), 1000 + ran(), 175 + ran(), 100)
+        swipe(300 + ran(), 270 + ran(), 1100 + ran(), 275 + ran(), 100)
         sleep(300)
         swipe(820 + ran(), 480 + ran(), 300 + ran(), 100 + ran(), 800)
         sleep(10);
@@ -1928,7 +1928,7 @@ function click_netMaker() {
         }
         click(1022 + ran(), 190 + ran())
 
-        sleep(300);
+        sleep(500);
     }
     return false
 }
@@ -2053,8 +2053,8 @@ function put_net(itemName) {
     return false;
 }
 
-function pond_operation(Account) {
-    let accountName = Account.title;
+function pond_operation(account_config) {
+    let accountName = account_config.title;
     let pondTimerName = accountName ? accountName + "鱼塘计时器" : "鱼塘计时器";
     let pondTime = getTimerState(pondTimerName);
     if (pondTime) {
@@ -2068,7 +2068,6 @@ function pond_operation(Account) {
         return true
     }
 
-    //
 
     log("========== 鱼塘 ==========");
     sleep(100);
@@ -2123,9 +2122,14 @@ function pond_operation(Account) {
     }
 
     sleep(1500);
-    let pondNum = Account.pond.ponds
+    let pondNum = account_config.pond.ponds.length > 0 ? account_config.pond.ponds : config.pond.ponds
+    if (pondNum.length == 0) {
+        log("未配置鱼塘,结束本次鱼塘")
+        showTip("未配置鱼塘,结束本次鱼塘")
+        return false;
+    }
     let allItem = { "鱼片": "普通渔网", "龙虾尾": "捕虾笼", "鸭毛": "捕鸭器" }
-    let item = Account.pond.name
+    let item = account_config.pond.name
     let itemName = allItem[item];
     let Times = [];
 
@@ -2191,9 +2195,9 @@ function pond_operation(Account) {
             showTip("点击渔网")
             sleep(1000);
             click(640 + ran(), 360 + ran())
-            sleep(500)
+            sleep(600)
             click(640 + ran(), 360 + ran())
-            sleep(500)
+            sleep(800)
         } else if (findMC(allItemColor["可供收集"])) {
             pondIsOccupied = true
         }
@@ -2204,7 +2208,7 @@ function pond_operation(Account) {
             continue;
         }
 
-        if (!(findMC(allItemColor["红色鱼饵"]) || findMC(allItemColor["nextButton"])) && !pondIsOccupied) {
+        if ((!(findMC(allItemColor["红色鱼饵"]) || findMC(allItemColor["nextButton"])) && !pondIsOccupied) && item != "鱼片") {
             log("未检测到放置渔网界面")
             showTip("未检测到放置渔网界面")
             find_fishPond(num, true);
@@ -2269,8 +2273,8 @@ function find_youxiang() {
     }
 }
 
-function tomOperation(Account) {
-    let accountName = Account.title || Account
+function tomOperation(account_config) {
+    let accountName = account_config.title || account_config
     let currentTomTimerName = accountName ? accountName + "Tom计时器" : "Tom计时器";
 
     let tomIsWorkName = accountName ? accountName + "TomIsWork" : "TomIsWork"
@@ -2296,11 +2300,17 @@ function tomOperation(Account) {
         return false;
     }
 
-    if ((config.tomFind.enabled || config.selectedFunction.code == 3) && Account.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
+
+    if ((config.tomFind.enabled || config.selectedFunction.code == 3) && account_config.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
         log("========== 汤姆 ==========");
 
-        let findItemType = Account.tomFind.type || config.tomFind.type;
-        let findItem = Account.tomFind.text || config.tomFind.text;
+        let findItemType = account_config.tomFind.type || config.tomFind.type;
+        let findItem = account_config.tomFind.text || config.tomFind.text;
+        if (!findItem) {
+            log("Tom:未配置要找的物品")
+            showTip("Tom:未配置要找的物品")
+            return false;
+        }
 
         sleep(100)
         find_close();
@@ -5247,13 +5257,32 @@ function operation(Account) {
     //开始售卖
     console.log("============开始售卖系列操作===============")
     shop();
+    // log(Account,config.tomFind,config.pond)
 
-    if (config.tomFind.enabled && Account.tomFind.enabled) {
-        tomOperation(Account);
+    let accountList_config
+    let account_config
+
+    if (config.switchAccount) {
+        accountList_config = configs.get("account_config", null);
+        account_config = accountList_config.find(item => item.title === accountName)
+    } else {
+        account_config = Account
     }
 
-    if (config.pond.enabled && Account.pond.enabled) {
-        pond_operation(Account);
+    try {
+        if (config.tomFind.enabled && account_config.tomFind.enabled) {
+            tomOperation(account_config);
+        }
+    } catch (error) {
+        toastLog(error)
+    }
+
+    try {
+        if (config.pond.enabled && account_config.pond.enabled) {
+            pond_operation(account_config);
+        }
+    } catch (error) {
+        toastLog(error)
     }
 
 }

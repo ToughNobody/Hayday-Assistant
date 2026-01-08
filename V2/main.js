@@ -11,6 +11,9 @@ let config
 // 当前显示的账号
 let currentDisplayAccount = "当前";
 
+// 标志：是否正在更新UI（用于区分程序更新和用户手动修改）
+let isUpdatingUI = false;
+
 
 
 let selfPath = engines.myEngine().getSource().toString();
@@ -104,7 +107,14 @@ if (savedData.length > 0) {
 
 // 添加"当前"账户作为第一个账户（如果还没有的话）
 if (sell_accountList.length === 0 || sell_accountList[0].title !== '当前') {
-    sell_accountList.unshift({ title: '当前', addFriend: '', done: false, price: 0 });
+    sell_accountList.unshift({ title: '当前', addFriend: '', done: false, price: 0, selected: true });
+} else {
+    // 确保第一个账户有selected属性
+    sell_accountList[0].selected = true;
+    // 确保其他账户的selected为false
+    for (var i = 1; i < sell_accountList.length; i++) {
+        sell_accountList[i].selected = false;
+    }
 }
 
 // 创建所有账户对应的仓库售卖列表数据源
@@ -335,10 +345,10 @@ function showCangkuSoldDialog() {
                 "   - 勾选复选框表示参与售卖\n" +
                 "   - 取消勾选表示不参与售卖\n\n" +
                 "4. 售卖逻辑：\n" +
-                "   - 优先级 ：物品按优先级分组，优先级数值越小越优先售卖\n"+
-                "   - 分组处理 ：同一优先级的物品视为一个组，按优先级从高到低依次处理\n"+
-                "   - 组内分配 :\n"+
-                "   - 如果当前优先级组的总库存 ≤ 剩余售卖额度，则该组所有物品全部售卖\n"+
+                "   - 优先级 ：物品按优先级分组，优先级数值越小越优先售卖\n" +
+                "   - 分组处理 ：同一优先级的物品视为一个组，按优先级从高到低依次处理\n" +
+                "   - 组内分配 :\n" +
+                "   - 如果当前优先级组的总库存 ≤ 剩余售卖额度，则该组所有物品全部售卖\n" +
                 "   - 如果当前优先级组的总库存 > 剩余售卖额度，则按各物品库存比例分配剩余售卖额度\n",
             positive: "确定"
         }).show();
@@ -919,9 +929,13 @@ function importAccountList() {
             sell_accountList.push({
                 title: importedAccountList[i].title,
                 done: false,
-                price: 0  // 添加默认价格属性
+                price: 0,  // 添加默认价格属性
+                selected: false  // 默认未选中
             });
         }
+
+        // 确保第一个账户（"当前"）保持选中状态
+        sell_accountList[0].selected = true;
 
         // 更新UI数据源
         ui.sell_accountList.setDataSource(sell_accountList);
@@ -1842,11 +1856,12 @@ ui.layout(
                 </appbar>
                 <horizontal>
 
-                    <vertical id="sell_drawerArea" w="100" h="*" bg="#EEEEEE" padding="10dp">
+                    <vertical id="sell_drawerArea" w="100" h="*" bg="#EEEEEE" padding="5dp">
                         <list id="sell_accountList" h="500">
-                            <horizontal w="*" h="50" padding="10dp" bg="#FFFFFF" marginBottom="5dp">
-                                <text text="{{this.title}}" textSize="16sp" w="30" layout_weight="1" maxLines="1" />
-                                <checkbox id="sell_accountList_done" checked="{{this.done}}" />
+                            <horizontal w="*" h="50" bg="#FFFFFF" marginBottom="5dp">
+                                <View id="sell_account_indicator" w="4" h="*" bg="{{this.selected ? '#FF0000' : '#FFFFFF'}}" />
+                                <text text="{{this.title}}" textSize="16sp" w="30" layout_weight="1" maxLines="1" layout_gravity="center_vertical" marginLeft="5" />
+                                <checkbox id="sell_accountList_done" checked="{{this.done}}" layout_gravity="center_vertical||right" />
                             </horizontal>
                         </list>
                         <button id="sell_improtAccountListButton" text="导入" w="auto" h="45" />
@@ -1873,9 +1888,12 @@ ui.layout(
                     <vertical id="account_config_list" w="100" h="*" bg="#F5F5F5" padding="8">
                         <list id="account_config_accounts" h="*">
                             <card w="*" h="50" margin="4" cardCornerRadius="4" cardElevation="1" foreground="?selectableItemBackground">
-                                <vertical padding="12" gravity="center_vertical">
-                                    <text text="{{this.title}}" textSize="16sp" textColor="#333333" />
-                                </vertical>
+                                <horizontal w="*" h="*">
+                                    <View id="account_indicator" w="4" h="*" bg="{{this.selected ? '#FF0000' : '#FFFFFF'}}" />
+                                    <vertical padding="12" gravity="center_vertical" w="*" h="*">
+                                        <text text="{{this.title}}" textSize="16sp" textColor="#333333" />
+                                    </vertical>
+                                </horizontal>
                             </card>
                         </list>
                     </vertical>
@@ -2013,6 +2031,8 @@ ui.emitter.on("back_pressed", () => {
 ui.accountConfigBtn.on("click", () => {
     // 加载账号列表
     let accountList = configs.get("accountList", []);
+    // 加载账号配置
+    let accountConfig = configs.get("account_config", []);
 
     // 如果账号列表为空，提示用户
     if (accountList.length === 0) {
@@ -2024,18 +2044,48 @@ ui.accountConfigBtn.on("click", () => {
     ui.drawer.setVisibility(8); // 8 = GONE
     ui.account_config_frame.setVisibility(0); // 0 = VISIBLE
 
+
+
     // 确保每个账号都有完整的设置字段
-    accountList = validateAccountSettings(accountList);
+    let accountsWithConfig = accountList.map((account, index) => {
+        // 查找该账号对应的配置
+        let accountConfigItem = accountConfig.find(item => item.title === account.title);
+        if (!accountConfigItem) {
+            // 如果没有配置，创建默认配置
+            //默认account_config
+            accountConfigItem = {
+                title: account.title,
+                tomFind: {
+                    enabled: true,
+                    type: "货仓",
+                    code: 0,
+                    text: ""
+                },
+                pond: {
+                    enabled: true,
+                    name: "鱼片",
+                    code: 0,
+                    ponds: []
+                }
+            };
+            accountConfig.push(accountConfigItem);
+        }
+        // 添加selected属性，默认第一个选中
+        accountConfigItem.selected = (index === 0);
+        return accountConfigItem;
+    });
 
+    // 验证账号配置
+    accountConfig = validateAccountConfig(accountsWithConfig)
 
-    // 保存更新后的账号列表
-    configs.put("accountList", accountList);
+    // 保存更新后的账号配置
+    configs.put("account_config", accountConfig);
 
     // 设置数据源
-    ui.account_config_accounts.setDataSource(accountList);
+    ui.account_config_accounts.setDataSource(accountsWithConfig);
 
     // 默认选择第一个账号
-    loadAccountConfig(accountList[0].title);
+    loadAccountConfig(accountsWithConfig[0].title);
 });
 
 // 账号配置页面返回按钮点击事件
@@ -2047,13 +2097,21 @@ ui.account_config_exitButton.on("click", () => {
 
 
 // 账号列表点击事件
-ui.account_config_accounts.on("item_click", (item) => {
+ui.account_config_accounts.on("item_click", (item, position) => {
+    // 更新选中状态
+    let accountsWithConfig = ui.account_config_accounts.getDataSource();
+    accountsWithConfig.forEach((account, index) => {
+        account.selected = (index === position);
+    });
+    // 刷新列表
+    ui.account_config_accounts.setDataSource(accountsWithConfig);
+    // 加载选中账号的配置
     loadAccountConfig(item.title);
 });
 
 // 账号配置页面设置按钮点击事件
 ui.account_config_settingsButton.on("click", () => {
-    dialogs.select("设置", ["恢复默认"])
+    dialogs.select("设置", ["恢复默认", "应用主页汤姆配置", "应用主页鱼塘编号", "应用主页鱼塘物品"])
         .then(function (selectedIndex) {
             if (selectedIndex >= 0) {
                 switch (selectedIndex) {
@@ -2062,13 +2120,14 @@ ui.account_config_settingsButton.on("click", () => {
                         dialogs.confirm("确定要恢复所有账号的默认设置吗？")
                             .then(function (confirmed) {
                                 if (confirmed) {
-                                    // 从配置获取accountList
-                                    let accountList = configs.get("accountList", []);
+                                    // 从配置获取account_config
+                                    let account_config = configs.get("account_config", []);
 
                                     // 遍历所有账号，恢复默认设置
-                                    for (let i = 0; i < accountList.length; i++) {
-                                        let account = accountList[i];
+                                    for (let i = 0; i < account_config.length; i++) {
+                                        let account = account_config[i];
                                         // 恢复默认设置
+                                        //默认account_config
                                         account.tomFind = {
                                             enabled: true,
                                             type: "货仓",
@@ -2078,15 +2137,113 @@ ui.account_config_settingsButton.on("click", () => {
                                         account.pond = {
                                             enabled: true,
                                             name: "鱼片",
-                                            ponds: [1, 2]
+                                            code: 0,
+                                            ponds: []
                                         };
                                     }
 
-                                    // 保存修改后的账号列表
-                                    configs.put("accountList", accountList);
+                                    // 保存修改后的账号配置
+                                    configs.put("account_config", account_config);
+
                                     // 重新加载当前显示的账号配置到UI
                                     loadAccountConfig(currentDisplayAccount);
                                     toast("已恢复所有账号的默认设置");
+                                }
+                            });
+                        break;
+                    case 1:
+                        log("账号配置:应用主页汤姆配置");
+                        dialogs.confirm("确定要将主页的汤姆配置应用到所有账号吗？")
+                            .then(function (confirmed) {
+                                if (confirmed) {
+                                    // 从主页配置获取tomFind
+                                    let tomFindConfig_itemType = configs.get("Tom_itemType", "货仓");
+                                    let tomFindConfig_itemName = configs.get("Tom_itemName", "");
+                                    // 从配置获取account_config
+                                    let account_config = configs.get("account_config", []);
+
+                                    // 遍历所有账号，应用主页汤姆配置
+                                    for (let i = 0; i < account_config.length; i++) {
+                                        let account = account_config[i];
+                                        // 应用主页汤姆配置
+                                        if (tomFindConfig_itemType) {
+                                            account.tomFind.type = tomFindConfig_itemType;
+                                            account.tomFind.code = tomFindConfig_itemType === "货仓" ? 0 : 1;
+                                        }
+                                        if (tomFindConfig_itemName !== undefined) {
+                                            account.tomFind.text = tomFindConfig_itemName;
+                                        }
+                                    }
+
+                                    // 保存修改后的账号配置
+                                    configs.put("account_config", account_config);
+
+                                    // 重新加载当前显示的账号配置到UI
+                                    loadAccountConfig(currentDisplayAccount);
+                                    toast("已应用主页汤姆配置到所有账号");
+                                }
+                            });
+                        break;
+                    case 2:
+                        log("账号配置:应用主页鱼塘编号");
+                        dialogs.confirm("确定要将主页的鱼塘编号应用到所有账号吗？")
+                            .then(function (confirmed) {
+                                if (confirmed) {
+                                    // 从主页配置获取pond
+                                    let pondConfig = configs.get("pond_ponds", [1, 2]);
+                                    log("主页鱼塘编号:", pondConfig);
+                                    // 从配置获取account_config
+                                    let account_config = configs.get("account_config", []);
+
+                                    // 遍历所有账号，应用主页鱼塘编号
+                                    for (let i = 0; i < account_config.length; i++) {
+                                        let account = account_config[i];
+                                        // 应用主页鱼塘编号
+                                        if (Array.isArray(pondConfig)) {
+                                            account.pond.ponds = pondConfig;
+                                        }
+                                    }
+
+                                    // 保存修改后的账号配置
+                                    configs.put("account_config", account_config);
+
+                                    // 重新加载当前显示的账号配置到UI
+                                    loadAccountConfig(currentDisplayAccount);
+                                    toast("已应用主页鱼塘编号到所有账号");
+                                }
+                            });
+                        break;
+                    case 3:
+                        log("账号配置:应用主页鱼塘物品");
+                        dialogs.confirm("确定要将主页的鱼塘物品应用到所有账号吗？")
+                            .then(function (confirmed) {
+                                if (confirmed) {
+                                    // 从主页配置获取pond
+                                    // log(configs.get("pond_itemName"))
+                                    let pondConfig = configs.get("pond_itemName", "鱼片");
+                                    // 从配置获取account_config
+                                    let account_config = configs.get("account_config", []);
+
+                                    // 遍历所有账号，应用主页鱼塘物品
+                                    for (let i = 0; i < account_config.length; i++) {
+                                        let account = account_config[i];
+                                        // 应用主页鱼塘物品
+                                        if (pondConfig) {
+                                            account.pond.name = pondConfig;
+                                            let fishItemTypes = ["鱼片", "龙虾尾", "鸭毛"];
+                                            account.pond.code = fishItemTypes.indexOf(pondConfig);
+                                            if (account.pond.code === -1) {
+                                                account.pond.code = 0;
+                                            }
+                                        }
+                                    }
+
+                                    // 保存修改后的账号配置
+                                    configs.put("account_config", account_config);
+
+                                    // 重新加载当前显示的账号配置到UI
+                                    loadAccountConfig(currentDisplayAccount);
+                                    toast("已应用主页鱼塘物品到所有账号");
                                 }
                             });
                         break;
@@ -2095,94 +2252,82 @@ ui.account_config_settingsButton.on("click", () => {
         });
 });
 
-// 验证账号设置的函数
-function validateAccountSettings(accountList) {
-    return accountList.map(account => {
-        // 验证并初始化tomFind对象
-        if (!account.tomFind || typeof account.tomFind !== 'object') {
-            account.tomFind = {
+
+function validateAccountConfig(account_config_List) {
+    return account_config_List.map(account => {
+
+        //默认account_config
+        let accountConfig = {
+            title: account.title,
+            tomFind: {
                 enabled: true, // 默认开启汤姆
                 type: "货仓",
                 code: 0,
                 text: ""
-            };
-        } else {
-            // 验证tomFind的每个字段
-            if (typeof account.tomFind.enabled !== 'boolean') {
-                account.tomFind.enabled = true;
+            },
+            pond: {
+                enabled: true, // 默认开启鱼塘
+                name: "鱼片",
+                code: 0,
+                ponds: [] // 默认选择鱼塘
             }
-            if (typeof account.tomFind.type !== 'string') {
-                account.tomFind.type = "货仓";
-            }
-            if (typeof account.tomFind.code !== 'number') {
-                account.tomFind.code = 0;
-            }
-            if (typeof account.tomFind.text !== 'string') {
-                account.tomFind.text = "";
+        };
+
+        // 如果原账户已有配置，合并并验证
+        if (account.tomFind && typeof account.tomFind === 'object') {
+            accountConfig.tomFind.enabled = typeof account.tomFind.enabled === 'boolean' ? account.tomFind.enabled : true;
+            accountConfig.tomFind.code = (account.tomFind.code >= 0 && account.tomFind.code <= 1) ? parseInt(account.tomFind.code) : 0;
+            accountConfig.tomFind.type = accountConfig.tomFind.code === 0 ? "货仓" : "粮仓";
+            accountConfig.tomFind.text = typeof account.tomFind.text === 'string' ? account.tomFind.text : "";
+        }
+
+        // 如果原账户已有pond配置，合并并验证
+        if (account.pond && typeof account.pond === 'object') {
+            accountConfig.pond.enabled = typeof account.pond.enabled === 'boolean' ? account.pond.enabled : true;
+            accountConfig.pond.code = (account.pond.code >= 0 && account.pond.code <= 2) ? parseInt(account.pond.code) : 0;
+            accountConfig.pond.name = ['鱼片', '龙虾尾', '鸭毛'][accountConfig.pond.code] || "鱼片";
+
+            if (Array.isArray(account.pond.ponds)) {
+                // 确保pond.ponds中的元素都是数字且在1-15区间内
+                let validPonds = account.pond.ponds.filter(pondNum => typeof pondNum === 'number' && pondNum >= 1 && pondNum <= 15);
+                accountConfig.pond.ponds = validPonds.length > 0 ? validPonds : [];
             }
         }
 
-        // 验证并初始化pond对象
-        if (!account.pond || typeof account.pond !== 'object') {
-            account.pond = {
-                enabled: true, // 默认开启鱼塘
-                name: "鱼片",
-                ponds: [1, 2] // 默认选择1号和2号鱼塘
-            };
-        } else {
-            // 验证pond的每个字段
-            if (typeof account.pond.enabled !== 'boolean') {
-                account.pond.enabled = true;
-            }
-            if (typeof account.pond.name !== 'string') {
-                account.pond.name = "鱼片";
-            }
-            if (!Array.isArray(account.pond.ponds)) {
-                account.pond.ponds = [1, 2];
-            } else {
-                // 确保pond.ponds中的元素都是数字
-                account.pond.ponds = account.pond.ponds.filter(pondNum => typeof pondNum === 'number');
-                // 如果过滤后为空，设置默认值
-                if (account.pond.ponds.length === 0) {
-                    account.pond.ponds = [1, 2];
-                }
-            }
-        }
-        return account;
+        return accountConfig;
     });
 }
 
 // 加载账号配置
 function loadAccountConfig(accountName) {
-    // 从配置中加载完整的账号列表
-    let accountList = configs.get("accountList", []);
+    // 从配置中加载账号配置
+    let accountConfig = configs.get("account_config", []);
 
-    // 查找当前账号
-    let currentAccount = accountList.find(account => account.title === accountName) || {
+    // 查找当前账号配置
+    let currentAccount = accountConfig.find(account => account.title === accountName) || {
+        //默认account_config
         title: accountName,
-        done: false
-    };
-
-    // 确保账号有完整的设置字段
-    if (!currentAccount.tomFind) {
-        currentAccount.tomFind = {
+        tomFind: {
             enabled: true, // 默认开启汤姆
             type: "货仓",
             code: 0,
             text: ""
-        };
-    }
-    if (!currentAccount.pond) {
-        currentAccount.pond = {
+        },
+        pond: {
             enabled: true, // 默认开启鱼塘
             name: "鱼片",
-            ponds: [1, 2] // 默认选择1号和2号鱼塘
-        };
-    }
-    // 确保pond.ponds存在
-    if (!currentAccount.pond.ponds) {
-        currentAccount.pond.ponds = [1, 2];
-    }
+            code: 0,
+            ponds: [] // 默认选择鱼塘
+        }
+    };
+
+    // 验证账号配置
+    currentAccount = validateAccountConfig([currentAccount])[0]
+    // log(currentAccount)
+
+    // 设置标志：正在更新UI，避免触发监听器
+    // log('设置标志:正在更新UI,避免触发监听器')
+    isUpdatingUI = true;
 
     // 更新UI
     ui.account_config_tom_switch.checked = currentAccount.tomFind.enabled;
@@ -2210,8 +2355,12 @@ function loadAccountConfig(accountName) {
     // 更新已开启的鱼塘编号显示
     ui.account_config_pond_numbers_display.setText(currentAccount.pond.ponds.join(","));
 
-    // 保存修改后的账号列表
-    configs.put("accountList", accountList);
+    // 延迟清除标志，确保下拉菜单的异步监听器在标志为true时触发
+    ui.post(function () {
+        // log('更新完成，清除标志')
+        isUpdatingUI = false;
+    }, 100);
+
 }
 
 
@@ -2220,33 +2369,44 @@ function addAutoSaveListeners() {
 
     // 汤姆开关事件
     ui.account_config_tom_switch.on("check", function (checked) {
-        // 从配置获取accountList
-        let accountList = configs.get("accountList", []);
+        // 如果正在更新UI，跳过保存
+        // log('汤姆开关',isUpdatingUI)
+        if (isUpdatingUI) return;
+
+        // 从配置中加载账号配置
+        let accountConfig = configs.get("account_config", []);
         // 查找当前显示的账号
-        let currentAccount = accountList.find(account => account.title === currentDisplayAccount);
+        let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
         if (currentAccount) {
             // 只修改汤姆开关状态
             currentAccount.tomFind.enabled = checked;
-            // 保存修改后的accountList
-            configs.put("accountList", accountList);
+            // log({ title: currentAccount.title, tomFind: { enabled: checked } })
+            // 保存修改后的账号配置
+            configs.put("account_config", accountConfig);
         }
     });
 
     // 汤姆物品类型选择事件
     ui.account_config_tom_item_type.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
-            // 从配置获取accountList
-            let accountList = configs.get("accountList", []);
+            // 如果正在更新UI，跳过保存
+            // log(isUpdatingUI)
+            if (isUpdatingUI) return;
+
+            // 从配置中加载账号配置
+            let accountConfig = configs.get("account_config", []);
             // 查找当前显示的账号
-            let currentAccount = accountList.find(account => account.title === currentDisplayAccount);
+            let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
             if (currentAccount) {
                 // 获取汤姆物品类型文本
                 let tomItemTypes = ["货仓", "粮仓"];
                 // 只修改汤姆物品类型和代码
                 currentAccount.tomFind.type = tomItemTypes[position];
                 currentAccount.tomFind.code = position;
-                // 保存修改后的accountList
-                configs.put("accountList", accountList);
+                // log({ title: currentAccount.title, tomFind: { type: tomItemTypes[position], code: position } })
+                // 保存修改后的账号配置
+                configs.put("account_config", accountConfig);
+
             }
         },
         onNothingSelected: function (parent) {
@@ -2257,15 +2417,20 @@ function addAutoSaveListeners() {
     // 汤姆物品名称输入事件
     ui.account_config_tom_item_name.addTextChangedListener(new android.text.TextWatcher({
         afterTextChanged: function (s) {
-            // 从配置获取accountList
-            let accountList = configs.get("accountList", []);
+            // 如果正在更新UI，跳过保存
+            if (isUpdatingUI) return;
+
+            // 从配置中加载账号配置
+            let accountConfig = configs.get("account_config", []);
             // 查找当前显示的账号
-            let currentAccount = accountList.find(account => account.title === currentDisplayAccount);
+            let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
             if (currentAccount) {
                 // 只修改汤姆物品名称
                 currentAccount.tomFind.text = s.toString();
-                // 保存修改后的accountList
-                configs.put("accountList", accountList);
+                // log({ title: currentAccount.title, tomFind: { text: s.toString() } })
+                // 保存修改后的账号配置
+                configs.put("account_config", accountConfig);
+
             }
         },
         beforeTextChanged: function (s, start, count, after) { },
@@ -2274,25 +2439,29 @@ function addAutoSaveListeners() {
 
     // 鱼塘开关事件
     ui.account_config_fish_pond.on("check", function (checked) {
-        // 从配置获取accountList
-        let accountList = configs.get("accountList", []);
+        // 如果正在更新UI，跳过保存
+        if (isUpdatingUI) return;
+
+        // 从配置中加载账号配置
+        let accountConfig = configs.get("account_config", []);
         // 查找当前显示的账号
-        let currentAccount = accountList.find(account => account.title === currentDisplayAccount);
+        let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
         if (currentAccount) {
             // 只修改鱼塘开关状态
             currentAccount.pond.enabled = checked;
-            // 保存修改后的accountList
-            configs.put("accountList", accountList);
+            // log({ title: currentAccount.title, pond: { enabled: checked } })
+            // 保存修改后的账号配置
+            configs.put("account_config", accountConfig);
         }
     });
 
     // 为鱼塘编号设置按钮添加点击事件
     ui.account_config_pond_number.on("click", function () {
-        // 从配置获取accountList
-        let accountList = configs.get("accountList", []);
+        // 从配置中加载账号配置
+        let accountConfig = configs.get("account_config", []);
         // 查找当前显示的账号
-        let currentAccount = accountList.find(account => account.title === currentDisplayAccount);
-        log(currentAccount);
+        let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
+        // log({ title: currentAccount.title, pond: { ponds: currentAccount.pond.ponds } });
         // 获取当前账号的鱼塘编号配置
         let pondNumbers = currentAccount.pond.ponds || [];
 
@@ -2304,66 +2473,51 @@ function addAutoSaveListeners() {
                     <horizontal>
                         <vertical gravity="center_vertical" w="0" layout_weight="1">
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_1" />
-                                <text text="1号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_1" text="1号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_2" />
-                                <text text="2号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_2" text="2号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_3" />
-                                <text text="3号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_3" text="3号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_4" />
-                                <text text="4号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_4" text="4号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_5" />
-                                <text text="5号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_5" text="5号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_6" />
-                                <text text="6号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_6" text="6号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_7" />
-                                <text text="7号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_7" text="7号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_8" />
-                                <text text="8号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_8" text="8号鱼塘" />
                             </horizontal>
                         </vertical>
                         <vertical gravity="center_vertical" w="0" layout_weight="1">
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_9" />
-                                <text text="9号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_9" text="9号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_10" />
-                                <text text="10号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_10" text="10号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_11" />
-                                <text text="11号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_11" text="11号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_12" />
-                                <text text="12号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_12" text="12号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_13" />
-                                <text text="13号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_13" text="13号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_14" />
-                                <text text="14号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_14" text="14号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_15" />
-                                <text text="15号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_15" text="15号鱼塘" />
                             </horizontal>
                         </vertical>
                     </horizontal>
@@ -2398,8 +2552,10 @@ function addAutoSaveListeners() {
             // 更新当前账号的鱼塘编号
             currentAccount.pond.ponds = selectedPonds;
 
-            // 保存修改后的账号列表
-            configs.put("accountList", accountList);
+            // log({ title: currentAccount.title, pond: { ponds: selectedPonds } })
+
+            // 保存修改后的账号配置
+            configs.put("account_config", accountConfig);
 
             // 更新已开启的鱼塘编号显示
             ui.account_config_pond_numbers_display.setText(selectedPonds.join(","));
@@ -2414,17 +2570,22 @@ function addAutoSaveListeners() {
     // 鱼塘物品类型选择事件
     ui.account_config_fish_item_type.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
         onItemSelected: function (parent, view, position, id) {
-            // 从配置获取accountList
-            let accountList = configs.get("accountList", []);
+            // 如果正在更新UI，跳过保存
+            if (isUpdatingUI) return;
+
+            // 从配置中加载账号配置
+            let accountConfig = configs.get("account_config", []);
             // 查找当前显示的账号
-            let currentAccount = accountList.find(account => account.title === currentDisplayAccount);
+            let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
             if (currentAccount) {
                 // 获取鱼塘物品名称
                 let fishItemTypes = ["鱼片", "龙虾尾", "鸭毛"];
-                // 只修改鱼塘物品类型
+                // 只修改鱼塘物品类型和代码
                 currentAccount.pond.name = fishItemTypes[position];
-                // 保存修改后的accountList
-                configs.put("accountList", accountList);
+                currentAccount.pond.code = position;
+                // log({ title: currentAccount.title, pond: { name: fishItemTypes[position], code: position } })
+                // 保存修改后的账号配置
+                configs.put("account_config", accountConfig);
             }
         },
         onNothingSelected: function (parent) {
@@ -3180,7 +3341,7 @@ function loadSaveAccountListFromConfig(config_save) {
                 pond: account.pond || {
                     enabled: true,
                     name: "鱼片",
-                    ponds: [1, 2]
+                    ponds: []
                 }
             });
             // 从映射中移除已处理的文件夹
@@ -3202,7 +3363,7 @@ function loadSaveAccountListFromConfig(config_save) {
             pond: {
                 enabled: true,
                 name: "鱼片",
-                ponds: [1, 2]
+                ponds: []
             }
         });
     });
@@ -3443,8 +3604,7 @@ ui['addFriend'].on('click', () => {
 
 // 添加新账号
 ui['addAccount'].on('click', () => {
-    const config = getConfig();
-    const method = config.accountMethod || 'email';
+    const method = configs.get("accountMethod", "email");
     const listName = method === 'email' ? 'AccountList' : 'SaveAccountList';
     let dataList = method === 'email' ? AccountList : SaveAccountList;
     const dialogTitle = method === 'email' ? '请输入新的账号名称' : '请输入新的存档账号名称';
@@ -3455,17 +3615,7 @@ ui['addAccount'].on('click', () => {
                 dataList.push({
                     title: title.trim(),
                     done: true,
-                    tomFind: {
-                        enabled: true,
-                        type: "货仓",
-                        code: 0,
-                        text: ""
-                    },
-                    pond: {
-                        enabled: true,
-                        name: "鱼片",
-                        ponds: [1, 2]
-                    }
+
                 });
                 ui[listName].adapter.notifyDataSetChanged();
 
@@ -3671,6 +3821,7 @@ function getConfig() {
         coin_subAccount_picName: configs.get("coin_subAccount_picName"),
         coin_item: configs.get("coin_item"),
         coin_picDirPath: configs.get("coin_picDirPath"),
+        account_config: configs.get("account_config"),
     };
     return storedConfig;
 }
@@ -3688,6 +3839,7 @@ function saveConfig(con) {
         configs.put("findAccountMethod", con.findAccountMethod);
         configs.put("accountMethod", con.accountMethod);
         configs.put("accountList", con.accountList);
+        configs.put("account_config", con.account_config);
         configs.put("saveAccountList", con.saveAccountList);
         configs.put("addFriendsList", con.addFriendsList);
         configs.put("shopPrice", con.shopPrice);
@@ -4012,7 +4164,16 @@ function validateConfig(config) {
     }
 
     // 验证账号列表
-    if (!Array.isArray(config.accountList)) config.accountList = [];
+    if (!Array.isArray(config.accountList)) {
+        config.accountList = defaultConfig.accountList;
+    }
+    // 确保每个账号都只有title和done字段，移除tomFind和pond等配置字段
+    config.accountList = config.accountList.map(account => {
+        return {
+            title: account.title,
+            done: account.done !== undefined ? account.done : false
+        };
+    });
 
     // 验证存档账号列表
     if (!Array.isArray(config.saveAccountList)) config.saveAccountList = [];
@@ -4236,6 +4397,8 @@ function validateConfig(config) {
     if (!config.coin_picDirPath || (config.coin_picDirPath && config.coin_picDirPath.length == 0)) config.coin_picDirPath = defaultConfig.coin_picDirPath;
 
 
+    if (!Array.isArray(config.account_config)) config.account_config = [];
+
 
     // 其他验证...
     if (!config.photoPath || (config.photoPath && config.photoPath.length == 0)) config.photoPath = "./res/pictures.1280_720"
@@ -4265,7 +4428,7 @@ function getDefaultConfig() {
         switchAccount: false,
         accountMethod: "email", // 账号切换方式，默认使用邮箱切换
         findAccountMethod: "ocr", // 账号识别方式，默认为文字识别
-        accountList: [], // 新增账号列表配置
+        accountList: [], // 恢复为原来的账号列表结构
         saveAccountList: [], // 新增保存账号列表配置
         addFriendsList: [], // 新增创新号账号列表配置
         shopPrice: {
@@ -4407,14 +4570,12 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 初始化颜色
     initColor();
 
-    // 确保每个账号都有完整的设置字段
-    AccountList = validateAccountSettings(config.accountList);
-
+    AccountList = config.accountList
     ui['AccountList'].setDataSource(AccountList);
-    // 保存更新后的账号列表
-    configs.put("accountList", AccountList);
+
     SaveAccountList = loadSaveAccountListFromConfig(config.saveAccountList);
     ui['SaveAccountList'].setDataSource(SaveAccountList);
+
     AddFriendsList = config.addFriendsList
     ui['addFriendsList'].setDataSource(AddFriendsList);
 
@@ -5390,66 +5551,51 @@ function initUI() {
                     <horizontal>
                         <vertical gravity="center_vertical" w="0" layout_weight="1">
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_1" />
-                                <text text="1号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_1" text="1号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_2" />
-                                <text text="2号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_2" text="2号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_3" />
-                                <text text="3号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_3" text="3号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_4" />
-                                <text text="4号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_4" text="4号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_5" />
-                                <text text="5号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_5" text="5号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_6" />
-                                <text text="6号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_6" text="6号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_7" />
-                                <text text="7号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_7" text="7号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_8" />
-                                <text text="8号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_8" text="8号鱼塘" />
                             </horizontal>
                         </vertical>
                         <vertical gravity="center_vertical" w="0" layout_weight="1">
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_9" />
-                                <text text="9号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_9" text="9号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_10" />
-                                <text text="10号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_10" text="10号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_11" />
-                                <text text="11号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_11" text="11号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_12" />
-                                <text text="12号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_12" text="12号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_13" />
-                                <text text="13号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_13" text="13号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_14" />
-                                <text text="14号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_14" text="14号鱼塘" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pond_15" />
-                                <text text="15号鱼塘" textSize="14" marginLeft="8" />
+                                <checkbox id="pond_15" text="15号鱼塘" />
                             </horizontal>
                         </vertical>
                     </horizontal>
@@ -5752,12 +5898,12 @@ function initUI() {
     ui.helpIcon_account_config.on("click", function () {
         dialogs.build({
             title: "账号配置帮助",
-            content: "- 汤姆和鱼塘的总开关在脚本主页,当主页的开关打开后这里才有效\n\n"+
-            "- 当这里的汤姆和鱼塘配置与主页配置不同时,优先选择这里的配置\n\n"+
-            "- 当主页没有配置相关信息,会使用这里的配置\n\n"+
-            "- \n\n"+
-            "- \n\n"+
-            "- \n\n",
+            content: "- 汤姆和鱼塘的总开关在脚本主页,当主页的开关打开后这里才有效\n\n" +
+                "- 当这里的汤姆和鱼塘配置与主页配置不同时,优先选择这里的配置\n\n" +
+                "- 当主页没有配置相关信息,会使用这里的配置\n\n" +
+                "- \n\n" +
+                "- \n\n" +
+                "- \n\n",
             positive: "确定"
         }).show();
     })
@@ -6171,6 +6317,13 @@ function initUI() {
 
     // 为账户列表项添加点击事件
     ui.sell_accountList.on("item_click", function (item, i, itemView, listView) {
+        // 更新选中状态
+        for (var j = 0; j < sell_accountList.length; j++) {
+            sell_accountList[j].selected = (j === i);
+        }
+        // 刷新列表
+        ui.sell_accountList.setDataSource(sell_accountList);
+
         // 隐藏所有内容块
         for (var j = 1; j <= sell_accountList.length; j++) {
             var contentBlock = ui.findView("sell_contentBlock" + j);

@@ -1,7 +1,7 @@
 {
-  "version": "2.2.1",
-  "description": "\n\nv2.2.1\n\n功能优化\n\n当耕地已种植作物时，会检测剩余时间。将剩余时间作为计时器时间。\n\n当小鸭沙龙或龙虾池满了，并且还有未收集的捕鸭器或捕虾笼时，会自动切换到下一个鱼塘\n\n单刷账号在执行完一轮后会自动复位到商店\n\n添加第一次雇佣汤姆界面的判断\n\n添加第一次雇佣汤姆的选择(首次雇佣汤姆界面是否选择确定),默认不选择\n\n优化渔船点击位置\n\n在脚本主页同样加入鱼塘配置\n\nBug修复\n\n修复accountList内容不完整的bug\n\n修复进入鱼塘的检测Bug\n\n修复单刷和存档刷地时的Bug\n\n修复当单刷并且不是仅汤姆时的“selectedFunction”未定义错误\n\n",
-  "zip_name": "卡通农场小助手v2.2.1.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.2.1/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.2.1.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.2.1/v2.2.1.zip"
+  "version": "2.2.2",
+  "description": "\n\n## v2.2.2\n\n注意：本次更新会将每个账号的汤姆和鱼塘信息重置，更新后需重新配置\n\nBug修复\n- 织网机检测时间延长3秒(当织网机做满10个物品,没收取完就跳了)\n- 修复当修改完账号单独配置后，再进行账号列表修改，会导致账号单独配置恢复到修改前的问题\n\n功能优化\n- 优化鱼塘勾选框的点击位置\n- 账号单独配置的鱼塘编号默认为空,如果未配置鱼塘编号,则默认使用主页的鱼塘编号\n- 汤姆或者鱼塘报错不会终止脚本运行,并且报错时会弹出提示\n- 优化找鱼塘的滑动手势\n- 优化账号配置界面的列表显示\n- 优化仓库售卖界面的列表显示\n\n",
+  "zip_name": "卡通农场小助手v2.2.2.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.2.2/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.2.2.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.2.2/v2.2.2.zip"
 }
