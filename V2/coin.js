@@ -43,7 +43,7 @@ let 主号农场名 = config.coin_mainAccount_picName   //照片名称
 let 小号 = config.coin_subAccount;
 let 小号农场名 = config.coin_subAccount_picName     //照片名称
 
-let 导金币物品 = config.coin_item   
+let 导金币物品 = config.coin_item
 
 //==================================
 
@@ -72,10 +72,12 @@ try {
 
 // configs.put("findAccountMethod","ocr")
 
+let currAccount = null
 
 function main() {
     module.checkmenu();
     module.switch_account(主号);
+    currAccount = 主号
     while (true) {
 
         sleep(500)
@@ -86,12 +88,13 @@ function main() {
         sellPlan = module.sellPlanValidate(sellPlan);
         if (sellPlan) {
             log("商店售卖计划:" + JSON.stringify(sellPlan))
-            module.shop_sell(sellPlan, allItemColor, null, 2)
+            module.shop_sell(sellPlan, allItemColor, null, currAccount == 主号 ? 2 : 0)
         }
         sleep(100)
         module.find_close();
         //这里账号名
         module.switch_account(小号);
+        currAccount = 小号
 
 
         module.openFriendMenu();
@@ -99,8 +102,8 @@ function main() {
         click(550, 150)
         sleep(1000)
 
-        //双击账号===========================这里坐标
-        findFriend(主号农场名)
+
+        if (!findFriend(主号农场名, 小号农场名)) continue;
 
         sleep(500)
         while (!friendButton()) { module.close() }
@@ -148,7 +151,7 @@ function main() {
         sellPlan = module.sellPlanValidate(sellPlan);
         if (sellPlan) {
             log("商店售卖计划:" + JSON.stringify(sellPlan))
-            module.shop_sell(sellPlan, allItemColor, null, 0)
+            module.shop_sell(sellPlan, allItemColor, null, currAccount == 主号 ? 2 : 0)
         }
         sleep(100)
         module.find_close();
@@ -156,6 +159,7 @@ function main() {
         //切回大号买1金物品
 
         module.switch_account(主号);
+        currAccount = 主号
 
         sleep(1000);
         module.openFriendMenu();
@@ -165,7 +169,7 @@ function main() {
         sleep(1000)
 
         //双击账号
-        findFriend(小号农场名)
+        if (!findFriend(小号农场名, 主号农场名)) continue;
 
         sleep(500)
         while (!friendButton()) { }
@@ -204,6 +208,23 @@ function friendButton() {
         { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
         { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
         { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }])
+
+        let sc = captureScreen();
+        //新版界面
+        let allMatch = module.findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
+            [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+
+        //老板界面
+        let allMatch2 = module.findMC(["#fdf8f4", [5, 32, "#f2ded3"],
+            [-17, 18, "#a44900"], [11, 54, "#f7c342"],
+            [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+
+        if (allMatch || allMatch2) {
+            log("进入界面")
+            module.showTip("进入界面")
+            return true;
+        }
+
         if (friendMenu) {
             module.showTip("关闭好友栏");
             log("关闭好友栏")
@@ -313,16 +334,19 @@ function ran() {
     return Math.random() * (2 * randomOffset) - randomOffset;
 }
 
-function findFriend(Account) {
+function findFriend(Account, Account_1, isclick = true) {
     const MAX_SCROLL_DOWN = 5; // 最多下滑5次
 
     let found = false; // 是否找到目标
     let scrollDownCount = 0; // 当前下滑次数
     let isEnd = false;
     let AccountIma = null;
+    let AccountIma_1 = null;
 
     AccountIma = files.join(照片文件夹, Account + ".png");
+    AccountIma_1 = files.join(照片文件夹, Account_1 + ".png");
     log("账号图片路径：" + AccountIma);
+    log("账号图片路径：" + AccountIma_1);
     module.showTip("");
     while (!found) {
         sleep(500);
@@ -341,7 +365,8 @@ function findFriend(Account) {
 
         is_find_Account = module.findimage(AccountIma, 0.9);
 
-        if (is_find_Account) { //如果找到账号名称，则点击
+
+        if (is_find_Account && isclick) { //如果找到账号名称，则点击
             log(`找到账号${Account}`);
             // module.showTip(`找到账号${Account}`);
             sleep(500);
@@ -354,6 +379,26 @@ function findFriend(Account) {
             found = true;
             break;
         }
+
+        let is_find_Account_1 = null;
+        is_find_Account_1 = module.findimage(AccountIma_1, 0.9);
+        if (is_find_Account_1 && click) { //如果找到另一个账号名称，则换号
+            log(`找到账号${Account_1}`);
+            module.showTip(`找到账号${Account_1},切换账号`);
+            module.switch_account(Account_1 == 主号农场名 ? 主号 : 小号);
+            currAccount = Account_1 == 主号农场名 ? 主号 : 小号
+            sleep(500);
+            return false;
+        }
+
+        //检测是否在好友簿界面
+        if (!matchColor([{ x: 544, y: 130, color: "#fff9db" }, { x: 425, y: 55, color: "#deb476" }])) {
+            module.openFriendMenu();
+            sleep(500)
+            click(550, 150)
+            sleep(1000)
+        }
+
         if (scrollDownCount < MAX_SCROLL_DOWN) {
             swipe(600, 630, 600, 350, 1000); // 下滑
             scrollDownCount++;
@@ -374,7 +419,7 @@ function findFriend(Account) {
             scrollDownCount = 0;
         }
     }
-    return;
+    return true;
 }
 
 

@@ -37,6 +37,14 @@ let configs = storages.create("config");
 // 启动自动点击权限请求
 module.autoSc();
 
+if (configs.get("push_settings") && configs.get("push_settings")[1]) {
+    let engineId = engines.myEngine().id;
+    configs.put("currentEngineId", engineId)
+
+    log("启动引擎监控...")
+    let monitorEngine = engines.execScriptFile("./engine_monitor.js");
+}
+
 
 
 function main() {
@@ -101,10 +109,9 @@ function main_email() {
             if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0 && !module.getTimerState("cangkuStatisticsTime")) {
                 //进行仓库统计
                 let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
+                rawData["账号"] = "账号"
                 //将仓库统计结果转换为表格数据
-                let rawContentData = module.creatContentData("账号", rawData);
-                //在表格前后加入标题，合计列
-                let contentData = module.rawContentData2(rawContentData);
+                let contentData = module.convertToTable(rawData);
                 //推送
                 module.pushTo(contentData);
                 module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
@@ -148,7 +155,7 @@ function main_email() {
             let cangkuStatisticsForEach = false;
 
             //设定初始仓库数据
-            let rawContentData = null;
+            let cangkuStatisticsData = [];
 
             //判断是否需要升仓
             if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
@@ -186,8 +193,9 @@ function main_email() {
                 if (cangkuStatisticsForEach) {
                     //执行仓库统计
                     let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
-                    //将仓库统计结果转换为表格数据
-                    rawContentData = module.creatContentData(`账号${Account.title}`, rawData, rawContentData);
+                    rawData["账号"] = Account.title
+                    //将仓库统计结果添加到统计数据
+                    cangkuStatisticsData.push(rawData);
                 }
                 while (true) {
                     // 获取下一个账号的计时器状态
@@ -218,9 +226,9 @@ function main_email() {
                 console.error("showDetails error:", error);
             }
             ;
-            if (cangkuStatisticsForEach && rawContentData) {
-                //在表格前后加入标题，合计列
-                let contentData = module.rawContentData2(rawContentData);
+            if (cangkuStatisticsForEach && cangkuStatisticsData.length > 0) {
+                //将仓库统计数据转换为表格数据
+                let contentData = module.convertToTable(cangkuStatisticsData);
                 //推送
                 module.pushTo(contentData);
             }
@@ -410,7 +418,7 @@ function main_save() {
         let cangkuStatisticsForEach = false;
 
         //设定初始仓库数据
-        let rawContentData = null;
+        let cangkuStatisticsData = [];
 
         //判断是否需要升仓
         if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
@@ -471,8 +479,9 @@ function main_save() {
             if (cangkuStatisticsForEach) {
                 //执行仓库统计
                 let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
-                //将仓库统计结果转换为表格数据
-                rawContentData = module.creatContentData(`账号${currentAccount.title}`, rawData, rawContentData);
+                rawData["账号"] = currentAccount.title
+                //将仓库统计结果添加到统计数据
+                cangkuStatisticsData.push(rawData);
             }
             while (true) {
                 // 获取下一个账号的计时器状态
@@ -502,9 +511,9 @@ function main_save() {
                 console.error("showDetails error:", error);
             }
 
-            if (cangkuStatisticsForEach && rawContentData) {
-                //在表格前后加入标题，合计列
-                let contentData = module.rawContentData2(rawContentData);
+            if (cangkuStatisticsForEach && cangkuStatisticsData.length > 0) {
+                //将仓库统计数据转换为表格数据
+                let contentData = module.convertToTable(cangkuStatisticsData);
                 //推送
                 module.pushTo(contentData);
             }

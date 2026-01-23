@@ -66,14 +66,13 @@ function main_email() {
         }
         module.findland(false)
         //执行仓库统计
-
         let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
-        //将仓库统计结果转换为表格数据
-        let rawContentData = module.creatContentData("账号", rawData);
-        //在表格前后加入标题，合计列
-        let contentData = module.rawContentData2(rawContentData);
-        // 输出原始数据
+        //输出原始数据
         log(rawData);
+        // 添加当前账号信息
+        rawData["账号"] =  "账号";
+        //将仓库统计结果转换为表格数据
+        let contentData = module.convertToTable(rawData);
         //推送
         module.pushTo(contentData);
 
@@ -88,7 +87,7 @@ function main_email() {
 
 
         //设定初始仓库数据
-        let rawContentData = null;
+        let cangkuStatisticsData = [];
 
         doneAccountsList.forEach(account => {
 
@@ -103,29 +102,21 @@ function main_email() {
             }
             module.findland(false)
 
-
-
             //执行仓库统计
             let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
-
-            //获取已合并数据列表
-            let mergedDataList = statistics.get("mergedDataList", []);
-            let mergedData = Object.assign({ "账号": account.title }, rawData);
-            mergedDataList.push(mergedData);
-            statistics.put("mergedDataList", mergedDataList);
-
-            //将仓库统计结果转换为表格数据
-            rawContentData = module.creatContentData(`账号${account.title}`, rawData, rawContentData);
-
-            // sleep(1000);
+            rawData["账号"] = account.title
+            //将仓库统计结果添加到统计数据
+            cangkuStatisticsData.push(rawData);
         });
 
-        if (rawContentData) {
-            //在表格前后加入标题，合计列
-            let contentData = module.rawContentData2(rawContentData);
+        //输出原始数据
+        log(cangkuStatisticsData);
+
+        if (cangkuStatisticsData.length > 0) {
+            //将仓库统计数据转换为表格数据
+            let contentData = module.convertToTable(cangkuStatisticsData);
             //推送
             module.pushTo(contentData);
-            log(statistics.get("mergedDataList"))
         }
 
     }
@@ -293,9 +284,8 @@ function main_save() {
     // 新建账号列表
     const doneAccountsList = config.saveAccountList.filter(account => account.done === true);
 
-
     //设定初始仓库数据
-    let rawContentData = null;
+    let cangkuStatisticsData = [];
 
     doneAccountsList.forEach(currentAccount => {
 
@@ -336,26 +326,17 @@ function main_save() {
 
         //执行仓库统计
         let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
+        rawData["账号"] = currentAccount.title
+        //将仓库统计结果添加到统计数据
+        cangkuStatisticsData.push(rawData);
+    });
 
-        //获取已合并数据列表
-        let mergedDataList = statistics.get("mergedDataList", []);
-        let mergedData = Object.assign({ "账号": account.title }, rawData);
-        mergedDataList.push(mergedData);
-        statistics.put("mergedDataList", mergedDataList);
-
-        //将仓库统计结果转换为表格数据
-        rawContentData = module.creatContentData(`账号${currentAccount.title}`, rawData, rawContentData);
-
-        // sleep(1000);
-
-        if (rawContentData) {
-            //在表格前后加入标题，合计列
-            let contentData = module.rawContentData2(rawContentData);
-            //推送
-            module.pushTo(contentData);
-            log(statistics.get("mergedDataList"))
-        }
-    })
+    if (cangkuStatisticsData.length > 0) {
+        //将仓库统计数据转换为表格数据
+        let contentData = module.convertToTable(cangkuStatisticsData);
+        //推送
+        module.pushTo(contentData);
+    }
 
 }
 

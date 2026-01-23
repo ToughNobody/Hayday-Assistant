@@ -1524,8 +1524,9 @@ ui.layout(
 
                                         <horizontal gravity="center_vertical">
                                             <text text="顶号延迟" textSize="14" w="120" marginRight="8" />
-                                            <input id="pauseTime" hint="5" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                            <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <input id="pauseTime" hint="5" w="50" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="分钟" textSize="14" w="auto" marginRight="8" />
                                         </horizontal>
 
                                         <horizontal gravity="center_vertical">
@@ -1585,31 +1586,35 @@ ui.layout(
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
                                             <text text="升仓间隔时间" textSize="14" w="120" marginRight="8" />
-                                            <input id="shengcangTime" hint="60" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                            <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <input id="shengcangTime" hint="60" w="50" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="分钟" textSize="14" w="auto" marginRight="8" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
-                                            <text text="仓库统计" textSize="14" w="120" marginRight="8" />
+                                            <text text="仓库统计" textSize="14" w="60" marginRight="8" />
                                             <button id="cangkuStatisticsBtn" textSize="14" w="80" h="40" text="执行统计" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                            <button id="cangkuStatistics_settingBtn" textSize="14" w="80" h="40" text="统计设置" style="Widget.AppCompat.Button.Borderless.Colored" />
                                             <View w="0" h="0" layout_weight="1" />
                                             <Switch id="isCangkuStatistics" gravity="left|center" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
                                             <text text="仓库统计间隔时间" textSize="14" w="120" marginRight="8" />
-                                            <input id="cangkuStatisticsTime" hint="300" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                            <text text="分钟" textSize="14" w="120" marginRight="8" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <input id="cangkuStatisticsTime" hint="300" w="50" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="分钟" textSize="14" w="auto" marginRight="8" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
                                             <text text="仓库统计页数" textSize="14" w="120" marginRight="8" />
-                                            <input id="cangkuStatisticsPage" hint="2" w="120" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
-                                            <text text="页" textSize="14" w="120" marginRight="8" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <input id="cangkuStatisticsPage" hint="2" w="50" h="40" textSize="14" bg="#FFFFFF" inputType="number" marginRight="8" />
+                                            <text text="页" textSize="14" w="auto" marginRight="8" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical">
-                                            <text text="推送方式" textSize="14" w="100" marginRight="8" />
+                                            <text text="推送方式" textSize="14" w="60" marginRight="8" />
+                                            <button id="pushTestBtn" textSize="14" w="80" h="40" text="推送测试" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                            <button id="pushSettingBtn" textSize="14" w="80" h="40" text="推送设置" style="Widget.AppCompat.Button.Borderless.Colored" />
                                             <spinner id="serverPlatform" entries="Pushplus|Server酱|WxPusher"
                                                 w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                            <View w="0" h="0" layout_weight="1" />
-                                            <button id="pushTestBtn" textSize="14" w="80" h="40" text="推送测试" style="Widget.AppCompat.Button.Borderless.Colored" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical" padding="8">
                                             <text text="token" textSize="14" w="60" marginRight="12" />
@@ -3753,6 +3758,8 @@ function getConfig() {
         shengcang_l: configs.get("shengcang_l"),
         shengcangTime: configs.get("shengcangTime"),
         isCangkuStatistics: configs.get("isCangkuStatistics"),
+        cangkuStatistics_settings: configs.get("cangkuStatistics_settings"),
+        push_settings: configs.get("push_settings"),
         cangkuStatisticsTime: configs.get("cangkuStatisticsTime"),
         cangkuStatisticsPage: configs.get("cangkuStatisticsPage"),
         treeShouldSwipe: configs.get("treeShouldSwipe"),
@@ -4473,6 +4480,13 @@ function getDefaultConfig() {
         shengcang_l: false,
         shengcangTime: 60,
         isCangkuStatistics: false,
+        cangkuStatistics_settings: ["盒钉", "螺钉", "镶板", "螺栓", "木板", "胶带", "土地契约", "木槌", "标桩",
+            "斧头", "木锯", "炸药", "炸药桶", "铁铲", "十字镐"],
+        push_settings: {
+            1: false,
+            2: false,
+            3: false
+        },
         cangkuStatisticsTime: 300,
         cangkuStatisticsPage: 2,
         treeShouldSwipe: true,
@@ -5095,7 +5109,7 @@ function startButton() {
                     sleep(100);
                     let newEngine = engines.execScriptFile("./shuadi.js");
                     log("启动刷地引擎，ID: " + newEngine.id);
-
+                    configs.put("currentEngineId", newEngine.id);
                 })
             }
             else if (config.accountMethod == "save") {
@@ -5110,7 +5124,7 @@ function startButton() {
                     sleep(100);
                     let newEngine = engines.execScriptFile("./shuadi.js");
                     log("启动刷地引擎，ID: " + newEngine.id);
-
+                    configs.put("currentEngineId", newEngine.id);
                 })
             }
             break;
@@ -5670,6 +5684,194 @@ function initUI() {
         // 保存修改后的开关状态到配置
         configs.put("tom_FirstHire", checked);
     });
+
+    // 仓库统计设置按钮点击事件
+    ui.cangkuStatistics_settingBtn.on("click", function () {
+        //从配置中获取当前设置
+        let defaultSettings = getDefaultConfig().cangkuStatistics_settings
+
+        let currentSettings = configs.get("cangkuStatistics_settings", defaultSettings);
+        // 显示仓库统计设置对话框
+        let customView = ui.inflate(
+            <vertical padding="16">
+                <text text="选择需要统计的物品" textSize="16" textStyle="bold" marginBottom="16" />
+                <scroll>
+                    <vertical h="*" paddingBottom="16">
+                        <horizontal>
+                            <vertical gravity="center_vertical" w="0" layout_weight="1">
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_1" text="盒钉" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_2" text="螺钉" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_3" text="镶板" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_4" text="螺栓" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_5" text="木板" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_6" text="胶带" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_7" text="土地契约" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_8" text="木槌" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_9" text="标桩" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_10" text="斧头" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_11" text="木锯" />
+                                </horizontal>
+                            </vertical>
+                            <vertical gravity="center_vertical" w="0" layout_weight="1">
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_12" text="炸药" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_13" text="炸药桶" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_14" text="铁铲" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_15" text="十字镐" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_16" text="鱼片" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_17" text="龙虾尾" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_18" text="小鸭羽毛" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_19" text="蜂糖" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_20" text="蜂蜜" />
+                                </horizontal>
+                                <horizontal gravity="center_vertical" marginBottom="8">
+                                    <checkbox id="cangkuStatistics_21" text="蜂蜡" />
+                                </horizontal>
+                            </vertical>
+                        </horizontal>
+                    </vertical>
+                </scroll>
+            </vertical>
+        );
+
+        const itemNames = [
+            "", "盒钉", "螺钉", "镶板", "螺栓", "木板", "胶带", "土地契约", "木槌", "标桩",
+            "斧头", "木锯", "炸药", "炸药桶", "铁铲", "十字镐", "鱼片", "龙虾尾", "小鸭羽毛",
+            "蜂糖", "蜂蜜", "蜂蜡"
+        ];
+
+        // 根据当前账号配置设置checkbox的初始状态
+        for (let i = 1; i <= 20; i++) {
+            customView[`cangkuStatistics_${i}`].setChecked(currentSettings.includes(itemNames[i]));
+        }
+
+        // 创建对话框
+        let dialog = dialogs.build({
+            customView: customView,
+            positive: "确定",
+            negative: "取消",
+            wrapInScrollView: true,
+            cancelable: true
+        });
+
+        // 为确定按钮添加点击事件
+        dialog.on("positive", function () {
+            // 收集选中的物品名称
+            let selectedItems = [];
+
+            for (let i = 1; i <= 20; i++) {
+                if (customView[`cangkuStatistics_${i}`].isChecked()) {
+                    selectedItems.push(itemNames[i]);
+                }
+            }
+
+            // 保存修改后的账号配置
+            configs.put("cangkuStatistics_settings", selectedItems);
+
+            toast("仓库统计设置成功");
+        });
+
+        // 显示对话框
+        dialog.show();
+    })
+
+    // 推送设置按钮点击事件
+    ui.pushSettingBtn.on("click", function () {
+        //从配置中获取当前设置
+        let defaultSettings = getDefaultConfig().push_settings
+
+        let currentSettings = configs.get("push_settings", defaultSettings);
+        // 显示推送设置对话框
+        let customView = ui.inflate(
+            <vertical padding="16">
+                <text text="推送设置" textSize="16" textStyle="bold" marginBottom="16" />
+                <vertical h="*" paddingBottom="16">
+                    <horizontal>
+                        <vertical gravity="center_vertical" w="0" layout_weight="1">
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pushSetting_1" text="刷地脚本停止时" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pushSetting_2" text="等待开发" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pushSetting_3" text="等待开发" />
+                            </horizontal>
+                        </vertical>
+                    </horizontal>
+                </vertical>
+            </vertical>
+        );
+        // 根据当前账号配置设置checkbox的初始状态
+        for (let i = 1; i <= 3; i++) {
+            customView[`pushSetting_${i}`].setChecked(currentSettings[i]);
+        }
+
+        // 创建对话框
+        let dialog = dialogs.build({
+            customView: customView,
+            positive: "确定",
+            negative: "取消",
+            wrapInScrollView: true,
+            cancelable: true
+        });
+        // 为确定按钮添加点击事件
+        dialog.on("positive", function () {
+            // 收集项目状态
+            let selectedItems = {};
+
+            for (let i = 1; i <= 3; i++) {
+                selectedItems[i] = customView[`pushSetting_${i}`].isChecked();
+            }
+
+            // 保存修改后的账号配置
+            configs.put("push_settings", selectedItems);
+
+            toast("推送设置成功");
+        });
+
+        // 显示对话框
+        dialog.show();
+    })
+
+
 
     // 仓库统计开关状态变化监听
     ui.isCangkuStatistics.on("check", (checked) => {

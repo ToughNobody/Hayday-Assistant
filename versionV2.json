@@ -1,7 +1,7 @@
 {
-  "version": "2.2.2",
-  "description": "\n\n## v2.2.2\n\n注意：本次更新会将每个账号的汤姆和鱼塘信息重置，更新后需重新配置\n\nBug修复\n- 织网机检测时间延长3秒(当织网机做满10个物品,没收取完就跳了)\n- 修复当修改完账号单独配置后，再进行账号列表修改，会导致账号单独配置恢复到修改前的问题\n\n功能优化\n- 优化鱼塘勾选框的点击位置\n- 账号单独配置的鱼塘编号默认为空,如果未配置鱼塘编号,则默认使用主页的鱼塘编号\n- 汤姆或者鱼塘报错不会终止脚本运行,并且报错时会弹出提示\n- 优化找鱼塘的滑动手势\n- 优化账号配置界面的列表显示\n- 优化仓库售卖界面的列表显示\n\n",
-  "zip_name": "卡通农场小助手v2.2.2.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.2.2/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.2.2.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.2.2/v2.2.2.zip"
+  "version": "2.2.3",
+  "description": "\n\nv2.2.3\n\nBug修复\n\n修复种树时输入文本报错的问题\n\n修复倒金币时找好友和进入好友农场循环检测导致的Bug\n\n修复只执行仓库统计时存档切换每个号都单独推送一次的Bug\n\n功能优化\n\n将鱼塘等待时间数组的收网时间改成制作工具时间\n\n适当延长种植时点击下一页按钮和鱼塘滑动时的等待时间\n\n如果第一块地作物成熟时间大于选择的作物成熟时间，计时器则按选择的作物成熟时间计算\n\n仓库统计可选择的统计物品\n\n新增功能\n\n刷地时脚本由于某些原因停止运行，可以通过推送功能收到通知。检测间隔30秒\n\n",
+  "zip_name": "卡通农场小助手v2.2.3.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.2.3/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.2.3.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.2.3/v2.2.3.zip"
 }

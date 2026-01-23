@@ -1482,7 +1482,7 @@ function checkmenu() {
 }
 
 /**
- * 打开好友菜单
+ * 打开好友菜单,自动点到好友簿页面，但不会选择“游戏内好友”
  * @returns {boolean} - 如果成功打开好友菜单则返回 `true`，否则返回 `false`
  */
 function openFriendMenu() {
@@ -1762,7 +1762,7 @@ function huadong_pond() {
     gestures([0, 200, [300 + ran(), 120 + ran()], [710 + ran(), 120 + ran()]],
         [0, 200, [1000 + ran(), 120 + ran()], [710 + ran(), 120 + ran()]
         ]);
-    sleep(100);
+    sleep(200);
 
     //右滑
     swipe(920 + ran(), 100 + ran(), 250 + ran(), 350, 100);
@@ -1772,7 +1772,7 @@ function huadong_pond() {
     gestures([0, 200, [420 + ran(), 250 + ran()], [710 + ran(), 250 + ran()]],
         [0, 200, [1000 + ran(), 250 + ran()], [710 + ran(), 250 + ran()]
         ]);
-    sleep(100);
+    sleep(200);
 
     //右滑
     swipe(920 + ran(), 100 + ran(), 250 + ran(), 350, 100);
@@ -2136,12 +2136,12 @@ function pond_operation(account_config) {
     let netMaker = null
 
     if (item == "鱼片") {
-        Times.push(20 * 60 * 60)//20小时
+        Times.push(4 * 60 * 60)//4小时
         huadong_pond()
         netMaker = click_netMaker()
         netMaker_produce(itemName)
     } else if (item == "龙虾尾") {
-        Times.push(6 * 60 * 60)//6小时
+        Times.push(2 * 60 * 60)//2小时
         huadong_pond()
         collect_lobster()
         sleep(500);
@@ -2149,7 +2149,7 @@ function pond_operation(account_config) {
         netMaker = click_netMaker()
         netMaker_produce(itemName)
     } else if (item == "鸭毛") {
-        Times.push(3 * 60 * 60)//3小时
+        Times.push(1 * 60 * 60)//1小时
         collect_duckSalon()
         sleep(500);
         huadong_pond()
@@ -2969,7 +2969,7 @@ function getHarvestGroup(group, L, R, S, rows) {
  */
 function harvest(center) {
     // 参数检查
-    if (!center) {
+    if (!center || !center.x || !center.y) {
         return false;
     }
     log("开始收割，坐标: " + center.x + "," + center.y);
@@ -2977,14 +2977,16 @@ function harvest(center) {
     let rows = config.harvestRepeat || 3
 
     let center_land = findland(false);
-    if (!center_land) {
+    if (!center_land || !center_land.x || !center_land.y) {
         return false;
     }
     // 定义偏移量
+    let harvestX = config.harvestX || 8
+    let harvestY = config.harvestY || 3.5
     // 左移
     const L = {
-        x: (config.harvestX + 2) * -36,
-        y: (config.harvestX + 2) * -18
+        x: (harvestX + 2) * -36,
+        y: (harvestX + 2) * -18
     };
     // 右移
     const R = {
@@ -2993,13 +2995,13 @@ function harvest(center) {
     };
     // 换行
     const S = {
-        x: (config.harvestY) * 36,
-        y: (config.harvestY) * -18
+        x: (harvestY) * 36,
+        y: (harvestY) * -18
     };
 
-    let pos1 = [config.firstland.x, config.firstland.y]
-    let pos2X = config.distanceX
-    let pos2Y = config.distanceY
+    let pos1 = [config.firstland.x || 20, config.firstland.y || 0]
+    let pos2X = config.distanceX || 0
+    let pos2Y = config.distanceY || 75
 
     // 初始土地坐标计算
     let pos_land = {
@@ -3466,19 +3468,15 @@ function shop() {
                 close();
             }
         }
-        sleep(200);
-        find_close();
-        sleep(300);
-        find_close();
+
     } catch (e) {
         console.error("shop函数出错:", e);
         showTip("商店操作出错，已跳过");
     } finally {
         // 确保关闭所有可能的弹窗
-        sleep(200);
-        find_close();
-        sleep(300);
-        find_close();
+        while (find_close()) {
+            sleep(200);
+        }
     }
 }
 
@@ -3999,6 +3997,11 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
  * @returns 有效售卖计划
  */
 function sellPlanValidate(sellPlan_original) {
+    if (!sellPlan_original || sellPlan_original.length === 0) {
+        console.log("售卖计划为空");
+        showTip("售卖计划为空");
+        return false;
+    }
     try {
         coin();
         let kongxian = find_kongxian();
@@ -4687,10 +4690,12 @@ function switch_account(Account) {
             // 检测supercell ID界面
             for (let i = 0; i < 20; i++) {
                 findAccountMenuNum++;
-                if (findMC(["#ffffff", [22, 0, "#0d327a"],
-                    [-3, 43, "#ffffff"], [-42, 33, "#0f3785"],
-                    [-22, 22, "#ffffff"], [-58, 0, "#ffffff"],
-                    [-43, 9, "#0e3682"]], null, [0, 250, 600, 250])) {
+                //识别supercell ID
+                if (findMC(["#103a8b", [-160, 42, "#ffffff"],
+                    [-120, 40, "#1c509b"], [13, 50, "#ffffff"],
+                    [19, 43, "#14408f"], [13, 42, "#ffffff"],
+                    [100, 46, "#ffffff"], [118, 36, "#0e3682"],
+                    [149, 51, "#0e3581"], [164, 74, "#ffffff"]], null, [0, 250, 600, 250])) {
                     break;
                 }
                 sleep(500);
@@ -5079,6 +5084,7 @@ function plant_crop() {
                     click(next_button.x + ran(), next_button.y + ran());
                     log("点击下一页按钮");
                     showTip("点击下一页按钮");
+                    sleep(200);
                     tries++;
                 } else {
                     log("未找到下一个按钮，检查界面");
@@ -5121,7 +5127,7 @@ function plant_crop() {
 /**
  * 收割作物
  * @param {*} center_sickle 镰刀坐标
- * @returns 如果成功收割返回true，第一块耕地已种植返回null
+ * @returns 如果成功收割返回true，第一块耕地已种植返回剩余时间（秒）
  */
 function harvest_crop(center_sickle) {
     //收作物
@@ -5240,7 +5246,8 @@ function operation(Account) {
 
 
     //设定计时器
-    let cropTime = typeof is_harvest === "number" ? is_harvest : config.matureTime * 60 - config.harvestTime; //成熟时间-收割时间
+    let fixed_time = config.matureTime * 60 - config.harvestTime      //成熟时间-收割时间
+    let cropTime = typeof is_harvest === "number" && (is_harvest < fixed_time) ? is_harvest : fixed_time;
     let timerName = accountName ? accountName + "计时器" : config.selectedCrop.text;
     timer(timerName, cropTime);
 
@@ -5362,8 +5369,24 @@ function cangkuStatistics(maxPages = 2) {
         }
         log("货仓容量：" + hcCapacity);
         showTip("货仓容量：" + hcCapacity);
-        // 初始化所有物品状态为未检测
-        Object.keys(cangkuItemColor).forEach(itemName => {
+        // 获取配置文件中的统计设置
+        let configItems = configs.get("cangkuStatistics_settings");
+        
+        // 创建只包含配置中指定物品的新数组
+        let targetItems = {};
+        if (Array.isArray(configItems)) {
+            configItems.forEach(itemName => {
+                if (allItemColor[itemName]) {
+                    targetItems[itemName] = allItemColor[itemName];
+                }
+            });
+        } else {
+            // 如果配置无效，则使用默认的cangkuItemColor
+            targetItems = cangkuItemColor;
+        }
+        
+        // 初始化所有配置物品状态为未检测
+        Object.keys(targetItems).forEach(itemName => {
             result[itemName] = {
                 counts: 0,
                 position: [],
@@ -5386,13 +5409,13 @@ function cangkuStatistics(maxPages = 2) {
             let sc1 = sc
 
             // 检测所有物品
-            Object.keys(cangkuItemColor).forEach(itemName => {
+            Object.keys(targetItems).forEach(itemName => {
                 // 如果已经检测到该物品，跳过
                 if (result[itemName].detected) {
                     return
                 }
 
-                let itemColor = cangkuItemColor[itemName];
+                let itemColor = targetItems[itemName];
                 let position = findMC(itemColor, sc, [146, 93, 1139 - 146, 576 - 93]);
 
                 if (position) {
@@ -5469,6 +5492,7 @@ function cangkuStatistics(maxPages = 2) {
     } catch (error) {
         log("仓库统计出错" + error);
     } finally {
+        sleep(100);
         find_close();
     }
 
@@ -5582,6 +5606,81 @@ function rawContentData2(rawContentData) {
     } catch (error) {
         log(error);
     }
+}
+
+function convertToTable(data) {
+    // 获取所有的项目名称（除了"账号"字段）
+    const allKeys = new Set();
+    data.forEach(item => {
+        Object.keys(item).forEach(key => {
+            if (key !== "账号") {
+                allKeys.add(key);
+            }
+        });
+    });
+    const keysArray = Array.from(allKeys);
+
+    // 构建表头
+    let table = "|         |";
+    data.forEach(item => {
+        table += `   ${item["账号"]}   |`;
+    });
+    table += " 总计 |\n";
+
+    // 添加分隔行
+    table += "|:--------:|";
+    data.forEach(() => {
+        table += ":----:|";
+    });
+    table += ":---:|\n";
+
+    // 为每个项目生成一行数据
+    keysArray.forEach(key => {
+        table += `| ${key}      |`;
+        
+        let total = 0;
+        let hasNonNumeric = false;
+        
+        data.forEach(item => {
+            const value = item[key];
+            
+            // 检查是否是容量格式（如 "1200/1500"）
+            if (typeof value === 'string' && value.includes('/')) {
+                table += `   ${value}   |`;
+                hasNonNumeric = true;
+            } else {
+                // 对于数字，添加到总计中
+                const numValue = parseInt(value) || 0;
+                total += numValue;
+                table += `   ${value}   |`;
+            }
+        });
+        
+        // 如果是数字类型的项目，显示总计；如果是容量格式，则计算前后数字的总和
+    if (hasNonNumeric) {
+        // 处理容量格式，如 "1200/1500"，计算为 "总当前/总最大"
+        let totalCurrent = 0;
+        let totalMax = 0;
+        
+        data.forEach(item => {
+            const value = item[key];
+            if (typeof value === 'string' && value.includes('/')) {
+                const parts = value.split('/');
+                const current = parseInt(parts[0]) || 0;
+                const max = parseInt(parts[1]) || 0;
+                totalCurrent += current;
+                totalMax += max;
+            }
+        });
+        
+        table += ` ${totalCurrent}/${totalMax} |\n`;
+    } else {
+        table += ` ${total} |\n`;
+    }
+    });
+
+    // 在表格前面添加标题和说明
+    return "### 卡通农场小助手仓库统计\n*数据仅供参考*\n\n" + table;
 }
 
 function setText_inGame(text) {
@@ -5800,6 +5899,7 @@ module.exports = {
     findFont: findFont,
     openFriendMenu: openFriendMenu,
     openFriend: openFriend,
+    setText_inGame: setText_inGame,
 
     //鱼塘相关
     find_yuchuan: find_yuchuan,
@@ -5857,6 +5957,7 @@ module.exports = {
     //推送相关
     creatContentData: creatContentData,
     rawContentData2: rawContentData2,
+    convertToTable: convertToTable,
     pushTo: pushTo,
 
     // 计时器
