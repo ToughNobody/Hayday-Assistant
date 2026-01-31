@@ -1731,6 +1731,22 @@ function huadong_zuoshang() {
 }
 
 /**
+ * 调整视角到正确位置
+ * 根据商店坐标定位
+ */
+function huadong_adjust([x, y], [endX, endY]) {
+    let shopPos = findshop(false, 3);
+    if (shopPos) {
+        const [_x, _y] = (x & y) ? [x, y] : [40, 90]
+        const [_endX, _endY] = (endX & endY) ? [endX + _x, endY + _y] : [250, 400]
+        swipe(shopPos.x + _x, shopPos.y + _y, _endX, _endY, 300);
+        sleep(50);
+        click(_endX, _endY);
+        sleep(100);
+    }
+}
+
+/**
  * 寻找渔船,视角需在左上角
  * @returns 渔船坐标,未找到返回false
  */
@@ -1934,6 +1950,51 @@ function click_netMaker() {
 }
 
 /**
+ * 点击机器，收集
+ * @param {Array} pos 机器坐标 [x, y]
+ * @param {string|Array} itemInfo 物品名称或颜色数组
+ * @returns {boolean} 是否成功点击织网机
+ */
+function click_machine([pos_x, pos_y], itemInfo) {
+
+    let itemName, itemColor;
+    if (typeof itemInfo === 'string') {
+        itemName = itemInfo;
+        if (!itemName || !allItemColor[itemName]) {
+            log("错误：未提供物品名称或物品名称不存在", itemName);
+            return false;
+        }
+        itemColor = allItemColor[itemName];
+    } else if (Array.isArray(itemInfo)) {
+        itemColor = itemInfo;
+    } else {
+        log("错误：传入参数类型不正确，应为字符串或数组", item);
+        return false;
+    }
+
+    for (let i = 0; i < 15; i++) {
+        let open = findMC(itemColor)
+        if (open) {
+            log("已打开机器")
+            return true
+        }
+        // else {
+        //     if (matchColor([{ x: 291, y: 564, color: "#fffadb" }, { x: 771, y: 669, color: "#fff9d7" },
+        //     { x: 1035, y: 569, color: "#fffad8" }, { x: 1229, y: 306, color: "#fffdeb" },
+        //     { x: 1171, y: 88, color: "#ed414c" }, { x: 1126, y: 94, color: "#fbbe34" }])) {
+        //         log("没有解锁织网机")
+        //         showTip("没有解锁织网机")
+        //         return false;
+        //     }
+        // }
+        click(pos_x + ran(), pos_y + ran())
+
+        sleep(500);
+    }
+    return false
+}
+
+/**
  * 视角需在右上角
  * 点击生产栏位，生产物品
  * @param {string} itemName 物品名称
@@ -1949,11 +2010,54 @@ function netMaker_produce(itemName) {
     for (let i = 0; i < 15; i++) {
         if (item) {
             swipe(item.x + ran(), item.y + ran(), 1022 + ran(), 190 + ran(), 300)
+            close()//防止制作神奇渔网
             if (click_waitFor(null, null, allItemColor["生产栏位已满"], 5, 16, 100)) {
                 log("生产栏位已满")
                 showTip("生产栏位已满")
                 return true
             }
+        }
+    }
+}
+
+/**
+ * 界面需在机器生产界面,制作物品
+ * 可传入物品名称或物品颜色,优先使用物品颜色
+ * @param {string|array} itemInfo 物品名称或物品颜色
+ * @param {array} pos 物品拖动坐标
+ * @returns {boolean} 是否成功点击生产栏位
+ */
+function machine_produce(itemInfo, [x, y]) {
+    let itemName, itemColor;
+    if (typeof itemInfo === 'string') {
+        itemName = itemInfo;
+        if (!itemName || !allItemColor[itemName]) {
+            log("错误：未提供物品名称或物品名称不存在", itemName);
+            return false;
+        }
+        itemColor = allItemColor[itemName];
+    } else if (Array.isArray(itemInfo)) {
+        itemColor = itemInfo;
+    } else {
+        log("错误：传入参数类型不正确，应为字符串或数组", item);
+        return false;
+    }
+    let item = findMC(itemColor)
+    for (let i = 0; i < 15; i++) {
+        if (!item) continue;
+        swipe(item.x + ran(), item.y + ran(), x + ran(), y + ran(), 300);
+        for (let j = 0; j < 5; j++) {
+            if (findMC(allItemColor["生产栏位已满"])) {
+                log("生产栏位已满")
+                showTip("生产栏位已满")
+                return true
+            } else if (findMC(allItemColor["资源不足"])) {
+                log("资源不足")
+                showTip("资源不足")
+                close()
+                return true
+            }
+            sleep(100);
         }
     }
 }
@@ -2054,7 +2158,7 @@ function put_net(itemName) {
 }
 
 function pond_operation(account_config) {
-    let accountName = account_config.title;
+    let accountName = account_config.title !== undefined ? account_config.title : account_config
     let pondTimerName = accountName ? accountName + "鱼塘计时器" : "鱼塘计时器";
     let pondTime = getTimerState(pondTimerName);
     if (pondTime) {
@@ -2066,6 +2170,13 @@ function pond_operation(account_config) {
         log(details);
         showTip(details);
         return true
+    }
+
+    let pondNum = account_config.pond.ponds.length > 0 ? account_config.pond.ponds : config.pond.ponds
+    if (pondNum.length == 0) {
+        log("未配置鱼塘,结束本次鱼塘")
+        showTip("未配置鱼塘,结束本次鱼塘")
+        return false;
     }
 
 
@@ -2106,6 +2217,7 @@ function pond_operation(account_config) {
                 }
                 log(`第 ${j + 1} 次检测: 未进入鱼塘`)
                 showTip(`第 ${j + 1} 次检测: 未进入鱼塘`)
+                close()
             }
             if (!enter) {
                 log("未进入鱼塘,结束本次鱼塘")
@@ -2122,12 +2234,7 @@ function pond_operation(account_config) {
     }
 
     sleep(1500);
-    let pondNum = account_config.pond.ponds.length > 0 ? account_config.pond.ponds : config.pond.ponds
-    if (pondNum.length == 0) {
-        log("未配置鱼塘,结束本次鱼塘")
-        showTip("未配置鱼塘,结束本次鱼塘")
-        return false;
-    }
+
     let allItem = { "鱼片": "普通渔网", "龙虾尾": "捕虾笼", "鸭毛": "捕鸭器" }
     let item = account_config.pond.name
     let itemName = allItem[item];
@@ -2168,7 +2275,7 @@ function pond_operation(account_config) {
         log(`执行${num}号鱼塘`)
         showTip(`执行${num}号鱼塘`)
         find_fishPond(num, true);
-        sleep(300);
+        sleep(1000);
         let pondIsEmpty = false
         let pondIsOccupied = false
 
@@ -2195,9 +2302,9 @@ function pond_operation(account_config) {
             showTip("点击渔网")
             sleep(1000);
             click(640 + ran(), 360 + ran())
-            sleep(600)
+            sleep(500)
             click(640 + ran(), 360 + ran())
-            sleep(800)
+            sleep(1500)
         } else if (findMC(allItemColor["可供收集"])) {
             pondIsOccupied = true
         }
@@ -2208,10 +2315,13 @@ function pond_operation(account_config) {
             continue;
         }
 
-        if ((!(findMC(allItemColor["红色鱼饵"]) || findMC(allItemColor["nextButton"])) && !pondIsOccupied) && item != "鱼片") {
-            log("未检测到放置渔网界面")
-            showTip("未检测到放置渔网界面")
-            find_fishPond(num, true);
+        if (item != "鱼片") {
+            sleep(500)
+            if (!(findMC(allItemColor["红色鱼饵"]) || findMC(allItemColor["nextButton"])) && !pondIsOccupied) {
+                log("未检测到放置渔网界面")
+                showTip("未检测到放置渔网界面")
+                find_fishPond(num, true);
+            }
         }
 
         if (!pondIsEmpty) {
@@ -2238,43 +2348,228 @@ function pond_operation(account_config) {
 
 }
 
+function honeycomb_operation(account_config) {
+    let accountName = account_config.title !== undefined ? account_config.title : account_config
+    let currentHoneycombTimerName = accountName ? accountName + "蜂糖计时器" : "蜂糖计时器";
 
-function find_baozhi() {
-    for (let i = 0; i < 20; i++) {
+    let selectedHoneycomb = account_config.honeycomb && account_config.honeycomb.name ? account_config.honeycomb.name : config.honeycomb.name
+    let honeyColor;
+    if (selectedHoneycomb == "蜂蜜") {
+        honeyColor = allItemColor["蜂蜜_A"]
+    } else if (selectedHoneycomb == "蜂蜡") {
+        honeyColor = allItemColor["蜂蜡_A"]
+    } else honeyColor = null;
+
+
+    let honeycombTime = getTimerState(currentHoneycombTimerName);
+    if (honeycombTime) {
+        let hours = Math.floor(honeycombTime / 3600);
+        let minutes = Math.floor(honeycombTime / 60) % 60;
+        let seconds = honeycombTime % 60;
+        let timeText = hours > 0 ? `${hours}时${minutes}分${seconds}秒` : minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+        details = `蜂糖剩余时间: ${timeText}`;
+        log(details);
+        showTip(details);
+        return true
+    }
+
+    log("========== 蜂糖 ==========");
+    sleep(100);
+    find_close();
+    sleep(100);
+    log("准备执行 蜂蜜")
+    showTip("准备执行 蜂蜜")
+
+    //收获蜂糖===============
+    for (let i = 0; i < 3; i++) {
+        huadong()
+        // sleep(100);
+
+        //滑动微调
+        huadong_adjust([40, 90], [250, 400])
+        sleep(500)
+
+        let honeyTreePos = find_honeyTree(10) //检测5秒
+        if (honeyTreePos) {
+            log("点击蜂蜜树")
+            click(honeyTreePos.x, honeyTreePos.y)
+            sleep(500);
+            let collect_honey_pos = findMC(allItemColor["蜂糖篮_可收集"])
+            if (collect_honey_pos) {   //如果找到蜂糖篮_可收集，执行收获操作
+                log("可收集蜂糖");
+                showTip("可收集蜂糖");
+                let L = { x: 300, y: 0 }
+                let R = { x: -L.x, y: -L.y }
+                let S = { x: 0, y: -25 }
+
+                let pos1 = [collect_honey_pos.x, collect_honey_pos.y]
+                let pos2 = [collect_honey_pos.x, collect_honey_pos.y + 200]
+                let pos3 = [(pos1[0] + pos2[0]) / 2, (pos1[1] + pos2[1]) / 2]
+
+                let group1 = [0, 3000, [collect_honey_pos.x, collect_honey_pos.y], pos3, pos1]
+                let group2 = [0, 3000, [collect_honey_pos.x, collect_honey_pos.y], pos3, pos2]
+                let harvestGroup1 = getHarvestGroup(group1, L, R, S, 3)
+                let harvestGroup2 = getHarvestGroup(group2, L, R, S, 3)
+                try {
+                    gestures(harvestGroup1, harvestGroup2);
+                } catch (error) {
+                    log(error)
+                }
+                // 收获完成后，设置35分钟计时器
+                timer(currentHoneycombTimerName, 35 * 60)
+                break;
+            } else if (findMC(allItemColor["蜂糖篮_不可收集"])) {
+                log("蜂糖未成熟")
+                showTip("蜂糖未成熟")
+                break;
+            } else {
+                log("第" + (i + 1) + "次,未检测到蜂蜜树界面")
+                showTip("第" + (i + 1) + "次,未检测到蜂蜜树界面")
+            }
+        }
+    }
+    //=================收获结束=================
+
+    // 制作
+
+    if (!honeyColor) {
+        log("蜂糖不制作,结束")
+        showTip("蜂糖不制作,结束")
+        return;
+    }
+
+    for (let i = 0; i < 3; i++) {
+
+        let honeyTreePos = find_honeyTree(10) //检测5秒
+        let honey_machine_pos = [honeyTreePos.x + 58, honeyTreePos.y + 45]
+        if (honeyTreePos) {
+            click_machine(honey_machine_pos, honeyColor)
+            sleep(500);
+            let honey_pos = findMC(allItemColor['蜂蜜'])
+            if (honey_pos) {
+                log("检测到摇蜜机界面")
+                showTip("检测到摇蜜机界面")
+                machine_produce(honeyColor, [honey_machine_pos[0], honey_machine_pos[1]])
+                break;
+            } else {
+                log("第" + (i + 1) + "次,未检测到摇蜜机界面")
+                showTip("第" + (i + 1) + "次,未检测到摇蜜机界面")
+            }
+        } else {
+            huadong()
+
+            //滑动微调
+            huadong_adjust([40, 90], [250, 400])
+        }
+    }
+
+
+    //种花蜜丛===============
+
+    // ======================
+
+}
+
+/**
+ * 查找蜂糖树
+ * 每次间隔500ms
+ * @param {number} maxTry 最大尝试次数
+ * @returns {object} 返回蜂蜜树坐标
+ */
+function find_honeyTree(maxTry) {
+    let maxTry_ = maxTry || 10
+
+    let honeyTreePos = null
+
+    for (let i = 0; i < maxTry_; i++) {
         let sc = captureScreen();
-        let baozhi1 = findMC(["#8f4e21", [0, -14, "#904f21"],
-            [9, -39, "#d0cec9"], [-1, -34, "#d60808"],
-            [-15, -8, "#aba79d"], [-12, -24, "#ecdeaf"]], sc, null, 20);
-        let baozhi2 = findMC(["#74401c", [0, -10, "#382517ff"],
-            [8, -33, "#bebcb8"], [11, -23, "#7e7c75"],
-            [-2, -29, "#b90707"], [-18, -13, "#9f916f"],
-            [-14, -1, "#86837c"]], sc, null, 20);
-        log(baozhi1, baozhi2)
-        if (baozhi1 || baozhi2) {
-            return baozhi1 || baozhi2;
+
+        let baozhi = findMC(allItemColor["报纸1"], sc, null, 20) || findMC(allItemColor["报纸2"], sc, null, 20);
+        if (baozhi) {
+            honeyTreePos = { x: baozhi.x + 242, y: baozhi.y - 130 }
+            log("报纸确定蜂蜜树位置,坐标：" + honeyTreePos.x + "," + honeyTreePos.y)
+            if (honeyTreePos.x > 1000 || honeyTreePos.x < 300 || honeyTreePos.y > 600 || honeyTreePos.y < 100) {
+                log("坐标超出范围,继续检测")
+            }
+            else break;
+        }
+
+        let youxiang = findMC(allItemColor["邮箱1"], sc) || findMC(allItemColor["邮箱2"], sc, null, 20);
+        if (youxiang) {
+            honeyTreePos = { x: youxiang.x + 186, y: youxiang.y - 168 }
+            log("邮箱确定蜂蜜树位置,坐标：" + honeyTreePos.x + "," + honeyTreePos.y)
+            if (honeyTreePos.x > 1000 || honeyTreePos.x < 300 || honeyTreePos.y > 600 || honeyTreePos.y < 100) {
+                log("坐标超出范围,继续检测")
+            }
+            else break;
+        }
+
+        let shop = findshop(silence = true, maxTry = 1);
+        if (shop) {
+            honeyTreePos = { x: shop.x + 442, y: shop.y - 77 }
+            log("商店确定蜂蜜树位置,坐标：" + honeyTreePos.x + "," + honeyTreePos.y)
+            if (honeyTreePos.x > 1000 || honeyTreePos.x < 300 || honeyTreePos.y > 600 || honeyTreePos.y < 100) {
+                log("坐标超出范围,继续检测")
+            }
+            else break;
+        }
+
+        log("第" + (i + 1) + "次寻找蜂蜜树")
+        showTip("第" + (i + 1) + "次寻找蜂蜜树")
+        sleep(500);
+
+    }
+
+    if (honeyTreePos) {
+        log("找到蜂蜜树，坐标：" + honeyTreePos.x + "," + honeyTreePos.y)
+        showTip("找到蜂蜜树")
+        return honeyTreePos;
+    } else {
+        // 循环结束后仍未找到，返回null
+        log("未找到蜂蜜树")
+        showTip("未找到蜂蜜树")
+        return null;
+    }
+}
+
+/**
+ * 查找报纸箱
+ * 每次间隔500ms
+ * @param {number} maxTry 最大尝试次数
+ * @returns {boolean} 返回报纸坐标
+ */
+function find_baozhi(maxTry = 20) {
+    for (let i = 0; i < maxTry; i++) {
+        let sc = captureScreen();
+        let baozhi = findMC(allItemColor["报纸1"], sc, null, 20) || findMC(allItemColor["报纸2"], sc, null, 20);
+
+        if (baozhi) {
+            return baozhi;
         }
         sleep(500);
     }
 }
 
-function find_youxiang() {
-    for (let i = 0; i < 20; i++) {
+/**
+ * 查找邮箱
+ * 每次间隔500ms
+ * @param {number} maxTry 最大尝试次数
+ * @returns {boolean} 返回邮箱坐标
+ */
+function find_youxiang(maxTry = 20) {
+    for (let i = 0; i < maxTry; i++) {
         let sc = captureScreen();
-        let youxiang1 = findMC(["#66605d", [13, -10, "#6f9692"],
-            [13, -23, "#ce1d1d"], [1, -23, "#9ecbd0"], [-12, -27, "#93c0c5"]
-        ], sc);
-        let youxiang2 = findMC(["#5f5a56", [14, -10, "#678783"],
-            [13, -20, "#a91717"], [-10, -28, "#87acad"], [3, -20, "#7fa4a7"]
-        ], sc);
-        if (youxiang1 || youxiang2) {
-            return youxiang1 || youxiang2;
+        let youxiang = findMC(allItemColor["邮箱1"], sc) || findMC(allItemColor["邮箱2"], sc, null, 20);
+
+        if (youxiang) {
+            return youxiang;
         }
         sleep(500);
     }
 }
 
 function tomOperation(account_config) {
-    let accountName = account_config.title || account_config
+    let accountName = account_config.title !== undefined ? account_config.title : account_config
     let currentTomTimerName = accountName ? accountName + "Tom计时器" : "Tom计时器";
 
     let tomIsWorkName = accountName ? accountName + "TomIsWork" : "TomIsWork"
@@ -2304,8 +2599,8 @@ function tomOperation(account_config) {
     if ((config.tomFind.enabled || config.selectedFunction.code == 3) && account_config.tomFind.enabled && !tomTime && tom_isWork) {    //汤姆
         log("========== 汤姆 ==========");
 
-        let findItemType = account_config.tomFind.type || config.tomFind.type;
-        let findItem = account_config.tomFind.text || config.tomFind.text;
+        let findItemType = (account_config.tomFind && account_config.tomFind.type) || config.tomFind.type;
+        let findItem = (account_config.tomFind && account_config.tomFind.text) || config.tomFind.text;
         if (!findItem) {
             log("Tom:未配置要找的物品")
             showTip("Tom:未配置要找的物品")
@@ -2451,10 +2746,13 @@ function tomMenu() {
         return "等待"
     }
     //没有雇佣汤姆页面
-    let menu3 = matchColor([{ x: 1127, y: 294, color: "#e93e47" },
-    { x: 1121, y: 324, color: "#f3c442" }, { x: 1009, y: 387, color: "#f3e8cb" },
-    { x: 1049, y: 483, color: "#fbe055" }, { x: 721, y: 482, color: "#fbe055" },
-    { x: 511, y: 483, color: "#fbe054" }])
+    let menu3 =
+        //花钻雇佣界面(带下方绿色免费框)
+        findMC(["#ea3e48", [-212, 46, "#f4eadb"], [-237, 144, "#f3e7c7"],
+            [-51, 296, "#fdc025"], [-262, 302, "#febc1e"], [-478, 298, "#fdbe23"]]) ||
+        //小盒界面
+        findMC(["#f4eada", [-51, 116, "#f3e8cd"], [-181, 188, "#a45c25"],
+            [-163, 238, "#8e3e12"], [-251, 247, "#c2742e"], [-133, 276, "#a25b25"]])
     if (menu3) {
         return "没有雇佣汤姆"
     }
@@ -2758,12 +3056,18 @@ function tomToFind(tomPos, findItemType, findItem) {
                 log("第一次雇佣汤姆");
                 showTip("第一次雇佣汤姆");
                 if (config.tom_firstHire) {
+                    log("第一次雇佣汤姆，点击雇佣")
+                    sleep(1000);
                     click(760 + ran(), 500 + ran())
                     sleep(1000);
                     let tomTime = tom_find(tomPos);
                     return tomTime;
                 }
-                else click(1100 + ran(), 450 + ran());
+                else {
+                    log("第一次雇佣汤姆，点击取消")
+                    sleep(1000);
+                    click(1100 + ran(), 450 + ran());
+                }
                 isfindTom = true;
                 return null;
             }
@@ -2779,6 +3083,8 @@ function tomToFind(tomPos, findItemType, findItem) {
     }
     return false;
 }
+
+
 
 
 //找耕地，并点击
@@ -2833,21 +3139,24 @@ function findland(isclick = true) {
 //找商店，只寻找
 
 /**
- * 
+ * 查找商店或面包房位置
+ * @param {boolean} silence - 是否静默，默认为false,为true会显示showTip
+ * @param {number} maxTry - 最大尝试次数，默认为5
  * @returns {object|boolean} 返回商店中心坐标对象{x,y}，若未找到商店则返回false
  * @description 该函数根据配置的查找方式（商店或面包房）定位对应位置
  *              主要用于辅助定位耕地位置
  */
-function findshop(silence = false) {
+function findshop(silence = false, maxTry = 5) {
     console.log("找" + config.landFindMethod);
     let center;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < maxTry; i++) {
         try {
             if (!silence) showTip("第 " + (i + 1) + " 次检测" + config.landFindMethod);
             if (config.landFindMethod == "商店") {
                 center = findimage(files.join(config.photoPath, "shop.png"), 0.6);
                 if (!center) {
-                    center = findimage(files.join(config.photoPath, "shop1.png"), 0.6);
+                    center1 = findimage(files.join(config.photoPath, "shop1.png"), 0.6);
+                    if (center1) center = { x: center1.x - 5, y: center1.y };
                 };
             } else {
                 center = findimage(files.join(config.photoPath, "bakery.png"), 0.6);
@@ -2861,7 +3170,7 @@ function findshop(silence = false) {
         if (center) break
         else {
             find_close();
-            sleep(500);
+            if (i < maxTry - 1) sleep(500);
         }
     }
     if (center) {
@@ -2874,6 +3183,7 @@ function findshop(silence = false) {
         return false;
     }
 }
+
 //打开路边小店
 function openshop() {
     let maxAttempts = 2; // 最大尝试次数
@@ -3269,7 +3579,7 @@ function coin() {
 }
 
 
-//商店货架寻找小麦，发布广告
+//商店货架寻找物品，发布广告
 function find_ad() {
     let shop_coin = findMC(["#fffabb", [83, -17, "#fff27d"], [80, -3, "#ffe718"], [-73, 22, "#f7cd88"]],
         null, null, 16);
@@ -3332,7 +3642,7 @@ function shop() {
         coin();
         sleep(500);
 
-        let wheat_sell_minNum = config.ReservedQuantity;//小麦售卖最低保存数量
+        let wheat_sell_minNum = config.ReservedQuantity;//售卖最低保存数量
 
         // 检查是否还在商店界面
         if (!inShop()) {
@@ -4403,8 +4713,18 @@ function find_close(screenshot1, action = null) {
         if (daocaoren) {
             log("识别到稻草人");
             showTip("识别到稻草人");
-            click(1055 + ran(), 600 + ran());
+            click(1055 + ran(), 550 + ran());
             jiaocheng();
+            return true;
+        }
+
+        let duihua = matchColor([{ x: 536, y: 125, color: "#f4eada" },
+        { x: 1151, y: 149, color: "#f4ebde" }, { x: 517, y: 506, color: "#f3e7c7" },
+        { x: 1166, y: 502, color: "#f3e8c8" }], screenshot = sc);
+        if (duihua) {
+            log("识别到对话");
+            showTip("识别到对话");
+            click(850 + ran(), 400 + ran());
             return true;
         }
 
@@ -5285,6 +5605,14 @@ function operation(Account) {
     }
 
     try {
+        if (config.honeycomb.enabled && account_config.honeycomb.enabled) {
+            honeycomb_operation(account_config);
+        }
+    } catch (error) {
+        toastLog(error)
+    }
+
+    try {
         if (config.pond.enabled && account_config.pond.enabled) {
             pond_operation(account_config);
         }
@@ -5371,7 +5699,7 @@ function cangkuStatistics(maxPages = 2) {
         showTip("货仓容量：" + hcCapacity);
         // 获取配置文件中的统计设置
         let configItems = configs.get("cangkuStatistics_settings");
-        
+
         // 创建只包含配置中指定物品的新数组
         let targetItems = {};
         if (Array.isArray(configItems)) {
@@ -5384,7 +5712,7 @@ function cangkuStatistics(maxPages = 2) {
             // 如果配置无效，则使用默认的cangkuItemColor
             targetItems = cangkuItemColor;
         }
-        
+
         // 初始化所有配置物品状态为未检测
         Object.keys(targetItems).forEach(itemName => {
             result[itemName] = {
@@ -5637,13 +5965,13 @@ function convertToTable(data) {
     // 为每个项目生成一行数据
     keysArray.forEach(key => {
         table += `| ${key}      |`;
-        
+
         let total = 0;
         let hasNonNumeric = false;
-        
+
         data.forEach(item => {
             const value = item[key];
-            
+
             // 检查是否是容量格式（如 "1200/1500"）
             if (typeof value === 'string' && value.includes('/')) {
                 table += `   ${value}   |`;
@@ -5655,28 +5983,28 @@ function convertToTable(data) {
                 table += `   ${value}   |`;
             }
         });
-        
+
         // 如果是数字类型的项目，显示总计；如果是容量格式，则计算前后数字的总和
-    if (hasNonNumeric) {
-        // 处理容量格式，如 "1200/1500"，计算为 "总当前/总最大"
-        let totalCurrent = 0;
-        let totalMax = 0;
-        
-        data.forEach(item => {
-            const value = item[key];
-            if (typeof value === 'string' && value.includes('/')) {
-                const parts = value.split('/');
-                const current = parseInt(parts[0]) || 0;
-                const max = parseInt(parts[1]) || 0;
-                totalCurrent += current;
-                totalMax += max;
-            }
-        });
-        
-        table += ` ${totalCurrent}/${totalMax} |\n`;
-    } else {
-        table += ` ${total} |\n`;
-    }
+        if (hasNonNumeric) {
+            // 处理容量格式，如 "1200/1500"，计算为 "总当前/总最大"
+            let totalCurrent = 0;
+            let totalMax = 0;
+
+            data.forEach(item => {
+                const value = item[key];
+                if (typeof value === 'string' && value.includes('/')) {
+                    const parts = value.split('/');
+                    const current = parseInt(parts[0]) || 0;
+                    const max = parseInt(parts[1]) || 0;
+                    totalCurrent += current;
+                    totalMax += max;
+                }
+            });
+
+            table += ` ${totalCurrent}/${totalMax} |\n`;
+        } else {
+            table += ` ${total} |\n`;
+        }
     });
 
     // 在表格前面添加标题和说明
@@ -5888,6 +6216,7 @@ module.exports = {
     findNum_findMC: findNum_findMC,
     huadong: huadong,
     huadong_zuoshang: huadong_zuoshang,
+    huadong_adjust: huadong_adjust,
     createWindow: createWindow,
     closeWindow: closeWindow,
     showTip: showTip,
@@ -5900,8 +6229,13 @@ module.exports = {
     openFriendMenu: openFriendMenu,
     openFriend: openFriend,
     setText_inGame: setText_inGame,
+    find_baozhi: find_baozhi,
+    find_youxiang: find_youxiang,
+    find_honeyTree: find_honeyTree,
+    machine_produce: machine_produce,
 
     //鱼塘相关
+    pond_operation: pond_operation,
     find_yuchuan: find_yuchuan,
     huadong_pond: huadong_pond,
     find_fishPond: find_fishPond,
@@ -5910,6 +6244,10 @@ module.exports = {
     collect_lobster: collect_lobster,
     collect_duckSalon: collect_duckSalon,
     put_net: put_net,
+
+    //蜂蜜相关
+    honeycomb_operation: honeycomb_operation,
+    find_honeyTree: find_honeyTree,
 
     // 游戏界面检查
     checkmenu: checkmenu,

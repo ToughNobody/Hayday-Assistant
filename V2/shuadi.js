@@ -95,6 +95,11 @@ function main_email() {
                     "enabled": true,
                     "name": config.pond.name,
                     "ponds": config.pond.ponds
+                },
+                "honeycomb": {
+                    "enabled": true,
+                    "name": config.honeycomb.name,
+                    "addFlower": config.honeycomb.addFlower
                 }
             };
             module.operation(AccountConfig);
@@ -145,10 +150,10 @@ function main_email() {
     //切换账号
     else {
         log("切换账号");
-        while (true) {
+        //新建账号列表
+        const doneAccountsList = config.accountList.filter(Account => Account.done === true);
 
-            //新建账号列表
-            const doneAccountsList = config.accountList.filter(Account => Account.done === true);
+        while (true) {
 
             //是否升仓，是否仓库统计
             let shengcangForEach = false;

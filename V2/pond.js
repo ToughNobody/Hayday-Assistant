@@ -40,6 +40,7 @@ try {
     console.error("创建窗口失败:", error);
 }
 
+
 function main() {
     sleep(100);
     module.checkmenu();
@@ -48,12 +49,8 @@ function main() {
     if (!configs.get("switchAccount", false)) {
         log("不切换账号")
         //循环操作
+
         while (true) {
-            module.find_close()
-            module.huadong()
-            log("执行汤姆")
-
-
             let AccountConfig = {
                 "title": "",
                 "done": true,
@@ -74,90 +71,38 @@ function main() {
                     "addFlower": config.honeycomb.addFlower
                 }
             };
+            module.pond_operation(AccountConfig);
+            sleep(1000);
+            module.find_close();
 
-            module.tomOperation(AccountConfig);
-            // timeStorage.put("Tom计时器",10)
-
-            let tomIsWorkName = "TomIsWork"
-            let tom_isWork = timeStorage.get(tomIsWorkName) !== null;//是否在工作
-            if (!tom_isWork) {
-                log("没有雇佣汤姆,3秒后退出")
-                module.showTip("没有雇佣汤姆,3秒后退出");
-                sleep(3000);
-                home();
-                exit();
-            }
-
-            let isLaunchGame = false;
-            let isStopGame = false;
             while (true) {
                 // 获取计时器剩余时间
-                let tomTime = module.getTimerState("Tom计时器");
-                if (tomTime <= 60) {
-                    if (!isLaunchGame) {
-                        log("剩余时间小于60秒,启动游戏")
-                        module.showTip("剩余时间小于60秒,启动游戏");
-                        launch("com.supercell.hayday");
-                        isLaunchGame = true;
-                    }
+                let timerState = module.getTimerState("鱼塘计时器");
+                log(timerState);
+                if (timerState) {
+                    // 将秒数转换为分钟和秒
+                    let minutes = Math.floor(timerState / 60);
+                    let seconds = timerState % 60;
+                    let timeText = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+                    module.showTip(`鱼塘剩余时间${timeText}`);
                 }
-
-                if (tomTime && tomTime > 60 && !isStopGame) {
-                    isStopGame = true;
-                    home();
-                }
-
-                if (tomTime) {
-                    let hours = Math.floor(tomTime / 3600);
-                    let minutes = Math.floor(tomTime / 60) % 60;
-                    let seconds = tomTime % 60;
-                    let timeText = hours > 0 ? `${hours}时${minutes}分${seconds}秒` : minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
-                    let details = `汤姆休息剩余时间: ${timeText}`;
-                    module.showTip(details);
-                }
-
-                if (!tomTime) {
+                if (!timerState) {
                     break;
                 }
                 sleep(1000);
             }
+
         }
     }
-    else {
-        log("切换账号")
 
+    //切换账号
+    else {
+        log("切换账号");
         //新建账号列表
         const doneAccountsList = config.accountList.filter(account => account.done === true);
         let nextAccount = null;
         while (true) {
-            //检查所有账户的tom状态
-            let allTomIsNull = true;
-            for (let acc of doneAccountsList) {
-                let tomIsWorkName = acc.title + "TomIsWork"
-                let tom_isWork = timeStorage.get(tomIsWorkName) !== null;//是否在工作
-                if (tom_isWork) {
-                    allTomIsNull = false;
-                    break;
-                }
-            }
-
-            if (allTomIsNull) {
-                log("所有账号都没有雇佣汤姆,3秒后退出")
-                module.showTip("所有账号都没有雇佣汤姆,3秒后退出");
-                sleep(3000);
-                home();
-                exit();
-            }
-
             doneAccountsList.forEach(account => {
-                let tomIsWorkName = account.title + "TomIsWork"
-                let tom_isWork = timeStorage.get(tomIsWorkName) !== null;//是否在工作
-                if (!tom_isWork) {
-                    log(account.title + "账号" + account.title + "没有雇佣汤姆")
-                    module.showTip(account.title + "账号" + account.title + "没有雇佣汤姆");
-                    return
-                }
-
                 //存在下一个账号，且下一个账号不是当前账号
                 if (nextAccount && nextAccount !== account.title) {
                     log("下一个账号:" + nextAccount, "当前账号:" + account.title, ",返回")
@@ -168,8 +113,7 @@ function main() {
                 module.switch_account(account.title);
                 log("============当前账号: " + account.title + "============");
 
-                module.huadong()
-                log("执行" + account.title + "账号的汤姆")
+                log("执行" + account.title + "账号的鱼塘操作")
 
                 let accountList_config
                 let account_config
@@ -182,36 +126,29 @@ function main() {
                 }
 
                 try {
-                    module.tomOperation(account_config);
+                    module.pond_operation(account_config);
                 } catch (error) {
-                    log("执行" + account.title + "账号的汤姆操作失败:", error);
+                    log("执行" + account.title + "账号的鱼塘操作失败:", error);
                 }
 
                 // 获取所有账号信息，找出时间最短的账号
                 let shortestTime = Infinity;
 
-                // 遍历所有账号，找出汤姆计时器剩余时间最短的账号
+                // 遍历所有账号，找出鱼塘计时器剩余时间最短的账号
                 for (let acc of doneAccountsList) {
 
-                    let accountTomTime = module.getTimerState(acc.title + "Tom计时器");
-                    let accountTomIsWorkName = acc.title + "TomIsWork"
-                    let accountTom_isWork = timeStorage.get(accountTomIsWorkName) !== null;//是否在工作
+                    let accountPondTime = module.getTimerState(acc.title + "鱼塘计时器");
 
-                    if (!accountTom_isWork) {
-                        log(acc.title + "账号" + acc.title + "没有雇佣汤姆,跳过")
-                        continue;
-                    }
-
-                    if ((timeStorage.get(accountTomIsWorkName) === undefined) && accountTomTime === null) {
+                    if (accountPondTime === null) {
                         log("账号" + acc.title + ",未执行过，执行")
                         nextAccount = acc.title
                         break;
                     }
 
                     // 有计时器的账号
-                    if (typeof (accountTomTime) === "number" && accountTomTime < shortestTime) {
-                        log("账号" + acc.title + ",计时器剩余时间: " + accountTomTime)
-                        shortestTime = accountTomTime;
+                    if (typeof (accountPondTime) === "number" && accountPondTime < shortestTime) {
+                        log("账号" + acc.title + ",计时器剩余时间: " + accountPondTime)
+                        shortestTime = accountPondTime;
                         nextAccount = acc.title;
                     }
                 }
@@ -219,31 +156,32 @@ function main() {
                 let isLaunchGame = false;
                 let isStopGame = false;
                 while (true) {
-                    // 获取时间最短账号的计时器剩余时间
-                    let nextTomtime = nextAccount ? module.getTimerState(nextAccount + "Tom计时器") : null;
-                    if (!nextTomtime) break;
 
-                    if (nextTomtime && nextTomtime <= 60 && !isLaunchGame) {
+                    // 获取时间最短账号的计时器剩余时间
+                    let nextPondtime = nextAccount ? module.getTimerState(nextAccount + "鱼塘计时器") : null;
+                    if (!nextPondtime) break;
+
+                    if (nextPondtime && nextPondtime <= 60 && !isLaunchGame) {
                         log("剩余时间小于60秒,启动游戏")
                         module.showTip("剩余时间小于60秒,启动游戏");
                         launch("com.supercell.hayday");
                         isLaunchGame = true;
 
                     }
-                    if (nextTomtime && nextTomtime > 60 && !isStopGame) {
+                    if (nextPondtime && nextPondtime > 60 && !isStopGame) {
                         isStopGame = true;
                         home();
                     }
-                    if (nextTomtime) {
-                        let hours = Math.floor(nextTomtime / 3600);
-                        let minutes = Math.floor(nextTomtime / 60) % 60;
-                        let seconds = nextTomtime % 60;
+                    if (nextPondtime) {
+                        let hours = Math.floor(nextPondtime / 3600);
+                        let minutes = Math.floor(nextPondtime / 60) % 60;
+                        let seconds = nextPondtime % 60;
                         let timeText = hours > 0 ? `${hours}时${minutes}分${seconds}秒` : minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
-                        let details = `汤姆休息最短剩余时间: ${timeText}，账号: ${nextAccount}`;
+                        let details = `鱼塘休息最短剩余时间: ${timeText}，账号: ${nextAccount}`;
                         log(details);
                         module.showTip(details);
                     }
-                    if (!nextTomtime) {
+                    if (!nextPondtime) {
                         break;
                     }
                     sleep(1000);
@@ -251,6 +189,8 @@ function main() {
             })
         }
     }
+
 }
 
 main();
+

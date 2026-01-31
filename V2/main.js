@@ -1258,7 +1258,7 @@ ui.layout(
                                         {/* 主功能选择 */}
                                         <horizontal gravity="center_vertical">
                                             <text text="选择功能：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|物品售卖|倒金币"
+                                            <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|仅鱼塘|物品售卖|倒金币"
                                                 w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                             <img id="helpIcon_functionSelect" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
                                         </horizontal>
@@ -1267,7 +1267,7 @@ ui.layout(
                                         <vertical id="cropSelectContainer" gravity="center_vertical" visibility="visible">
                                             <horizontal gravity="center_vertical">
                                                 <text text="种植作物：" textSize="14" w="80" marginRight="8" />
-                                                <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗"
+                                                <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗|黑豆"
                                                     w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                                 <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
                                                 <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
@@ -1302,8 +1302,8 @@ ui.layout(
                                         {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
                                         <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
                                             <text text="物品类型：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="Tom_itemType" entries="货仓|粮仓" w="120" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
-                                            <input id="Tom_itemName" hint="物品名称" w="*" h="48" textSize="14" bg="#FFFFFF" />
+                                            <spinner id="Tom_itemType" entries="货仓|粮仓" w="100" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
+                                            <input id="Tom_itemName" hint="物品名称" h="48" textSize="14" bg="#FFFFFF" />
                                         </horizontal>
 
 
@@ -1333,9 +1333,28 @@ ui.layout(
                                             {/* 鱼塘物品类型 */}
                                             <horizontal gravity="center_vertical" marginBottom="12">
                                                 <text text="鱼塘物品类型：" textSize="14" w="120" marginRight="8" />
-                                                <spinner id="pond_fish_item_type" entries="鱼片|龙虾尾|鸭毛" w="150" textSize="14" h="48" bg="#FFFFFF" />
+                                                <spinner id="pond_fish_item_type" entries="鱼片|龙虾尾|鸭毛" w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                             </horizontal>
                                         </vertical>
+
+
+                                        {/* 蜂蜜 - 仅在刷地时显示 */}
+                                        <horizontal id="honeySwitchContainer" gravity="center_vertical">
+                                            <text text="开启蜂蜜：" textSize="14" w="80" marginRight="8" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="honeySwitch" />
+                                        </horizontal>
+
+                                        {/* 蜂蜜信息 - 仅在蜂蜜开关开启时显示 */}
+                                        <vertical id="honeyInfoContainer" gravity="center_vertical" visibility="gone">
+                                            <horizontal gravity="center_vertical">
+                                                <text text="制作物品：" textSize="14" w="80" marginRight="8" />
+                                                <spinner id="honeycomb_itemName" entries="不做|蜂蜜|蜂蜡" w="auto" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <checkbox id="honeycomb_addFlower" text="补种花蜜" h="48" textSize="14" bg="#FFFFFF" />
+                                            </horizontal>
+                                        </vertical>
+
 
                                         {/* 树木选择 - 仅在种树时显示 */}
                                         <vertical id="treeSelectContainer" gravity="center_vertical" visibility="gone">
@@ -1906,59 +1925,85 @@ ui.layout(
                     {/* 右侧详细设置 */}
                     <vertical id="account_config_content" w="*" h="*" bg="#FFFFFF" padding="16">
                         <card w="*" h="auto" marginBottom="16" cardCornerRadius="8" cardElevation="2">
-                            <vertical padding="16">
-                                <horizontal marginBottom="16">
-                                    <text text="功能设置" textSize="16" textStyle="bold" />
-                                    <img id="helpIcon_account_config" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
-                                    <View w="0" h="0" layout_weight="1" />
-                                    <text id="current_account_name" text="" textSize="14" textColor="#666666" />
-                                </horizontal>
+                            <scroll>
 
-                                {/* 开启汤姆开关 */}
-                                <horizontal gravity="center_vertical" marginBottom="12">
-                                    <text text="开启汤姆：" textSize="14" w="120" marginRight="8" />
-                                    <View w="0" h="0" layout_weight="1" />
-                                    <Switch id="account_config_tom_switch" />
-                                </horizontal>
+                                <vertical padding="16">
+                                    <horizontal marginBottom="16">
+                                        <text text="功能设置" textSize="16" textStyle="bold" />
+                                        <img id="helpIcon_account_config" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <text id="current_account_name" text="" textSize="14" textColor="#666666" />
+                                    </horizontal>
 
-                                {/* 汤姆物品类型 */}
-                                <horizontal gravity="center_vertical" marginBottom="12">
-                                    <text text="汤姆物品类型：" textSize="14" w="120" marginRight="8" />
-                                    <spinner id="account_config_tom_item_type" entries="货仓|粮仓" w="150" textSize="14" h="48" bg="#FFFFFF" />
-                                </horizontal>
+                                    {/* 开启汤姆开关 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="开启汤姆：" textSize="14" w="120" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <Switch id="account_config_tom_switch" />
+                                    </horizontal>
 
-                                {/* 汤姆物品名称 */}
-                                <horizontal gravity="center_vertical" marginBottom="12">
-                                    <text text="汤姆物品名称：" textSize="14" w="120" marginRight="8" />
-                                    <input id="account_config_tom_item_name" hint="物品名称" w="*" h="48" textSize="14" bg="#FFFFFF" />
-                                </horizontal>
+                                    {/* 汤姆物品类型 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="汤姆物品类型：" textSize="14" w="120" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <spinner id="account_config_tom_item_type" entries="货仓|粮仓" w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
 
-                                {/* 开启鱼塘 */}
-                                <horizontal gravity="center_vertical" marginBottom="12">
-                                    <text text="开启鱼塘：" textSize="14" w="120" marginRight="8" />
-                                    <View w="0" h="0" layout_weight="1" />
-                                    <Switch id="account_config_fish_pond" />
-                                </horizontal>
+                                    {/* 汤姆物品名称 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="汤姆物品名称：" textSize="14" w="120" marginRight="8" />
+                                        <input id="account_config_tom_item_name" hint="物品名称" w="*" h="48" textSize="14" bg="#FFFFFF" />
+                                    </horizontal>
 
-                                {/* 鱼塘编号设置 */}
-                                <horizontal gravity="center_vertical" marginBottom="12">
-                                    <text text="鱼塘编号：" textSize="14" w="120" marginRight="8" />
-                                    <View w="0" h="0" layout_weight="1" />
-                                    <button id="account_config_pond_number" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
-                                </horizontal>
+                                    {/* 开启鱼塘 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="开启鱼塘：" textSize="14" w="120" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <Switch id="account_config_fish_pond" />
+                                    </horizontal>
 
-                                {/* 显示开启的鱼塘编号 */}
-                                <horizontal gravity="center_vertical" marginBottom="12">
-                                    <text text="已开启鱼塘:" textSize="14" w="80" marginRight="8" />
-                                    <text id="account_config_pond_numbers_display" text="" textSize="14" textColor="#666666" />
-                                </horizontal>
+                                    {/* 鱼塘编号设置 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="鱼塘编号：" textSize="14" w="120" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <button id="account_config_pond_number" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                    </horizontal>
 
-                                {/* 鱼塘物品类型 */}
-                                <horizontal gravity="center_vertical" marginBottom="12">
-                                    <text text="鱼塘物品类型：" textSize="14" w="120" marginRight="8" />
-                                    <spinner id="account_config_fish_item_type" entries="鱼片|龙虾尾|鸭毛" w="150" textSize="14" h="48" bg="#FFFFFF" />
-                                </horizontal>
-                            </vertical>
+                                    {/* 显示开启的鱼塘编号 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="已开启鱼塘:" textSize="14" w="80" marginRight="8" />
+                                        <text id="account_config_pond_numbers_display" text="" textSize="14" textColor="#666666" />
+                                    </horizontal>
+
+                                    {/* 鱼塘物品类型 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="鱼塘物品类型：" textSize="14" w="120" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <spinner id="account_config_fish_item_type" entries="鱼片|龙虾尾|鸭毛" w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                    </horizontal>
+
+                                    {/* 开启蜂蜜 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="开启蜂蜜：" textSize="14" w="120" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <Switch id="account_config_honey_switch" />
+                                    </horizontal>
+
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="制作物品：" textSize="14" w="80" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <spinner id="account_config_honeycomb_itemName" entries="不做|蜂蜜|蜂蜡" w="auto" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
+                                    </horizontal>
+
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="补种花蜜：" textSize="14" w="80" marginRight="8" />
+                                        <View w="0" h="0" layout_weight="1" />
+                                        <checkbox id="account_config_honeycomb_addFlower" textSize="14" bg="#FFFFFF" />
+                                    </horizontal>
+
+
+                                </vertical>
+                            </scroll>
                         </card>
                     </vertical>
                 </horizontal>
@@ -2071,7 +2116,12 @@ ui.accountConfigBtn.on("click", () => {
                     name: "鱼片",
                     code: 0,
                     ponds: []
-                }
+                },
+                honeycomb: {
+                    enabled: true,
+                    name: "蜂蜜",
+                    addFlower: false
+                },
             };
             accountConfig.push(accountConfigItem);
         }
@@ -2144,6 +2194,11 @@ ui.account_config_settingsButton.on("click", () => {
                                             name: "鱼片",
                                             code: 0,
                                             ponds: []
+                                        };
+                                        account.honeycomb = {
+                                            enabled: true,
+                                            name: "蜂蜜",
+                                            addFlower: false
                                         };
                                     }
 
@@ -2275,7 +2330,12 @@ function validateAccountConfig(account_config_List) {
                 name: "鱼片",
                 code: 0,
                 ponds: [] // 默认选择鱼塘
-            }
+            },
+            honeycomb: {
+                enabled: true, // 默认开启蜂蜜
+                name: "蜂蜜",
+                addFlower: false
+            },
         };
 
         // 如果原账户已有配置，合并并验证
@@ -2297,6 +2357,13 @@ function validateAccountConfig(account_config_List) {
                 let validPonds = account.pond.ponds.filter(pondNum => typeof pondNum === 'number' && pondNum >= 1 && pondNum <= 15);
                 accountConfig.pond.ponds = validPonds.length > 0 ? validPonds : [];
             }
+        }
+
+        // 如果原账户已有honeycomb配置，合并并验证
+        if (account.honeycomb && typeof account.honeycomb === 'object') {
+            accountConfig.honeycomb.enabled = typeof account.honeycomb.enabled === 'boolean' ? account.honeycomb.enabled : true;
+            accountConfig.honeycomb.name = typeof account.honeycomb.name === 'string' && ["不做", "蜂蜜", "蜂蜡"].includes(account.honeycomb.name) ? account.honeycomb.name : "蜂蜜";
+            accountConfig.honeycomb.addFlower = typeof account.honeycomb.addFlower === 'boolean' ? account.honeycomb.addFlower : false;
         }
 
         return accountConfig;
@@ -2323,7 +2390,12 @@ function loadAccountConfig(accountName) {
             name: "鱼片",
             code: 0,
             ponds: [] // 默认选择鱼塘
-        }
+        },
+        honeycomb: {
+            enabled: true, // 默认开启蜂蜜
+            name: "蜂蜜",
+            addFlower: false
+        },
     };
 
     // 验证账号配置
@@ -2347,6 +2419,20 @@ function loadAccountConfig(accountName) {
         fishItemIndex = 0;
     }
     ui.account_config_fish_item_type.setSelection(fishItemIndex);
+
+    // 更新蜂蜜开关状态
+    ui.account_config_honey_switch.checked = currentAccount.honeycomb.enabled;
+    // 更新蜂蜜物品类型
+    let honeyItemTypes = ["不做", "蜂蜜", "蜂蜡"];
+    let honeyItemIndex = honeyItemTypes.indexOf(currentAccount.honeycomb.name);
+    if (honeyItemIndex === -1) {
+        honeyItemIndex = 0;
+    }
+    ui.account_config_honeycomb_itemName.setSelection(honeyItemIndex);
+    // 更新补种花蜜复选框状态
+    ui.account_config_honeycomb_addFlower.checked = currentAccount.honeycomb.addFlower;
+
+
 
     // 更新当前账号名称显示
     ui.current_account_name.setText(accountName);
@@ -2597,6 +2683,67 @@ function addAutoSaveListeners() {
             // 空处理
         }
     }));
+
+    // 蜂蜜开关事件
+    ui.account_config_honey_switch.on("check", function (checked) {
+        // 如果正在更新UI，跳过保存
+        if (isUpdatingUI) return;
+
+        // 从配置中加载账号配置
+        let accountConfig = configs.get("account_config", []);
+        // 查找当前显示的账号
+        let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
+        if (currentAccount) {
+            // 只修改蜂蜜开关状态
+            currentAccount.honeycomb.enabled = checked;
+            // log({ title: currentAccount.title, honeycomb: { enabled: checked } })
+            // 保存修改后的账号配置
+            configs.put("account_config", accountConfig);
+        }
+    });
+
+    // 蜂蜜物品类型选择事件
+    ui.account_config_honeycomb_itemName.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            // 如果正在更新UI，跳过保存
+            if (isUpdatingUI) return;
+
+            // 从配置中加载账号配置
+            let accountConfig = configs.get("account_config", []);
+            // 查找当前显示的账号
+            let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
+            if (currentAccount) {
+                // 获取蜂蜜物品类型
+                let honeyItemTypes = ["不做", "蜂蜜", "蜂蜡"];
+                // 只修改蜂蜜物品类型
+                currentAccount.honeycomb.name = honeyItemTypes[position];
+                // log({ title: currentAccount.title, honeycomb: { name: honeyItemTypes[position] } })
+                // 保存修改后的账号配置
+                configs.put("account_config", accountConfig);
+            }
+        },
+        onNothingSelected: function (parent) {
+            // 空处理
+        }
+    }));
+
+    // 蜂蜜补种花蜜复选框事件
+    ui.account_config_honeycomb_addFlower.on("check", function (checked) {
+        // 如果正在更新UI，跳过保存
+        if (isUpdatingUI) return;
+
+        // 从配置中加载账号配置
+        let accountConfig = configs.get("account_config", []);
+        // 查找当前显示的账号
+        let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
+        if (currentAccount) {
+            // 只修改补种花蜜复选框状态
+            currentAccount.honeycomb.addFlower = checked;
+            // log({ title: currentAccount.title, honeycomb: { addFlower: checked } })
+            // 保存修改后的账号配置
+            configs.put("account_config", accountConfig);
+        }
+    });
 
 }
 
@@ -3369,7 +3516,12 @@ function loadSaveAccountListFromConfig(config_save) {
                 enabled: true,
                 name: "鱼片",
                 ponds: []
-            }
+            },
+            honeycomb: {
+                enabled: true,
+                name: "蜂蜜",
+                addFlower: false
+            },
         });
     });
 
@@ -3785,6 +3937,11 @@ function getConfig() {
             name: configs.get("pond_itemName"),
             ponds: configs.get("pond_ponds")
         },
+        honeycomb: {
+            enabled: configs.get("honeycomb_enabled"),
+            name: configs.get("honeycomb_name"),
+            addFlower: configs.get("honeycomb_addFlower")
+        },
         CangkuSoldList: configs.get("CangkuSoldList", CangkuSoldList),
         isCangkuSold: configs.get("isCangkuSold", false),
         CangkuSold_triggerNum: configs.get("CangkuSold_triggerNum", 10),
@@ -3909,6 +4066,11 @@ function saveConfig(con) {
         configs.put("pond_enabled", con.pond.enabled);
         configs.put("pond_itemName", con.pond.name);
         configs.put("pond_ponds", con.pond.ponds);
+
+        // 存储蜂蜜comb配置
+        configs.put("honeycomb_enabled", con.honeycomb.enabled);
+        configs.put("honeycomb_name", con.honeycomb.name);
+        configs.put("honeycomb_addFlower", con.honeycomb.addFlower);
 
         // 存储截图坐标
         configs.put("screenshotX1", con.screenshotCoords.coord1.x);
@@ -4064,7 +4226,7 @@ function validateConfig(config) {
 
     // 验证功能选择
     if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
-    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆", "物品售卖", "倒金币"];
+    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆", "仅鱼塘", "物品售卖", "倒金币"];
     if (config.selectedFunction.code < 0 || config.selectedFunction.code >= functionOptions.length) {
         config.selectedFunction.code = defaultConfig.selectedFunction.code;
     }
@@ -4072,7 +4234,7 @@ function validateConfig(config) {
 
     // 验证作物选择
     if (!config.selectedCrop) config.selectedCrop = defaultConfig.selectedCrop;
-    const cropOptions = ["小麦", "玉米", "胡萝卜", "大豆", "甘蔗"];
+    const cropOptions = ["小麦", "玉米", "胡萝卜", "大豆", "甘蔗", "黑豆"];
     if (config.selectedCrop.code < 0 || config.selectedCrop.code >= cropOptions.length) {
         config.selectedCrop.code = defaultConfig.selectedCrop.code;
     }
@@ -4235,6 +4397,19 @@ function validateConfig(config) {
         if (config.pond.ponds.length === 0) {
             config.pond.ponds = defaultConfig.pond.ponds;
         }
+    }
+
+    // 验证蜂蜜配置
+    if (!config.honeycomb) config.honeycomb = defaultConfig.honeycomb;
+    if (typeof config.honeycomb.enabled !== "boolean") {
+        config.honeycomb.enabled = defaultConfig.honeycomb.enabled;
+    }
+    const honeyItemOptions = ["不做", "蜂蜜", "蜂蜡"];
+    if (typeof config.honeycomb.name !== "string" || !honeyItemOptions.includes(config.honeycomb.name)) {
+        config.honeycomb.name = defaultConfig.honeycomb.name;
+    }
+    if (typeof config.honeycomb.addFlower !== "boolean") {
+        config.honeycomb.addFlower = defaultConfig.honeycomb.addFlower;
     }
 
     // 验证是否已出售商品列表
@@ -4517,6 +4692,12 @@ function getDefaultConfig() {
             name: "鱼片",
             ponds: [1, 2]
         },
+        // 蜂蜜相关配置
+        honeycomb: {
+            enabled: false,
+            name: "蜂蜜",
+            addFlower: false
+        },
         CangkuSoldList: CangkuSoldList,
         isCangkuSold: false,
         CangkuSold_triggerNum: 10,
@@ -4756,6 +4937,26 @@ function loadConfigToUI(loadConfigFromFile = false) {
     // 加载已开启的鱼塘编号
     if (config.pond.ponds !== undefined) {
         ui.pond_numbers_display.setText(config.pond.ponds.join(","));
+    }
+
+    // 加载蜂蜜相关配置
+    if (config.honeycomb.enabled !== undefined) {
+        ui.honeySwitch.setChecked(config.honeycomb.enabled);
+        // 根据开关状态控制honeyInfoContainer的可见性
+        ui.honeyInfoContainer.attr("visibility", config.honeycomb.enabled ? "visible" : "gone");
+    }
+
+    //加载蜂糖制作物品
+    if (config.honeycomb.name !== undefined) {
+        const itemIndex = ["不做", "蜂蜜", "蜂蜡"].indexOf(config.honeycomb.name);
+        if (itemIndex >= 0) {
+            ui.honeycomb_itemName.setSelection(itemIndex);
+        }
+    }
+
+    // 加载蜂糖_补种花蜜
+    if (config.honeycomb.addFlower !== undefined) {
+        ui.honeycomb_addFlower.setChecked(config.honeycomb.addFlower);
     }
 
     if (config.tomFind.type !== undefined) {
@@ -5164,7 +5365,18 @@ function startButton() {
             });
             break;
 
-        case 4: // 物品售卖
+        case 4: // 仅鱼塘
+         stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./pond.js");
+                log("启动鱼塘引擎，ID: " + newEngine.id);
+
+            });
+            break;
+
+        case 5: // 物品售卖
             stopOtherEngines();
             threads.start(() => {
                 launch("com.supercell.hayday");
@@ -5175,7 +5387,7 @@ function startButton() {
             });
             break;
 
-        case 5: //倒金币
+        case 6: //倒金币
             stopOtherEngines();
             threads.start(() => {
                 launch("com.supercell.hayday");
@@ -5254,7 +5466,18 @@ function winStartButton() {
             });
             break;
 
-        case 4: // 物品售卖
+        case 4: // 仅鱼塘
+         stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./pond.js");
+                log("启动鱼塘引擎，ID: " + newEngine.id);
+
+            });
+            break;
+
+        case 5: // 物品售卖
             stopOtherEngines();
             threads.start(() => {
                 launch("com.supercell.hayday");
@@ -5265,7 +5488,7 @@ function winStartButton() {
             });
             break;
 
-        case 5: //倒金币
+        case 6: //倒金币
             stopOtherEngines();
             threads.start(() => {
                 launch("com.supercell.hayday");
@@ -5392,117 +5615,71 @@ function initUI() {
             // 获取当前选择的功能
             const selectedFunction = item;
 
+            // 显示/隐藏 UI 元素的辅助函数
+            function setUIVisibility(visibleElements) {
+                // 所有可能的 UI 元素
+                const allElements = [
+                    "cropSelectContainer",
+                    "tomSwitchContainer",
+                    "pondSwitchContainer",
+                    "treeSelectContainer",
+                    "honeySwitchContainer",
+                    "addFriendsCard",
+                    "tomItemContainer",
+                    "pondItemContainer",
+                    "honeyInfoContainer",
+                    "sell_itemSoldContainer",
+                    "coinContainer"
+                ];
+
+                // 遍历所有元素，显示在 visibleElements 中的，隐藏不在其中的
+                allElements.forEach(element => {
+                    if (visibleElements.includes(element)) {
+                        ui[element].attr("visibility", "visible");
+                    } else {
+                        ui[element].attr("visibility", "gone");
+                    }
+                });
+            }
+
             // 根据选择的功能显示/隐藏相应的选项
             if (selectedFunction === "刷地") {
-                // 显示作物选择和汤姆开关，隐藏树木选择
-                ui.cropSelectContainer.attr("visibility", "visible");
-                // 显示汤姆开关和鱼塘开关
-                ui.tomSwitchContainer.attr("visibility", "visible");
-                ui.pondSwitchContainer.attr("visibility", "visible");
+                let visibleElements = ["cropSelectContainer",
+                    "tomSwitchContainer",
+                    "pondSwitchContainer",
+                    "honeySwitchContainer",
+                ];
 
-                ui.treeSelectContainer.attr("visibility", "gone");
-
-                ui.addFriendsCard.attr("visibility", "gone");
-                // 控制汤姆相关控件
                 if (ui.tomSwitch.isChecked()) {
-                    ui.tomItemContainer.attr("visibility", "visible");
-                } else {
-                    ui.tomItemContainer.attr("visibility", "gone");
+                    visibleElements.push("tomItemContainer");
                 }
-                // 控制鱼塘相关控件 - 只有在鱼塘开关打开时才显示
                 if (ui.pondSwitch.isChecked()) {
-                    ui.pondItemContainer.attr("visibility", "visible");
-                } else {
-                    ui.pondItemContainer.attr("visibility", "gone");
+                    visibleElements.push("pondItemContainer");
                 }
-                ui.sell_itemSoldContainer.attr("visibility", "gone");
-                // 隐藏倒金币相关控件
-                ui.coinContainer.attr("visibility", "gone");
+                if (ui.honeySwitch.isChecked()) {
+                    visibleElements.push("honeyInfoContainer");
+                }
+
+                setUIVisibility(visibleElements);
             } else if (selectedFunction === "种树") {
-                // 隐藏作物选择和汤姆开关，显示树木选择
-                ui.cropSelectContainer.attr("visibility", "gone");
-                // 隐藏汤姆开关和鱼塘开关
-                ui.tomSwitchContainer.attr("visibility", "gone");
-                ui.pondSwitchContainer.attr("visibility", "gone");
-
-                ui.treeSelectContainer.attr("visibility", "visible");
-
-                ui.addFriendsCard.attr("visibility", "gone");
-                // 隐藏汤姆相关控件
-                ui.tomItemContainer.attr("visibility", "gone");
-                // 隐藏鱼塘相关控件
-                ui.pondItemContainer.attr("visibility", "gone");
-                ui.sell_itemSoldContainer.attr("visibility", "gone");
-                // 隐藏倒金币相关控件
-                ui.coinContainer.attr("visibility", "gone");
+                // 显示树木选择
+                setUIVisibility(["treeSelectContainer"]);
             } else if (selectedFunction === "创新号") {
-                // 创新号
-                ui.cropSelectContainer.attr("visibility", "gone");
-                // 隐藏汤姆开关和鱼塘开关
-                ui.tomSwitchContainer.attr("visibility", "gone");
-                ui.pondSwitchContainer.attr("visibility", "gone");
-
-                ui.treeSelectContainer.attr("visibility", "gone");
-
-                ui.addFriendsCard.attr("visibility", "visible");
-                // 隐藏汤姆相关控件
-                ui.tomItemContainer.attr("visibility", "gone");
-                // 隐藏鱼塘相关控件
-                ui.pondItemContainer.attr("visibility", "gone");
-                ui.sell_itemSoldContainer.attr("visibility", "gone");
-                // 隐藏倒金币相关控件
-                ui.coinContainer.attr("visibility", "gone");
+                // 显示添加好友卡片
+                setUIVisibility(["addFriendsCard"]);
             } else if (selectedFunction === "仅汤姆") {
-                // 仅汤姆
-                ui.cropSelectContainer.attr("visibility", "gone");
-                // 隐藏汤姆开关和鱼塘开关
-                ui.tomSwitchContainer.attr("visibility", "gone");
-                ui.pondSwitchContainer.attr("visibility", "gone");
-
-                ui.treeSelectContainer.attr("visibility", "gone");
-
-                ui.addFriendsCard.attr("visibility", "gone");
                 // 显示汤姆相关控件
-                ui.tomItemContainer.attr("visibility", "visible");
-                // 隐藏鱼塘相关控件
-                ui.pondItemContainer.attr("visibility", "gone");
-                ui.sell_itemSoldContainer.attr("visibility", "gone");
-                // 隐藏倒金币相关控件
-                ui.coinContainer.attr("visibility", "gone");
-            } else if (selectedFunction === "物品售卖") {
-                // 物品售卖
-                ui.cropSelectContainer.attr("visibility", "gone");
-                // 隐藏汤姆开关和鱼塘开关
-                ui.tomSwitchContainer.attr("visibility", "gone");
-                ui.pondSwitchContainer.attr("visibility", "gone");
-
-                ui.treeSelectContainer.attr("visibility", "gone");
-
-                ui.addFriendsCard.attr("visibility", "gone");
-                // 隐藏汤姆相关控件
-                ui.tomItemContainer.attr("visibility", "gone");
-                // 隐藏鱼塘相关控件
-                ui.pondItemContainer.attr("visibility", "gone");
-                ui.sell_itemSoldContainer.attr("visibility", "visible");
-                // 隐藏倒金币相关控件
-                ui.coinContainer.attr("visibility", "gone");
+                setUIVisibility(["tomItemContainer"]);
+            } else if (selectedFunction === "仅鱼塘") {
+                // 显示鱼塘相关控件
+                setUIVisibility(["pondItemContainer"]);
+            }
+             else if (selectedFunction === "物品售卖") {
+                // 显示物品售卖相关控件
+                setUIVisibility(["sell_itemSoldContainer"]);
             } else if (selectedFunction === "倒金币") {
-                // 倒金币
-                ui.cropSelectContainer.attr("visibility", "gone");
-                // 隐藏汤姆开关和鱼塘开关
-                ui.tomSwitchContainer.attr("visibility", "gone");
-                ui.pondSwitchContainer.attr("visibility", "gone");
-
-                ui.treeSelectContainer.attr("visibility", "gone");
-
-                ui.addFriendsCard.attr("visibility", "gone");
-                // 隐藏汤姆相关控件
-                ui.tomItemContainer.attr("visibility", "gone");
-                // 隐藏鱼塘相关控件
-                ui.pondItemContainer.attr("visibility", "gone");
-                ui.sell_itemSoldContainer.attr("visibility", "gone");
                 // 显示倒金币相关控件
-                ui.coinContainer.attr("visibility", "visible");
+                setUIVisibility(["coinContainer"]);
             }
 
 
@@ -5656,6 +5833,41 @@ function initUI() {
         // 显示对话框
         dialog.show();
     });
+
+    // 蜂蜜开关状态变化监听
+    ui.honeySwitch.on("check", (checked) => {
+        log("蜂蜜开关状态变化:", checked);
+        // 保存修改后的开关状态到配置
+        configs.put("honeycomb_enabled", checked);
+        // 根据当前选择的功能和开关状态控制honeyInfoContainer的可见性
+        const currentFunction = ui.functionSelect.getSelectedItem().toString();
+        if (currentFunction === "刷地") {
+            ui.honeyInfoContainer.attr("visibility", checked ? "visible" : "gone");
+        } else {
+            ui.honeyInfoContainer.attr("visibility", "gone");
+        }
+    });
+
+    // 蜂糖制作物品选择事件
+    ui.honeycomb_itemName.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener({
+        onItemSelected: function (parent, view, position, id) {
+            // 获取蜂糖制作物品名称
+            let honeyItemNames = ["不做", "蜂蜜", "蜂蜡"];
+            let selectedHoneyItem = honeyItemNames[position];
+            // 保存选择的蜂糖制作物品名称到配置
+            configs.put("honeycomb_name", selectedHoneyItem);
+        },
+        onNothingSelected: function (parent) {
+            // 空处理
+        }
+    }));
+
+    // 蜂糖_补种花蜜开关状态变化监听
+    ui.honeycomb_addFlower.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("honeycomb_addFlower", checked);
+    });
+
 
     // 账号开关状态变化监听
     ui.accountSwitch.on("check", (checked) => {
@@ -5926,7 +6138,8 @@ function initUI() {
                 "玉米": 5,
                 "胡萝卜": 10,
                 "大豆": 20,
-                "甘蔗": 30
+                "甘蔗": 30,
+                "黑豆": 10
             };
 
             if (matureTimes[item] !== undefined) {
