@@ -104,6 +104,10 @@ function main_email() {
 
             //执行仓库统计
             let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
+            if (!rawData) {
+                log("账号" + account.title + "仓库统计数据为空");
+                return;
+            }
             rawData["账号"] = account.title
             //将仓库统计结果添加到统计数据
             cangkuStatisticsData.push(rawData);
@@ -326,6 +330,10 @@ function main_save() {
 
         //执行仓库统计
         let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
+        if (!rawData) {
+            log("账号" + currentAccount.title + "仓库统计数据为空");
+            return;
+        }
         rawData["账号"] = currentAccount.title
         //将仓库统计结果添加到统计数据
         cangkuStatisticsData.push(rawData);

@@ -114,6 +114,10 @@ function main_email() {
             if (config.isCangkuStatistics && config.cangkuStatisticsTime >= 0 && !module.getTimerState("cangkuStatisticsTime")) {
                 //进行仓库统计
                 let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
+                if (!rawData) {
+                    log("仓库统计数据为空");
+                    return;
+                }
                 rawData["账号"] = "账号"
                 //将仓库统计结果转换为表格数据
                 let contentData = module.convertToTable(rawData);
@@ -198,6 +202,10 @@ function main_email() {
                 if (cangkuStatisticsForEach) {
                     //执行仓库统计
                     let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
+                    if (!rawData) {
+                        log("账号" + Account.title + "仓库统计数据为空");
+                        return;
+                    }
                     rawData["账号"] = Account.title
                     //将仓库统计结果添加到统计数据
                     cangkuStatisticsData.push(rawData);
@@ -484,6 +492,10 @@ function main_save() {
             if (cangkuStatisticsForEach) {
                 //执行仓库统计
                 let rawData = module.cangkuStatistics(config.cangkuStatisticsPage);
+                if (!rawData) {
+                    log("账号" + currentAccount.title + "仓库统计数据为空");
+                    return;
+                }
                 rawData["账号"] = currentAccount.title
                 //将仓库统计结果添加到统计数据
                 cangkuStatisticsData.push(rawData);

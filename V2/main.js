@@ -3249,7 +3249,13 @@ ui.menu.on("item_click", item => {
         case "群":
             dialogs.build({
                 title: "👥 加入交流群 👥",
-                content: "想要加入我们的QQ交流群吗？\n这里有更多资源和帮助！\n群号:933276299",
+                customView: ui.inflate(
+                    <vertical>
+                        <text text="想要加入我们的QQ交流群吗？" />
+                        <text text="这里有更多资源和帮助！" />
+                        <text id="qqGroupLink" text="群号:933276299" textColor="#0000FF" textStyle="bold" />
+                    </vertical>
+                ),
                 positive: "立即加入 🚀",
                 negative: "复制群号",
                 neutral: "再想想"
@@ -3260,6 +3266,7 @@ ui.menu.on("item_click", item => {
             }).on("neutral", () => {
                 // toast("没关系，随时欢迎加入！😊");
             }).show();
+           
             break;
         case "谢":
             dialogs.build({
@@ -5055,28 +5062,29 @@ function stopOtherEngines(stopAll = false) {
 
 
 
-// 使用须知内容
-const instructions = [
-    "使用说明：",
-    "",
-    "在线文档",
-    "• 腾讯文档: https://docs.qq.com/doc/DWEtDUXB0U0dISGxo",
-    "",
-    "配置存储位置：",
-    "日志文件位置：",
-    logDir,
-    ""
-
-].join("\n");
-
 // ==================== 事件绑定 ====================
 
 // 使用须知按钮点击事件
 ui.btnInstructions.click(() => {
     dialogs.build({
         title: "使用说明",
-        content: instructions,
-        contentTextSize: 14,
+        customView: ui.inflate(
+            <vertical>
+
+                <text text="重要提醒:" />
+                <text text="" />
+                <text text="本软脚本免费开源" />
+                <text text="" />
+                <text autoLink="web" text="开源地址: https://github.com/ToughNobody/Hayday-Assistant" />
+                <text text="" />
+                <text text="如果您是从第三方付费购买，请立即申请退款并举报！" />
+                <text text="" />
+                <text text="在线文档" />
+                <text autoLink="web" text="• 腾讯文档: https://docs.qq.com/doc/DWEtDUXB0U0dISGxo" />
+                <text text="" />
+            </vertical>
+
+        ),
         positive: "关闭",
         neutral: "复制文档链接",
         negative: "打开文档"
@@ -5366,7 +5374,7 @@ function startButton() {
             break;
 
         case 4: // 仅鱼塘
-         stopOtherEngines();
+            stopOtherEngines();
             threads.start(() => {
                 launch("com.supercell.hayday");
                 sleep(100);
@@ -5467,7 +5475,7 @@ function winStartButton() {
             break;
 
         case 4: // 仅鱼塘
-         stopOtherEngines();
+            stopOtherEngines();
             threads.start(() => {
                 launch("com.supercell.hayday");
                 sleep(100);
@@ -5674,7 +5682,7 @@ function initUI() {
                 // 显示鱼塘相关控件
                 setUIVisibility(["pondItemContainer"]);
             }
-             else if (selectedFunction === "物品售卖") {
+            else if (selectedFunction === "物品售卖") {
                 // 显示物品售卖相关控件
                 setUIVisibility(["sell_itemSoldContainer"]);
             } else if (selectedFunction === "倒金币") {

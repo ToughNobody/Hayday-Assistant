@@ -20,6 +20,13 @@ let statistics = storages.create("statistics");
 //都取左上为基准点
 const cangkuItemColor = color_lib.cangkuItemColor;
 
+// 仓库统计物品颜色
+const cangkuStatisticsItemColor = color_lib.cangkuStatisticsItemColor;
+
+//汤姆物品颜色
+const tomItemColor = color_lib.tomItemColor;
+
+
 //其他物品颜色
 const otherItemColor = color_lib.otherItemColor;
 
@@ -1732,17 +1739,30 @@ function huadong_zuoshang() {
 
 /**
  * 调整视角到正确位置
- * 根据商店坐标定位
+ * 根据商店坐标定位商店，调整视角到商店位置
+ * @param {Array} [x, y] - 商店坐标偏移量，默认[140, -10]
+ * @param {Array} [endX, endY] - 目标位置偏移量，默认[250, 400]
+ * @returns {boolean} - 如果调整成功则返回 `true`，否则返回 `false`
  */
 function huadong_adjust([x, y], [endX, endY]) {
     let shopPos = findshop(false, 3);
     if (shopPos) {
-        const [_x, _y] = (x & y) ? [x, y] : [40, 90]
-        const [_endX, _endY] = (endX & endY) ? [endX + _x, endY + _y] : [250, 400]
+        const [_x, _y] = (x && y) ? [x, y] : [140, -10]
+        const [_endX, _endY] = (endX && endY) ? [endX + _x, endY + _y] : [250, 400]
+        log(Math.abs(shopPos.x + _x - _endX), Math.abs(shopPos.y + _y - _endY))
+        const distance = Math.sqrt(Math.pow(shopPos.x + _x - _endX, 2) + Math.pow(shopPos.y + _y - _endY, 2));
+        if (distance < 100) {
+            log("调整视角到正确位置,无需滑动")
+            return true;
+        }
         swipe(shopPos.x + _x, shopPos.y + _y, _endX, _endY, 300);
         sleep(50);
         click(_endX, _endY);
         sleep(100);
+        return true;
+    } else {
+        log("未识别到商店")
+        return false;
     }
 }
 
@@ -2386,7 +2406,7 @@ function honeycomb_operation(account_config) {
         // sleep(100);
 
         //滑动微调
-        huadong_adjust([40, 90], [250, 400])
+        huadong_adjust([140, -10], [250, 400])
         sleep(500)
 
         let honeyTreePos = find_honeyTree(10) //检测5秒
@@ -2459,7 +2479,7 @@ function honeycomb_operation(account_config) {
             huadong()
 
             //滑动微调
-            huadong_adjust([40, 90], [250, 400])
+            huadong_adjust([140, -10], [250, 400])
         }
     }
 
@@ -2610,7 +2630,11 @@ function tomOperation(account_config) {
         sleep(100)
         find_close();
         sleep(100);
-        swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
+
+        if (!huadong_adjust([140, -10], [210, 240])) {
+            huadong()
+            huadong_adjust([140, -10], [210, 240])
+        }
         sleep(350)
         let tomPos = clickTom();
         sleep(500);
@@ -2725,23 +2749,21 @@ function clickTom() {
 
 function tomMenu() {
     //汤姆剩余时间不足2小时
-    let menu5 = findMC(["#ee5f34", [59, 5, "#ff6133"], [104, 7, "#fd6133"], [-39, -83, "#f3e8c9"], [-43, -207, "#f4eadb"]])
+    let menu5 = findMC(["#ff6133", [90, 7, "#ff6133"], [-110, -225, "#f3ead7"], [428, -232, "#f4ebde"]])
     if (menu5) {
         log("汤姆剩余时间不足2小时")
         return "没有雇佣汤姆"
     }
     //寻找页面
-    let menu1 = matchColor([{ x: 405, y: 145, color: "#ffffff" },
-    { x: 363, y: 221, color: "#423a35" }, { x: 356, y: 318, color: "#ffd158" },
-    { x: 907, y: 318, color: "#fff9db" }, { x: 838, y: 446, color: "#cccccc" }]);
+    let menu1 = findMC(["#deb477", [583, 22, "#d3a265"], [694, 1, "#ec414b"],
+        [676, 98, "#fcd05c"], [628, 102, "#fff9db"]]);
     if (menu1) {
         return "寻找"
     }
     //等待页面
-    let menu2 = matchColor([{ x: 550, y: 342, color: "#f4ebdd" },
-    { x: 939, y: 352, color: "#f3eada" }, { x: 932, y: 470, color: "#f4e8ca" },
-    { x: 551, y: 458, color: "#f3e9d0" }, { x: 565, y: 405, color: "#7b593d" },
-    { x: 872, y: 405, color: "#7b593d" }, { x: 897, y: 415, color: "#7b593d" }]);
+    let menu2 = matchColor([{ x: 559, y: 184, color: "#f4eadb" }, { x: 1122, y: 186, color: "#f4ebde" },
+    { x: 601, y: 233, color: "#7b593d" }, { x: 988, y: 233, color: "#7b593d" },
+    { x: 1111, y: 297, color: "#f3e7c8" }]);
     if (menu2) {
         return "等待"
     }
@@ -2750,6 +2772,10 @@ function tomMenu() {
         //花钻雇佣界面(带下方绿色免费框)
         findMC(["#ea3e48", [-212, 46, "#f4eadb"], [-237, 144, "#f3e7c7"],
             [-51, 296, "#fdc025"], [-262, 302, "#febc1e"], [-478, 298, "#fdbe23"]]) ||
+        //花钻雇佣界面(带下方绿色免费框) 第二版(回归)
+        findMC(["#f4ead7", [554, -46, "#ee444e"], [518, 151, "#f3e8cc"],
+            [528, 507, "#5bc739"]]) ||
+
         //小盒界面
         findMC(["#f4eada", [-51, 116, "#f3e8cd"], [-181, 188, "#a45c25"],
             [-163, 238, "#8e3e12"], [-251, 247, "#c2742e"], [-133, 276, "#a25b25"]])
@@ -2757,14 +2783,14 @@ function tomMenu() {
         return "没有雇佣汤姆"
     }
 
-    let menu4 = matchColor([{ x: 677, y: 615, color: "#f6cb51" }, { x: 977, y: 620, color: "#f6c647" },
-    { x: 605, y: 528, color: "#efc462" }, { x: 997, y: 300, color: "#f4e9d0" }])
+    let menu4 = matchColor([{ x: 624, y: 96, color: "#f5ebd8" },
+    { x: 1135, y: 124, color: "#f4ead8" }, { x: 1004, y: 530, color: "#f6c243" }])
     if (menu4) {
         return "选择数量"
     }
 
-    let menu6 = matchColor([{ x: 935, y: 274, color: "#f4ebdc" }, { x: 926, y: 369, color: "#f4e8c9" },
-    { x: 938, y: 512, color: "#f5c041" }, { x: 621, y: 504, color: "#f6c344" }])
+    let menu6 = matchColor([{ x: 571, y: 96, color: "#f4eada" }, { x: 1108, y: 118, color: "#f4eada" },
+    { x: 675, y: 370, color: "#f7bb3b" }, { x: 982, y: 378, color: "#f6b430" }, { x: 784, y: 369, color: "#f5d55b" }])
     if (menu6) {
         return "第一次"
     }
@@ -2788,13 +2814,13 @@ function tomToFind(tomPos, findItemType, findItem) {
         let findNum = 0;
         while (findNum < 3) {
             // 根据类型确定点击坐标
-            let x = 365 + ran();
-            let y = 340 + ran();
+            let x = 230 + ran();
+            let y = 350 + ran();
             if (findItemType == "粮仓") {
-                y = 246 + ran();
+                y = 230 + ran();
             } else if (findItemType != "货仓") {
                 // 默认情况也点击货仓位置
-                y = 340 + ran();
+                y = 350 + ran();
             }
 
             // 执行点击和输入操作
@@ -2803,9 +2829,8 @@ function tomToFind(tomPos, findItemType, findItem) {
             //点击搜索
 
             if (!matchColor([{ x: 730, y: 253, color: "#ffffca" }, { x: 452, y: 226, color: "#ffffca" }], null, 6)) {//相似度6不能高了
-                let searchButton = findMC(["#ffffff", [7, -6, "#f7d400"],
-                    [7, -16, "#ffffff"], [-11, -3, "#f8c900"], [-6, 8, "#ffffff"],
-                    [7, 12, "#f4c700"], [3, 33, "#fefef4"]])
+                let searchButton = findMC(["#ffffff", [8, -7, "#f5d500"], [13, -17, "#ffffff"],
+                    [-17, -9, "#f9ca00"], [8, 23, "#f4be00"]], null, [131, 34, 500 - 131, 333 - 34])
                 if (searchButton) {
                     log("点击搜索按钮")
                     click(searchButton.x + ran(), searchButton.y + ran())
@@ -2818,13 +2843,14 @@ function tomToFind(tomPos, findItemType, findItem) {
                 }
             }
             //点击输入框
-            click(590 + ran(), 240 + ran());
+            click(490 + ran(), 230 + ran());
             log("输入搜索内容:" + findItem);
             showTip("输入搜索内容:" + findItem);
             sleep(500);
             setText_inGame(findItem); //输入搜索内容
             sleep(150)
-            if (!images.findColorInRegion(captureScreen(), "#753e36", 442, 210, 752 - 442, 263 - 210)) {
+            //检测是否有文字颜色
+            if (!images.findColorInRegion(captureScreen(), "#753e36", 311, 190, 681 - 311, 258 - 190)) {
                 log("文字未输入成功")
                 showTip("文字未输入成功");
                 findNum++
@@ -2833,79 +2859,56 @@ function tomToFind(tomPos, findItemType, findItem) {
 
             //点击物品
             sleep(350);
-            let firstPos = [500, 360]
-            let step = [160, 70]
-            let firstcolorPos = [{ x: 480, y: 340 }, { x: 482, y: 382 }, { x: 502, y: 360 }, { x: 532, y: 346 }, { x: 543, y: 378 }]
+            let firstPos = [380, 370]
+            let step = [190, 100]
+            let firstcolorPos = [{ x: 380, y: 370 }, { x: 361, y: 350 }, { x: 409, y: 396 }, { x: 417, y: 346 }, { x: 366, y: 400 }]
             let color = "#fff9db"
             let isFind = false;
-            let notFind = false;
 
             //如果搜索后第二格没有物品
-            if (matchColor([{ x: 637, y: 338, color: "#fff9db" }, { x: 665, y: 360, color: "#fff9db" }, { x: 631, y: 388, color: "#fff9db" }, { x: 695, y: 390, color: "#fff9db" }, { x: 690, y: 342, color: "#fff9db" }])) {
+            if (matchColor([{ x: firstcolorPos[0].x + step[0], y: firstcolorPos[0].y, color: color },
+            { x: firstcolorPos[1].x + step[0], y: firstcolorPos[1].y, color: color },
+            { x: firstcolorPos[2].x + step[0], y: firstcolorPos[2].y, color: color },
+            { x: firstcolorPos[3].x + step[0], y: firstcolorPos[3].y, color: color },
+            { x: firstcolorPos[4].x + step[0], y: firstcolorPos[4].y, color: color }])) {
                 isFind = true;
                 click(firstPos[0] + ran(), firstPos[1] + ran())
             } else {
-                for (let j = 0; j < 2; j++) {
-                    if (isFind || notFind) {
+                for (let i = 0; i < 2; i++) {
+                    if (isFind) {
                         break;
                     }
-                    for (let i = 0; i < 6; i++) {
-                        if (isFind || notFind) {
-                            break;
-                        }
-
-                        if (!matchColor([{ x: firstcolorPos[0].x + i % 2 * step[0], y: firstcolorPos[0].y + Math.floor(i / 2) * step[1], color: color },
-                        { x: firstcolorPos[1].x + i % 2 * step[0], y: firstcolorPos[1].y + Math.floor(i / 2) * step[1], color: color },
-                        { x: firstcolorPos[2].x + i % 2 * step[0], y: firstcolorPos[2].y + Math.floor(i / 2) * step[1], color: color },
-                        { x: firstcolorPos[3].x + i % 2 * step[0], y: firstcolorPos[3].y + Math.floor(i / 2) * step[1], color: color },
-                        { x: firstcolorPos[4].x + i % 2 * step[0], y: firstcolorPos[4].y + Math.floor(i / 2) * step[1], color: color }])) {
-                            click(firstPos[0] + i % 2 * step[0], firstPos[1] + Math.floor(i / 2) * step[1]);
-                            sleep(150);
-                            if (allItemColor[findItem]) {
-                                log("物品:" + findItem + "颜色在颜色库中")
-                                //检测右侧框内物品
-                                let pos = findMC(allItemColor[findItem], null, [845, 234, 1015 - 845, 384 - 234]);
-                                if (pos) {
-                                    isFind = true;
-                                }
-                            }
-                            if (!isFind) {
-                                let img1 = images.clip(captureScreen(), 820, 277, 1039 - 820, 410 - 277)
-                                try {
-                                    let itemText = paddle.ocrText(img1);
-                                    if (itemText.includes(findItem)) {
-                                        isFind = true;
-                                    }
-                                } catch (error) {
-                                    log(error)
-                                } finally {
-                                    img1.recycle()
-                                }
-                            }
-                        } else {
-                            log("第" + (j * 6 + i + 1) + "格为空")
-                            notFind = true;
-                            break;
-                        }
+                    if (!tomItemColor[findItem]) {
+                        sleep(200)
+                        click(firstPos[0] + ran(), firstPos[1] + ran())
+                        isFind = true;
+                        break;
                     }
-
+                    sleep(200)
+                    itemPos = findMC(tomItemColor[findItem], null, [287, 294, 675 - 287, 651 - 294])
+                    if (itemPos) {
+                        log("找到该物品,坐标:" + itemPos.x + "," + itemPos.y)
+                        showTip("找到 " + findItem)
+                        isFind = true;
+                        click(itemPos.x + ran(), itemPos.y + ran())
+                    }
                     if (!isFind) {
-                        swipe(590, 560, 590, 325, 500)
+                        swipe(490, 600, 490, 365, 500)
                         sleep(10)
-                        click(590, 325)
+                        click(490, 365)
                     }
                 }
             }
 
             if (!isFind) {
                 log("没找到该物品,点击第一个物品")
-                click(500 + ran(), 360 + ran())
+                click(firstPos[0] + ran(), firstPos[1] + ran())
             }
 
             // 点击 开始寻找 按钮
             sleep(500);
-            if (matchColor([{ x: 806, y: 448, color: "#f6bf3f" }, { x: 1042, y: 448, color: "#f6ba38" }])) {
-                click(920 + ran(), 440 + ran());
+            if (matchColor([{ x: 752, y: 459, color: "#f6bd3d" }, { x: 1029, y: 464, color: "#f6bc3a" }])) {
+                click(890 + ran(), 460 + ran());
                 //第一次回来
                 log("等待汤姆中,请勿进行任何操作...");
                 showTip("等待汤姆中,请勿进行任何操作...");
@@ -2924,7 +2927,7 @@ function tomToFind(tomPos, findItemType, findItem) {
     function tom_operation2(tomPos, inTomMenu = false) {
 
         function tom_operation2_click(tomPos) {
-            click(980 + ran(), 450 + ran());
+            click(1080 + ran(), 370 + ran());
             //第二次回来
             log("等待汤姆中,请勿进行任何操作...");
             showTip("等待汤姆中,请勿进行任何操作...");
@@ -2952,8 +2955,8 @@ function tomToFind(tomPos, findItemType, findItem) {
                 if (findNum == 0 && i == 0 && tomPos) click(tomPos.x, tomPos.y);
                 sleep(1000);
                 //选择找的数量
-                if (!matchColor([{ x: 677, y: 615, color: "#f6cb51" }, { x: 977, y: 620, color: "#f6c647" },
-                { x: 605, y: 528, color: "#efc462" }, { x: 997, y: 300, color: "#f4e9d0" }])) {
+                if (!matchColor([{ x: 624, y: 96, color: "#f5ebd8" },
+                { x: 1135, y: 124, color: "#f4ead8" }, { x: 1004, y: 530, color: "#f6c243" }])) {
                     continue;
                 }
                 tom_operation2_click(tomPos);
@@ -2979,7 +2982,7 @@ function tomToFind(tomPos, findItemType, findItem) {
             if (tom_menu == "等待" || tom_menu == "没有雇佣汤姆") {
                 log("成功收取物品");
                 showTip("成功收取物品");
-                let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "clip");
+                let tomTimeStr = findFont(null, [838, 406, 1005 - 838, 453 - 406], "#FFFFFF", 8, Font.FontLibrary_Tom, 0.7, mode = "clip");
                 let tomTimeStr_fixed = tomTimeStr.replace(/(\d*)小时/, function (match, p1) {
                     // 如果没有数字或者数字不是1，则替换为1
                     if (p1 === "" || p1 !== "1") {
@@ -2990,7 +2993,8 @@ function tomToFind(tomPos, findItemType, findItem) {
                 });
                 let tomTime = extractTime(tomTimeStr_fixed);
                 showTip("汤姆剩余时间:" + tomTime.hours + "小时" + tomTime.minutes + "分钟" + tomTime.seconds + "秒");
-                click(1200 + ran(), 400 + ran());
+                sleep(1000);
+                click(200 + ran(), 420 + ran());
                 isfindTom = true;
                 return tomTime;
             } else {
@@ -3030,7 +3034,14 @@ function tomToFind(tomPos, findItemType, findItem) {
                 tom_operation2(tomPos, true);
             } else if (tom_menu == "等待") {
                 findNum = 0;
-                let tomTimeStr = findFont(null, [757, 548, 857 - 757, 577 - 548], "#FFFFFF", 32, Font.FontLibrary_Tom, 0.6, mode = "clip");
+                let tomTimeStr = findFont(null, [838, 406, 1005 - 838, 453 - 406], "#FFFFFF", 8, Font.FontLibrary_Tom, 0.7, mode = "clip");
+                if (!tomTimeStr) {
+                    if (findMC(["#ff6133", [90, 7, "#ff6133"], [-110, -225, "#f3ead7"], [428, -232, "#f4ebde"]])) {
+                        log("剩余时间不足2小时")
+                        showTip("剩余时间不足2小时")
+                        return null;
+                    }
+                }
                 let tomTimeStr_fixed = tomTimeStr.replace(/(\d*)小时/, function (match, p1) {
                     // 如果没有数字或者数字不是1，则替换为1
                     if (p1 === "" || p1 !== "1") {
@@ -3041,14 +3052,16 @@ function tomToFind(tomPos, findItemType, findItem) {
                 });
                 let tomTime = extractTime(tomTimeStr_fixed);
                 showTip("汤姆剩余时间:" + tomTime.hours + "小时" + tomTime.minutes + "分钟" + tomTime.seconds + "秒");
-                click(1200 + ran(), 400 + ran());
+                sleep(1000);
+                click(200 + ran(), 420 + ran());
                 isfindTom = true;
                 return tomTime;
             } else if (tom_menu == "没有雇佣汤姆") {
                 findNum = 0;
                 log("没有雇佣汤姆");
                 showTip("没有雇佣汤姆");
-                click(1200 + ran(), 400 + ran());
+                sleep(1000);
+                click(200 + ran(), 420 + ran());
                 isfindTom = true;
                 return null;
             } else if (tom_menu == "第一次") {
@@ -3066,7 +3079,7 @@ function tomToFind(tomPos, findItemType, findItem) {
                 else {
                     log("第一次雇佣汤姆，点击取消")
                     sleep(1000);
-                    click(1100 + ran(), 450 + ran());
+                    click(200 + ran(), 420 + ran());
                 }
                 isfindTom = true;
                 return null;
@@ -5641,17 +5654,20 @@ function cangkuStatistics(maxPages = 2) {
         let lcCapacity = "0/0";
         let hcCapacity = "0/0";
         sleep(500);
+        find_close();
         let isFindShop = findshop(true);
         if (isFindShop) {  //判断是否找到商店
+            huadong_adjust([140, -10], [330, 310])
             console.log("点击粮仓");
             showTip("点击粮仓");
             click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
             sleep(500);
-            if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }], null, 16)) {  //判断是否进入粮仓
-                lcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
+
+            if (click_waitFor(null, null, ["#ffffff", [156, -24, "#dfb57a"], [910, -20, "#ec404b"]], null, 0.8, 200)) {  //判断是否进入粮仓  左侧搜索按钮,棕色边框,右上叉号
+                lcCapacity = findFont(captureScreen(), [643, 86, 883 - 643, 148 - 86], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
                 if (!lcCapacity) {
                     sleep(500);
-                    lcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
+                    lcCapacity = findFont(captureScreen(), [643, 86, 883 - 643, 148 - 86], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
                 }
                 log("粮仓容量：" + lcCapacity);
                 showTip("粮仓容量：" + lcCapacity);
@@ -5683,17 +5699,17 @@ function cangkuStatistics(maxPages = 2) {
         sleep(500);
 
         //判断是否进入货仓
-        if (!matchColor([{ x: 1140, y: 66, color: "#ee434e" }], null, 16)) {  //未进入粮仓
+        if (!click_waitFor(null, null, ["#ffffff", [156, -24, "#dfb57a"], [910, -20, "#ec404b"]], null, 0.8, 200)) {  //未进入货仓
             console.log("未进入货仓");
             showTip("未进入货仓");
             find_close();
             return null
         }
 
-        hcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
+        hcCapacity = findFont(captureScreen(), [643, 86, 883 - 643, 148 - 86], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
         if (!hcCapacity) {
             sleep(500);
-            hcCapacity = findFont(captureScreen(), [626, 57, 916 - 626, 120 - 57], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
+            hcCapacity = findFont(captureScreen(), [643, 86, 883 - 643, 148 - 86], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
         }
         log("货仓容量：" + hcCapacity);
         showTip("货仓容量：" + hcCapacity);
@@ -5704,13 +5720,13 @@ function cangkuStatistics(maxPages = 2) {
         let targetItems = {};
         if (Array.isArray(configItems)) {
             configItems.forEach(itemName => {
-                if (allItemColor[itemName]) {
-                    targetItems[itemName] = allItemColor[itemName];
+                if (cangkuStatisticsItemColor[itemName]) {
+                    targetItems[itemName] = cangkuStatisticsItemColor[itemName];
                 }
             });
         } else {
-            // 如果配置无效，则使用默认的cangkuItemColor
-            targetItems = cangkuItemColor;
+            // 如果配置无效，则使用默认的cangkuStatisticsItemColor
+            targetItems = cangkuStatisticsItemColor;
         }
 
         // 初始化所有配置物品状态为未检测
@@ -5744,19 +5760,19 @@ function cangkuStatistics(maxPages = 2) {
                 }
 
                 let itemColor = targetItems[itemName];
-                let position = findMC(itemColor, sc, [146, 93, 1139 - 146, 576 - 93]);
+                let position = findMC(itemColor, sc, [201, 124, 1093 - 201, 563 - 124]);
 
                 if (position) {
                     // 找到物品
                     let itemNum = 0;
                     let numRegion = [position.x, position.y, 130, 80];
-                    itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
+                    itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.8);
                     // 如果第一次检测为空，再检测一遍
                     if (!itemNum || itemNum.trim() === "") {
                         console.log(`第一次检测${itemName}为空，重新检测`);
                         showTip(`第一次检测${itemName}为空，重新检测`);
                         sleep(100);
-                        itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
+                        itemNum = findFont(null, numRegion, "#FFFFFF", 8, Font.FontLibrary_CKNum, 0.8);
                     }
 
                     result[itemName] = {
@@ -6148,7 +6164,7 @@ function copy_shell(name, direction = "export") {
 }
 
 /**
- * 点击指定点或匹配颜色的点，最多重试max次
+ * 点击指定点,等待匹配的颜色，最多重试max次
  * @param {Array} point 点击的点坐标，[x, y]
  * @param {Array} matchColorPoints matchColor数组
  * @param {Array} MCPoints findMC数组
@@ -6156,6 +6172,7 @@ function copy_shell(name, direction = "export") {
  * @returns {boolean} 未识别到：返回false。识别到：传入MC返回坐标，传入matchColor返回true
  */
 function click_waitFor(point, matchColorPoints, MCPoints, max = 10, xiangsidu, sleepTime = 200) {
+    max = max || 10;
     xiangsidu = xiangsidu || null
     if (point) click(point[0], point[1])
     if (matchColorPoints) {
@@ -6173,7 +6190,18 @@ function click_waitFor(point, matchColorPoints, MCPoints, max = 10, xiangsidu, s
     return false;
 }
 
+/**
+ * 等待匹配的颜色或MC，最多重试max次,匹配到后点击
+ * @param {Array} point 点击的点坐标，[x, y]
+ * @param {Array} matchColorPoints matchColor数组
+ * @param {Array} MCPoints findMC数组
+ * @param {number} max 最大重试次数，默认10次
+ * @param {number} xiangsidu 匹配相似度，默认null
+ * @param {number} sleepTime 每次重试间隔时间，默认200毫秒
+ * @returns {boolean} 未识别到：返回false。识别到：传入MC返回坐标，传入matchColor返回true
+ */
 function waitFor_click(point, matchColorPoints, MCPoints, max = 10, xiangsidu, sleepTime = 200) {
+    max = max || 10;
     xiangsidu = xiangsidu || null
     let find = false;
     if (matchColorPoints) {
@@ -6188,7 +6216,7 @@ function waitFor_click(point, matchColorPoints, MCPoints, max = 10, xiangsidu, s
         for (let i = 0; i < max; i++) {
             let pos = findMC(MCPoints, null, null, xiangsidu)
             if (pos) {
-                if (!point) click(pos[0], pos[1])
+                if (!point) click(pos.x, pos.y)
                 find = true;
                 break;
             }
