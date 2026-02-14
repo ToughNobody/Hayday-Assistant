@@ -1,7 +1,7 @@
 {
-  "version": "2.2.5",
-  "description": "v2.2.5\n\n仓库统计功能已适配新版界面\n\n汤姆功能已适配新版界面\n\n功能优化\n\n优化汤姆和仓库统计视角滑动\n\n",
-  "zip_name": "卡通农场小助手v2.2.5.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.2.5/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.2.5.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.2.5/v2.2.5.zip"
+  "version": "2.2.6",
+  "description": "v2.2.6\n\n自动升仓功能已适配新版界面\n\nBug修复\n\n修复物品售卖时等待货架失效的问题\n\n稍微调整汤姆,蜂蜜,升仓等功能视角右滑时的起始点\n\n修复仓库统计时的粮仓点击位置错误\n\n",
+  "zip_name": "卡通农场小助手v2.2.6.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.2.6/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.2.6.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.2.6/v2.2.6.zip"
 }

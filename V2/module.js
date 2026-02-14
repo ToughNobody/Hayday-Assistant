@@ -1740,14 +1740,14 @@ function huadong_zuoshang() {
 /**
  * 调整视角到正确位置
  * 根据商店坐标定位商店，调整视角到商店位置
- * @param {Array} [x, y] - 商店坐标偏移量，默认[140, -10]
+ * @param {Array} [x, y] - 商店坐标偏移量，默认[60, 50]
  * @param {Array} [endX, endY] - 目标位置偏移量，默认[250, 400]
  * @returns {boolean} - 如果调整成功则返回 `true`，否则返回 `false`
  */
 function huadong_adjust([x, y], [endX, endY]) {
     let shopPos = findshop(false, 3);
     if (shopPos) {
-        const [_x, _y] = (x && y) ? [x, y] : [140, -10]
+        const [_x, _y] = (x && y) ? [x, y] : [60, 50]
         const [_endX, _endY] = (endX && endY) ? [endX + _x, endY + _y] : [250, 400]
         log(Math.abs(shopPos.x + _x - _endX), Math.abs(shopPos.y + _y - _endY))
         const distance = Math.sqrt(Math.pow(shopPos.x + _x - _endX, 2) + Math.pow(shopPos.y + _y - _endY, 2));
@@ -2406,7 +2406,7 @@ function honeycomb_operation(account_config) {
         // sleep(100);
 
         //滑动微调
-        huadong_adjust([140, -10], [250, 400])
+        huadong_adjust([60, 50], [250, 400])
         sleep(500)
 
         let honeyTreePos = find_honeyTree(10) //检测5秒
@@ -2479,7 +2479,7 @@ function honeycomb_operation(account_config) {
             huadong()
 
             //滑动微调
-            huadong_adjust([140, -10], [250, 400])
+            huadong_adjust([60, 50], [250, 400])
         }
     }
 
@@ -2631,9 +2631,9 @@ function tomOperation(account_config) {
         find_close();
         sleep(100);
 
-        if (!huadong_adjust([140, -10], [210, 240])) {
+        if (!huadong_adjust([60, 50], [210, 240])) {
             huadong()
-            huadong_adjust([140, -10], [210, 240])
+            huadong_adjust([60, 50], [210, 240])
         }
         sleep(350)
         let tomPos = clickTom();
@@ -4185,7 +4185,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             }
             let sellNum = item.num > 10 ? 10 : item.num;
 
-            if (configs.get("selectedFunction").code == 4 && configs.get("waitShelf" || false)) {
+            if (configs.get("selectedFunction").text == "物品售卖" && configs.get("waitShelf" || false)) {
                 find_kongxian_until()
             } else {
                 if (!find_kongxian()) {    //没有空闲货架
@@ -5160,15 +5160,18 @@ function shengcang() {
             sleep(100);
             let isFindShop = findshop(true);
             if (isFindShop) {  //判断是否找到商店
+                huadong_adjust([60, 50], [330, 310]);
+                sleep(100);
+                isFindShop = findshop(true);
                 console.log("点击粮仓");
                 showTip("点击粮仓");
                 click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
                 sleep(500);
-                if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }], null, 16)) {  //判断是否进入粮仓
-                    click(700 + ran(), 625 + ran());
+                if (click_waitFor(null, null, ["#ffffff", [156, -24, "#dfb57a"], [910, -20, "#ec404b"]], null, 0.8, 200)) {  //判断是否进入粮仓 左侧搜索按钮,棕色边框,右上叉号
+                    click(700 + ran(), 610 + ran());
                     sleep(500);
-                    if (matchColor([{ x: 932, y: 414, color: "#69b850" }])) {  //判断是否可以升级
-                        click(932 + ran(), 408 + ran());//点击升级
+                    if (matchColor([{ x: 904, y: 407, color: "#69b750" }])) {  //判断是否可以升级
+                        click(910 + ran(), 404 + ran());//点击升级
                         sleep(500);
                         find_close();
                         sleep(500);
@@ -5202,11 +5205,11 @@ function shengcang() {
                 showTip("点击货仓");
                 click(isFindShop.x + config.huocangOffset.x + ran(), isFindShop.y + config.huocangOffset.y + ran()); //点击货仓
                 sleep(500);
-                if (matchColor([{ x: 1140, y: 66, color: "#ee434e" }])) {  //判断是否进入货仓
+                if (click_waitFor(null, null, ["#ffffff", [156, -24, "#dfb57a"], [910, -20, "#ec404b"]], null, 0.8, 200)) {  //判断是否进入货仓 左侧搜索按钮,棕色边框,右上叉号
                     click(700 + ran(), 625 + ran());
                     sleep(500);
-                    if (matchColor([{ x: 932, y: 414, color: "#69b850" }], null, 16)) {  //判断是否可以升级
-                        click(932 + ran(), 408 + ran());//点击升级
+                    if (matchColor([{ x: 904, y: 407, color: "#69b850" }])) {  //判断是否可以升级
+                        click(910 + ran(), 404 + ran());//点击升级
                         sleep(500);
                         find_close();
                         sleep(500);
@@ -5657,7 +5660,9 @@ function cangkuStatistics(maxPages = 2) {
         find_close();
         let isFindShop = findshop(true);
         if (isFindShop) {  //判断是否找到商店
-            huadong_adjust([140, -10], [330, 310])
+            huadong_adjust([60, 50], [330, 310]);
+            sleep(100);
+            isFindShop = findshop(true);
             console.log("点击粮仓");
             showTip("点击粮仓");
             click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
