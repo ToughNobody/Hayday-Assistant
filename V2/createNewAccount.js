@@ -59,9 +59,9 @@ function inputAge() {
         for (let i = 0; i < 5; i++) {
             module.showTip(`检测输入年龄界面，第${i + 1}次`);
             log(`检测输入年龄界面，第${i + 1}次`);
-            ageMenu = module.matchColor([{ x: 515, y: 115, color: "#81481a" },
-            { x: 586, y: 221, color: "#fec128" }, { x: 746, y: 515, color: "#6bb852" },
-            { x: 530, y: 509, color: "#de4e4e" }])
+            ageMenu = module.matchColor([{ x: 485, y: 50, color: "#e0b77c" },
+            { x: 493, y: 126, color: "#81481a" }, { x: 795, y: 145, color: "#81481a" },
+            { x: 807, y: 231, color: "#fec128" }])
             if (ageMenu) break;
             sleep(1000);
         }
@@ -343,9 +343,8 @@ function dingdan() {
     let dingdan = null;
     let num = 0;
     while (num < 10) {
-        dingdan = module.matchColor([{ x: 248, y: 96, color: "#fdca43" },
-        { x: 318, y: 61, color: "#dfb578" }, { x: 1077, y: 68, color: "#eb3f49" },
-        { x: 976, y: 103, color: "#fdca43" }]);
+        dingdan = module.matchColor([{ x: 360, y: 54, color: "#dfb679" }, { x: 1015, y: 110, color: "#fdca43" },
+        { x: 1068, y: 182, color: "#faecc7" }, { x: 191, y: 124, color: "#784d34" }]);
         if (dingdan) break;
         sleep(1000);
         num++;
@@ -457,6 +456,7 @@ function jiazai() {
     try {
         let jiazai = null;
         let tiaoguo = null;
+        let duihua = null;
         let num = 0;
         module.showTip("检测加载页面");
         log("检测加载页面");
@@ -466,6 +466,7 @@ function jiazai() {
             tiaoguo = module.matchColor([{ x: 1001, y: 622, color: "#ffffff" },
             { x: 1025, y: 625, color: "#ffffff" }, { x: 1012, y: 627, color: "#f6be3e" },
             { x: 1036, y: 623, color: "#f6ca4d" }], sc);
+            // log("tiaoguo", tiaoguo);
             if (tiaoguo) {
                 click(1100, 620);
                 num = 0;
@@ -475,10 +476,20 @@ function jiazai() {
             jiazai = module.matchColor([{ x: 438, y: 565, color: "#fcffa2" },
             { x: 409, y: 550, color: "#85cbec" }, { x: 418, y: 585, color: "#c4e3e8" },
             { x: 867, y: 546, color: "#7ec8ed" }, { x: 861, y: 587, color: "#c7e3e8" }], sc);
+            // log("jiazai", jiazai);
             if (!jiazai && num > 3) {
                 sleep(4000)
                 break
             };
+
+            duihua = module.matchColor([{ x: 523, y: 112, color: "#f4ebdc" }, { x: 1150, y: 125, color: "#f4ebdf" },
+            { x: 531, y: 489, color: "#f3e7c8" }, { x: 1162, y: 505, color: "#f3e8c8" }], sc);
+            // log("duihua", duihua);
+            if (duihua) {
+                // click(850, 400);
+                break;
+            }
+
             sleep(1000);
             num++;
         }
