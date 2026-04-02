@@ -392,7 +392,7 @@ function findFriend(Account, Account_1, isclick = true) {
         }
 
         //检测是否在好友簿界面
-        if (!matchColor([{ x: 544, y: 130, color: "#fff9db" }, { x: 425, y: 55, color: "#deb476" }])) {
+        if (!module.matchColor([{ x: 544, y: 130, color: "#fff9db" }, { x: 425, y: 55, color: "#deb476" }])) {
             module.openFriendMenu();
             sleep(500)
             click(550, 150)

@@ -35,7 +35,7 @@ let configs = storages.create("config");
 
 
 // 启动自动点击权限请求
-module.autoSc();
+// module.autoSc();
 
 if (configs.get("push_settings") && configs.get("push_settings")[1]) {
     let engineId = engines.myEngine().id;

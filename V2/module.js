@@ -26,6 +26,8 @@ const cangkuStatisticsItemColor = color_lib.cangkuStatisticsItemColor;
 //汤姆物品颜色
 const tomItemColor = color_lib.tomItemColor;
 
+//商店物品颜色
+const shopItemColor = color_lib.shopItemColor;
 
 //其他物品颜色
 const otherItemColor = color_lib.otherItemColor;
@@ -49,6 +51,12 @@ const cropName = config.selectedCrop.text
 let crop = cropItemColor[cropName].crop;
 let crop_plant = cropItemColor[cropName].crop_plant;
 let crop_sell = cropItemColor[cropName].crop_sell;
+
+//界面
+const 商店界面范围 = [294, 133, 728 - 294, 673 - 133]
+const 商店售卖数字范围 = [870, 170, 935 - 870, 230 - 170]
+
+const 货仓界面范围 = [201, 124, 1093 - 201, 563 - 124]
 
 
 let randomOffset = 5; // 随机偏移量
@@ -3208,8 +3216,9 @@ function openshop() {
                 showTip("打开路边小店");
                 sleep(300);
                 click(findshop_1.x + config.shopOffset.x + ran(), findshop_1.y + config.shopOffset.y + ran());
-                sleep(100)
+                sleep(200)
                 if (inShop()) {
+                    log("成功打开商店");
                     return true; // 成功找到并点击
                 }
             }
@@ -3625,7 +3634,7 @@ function find_ad() {
  * @returns {boolean} 是否在商店主界面
  */
 function inShop() {
-    if (matchColor([{ x: 1161, y: 524, color: "#cb642c" }, { x: 1063, y: 618, color: "#eeae52" }, { x: 1032, y: 606, color: "#dab299" }], null, 16)) {
+    if (matchColor(allItemColor["商店界面"], null, 16)) {
         return true;
     } else {
         return false;
@@ -3637,7 +3646,7 @@ function inShop() {
  * @returns {boolean} 是否在商店售卖界面
  */
 function inShop_sell() {
-    if (matchColor([{ x: 1110, y: 378, color: "#fff9db" }, { x: 342, y: 58, color: "#deb476" }, { x: 1163, y: 49, color: "#fac73f" }])) {
+    if (matchColor(allItemColor["商店售卖界面"])) {
         return true;
     } else {
         return false;
@@ -3682,17 +3691,17 @@ function shop() {
             }
 
             //判断是否在粮仓界面
-            if (!matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
-                click(200 + ran(), 200 + ran());//点击售卖粮仓按钮
+            if (!matchColor(allItemColor["商店粮仓界面"])) {
+                click(200 + ran(), 220 + ran());//点击售卖粮仓按钮
                 sleep(100);
                 console.log("点击粮仓按钮")
             }
 
-            let wheat_sell = findMC(crop_sell, null, [261, 122, 707 - 261, 688 - 122], 16);
+            let wheat_sell = findMC(crop_sell, null, [292, 131, 729 - 292, 676 - 131], 16);
 
             if (!wheat_sell) {   //没找到售卖货架上的作物
                 sleep(100);
-                wheat_sell = findMC(crop_sell, null, [261, 122, 707 - 261, 688 - 122], 16);
+                wheat_sell = findMC(crop_sell, null, [292, 131, 729 - 292, 676 - 131], 16);
                 if (!wheat_sell) {
                     console.log("未识别到" + config.selectedCrop.text);
                     showTip("未识别到" + config.selectedCrop.text);
@@ -3716,7 +3725,7 @@ function shop() {
                 showTip(config.selectedCrop.text + "数量" + wheat_num + "，不足" + wheat_sell_minNum + "，结束售卖");
                 log(config.selectedCrop.text + "数量不足，退出售卖");
                 if (inShop_sell()) {
-                    log("识别到售卖界面，点击叉叉")
+                    log("识别到售卖界面，点击叉叉(1)")
                     close();
                 }
                 break;
@@ -3725,7 +3734,7 @@ function shop() {
             console.log(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sell_minNum + "，可售卖" + sellNum);
             showTip(config.selectedCrop.text + "数量" + wheat_num + "≥" + wheat_sell_minNum + "，可售卖" + sellNum);
             if (inShop_sell()) {
-                log("识别到售卖界面，点击叉叉")
+                log("识别到售卖界面，点击叉叉(2)")
                 close();
             }
             shop_sell([{ title: config.selectedCrop.text, num: sellNum }], { [config.selectedCrop.text]: crop_sell }, "粮仓", config.shopPrice.code)
@@ -3750,14 +3759,14 @@ function shop() {
 
             click(shop_coin.x + ran(), shop_coin.y + ran()); //点击可上架物品
             log("发布广告：点击" + config.selectedCrop.text)
-            sleep(100);
+            sleep(500);
 
-            let ad = matchColor([{ x: 750, y: 420, color: "#fff9db" }]);
+            let ad = matchColor([{ x: 702, y: 417, color: "#fff9db" }]);
             if (!ad) {
                 console.log("可以发布广告");
-                click(800 + ran(), 330 + ran());
+                click(720 + ran(), 360 + ran());
                 // sleep(100);
-                click(640 + ran(), 500 + ran());
+                click(640 + ran(), 470 + ran());
                 // sleep(200);
                 close();
             } else {
@@ -3857,7 +3866,7 @@ function find_kongxian(maxAttempts = 5) {
     showTip("找到空闲货架");
     click(kongxian.x + ran(), kongxian.y + ran()); //点击空闲货架
     // console.log("点击空闲货架")
-    sleep(200);
+    sleep(600);
     return true;
 }
 
@@ -3891,14 +3900,14 @@ function shopStatistic(sc) {
             return false;
         }
         //判断是否在货仓界面
-        if (matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
-            click(200 + ran(), 330 + ran());//点击售卖货仓按钮
+        if (!matchColor(allItemColor["商店货仓界面"])) {
+            click(205 + ran(), 350 + ran());//点击售卖货仓按钮
             sleep(100);
             console.log("点击货仓按钮")
         }
 
         sc = sc || captureScreen();
-        let capacity_result = findFont(sc, [659, 56, 854 - 659, 100 - 56], "#FFFFFF", 8, Font.FontLibrary_ShopCapacity, 0.9);
+        let capacity_result = findFont(sc, [503, 61, 687 - 503, 110 - 61], "#FFFFFF", 8, Font.FontLibrary_ShopCapacity, 0.7);
         log(capacity_result);
 
         // 提取 '/' 两边的数字并计算差值
@@ -3937,7 +3946,7 @@ function shopStatistic(sc) {
         let allItemsDetected = false;
 
         // 初始化所有物品状态为未检测
-        Object.keys(cangkuItemColor).forEach(itemName => {
+        Object.keys(shopItemColor).forEach(itemName => {
             shopResult[itemName] = {
                 counts: 0,
                 position: [],
@@ -3961,19 +3970,23 @@ function shopStatistic(sc) {
             let sc1 = sc
 
             // 检测所有物品
-            Object.keys(cangkuItemColor).forEach(itemName => {
+            Object.keys(shopItemColor).forEach(itemName => {
                 // 如果已经检测到该物品，跳过
                 if (shopResult[itemName].detected) {
-                    return
+                    return;
                 }
 
-                let itemColor = cangkuItemColor[itemName];
-                let position = findMC(itemColor, sc, [285, 123, 686 - 285, 688 - 123]);
+                let itemColor = shopItemColor[itemName];
+                let position = findMC(itemColor, sc, 商店界面范围);
 
                 if (position) {
+                    // 检查物品是否在截取范围内
+                    if (position.y + 80 > 商店界面范围[1] +商店界面范围[3]) {
+                        return;
+                    }
                     // 找到物品
                     let itemNum = 0;
-                    let numRegion = [position.x, position.y, 130, 80];
+                    let numRegion = [position.x - 20, position.y, 150, 80];
                     itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
                     // 如果第一次检测为空，再检测一遍
                     if (!itemNum || itemNum.trim() === "") {
@@ -4006,9 +4019,9 @@ function shopStatistic(sc) {
             if (currentPage < maxPages - 1) {
                 console.log("向下翻页...");
                 showTip("向下翻页...");
-                swipe(480, 660, 480, 145, 1000)
+                swipe(580, 650, 580, 200, 1000)
                 sleep(30)
-                click(480, 132)
+                click(580, 200)
                 currentPage++;
             } else {
                 console.log("已达到最大翻页次数");
@@ -4197,37 +4210,35 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
 
             //判断是否在货仓/粮仓界面
             sleep(100)
-            if (matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
+            if (matchColor(allItemColor["商店界面"])) {
                 if (pos == "货仓") {
-                    click(200 + ran(), 330 + ran());//点击售卖货仓按钮
+                    click(205 + ran(), 350 + ran());//点击售卖货仓按钮
                     sleep(100);
                     console.log("点击货仓按钮")
                 }
             } else {
                 if (pos == "粮仓") {
-                    click(200 + ran(), 200 + ran());//点击售卖粮仓按钮
+                    click(200 + ran(), 220 + ran());//点击售卖粮仓按钮
                     sleep(100);
                     console.log("点击粮仓按钮")
                 }
             }
 
             //如果打开搜索按钮，关闭搜索栏
-            if (matchColor([{ x: 262, y: 255, color: "#ebc784" }, { x: 284, y: 238, color: "#ffffca" },
-            { x: 701, y: 238, color: "#ffffca" }, { x: 701, y: 255, color: "#eac784" },
-            { x: 701, y: 280, color: "#e2d8bf" }, { x: 699, y: 292, color: "#fff9db" }])) {
-                click(260 + ran(), 110 + ran())
-                sleep(150);
+            if (matchColor(allItemColor["商店搜索框"])) {
+                click(265 + ran(), 70 + ran())
+                sleep(300);
             }
 
             //如果有物品颜色
             if (itemColor[item.title]) {
-                let item_sell = findMC(itemColor[item.title], null, [261, 122, 707 - 261, 688 - 122], 16);
+                let item_sell = findMC(itemColor[item.title], null, 商店界面范围, 16);
 
                 if (!item_sell) {   //没找到售卖货架上的作物
 
                     clickShopSearchButton(item.title);
 
-                    item_sell = findMC(itemColor[item.title], null, [261, 122, 707 - 261, 688 - 122], 16);
+                    item_sell = findMC(itemColor[item.title], null, 商店界面范围, 16);
                     if (item_sell) {
                         log("找到" + item.title)
                     }
@@ -4235,7 +4246,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
                     if (!item_sell) {
                         console.log("未找到" + item.title + "，尝试下一个");
                         showTip("未找到" + item.title + "，尝试下一个");
-                        click(1150 + ran(), 50 + ran())//点击叉号
+                        click(1110 + ran(), 70 + ran())//点击叉号
                         break;
                     }
                 }
@@ -4247,7 +4258,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
 
                 clickShopSearchButton(item.title);
 
-                click(380 + ran(), 350 + ran());
+                click(350 + ran(), 350 + ran()); //点击第一个
             }
 
             // 识别售卖数字
@@ -4255,13 +4266,13 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             let item_num
 
             for (let i = 0; i < 5; i++) {
-                if (matchColor([{ x: 1103, y: 214, color: "#b6b6b6" }, { x: 799, y: 216, color: "#f4bd00" }])) {
+                if (matchColor([{ x: 825, y: 210, color: "#f4c000" }, { x: 1077, y: 208, color: "#b9b9b9" }])) {
                     item_num = 10
-                } else if (matchColor([{ x: 799, y: 214, color: "#bababa" }, { x: 1101, y: 212, color: "#f8b900" }]) ||
-                    matchColor([{ x: 801, y: 215, color: "#bababa" }, { x: 1101, y: 211, color: "#b7b7b7" }])) {
+                } else if (matchColor([{ x: 828, y: 211, color: "#bababa" }, { x: 1078, y: 208, color: "#f6bd00" }]) ||
+                    matchColor([{ x: 827, y: 210, color: "#bbbbbb" }, { x: 1076, y: 211, color: "#b8b8b8" }])) {
                     item_num = 1
                 } else {
-                    let region2 = [829, 168, 941 - 829, 250 - 168]
+                    let region2 = 商店售卖数字范围 //识别售卖数字的区域
                     item_num = findFont(null, region2, "#FFFFFF", 8, Font.FontLibrary_ShopSoldNum, 0.9);
                     log("识别售卖个数" + item_num)
                     if (item_num == "" || item_num == 0) {
@@ -4284,21 +4295,21 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             showTip("售卖:" + item.title + ",个数:" + sellNum)
             if (sellNum_difference >= 0) {
                 for (let i = 0; i < sellNum_difference; i++) {
-                    click(1085 + ran(), 190 + ran());
+                    click(1060 + ran(), 190 + ran()); //点击增加按钮
                 }
             }
 
             if (sellNum_difference < 0) {
                 for (let i = 0; i < -sellNum_difference; i++) {
-                    click(800 + ran(), 190 + ran());
+                    click(830 + ran(), 190 + ran()); //点击减少按钮
                 }
             }
 
             console.log("修改售价");
             if (price == 0) {
-                click(860 + ran(), 360 + ran());//修改售价(最低)
+                click(890 + ran(), 380 + ran());//修改售价(最低)
             } else if (price == 2) {
-                click(1020 + ran(), 370 + ran());//修改售价(最高)
+                click(1000 + ran(), 380 + ran());//修改售价(最高)
             }
 
             //上架
@@ -4334,8 +4345,8 @@ function sellPlanValidate(sellPlan_original) {
             return false;
         }
         //判断是否在货仓界面
-        if (matchColor([{ x: 247, y: 211, color: "#ffd157" }, { x: 251, y: 340, color: "#ffb906" }])) {
-            click(200 + ran(), 330 + ran());//点击售卖货仓按钮
+        if (matchColor(allItemColor["商店货仓界面"])) {
+            click(205 + ran(), 350 + ran());//点击售卖货仓按钮
             sleep(100);
             console.log("点击货仓按钮")
         }
@@ -4435,22 +4446,18 @@ function sellPlanValidate(sellPlan_original) {
 
 function clickShopSearchButton(item) {
     for (let i = 0; i < 3; i++) {
-        if (!matchColor([{ x: 262, y: 255, color: "#ebc784" }, { x: 284, y: 238, color: "#ffffca" },
-        { x: 701, y: 238, color: "#ffffca" }, { x: 701, y: 255, color: "#eac784" },
-        { x: 701, y: 280, color: "#e2d8bf" }, { x: 699, y: 292, color: "#fff9db" }])) {
-            click_waitFor([260 + ran(), 110 + ran()],
-                [{ x: 262, y: 255, color: "#ebc784" }, { x: 284, y: 238, color: "#ffffca" },
-                { x: 701, y: 238, color: "#ffffca" }, { x: 701, y: 255, color: "#eac784" },
-                { x: 701, y: 280, color: "#e2d8bf" }, { x: 699, y: 292, color: "#fff9db" }], null, 10)
-            sleep(100);
+        if (!matchColor(allItemColor["商店搜索框"])) {
+            click_waitFor([265 + ran(), 70 + ran()],
+                allItemColor["商店搜索框"], null, 10)
+            sleep(300);
         }
-        click(500 + ran(), 200 + ran());
+        click(460 + ran(), 180 + ran());
         sleep(100);
         setText_inGame(item);
         log("输入" + item)
         sleep(150);
 
-        if (images.findColorInRegion(captureScreen(), "#78433a", 288, 158, 707 - 288, 238 - 158)) return true;
+        if (images.findColorInRegion(captureScreen(), "#78433a", 301, 158, 735 - 301, 202 - 158)) return true;
     }
     return false;
 }
@@ -5024,11 +5031,7 @@ function switch_account(Account) {
             for (let i = 0; i < 20; i++) {
                 findAccountMenuNum++;
                 //识别supercell ID
-                if (findMC(["#103a8b", [-160, 42, "#ffffff"],
-                    [-120, 40, "#1c509b"], [13, 50, "#ffffff"],
-                    [19, 43, "#14408f"], [13, 42, "#ffffff"],
-                    [100, 46, "#ffffff"], [118, 36, "#0e3682"],
-                    [149, 51, "#0e3581"], [164, 74, "#ffffff"]], null, [0, 250, 600, 250])) {
+                if (findMC(allItemColor["supercellID界面"],  null, [0, 250, 600, 250])) {
                     break;
                 }
                 sleep(500);
@@ -5091,6 +5094,13 @@ function switch_account(Account) {
                 break;
             }
             if (scrollDownCount < MAX_SCROLL_DOWN && !isEnd) {
+                // 滑动前先检测是否在supercell ID界面
+                if (!findMC(allItemColor["supercellID界面"],  null, [0, 250, 600, 250])) {
+                    log("未识别到supercell ID界面");
+                    showTip("未识别到supercell ID界面");
+                    switch_account(Account);
+                    return num; // 切换账号后返回
+                }
                 const [x1, y1] = [960, 600];
                 const [x2, y2] = [960, 150];//原960,60
                 swipe(x1 + ran(), y1 + ran(), x2 + ran(), y2 + ran(), [500]); // 下滑
@@ -5761,13 +5771,17 @@ function cangkuStatistics(maxPages = 2) {
             Object.keys(targetItems).forEach(itemName => {
                 // 如果已经检测到该物品，跳过
                 if (result[itemName].detected) {
-                    return
+                    return;
                 }
 
                 let itemColor = targetItems[itemName];
-                let position = findMC(itemColor, sc, [201, 124, 1093 - 201, 563 - 124]);
+                let position = findMC(itemColor, sc, 货仓界面范围);
 
                 if (position) {
+                    // 检查物品是否在截取范围内
+                    if (position.y + 80 > 货仓界面范围[1] + 货仓界面范围[3]) {
+                        return;
+                    }
                     // 找到物品
                     let itemNum = 0;
                     let numRegion = [position.x, position.y, 130, 80];

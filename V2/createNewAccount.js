@@ -7,7 +7,7 @@ let config = module.config;
 const doneAddFriendsList = config.addFriendsList.filter(account => account.addFriendsdone === true);
 
 // 启动自动点击权限请求
-module.autoSc();
+// module.autoSc();
 
 try {
     module.createWindow({ x: 0, y: 0.65 });

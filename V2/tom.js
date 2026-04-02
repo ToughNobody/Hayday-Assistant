@@ -32,7 +32,7 @@ let timeStorage = storages.create("times");
 let configs = storages.create("config");
 
 // 启动自动点击权限请求
-module.autoSc();
+// module.autoSc();
 
 try {
     module.createWindow(config.showText);

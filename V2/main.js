@@ -1291,13 +1291,14 @@ ui.layout(
                                                 <input id="CangkuSold_targetNum" type="number" w="auto" h="48" text="25" marginLeft="5" textSize="14" bg="#FFFFFF" maxLength="3" />
                                             </horizontal>
 
-                                            {/* 汤姆 - 仅在刷地时显示*/}
-                                            <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="visible">
-                                                <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
-                                                <View w="0" h="0" layout_weight="1" />
-                                                <Switch id="tomSwitch" />
-                                            </horizontal>
                                         </vertical>
+
+                                        {/* 汤姆 - 仅在刷地时显示*/}
+                                        <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="visible">
+                                            <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="tomSwitch" />
+                                        </horizontal>
 
                                         {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
                                         <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
@@ -3266,7 +3267,7 @@ ui.menu.on("item_click", item => {
             }).on("neutral", () => {
                 // toast("没关系，随时欢迎加入！😊");
             }).show();
-           
+
             break;
         case "谢":
             dialogs.build({
@@ -5296,6 +5297,11 @@ function startButton() {
         toastLog("当前分辨率不正确，请使用720*1280分辨率")
     }
 
+    if (!ui.requestScBtn.checked) {
+        toast("请先打开截图权限");
+        return;
+    }
+
     if (!auto.service) {
         toast("请先开启无障碍服务");
         app.startActivity({
@@ -5419,6 +5425,11 @@ function winStartButton() {
 
     if (device.width != 720 || device.height != 1280) {
         toastLog("当前分辨率不正确，请使用720*1280分辨率,1")
+    }
+
+    if (!ui.requestScBtn.checked) {
+        toast("请先打开截图权限");
+        return;
     }
 
     if (!auto.service) {
