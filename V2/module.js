@@ -29,6 +29,9 @@ const tomItemColor = color_lib.tomItemColor;
 //商店物品颜色
 const shopItemColor = color_lib.shopItemColor;
 
+//商店售卖物品颜色
+const shopSellItemColor = color_lib.shopSellItemColor;
+
 //其他物品颜色
 const otherItemColor = color_lib.otherItemColor;
 
@@ -3677,7 +3680,7 @@ function shop() {
             let sellPlan = shopStatistic();
             if (sellPlan) {
                 log("商店售卖计划:" + JSON.stringify(sellPlan))
-                shop_sell(sellPlan, allItemColor)
+                shop_sell(sellPlan, shopSellItemColor)
             }
         }
 
@@ -3744,7 +3747,7 @@ function shop() {
 
         console.log("发布广告");
         showTip("发布广告");
-        sleep(100);
+        sleep(500);
         if (inShop_sell()) {
             close();//点击叉号
             log("发布广告(在售卖界面)：点击叉号")
@@ -4183,7 +4186,7 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
  * @returns 
  */
 function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
-    sleep(100);
+    sleep(500);
     if (inShop_sell()) {
         close();//点击叉号
         log("商店售卖(在售卖界面)：点击叉号")
@@ -4380,10 +4383,10 @@ function sellPlanValidate(sellPlan_original) {
 
             let itemPos = null;
             //搜索后，如果颜色库有该物品
-            if (allItemColor[itemName.item]) {
+            if (shopSellItemColor[itemName.item]) {
                 //如果搜索后第二格有物品（弃）
                 // !matchColor([{ x: 559, y: 318, color: "#fff9db" }, { x: 598, y: 349, color: "#fff9db" }, { x: 634, y: 320, color: "#fff9db" }, { x: 631, y: 378, color: "#fff9db" }, { x: 561, y: 383, color: "#fff9db" }])
-                itemPos = findMC(allItemColor[itemName.item], null, [261, 122, 707 - 261, 688 - 122], 16)
+                itemPos = findMC(shopSellItemColor[itemName.item], null, [261, 122, 707 - 261, 688 - 122], 16)
 
                 if (itemPos) {
                     numRegion = [itemPos.x, itemPos.y, 130, 80];
