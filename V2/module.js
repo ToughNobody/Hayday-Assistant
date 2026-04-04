@@ -3984,7 +3984,7 @@ function shopStatistic(sc) {
 
                 if (position) {
                     // 检查物品是否在截取范围内
-                    if (position.y + 80 > 商店界面范围[1] +商店界面范围[3]) {
+                    if (position.y + 80 > 商店界面范围[1] + 商店界面范围[3]) {
                         return;
                     }
                     // 找到物品
@@ -4234,7 +4234,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             }
 
             //如果有物品颜色
-            if (itemColor[item.title]) {
+            if (itemColor && itemColor[item.title]) {
                 let item_sell = findMC(itemColor[item.title], null, 商店界面范围, 16);
 
                 if (!item_sell) {   //没找到售卖货架上的作物
@@ -4386,10 +4386,11 @@ function sellPlanValidate(sellPlan_original) {
             if (shopSellItemColor[itemName.item]) {
                 //如果搜索后第二格有物品（弃）
                 // !matchColor([{ x: 559, y: 318, color: "#fff9db" }, { x: 598, y: 349, color: "#fff9db" }, { x: 634, y: 320, color: "#fff9db" }, { x: 631, y: 378, color: "#fff9db" }, { x: 561, y: 383, color: "#fff9db" }])
-                itemPos = findMC(shopSellItemColor[itemName.item], null, [261, 122, 707 - 261, 688 - 122], 16)
+                itemPos = findMC(shopSellItemColor[itemName.item], null, 商店界面范围, 16)
 
                 if (itemPos) {
-                    numRegion = [itemPos.x, itemPos.y, 130, 80];
+                    log("找到" + itemName.item)
+                    numRegion = [itemPos.x - 20, itemPos.y, 140, 80];
                 } else {
                     log("搜索后未找到该物品" + itemName.item)
                     detected = false;
@@ -4460,7 +4461,11 @@ function clickShopSearchButton(item) {
         log("输入" + item)
         sleep(150);
 
-        if (images.findColorInRegion(captureScreen(), "#78433a", 301, 158, 735 - 301, 202 - 158)) return true;
+        if (images.findColorInRegion(captureScreen(), "#78433a", 301, 158, 735 - 301, 202 - 158)) {
+            log("成功输入" + item)
+            return true;
+        }
+        log("输入失败" + item)
     }
     return false;
 }
@@ -5034,7 +5039,7 @@ function switch_account(Account) {
             for (let i = 0; i < 20; i++) {
                 findAccountMenuNum++;
                 //识别supercell ID
-                if (findMC(allItemColor["supercellID界面"],  null, [0, 250, 600, 250])) {
+                if (findMC(allItemColor["supercellID界面"], null, [0, 250, 600, 250])) {
                     break;
                 }
                 sleep(500);
@@ -5098,7 +5103,7 @@ function switch_account(Account) {
             }
             if (scrollDownCount < MAX_SCROLL_DOWN && !isEnd) {
                 // 滑动前先检测是否在supercell ID界面
-                if (!findMC(allItemColor["supercellID界面"],  null, [0, 250, 600, 250])) {
+                if (!findMC(allItemColor["supercellID界面"], null, [0, 250, 600, 250])) {
                     log("未识别到supercell ID界面");
                     showTip("未识别到supercell ID界面");
                     switch_account(Account);

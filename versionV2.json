@@ -1,7 +1,7 @@
 {
-  "version": "2.2.9",
-  "description": "## v2.2.9\n\n- 适当延长商店中某些操作的等待时长\n\n- 添加部分物品在商店界面的识别",
-  "zip_name": "卡通农场小助手v2.2.9.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.2.9/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.2.9.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.2.9/v2.2.9.zip"
+  "version": "2.2.10",
+  "description": "## v2.2.10\n\nBug修复\n\n- 修复仓库售卖时的物品识别问题\n\n",
+  "zip_name": "卡通农场小助手v2.2.10.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.2.10/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.2.10.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.2.10/v2.2.10.zip"
 }
