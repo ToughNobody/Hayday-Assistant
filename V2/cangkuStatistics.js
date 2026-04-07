@@ -57,6 +57,10 @@ function main_email() {
     sleep(500);
     if (!config.switchAccount || config.accountList.filter(account => account.done).length <= 1) { //不切换账号
         log("不切换账号");
+
+        //设定初始仓库数据
+        let cangkuStatisticsData = [];
+
         module.huadong();
         sleep(500);
         let isFindShop = module.findshop()
@@ -71,8 +75,9 @@ function main_email() {
         log(rawData);
         // 添加当前账号信息
         rawData["账号"] =  "账号";
+        cangkuStatisticsData.push(rawData);
         //将仓库统计结果转换为表格数据
-        let contentData = module.convertToTable(rawData);
+        let contentData = module.convertToTable(cangkuStatisticsData);
         //推送
         module.pushTo(contentData);
 

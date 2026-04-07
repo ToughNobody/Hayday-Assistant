@@ -5007,7 +5007,7 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
 function stopOtherEngines(stopAll = false) {
     threads.start(() => {
-        log("开始停止" + (stopAll ? "所有" : "其他") + "引擎");
+        log("开始停止" + (stopAll ? "所有" : "其他") + "引擎"+",出现红字报错属于正常现象");
 
         let maxAttempts = 10; // 防止无限循环
         let attempts = 0;

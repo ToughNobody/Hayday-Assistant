@@ -4348,7 +4348,7 @@ function sellPlanValidate(sellPlan_original) {
             return false;
         }
         //判断是否在货仓界面
-        if (matchColor(allItemColor["商店货仓界面"])) {
+        if (!matchColor(allItemColor["商店货仓界面"])) {
             click(205 + ran(), 350 + ran());//点击售卖货仓按钮
             sleep(100);
             console.log("点击货仓按钮")
@@ -5679,7 +5679,7 @@ function cangkuStatistics(maxPages = 2) {
         let isFindShop = findshop(true);
         if (isFindShop) {  //判断是否找到商店
             huadong_adjust([60, 50], [330, 310]);
-            sleep(100);
+            sleep(300);
             isFindShop = findshop(true);
             console.log("点击粮仓");
             showTip("点击粮仓");
