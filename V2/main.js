@@ -1936,9 +1936,16 @@ ui.layout(
                                         <text id="current_account_name" text="" textSize="14" textColor="#666666" />
                                     </horizontal>
 
+                                    {/* 仓库升仓 */}
+                                    <horizontal gravity="center_vertical" marginBottom="8">
+                                        <text text="自动升仓" textSize="14" w="auto" marginRight="8" />
+                                        <checkbox id="account_config_shengcang_h" checked="false" text="货仓" />
+                                        <checkbox id="account_config_shengcang_l" checked="false" text="粮仓" />
+                                    </horizontal>
+
                                     {/* 开启汤姆开关 */}
                                     <horizontal gravity="center_vertical" marginBottom="8">
-                                        <text text="开启汤姆：" textSize="14" w="120" marginRight="8" />
+                                        <text text="开启汤姆：" textSize="14" w="auto" marginRight="8" />
                                         <View w="0" h="0" layout_weight="1" />
                                         <Switch id="account_config_tom_switch" />
                                     </horizontal>
@@ -2087,7 +2094,7 @@ ui.accountConfigBtn.on("click", () => {
 
     // 如果账号列表为空，提示用户
     if (accountList.length === 0) {
-        toast("没有账号，请先添加账号");
+        toast("没有账号，请先添加邮箱账号");
         return;
     }
 
@@ -2106,6 +2113,12 @@ ui.accountConfigBtn.on("click", () => {
             //默认account_config
             accountConfigItem = {
                 title: account.title,
+                shengcang_h: {
+                    enabled: true, // 默认开启货仓升仓
+                },
+                shengcang_l: {
+                    enabled: true, // 默认开启粮仓升仓
+                },
                 tomFind: {
                     enabled: true,
                     type: "货仓",
@@ -2184,6 +2197,12 @@ ui.account_config_settingsButton.on("click", () => {
                                         let account = account_config[i];
                                         // 恢复默认设置
                                         //默认account_config
+                                        account.shengcang_h = {
+                                            enabled: true, // 默认开启货仓升仓
+                                        };
+                                        account.shengcang_l = {
+                                            enabled: true, // 默认开启粮仓升仓
+                                        };
                                         account.tomFind = {
                                             enabled: true,
                                             type: "货仓",
@@ -2315,11 +2334,18 @@ ui.account_config_settingsButton.on("click", () => {
 
 
 function validateAccountConfig(account_config_List) {
+    // log(account_config_List)
     return account_config_List.map(account => {
 
         //默认account_config
         let accountConfig = {
             title: account.title,
+            shengcang_h: {
+                enabled: true, // 默认开启货仓升仓
+            },
+            shengcang_l: {
+                enabled: true, // 默认开启粮仓升仓
+            },
             tomFind: {
                 enabled: true, // 默认开启汤姆
                 type: "货仓",
@@ -2339,7 +2365,19 @@ function validateAccountConfig(account_config_List) {
             },
         };
 
-        // 如果原账户已有配置，合并并验证
+
+        // 如果原账户已有shengcang_h配置，合并并验证
+        if (account.shengcang_h && typeof account.shengcang_h === 'object') {
+            accountConfig.shengcang_h.enabled = typeof account.shengcang_h.enabled === 'boolean' ? account.shengcang_h.enabled : true;
+        }
+
+        // 如果原账户已有shengcang_l配置，合并并验证
+        if (account.shengcang_l && typeof account.shengcang_l === 'object') {
+            accountConfig.shengcang_l.enabled = typeof account.shengcang_l.enabled === 'boolean' ? account.shengcang_l.enabled : true;
+        }
+
+
+        // 如果原账户已有Tom配置，合并并验证
         if (account.tomFind && typeof account.tomFind === 'object') {
             accountConfig.tomFind.enabled = typeof account.tomFind.enabled === 'boolean' ? account.tomFind.enabled : true;
             accountConfig.tomFind.code = (account.tomFind.code >= 0 && account.tomFind.code <= 1) ? parseInt(account.tomFind.code) : 0;
@@ -2366,7 +2404,7 @@ function validateAccountConfig(account_config_List) {
             accountConfig.honeycomb.name = typeof account.honeycomb.name === 'string' && ["不做", "蜂蜜", "蜂蜡"].includes(account.honeycomb.name) ? account.honeycomb.name : "蜂蜜";
             accountConfig.honeycomb.addFlower = typeof account.honeycomb.addFlower === 'boolean' ? account.honeycomb.addFlower : false;
         }
-
+        // log(accountConfig)
         return accountConfig;
     });
 }
@@ -2380,6 +2418,12 @@ function loadAccountConfig(accountName) {
     let currentAccount = accountConfig.find(account => account.title === accountName) || {
         //默认account_config
         title: accountName,
+        shengcang_h: {
+            enabled: true, // 默认开启货仓升仓
+        },
+        shengcang_l: {
+            enabled: true, // 默认开启粮仓升仓
+        },
         tomFind: {
             enabled: true, // 默认开启汤姆
             type: "货仓",
@@ -2408,6 +2452,8 @@ function loadAccountConfig(accountName) {
     isUpdatingUI = true;
 
     // 更新UI
+    ui.account_config_shengcang_h.checked = currentAccount.shengcang_h.enabled;
+    ui.account_config_shengcang_l.checked = currentAccount.shengcang_l.enabled;
     ui.account_config_tom_switch.checked = currentAccount.tomFind.enabled;
     ui.account_config_tom_item_type.setSelection(currentAccount.tomFind.code);
     ui.account_config_tom_item_name.setText(currentAccount.tomFind.text);
@@ -2458,6 +2504,42 @@ function loadAccountConfig(accountName) {
 
 // 添加自动保存事件监听器
 function addAutoSaveListeners() {
+
+    // 升仓开关事件
+    ui.account_config_shengcang_h.on("check", function (checked) {
+        if (isUpdatingUI) return;
+
+        // 从配置中加载账号配置
+        let accountConfig = configs.get("account_config", []);
+        // 查找当前显示的账号
+        let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
+        if (currentAccount) {
+            // 只修改升仓开关状态
+            currentAccount.shengcang_h.enabled = checked;
+            // log({ title: currentAccount.title, shengcang_h: { enabled: checked } })
+            // 保存修改后的账号配置
+            configs.put("account_config", accountConfig);
+        }
+    });
+
+    // 升仓开关事件
+    ui.account_config_shengcang_l.on("check", function (checked) {
+        if (isUpdatingUI) return;
+
+        // 从配置中加载账号配置
+        let accountConfig = configs.get("account_config", []);
+        // 查找当前显示的账号
+        let currentAccount = accountConfig.find(account => account.title === currentDisplayAccount);
+        if (currentAccount) {
+            // 只修改升仓开关状态
+            currentAccount.shengcang_l.enabled = checked;
+            // log({ title: currentAccount.title, shengcang_l: { enabled: checked } })
+            // 保存修改后的账号配置
+            configs.put("account_config", accountConfig);
+        }
+    });
+
+
 
     // 汤姆开关事件
     ui.account_config_tom_switch.on("check", function (checked) {
@@ -3514,6 +3596,12 @@ function loadSaveAccountListFromConfig(config_save) {
         orderedSaveAccountList.push({
             title: name,
             done: true,
+            shengcang_h: {
+                enabled: true, // 默认开启货仓升仓
+            },
+            shengcang_l: {
+                enabled: true, // 默认开启粮仓升仓
+            },
             tomFind: {
                 enabled: true,
                 type: "货仓",
@@ -4363,6 +4451,9 @@ function validateConfig(config) {
         config.switchAccount = defaultConfig.switchAccount;
     }
 
+    let accountConfig = configs.get("account_config", []);
+    configs.put("account_config", validateAccountConfig(accountConfig));;
+
     // 验证商店价格选项
     if (!config.shopPrice) config.shopPrice = defaultConfig.shopPrice;
     const shopPriceOptions = ["最低", "平价", "最高"];
@@ -5007,7 +5098,7 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
 function stopOtherEngines(stopAll = false) {
     threads.start(() => {
-        log("开始停止" + (stopAll ? "所有" : "其他") + "引擎"+",出现红字报错属于正常现象");
+        log("开始停止" + (stopAll ? "所有" : "其他") + "引擎" + ",出现红字报错属于正常现象");
 
         let maxAttempts = 10; // 防止无限循环
         let attempts = 0;
@@ -5034,7 +5125,7 @@ function stopOtherEngines(stopAll = false) {
                 let engine = enginesToStop[i];
                 try {
                     engine.forceStop();
-                    log(`已停止引擎(ID: ${engine.id})`);
+                    log(`已停止引擎(ID: ${engine.id})，出现红字报错属于正常现象`);
                     stopped = true;
                 } catch (e) {
                     log(`停止引擎失败(ID: ${engine.id}): ${e}`);

@@ -85,6 +85,12 @@ function main_email() {
             let AccountConfig = {
                 "title": "",
                 "done": true,
+                "shengcang_h": {
+                    "enabled": config.shengcang_h.enabled,
+                },
+                "shengcang_l": {
+                    "enabled": config.shengcang_l.enabled,
+                },
                 "tomFind": {
                     "enabled": config.tomFind.enabled,
                     "type": config.tomFind.type,
@@ -107,7 +113,8 @@ function main_email() {
 
             //执行升仓
             if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
-                module.shengcang();
+                log(AccountConfig.shengcang_h.enabled, AccountConfig.shengcang_l.enabled);
+                module.shengcang(AccountConfig.shengcang_h.enabled, AccountConfig.shengcang_l.enabled);
                 module.timer("shengcangTime", config.shengcangTime * 60);
             }
             //执行仓库统计
@@ -196,7 +203,10 @@ function main_email() {
 
                 //升仓
                 if (shengcangForEach) {
-                    module.shengcang(); //执行升仓
+                    accountList_config = configs.get("account_config", null);
+                    account_config = accountList_config.find(item => item.title === Account.title)
+                    log(account_config.shengcang_h.enabled, account_config.shengcang_l.enabled);
+                    module.shengcang(account_config.shengcang_h.enabled, account_config.shengcang_l.enabled); //执行升仓
                 }
                 //仓库统计
                 if (cangkuStatisticsForEach) {
@@ -486,7 +496,7 @@ function main_save() {
 
             //升仓
             if (shengcangForEach) {
-                module.shengcang(); //执行升仓
+                module.shengcang(currentAccount.shengcang_h.enabled, currentAccount.shengcang_l.enabled); //执行升仓
             }
             //仓库统计
             if (cangkuStatisticsForEach) {

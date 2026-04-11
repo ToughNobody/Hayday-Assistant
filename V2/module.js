@@ -2673,64 +2673,81 @@ function tomOperation(account_config) {
 }
 
 function findTom() {
-    for (let i = 0; i < 20; i++) {
-        let sc = captureScreen();
+    try {
+        var tomPosImg = images.fromBase64(Font.img.tomPos);
+        for (let i = 0; i < 20; i++) {
+            let sc = captureScreen();
 
-        let box = findMC(["#cc9759", [32, 0, "#6f371c"],
-            [34, 5, "#c8a250"], [42, 2, "#87b80e"],
-            [40, 12, "#87b50f"], [11, -23, "#cdc921"]])
-        if (box) {
-            tomPos = { x: box.x + 20, y: box.y };
-            log("盒子定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
-            if (tomPos.x < 1280 && tomPos.y < 720) {
+            let box_img = findImage(sc, tomPosImg, {
+                threshold: 0.8,
+            })
+            if (box_img) {
+                tomPos = { x: box_img.x + tomPosImg.getWidth() / 2, y: box_img.y + tomPosImg.getHeight() / 2 };
+                log("照片(盒子)定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
                 return tomPos;
-            } else {
-                return null
             }
-        }
 
-        let baozhi1 = findMC(["#8f4e21", [0, -14, "#904f21"],
-            [9, -39, "#d0cec9"], [-1, -34, "#d60808"],
-            [-15, -8, "#aba79d"], [-12, -24, "#ecdeaf"]], sc);
-        let baozhi2 = findMC(["#74401c", [0, -10, "#382517ff"],
-            [8, -33, "#bebcb8"], [11, -23, "#7e7c75"],
-            [-2, -29, "#b90707"], [-18, -13, "#9f916f"],
-            [-14, -1, "#86837c"]], sc);
-
-        if (baozhi1 || baozhi2) {
-            let baozhi = baozhi1 || baozhi2;
-            tomPos = { x: baozhi.x + 194, y: baozhi.y + 140 };
-            log("报纸定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
-            if (tomPos.x < 1280 && tomPos.y < 720) {
-                return tomPos;
-            } else {
-                return null
+            let box = findMC(["#cc9759", [32, 0, "#6f371c"],
+                [34, 5, "#c8a250"], [42, 2, "#87b80e"],
+                [40, 12, "#87b50f"], [11, -23, "#cdc921"]])
+            if (box) {
+                tomPos = { x: box.x + 20, y: box.y };
+                log("盒子定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
+                if (tomPos.x < 1280 && tomPos.y < 720) {
+                    return tomPos;
+                } else {
+                    return null
+                }
             }
-        }
 
-        let youxiang1 = findMC(["#66605d", [13, -10, "#6f9692"],
-            [13, -23, "#ce1d1d"], [1, -23, "#9ecbd0"], [-12, -27, "#93c0c5"]
-        ], sc);
-        let youxiang2 = findMC(["#5f5a56", [14, -10, "#678783"],
-            [13, -20, "#a91717"], [-10, -28, "#87acad"], [3, -20, "#7fa4a7"]
-        ], sc);
+            let baozhi1 = findMC(["#8f4e21", [0, -14, "#904f21"],
+                [9, -39, "#d0cec9"], [-1, -34, "#d60808"],
+                [-15, -8, "#aba79d"], [-12, -24, "#ecdeaf"]], sc);
+            let baozhi2 = findMC(["#74401c", [0, -10, "#382517ff"],
+                [8, -33, "#bebcb8"], [11, -23, "#7e7c75"],
+                [-2, -29, "#b90707"], [-18, -13, "#9f916f"],
+                [-14, -1, "#86837c"]], sc);
 
-        if (youxiang1 || youxiang2) {
-            let youxiang = youxiang1 || youxiang2;
-            tomPos = { x: youxiang.x + 140, y: youxiang.y + 99 };
-            log("邮箱定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
-            if (tomPos.x < 1280 && tomPos.y < 720) {
-                return tomPos;
-            } else {
-                return null
+            if (baozhi1 || baozhi2) {
+                let baozhi = baozhi1 || baozhi2;
+                tomPos = { x: baozhi.x + 194, y: baozhi.y + 140 };
+                log("报纸定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
+                if (tomPos.x < 1280 && tomPos.y < 720) {
+                    return tomPos;
+                } else {
+                    return null
+                }
             }
-        }
 
-        sleep(500);
+            let youxiang1 = findMC(["#66605d", [13, -10, "#6f9692"],
+                [13, -23, "#ce1d1d"], [1, -23, "#9ecbd0"], [-12, -27, "#93c0c5"]
+            ], sc);
+            let youxiang2 = findMC(["#5f5a56", [14, -10, "#678783"],
+                [13, -20, "#a91717"], [-10, -28, "#87acad"], [3, -20, "#7fa4a7"]
+            ], sc);
+
+            if (youxiang1 || youxiang2) {
+                let youxiang = youxiang1 || youxiang2;
+                tomPos = { x: youxiang.x + 140, y: youxiang.y + 99 };
+                log("邮箱定位汤姆,坐标:" + tomPos.x + "," + tomPos.y)
+                if (tomPos.x < 1280 && tomPos.y < 720) {
+                    return tomPos;
+                } else {
+                    return null
+                }
+            }
+
+            sleep(500);
+        }
+        log("未找到汤姆")
+        showTip("未找到汤姆")
+        return null;
+    } catch (e) {
+        log(e)
+        return null;
+    } finally {
+        tomPosImg.recycle();
     }
-    log("未找到汤姆")
-    showTip("未找到汤姆")
-    return null;
 }
 
 function clickTom() {
@@ -2758,6 +2775,10 @@ function clickTom() {
     }
 }
 
+/**
+ * 汤姆界面
+ * @returns {string} 汤姆界面状态
+ */
 function tomMenu() {
     //汤姆剩余时间不足2小时
     let menu5 = findMC(["#ff6133", [90, 7, "#ff6133"], [-110, -225, "#f3ead7"], [428, -232, "#f4ebde"]])
@@ -4537,6 +4558,14 @@ function find_close(screenshot1, action = null) {
             return "levelup";
         }
 
+        //Tom界面
+        if (tomMenu()) {
+            log("汤姆界面")
+            showTip("汤姆界面")
+            click(200 + ran(), 420 + ran());
+            return "tomMenu";
+        }
+
         //点开好友栏
         let friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
         { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
@@ -5168,13 +5197,16 @@ function switch_account(Account) {
 /**
  * 
  */
-function shengcang() {
+function shengcang(h, l) {
     console.log("当前操作:升仓");
     showTip("当前操作:升仓");
 
     try {
+        let shengcang_h = h !== false;
+        let shengcang_l = l !== false;
+
         //升粮仓
-        if (config.shengcang_l) {
+        if (config.shengcang_l && shengcang_l) {
             sleep(100);
             let isFindShop = findshop(true);
             if (isFindShop) {  //判断是否找到商店
@@ -5215,7 +5247,7 @@ function shengcang() {
         }
 
         //升货仓
-        if (config.shengcang_h) {
+        if (config.shengcang_h && shengcang_h) {
             sleep(100);
             let isFindShop = findshop(true);
             if (isFindShop) {  //判断是否找到商店
