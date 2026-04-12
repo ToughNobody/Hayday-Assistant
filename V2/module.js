@@ -7,6 +7,7 @@ const Font = require("./img_Base64.js");
 const color_lib = require("./color_lib.js");
 const timerMap = new Map();
 
+const startTime = Date.now();
 
 let appExternalDir = context.getExternalFilesDir(null).getAbsolutePath();
 
@@ -3240,7 +3241,7 @@ function openshop() {
                 showTip("打开路边小店");
                 sleep(300);
                 click(findshop_1.x + config.shopOffset.x + ran(), findshop_1.y + config.shopOffset.y + ran());
-                sleep(200)
+                sleep(500)
                 if (inShop()) {
                     log("成功打开商店");
                     return true; // 成功找到并点击
@@ -4201,7 +4202,7 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
 /**
  * 售卖物品,函数内自带coin()
  * @param {*} sellPlan 售卖计划,格式[{title:"物品名称",num:数量}]
- * @param {*} itemColor 物品颜色,格式{物品名称:颜色}
+ * @param {*} itemColor 物品颜色库,格式{物品名称:颜色}
  * @param {*} pos 物品类型，粮仓即作物售卖，默认货仓
  * @param {*} price 售卖价格,0为最低价格,2为最高价格
  * @returns 
@@ -5688,7 +5689,56 @@ function operation(Account) {
 
 }
 
+/**
+ * 账号信息统计
+ * 识别账号等级、金币、钻石
+ * 识别失败时，会尝试5次
+ * 在能识别到商店的页面使用
+ * @returns {Object} 包含账号等级、金币、钻石的对象,example:{ level: '16', coin: '86108', diamond: '37' }
+ */
+function accountInfoStatistics() {
+    log("账号信息统计")
+    try {
+        let accountInfo = {}
+        let levelPos = [39, 25, 92, 70];
+        let coinPos = [918, 20, 1132, 116];
+        for (let i = 0; i < 5; i++) {
+            let img = captureScreen();
+            var img_clip = images.clip(img, 918, 20, 1132 - 918, 116 - 20);
+            if (!accountInfo.等级) {
+                let level = findFont(img, levelPos, "#FFFFFF", 8, Font.FontLibrary_levelNum, 0.8).toString();
+                accountInfo.等级 = level ? level : null;
+                log("账号等级:" + accountInfo.等级);
+                showTip("账号等级:" + accountInfo.等级);
+            }
+            if (!accountInfo.金币 || !accountInfo.钻石) {
+                let ocrResult = gmlkit.ocr(img_clip, "En").text;
+                let ocrResultText = ocrResult.split("\n").map(item => item.replace(/\D+/g, ''));
+                log("ocrResultText:", ocrResultText)
+                if (ocrResultText.length == 2) {
+                    accountInfo.金币 = ocrResultText[0];
+                    accountInfo.钻石 = ocrResultText[1];
+                    log("金币:" + accountInfo.金币 + ", 钻石:" + accountInfo.钻石);
+                    showTip("金币:" + accountInfo.金币 + ", 钻石:" + accountInfo.钻石);
+                } else {
+                    if (i % 2 == 0) huadong_adjust([60, 50], [210, 240]);
+                    else huadong_adjust([60, 50], [330, 210]);
+                }
 
+            }
+            if (accountInfo.等级 && accountInfo.金币 && accountInfo.钻石) {
+                break;
+            }
+        }
+        if (!accountInfo.金币) accountInfo.金币 = "0";
+        if (!accountInfo.钻石) accountInfo.钻石 = "0";
+        return accountInfo;
+    } catch (error) {
+        log(error)
+    } finally {
+        img_clip.recycle();
+    }
+}
 
 /**
  * 仓库统计
@@ -5710,6 +5760,8 @@ function cangkuStatistics(maxPages = 2) {
         find_close();
         let isFindShop = findshop(true);
         if (isFindShop) {  //判断是否找到商店
+            var accountInfo = accountInfoStatistics();
+
             huadong_adjust([60, 50], [330, 310]);
             sleep(300);
             isFindShop = findshop(true);
@@ -5875,6 +5927,13 @@ function cangkuStatistics(maxPages = 2) {
         // 处理结果数据
         const processedResult = {};
 
+        // 处理账号等级
+        processedResult["账号等级"] = accountInfo.等级;
+        // 处理金币
+        processedResult["金币"] = accountInfo.金币;
+        // 处理钻石
+        processedResult["钻石"] = accountInfo.钻石;
+
         // 处理数量值
         if (lcCapacity) processedResult["粮仓容量"] = lcCapacity ? lcCapacity : "0/0";
         if (hcCapacity) processedResult["货仓容量"] = hcCapacity ? hcCapacity : "0/0";
@@ -5890,7 +5949,11 @@ function cangkuStatistics(maxPages = 2) {
                 processedResult[itemName] = parseInt(count);
             }
         });
+
         find_close();
+
+        // 返回处理后的结果
+        return processedResult;
 
     } catch (error) {
         log("仓库统计出错" + error);
@@ -5899,8 +5962,6 @@ function cangkuStatistics(maxPages = 2) {
         find_close();
     }
 
-    // 返回处理后的结果
-    return processedResult;
 };
 
 /**
@@ -6049,7 +6110,27 @@ function convertToTable(data) {
 
             // 检查是否是容量格式（如 "1200/1500"）
             if (typeof value === 'string' && value.includes('/')) {
-                table += `   ${value}   |`;
+                // 对于货仓容量和粮仓容量，在/后添加换行符并设置背景颜色
+                let displayValue = value;
+                let cellContent = value;
+                if (key === "货仓容量" || key === "粮仓容量") {
+                    displayValue = value.replace('/', '/<BR>');
+                    // 计算差值并设置背景颜色
+                    const parts = value.split('/');
+                    const current = parseInt(parts[0]) || 0;
+                    const max = parseInt(parts[1]) || 0;
+                    const diff = max - current;
+                    let bgColor = '';
+                    if (diff > 100) {
+                        bgColor = '#84e69b'; // 绿色
+                    } else if (diff > 25) {
+                        bgColor = '#eada52'; // 橙色
+                    } else {
+                        bgColor = '#e37a83'; // 红色
+                    }
+                    cellContent = `<div style="background-color: ${bgColor}; padding: 2px 8px;">${displayValue}</div>`;
+                }
+                table += `   ${cellContent}   |`;
                 hasNonNumeric = true;
             } else {
                 // 对于数字，添加到总计中
@@ -6059,31 +6140,52 @@ function convertToTable(data) {
             }
         });
 
-        // 如果是数字类型的项目，显示总计；如果是容量格式，则计算前后数字的总和
-        if (hasNonNumeric) {
-            // 处理容量格式，如 "1200/1500"，计算为 "总当前/总最大"
-            let totalCurrent = 0;
-            let totalMax = 0;
-
-            data.forEach(item => {
-                const value = item[key];
-                if (typeof value === 'string' && value.includes('/')) {
-                    const parts = value.split('/');
-                    const current = parseInt(parts[0]) || 0;
-                    const max = parseInt(parts[1]) || 0;
-                    totalCurrent += current;
-                    totalMax += max;
-                }
-            });
-
-            table += ` ${totalCurrent}/${totalMax} |\n`;
+        // 如果是账号等级，不显示总计
+        if (key === "账号等级") {
+            table += " |\n";
         } else {
-            table += ` ${total} |\n`;
+            // 如果是数字类型的项目，显示总计；如果是容量格式，则计算前后数字的总和
+            if (hasNonNumeric) {
+                // 处理容量格式，如 "1200/1500"，计算为 "总当前/总最大"
+                let totalCurrent = 0;
+                let totalMax = 0;
+
+                data.forEach(item => {
+                    const value = item[key];
+                    if (typeof value === 'string' && value.includes('/')) {
+                        const parts = value.split('/');
+                        const current = parseInt(parts[0]) || 0;
+                        const max = parseInt(parts[1]) || 0;
+                        totalCurrent += current;
+                        totalMax += max;
+                    }
+                });
+
+                // 对于货仓容量和粮仓容量的总计，在/后添加换行符
+                let totalDisplay = `${totalCurrent}/${totalMax}`;
+                if (key === "货仓容量" || key === "粮仓容量") {
+                    totalDisplay = totalDisplay.replace('/', '/<BR>');
+                }
+                table += ` **${totalDisplay}** |\n`;
+            } else {
+                table += ` **${total}** |\n`;
+            }
         }
     });
 
-    // 在表格前面添加标题和说明
-    return "### 卡通农场小助手仓库统计\n*数据仅供参考*\n\n" + table;
+    // 计算小助手已运行时间
+    const currentTime = Date.now();
+    const runTime = currentTime - startTime;
+    const hours = Math.floor(runTime / (1000 * 60 * 60));
+    const minutes = Math.floor((runTime % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((runTime % (1000 * 60)) / 1000);
+    
+    // 在表格前面添加标题、说明和运行时间
+    return `### 卡通农场小助手仓库统计
+*数据仅供参考*
+*小助手已运行 ${hours}小时${minutes}分钟${seconds}秒*
+
+` + table;
 }
 
 function setText_inGame(text) {
@@ -6376,6 +6478,7 @@ module.exports = {
     clearFans: clearFans,
 
     // 仓库相关
+    accountInfoStatistics: accountInfoStatistics,
     shengcang: shengcang,
     cangkuStatistics: cangkuStatistics,
 

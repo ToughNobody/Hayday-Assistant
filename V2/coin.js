@@ -32,6 +32,10 @@ let configs = storages.create("config");
 let cangkuItemColor = module.cangkuItemColor;
 let otherItemColor = module.otherItemColor;
 let allItemColor = module.allItemColor;
+const color_lib = require("./color_lib.js");
+//商店物品颜色
+const shopItemColor = color_lib.shopItemColor;
+const shopSellItemColor = color_lib.shopSellItemColor;
 
 //改此处============================
 
@@ -88,7 +92,7 @@ function main() {
         sellPlan = module.sellPlanValidate(sellPlan);
         if (sellPlan) {
             log("商店售卖计划:" + JSON.stringify(sellPlan))
-            module.shop_sell(sellPlan, allItemColor, null, currAccount == 主号 ? 2 : 0)
+            module.shop_sell(sellPlan, shopSellItemColor, null, currAccount == 主号 ? 2 : 0)
         }
         sleep(100)
         module.find_close();
@@ -151,7 +155,7 @@ function main() {
         sellPlan = module.sellPlanValidate(sellPlan);
         if (sellPlan) {
             log("商店售卖计划:" + JSON.stringify(sellPlan))
-            module.shop_sell(sellPlan, allItemColor, null, currAccount == 主号 ? 2 : 0)
+            module.shop_sell(sellPlan, shopSellItemColor, null, currAccount == 主号 ? 2 : 0)
         }
         sleep(100)
         module.find_close();
