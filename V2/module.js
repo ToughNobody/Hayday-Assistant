@@ -6188,6 +6188,92 @@ function convertToTable(data) {
 ` + table;
 }
 
+function convertToText(data) {
+    // 计算小助手已运行时间
+    const currentTime = Date.now();
+    const runTime = currentTime - startTime;
+    const hours = Math.floor(runTime / (1000 * 60 * 60));
+    const minutes = Math.floor((runTime % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((runTime % (1000 * 60)) / 1000);
+    
+    let text = "### 卡通农场小助手仓库统计\n";
+    text += "*数据仅供参考*\n";
+    text += `*小助手已运行 ${hours}小时${minutes}分钟${seconds}秒*\n\n`;
+    
+    // 为每个账号生成文本
+    data.forEach(item => {
+        text += `**${item["账号"]}**\n`;
+        text += "-------------------\n";
+        
+        // 手动处理需要放在同一行的项目
+        const accountLevel = item["账号等级"] ? `账号等级: ${item["账号等级"]}` : "";
+        const line1 = [];
+        const line2 = [];
+        const line3 = [];
+        const line4 = [];
+        const line5 = [];
+        const otherLines = [];
+        
+        Object.keys(item).forEach(key => {
+            if (key !== "账号" && key !== "账号等级" && key !== "粮仓容量" && key !== "货仓容量") {
+                const value = item[key];
+                const entry = `${key}: ${value}`;
+                
+                // 将指定项目放在同一行
+                if (key === "金币" || key === "钻石") {
+                    line1.push(entry);
+                } else if (key === "盒钉" || key === "螺钉" || key === "镶板") {
+                    line2.push(entry);
+                } else if (key === "螺栓" || key === "木板" || key === "胶带") {
+                    line3.push(entry);
+                } else if (key === "土地契约" || key === "木槌" || key === "标桩") {
+                    line4.push(entry);
+                } else if (key === "斧头" || key === "木锯" || key === "炸药" || key === "炸药桶" || key === "铁铲") {
+                    line5.push(entry);
+                } else {
+                    otherLines.push(entry);
+                }
+            }
+        });
+        
+        // 按照指定顺序添加行
+        if (accountLevel) {
+            text += `${accountLevel}\n`;
+        }
+        if (line1.length > 0) {
+            text += `${line1.join(" | ")}\n`;
+        }
+        // 单独显示粮仓容量和货仓容量
+        if (item["粮仓容量"]) {
+            text += `粮仓容量: ${item["粮仓容量"]}\n`;
+        }
+        if (item["货仓容量"]) {
+            text += `货仓容量: ${item["货仓容量"]}\n`;
+        }
+        if (line2.length > 0) {
+            text += `${line2.join(" | ")}\n`;
+        }
+        if (line3.length > 0) {
+            text += `${line3.join(" | ")}\n`;
+        }
+        if (line4.length > 0) {
+            text += `${line4.join(" | ")}\n`;
+        }
+        if (line5.length > 0) {
+            text += `${line5.join(" | ")}\n`;
+        }
+        
+        // 添加其他行
+        if (otherLines.length > 0) {
+            text += `${otherLines.join(" | ")}\n`;
+        }
+        
+        text += "\n";
+    });
+    
+    return text;
+}
+
 function setText_inGame(text) {
     if (currentPackage() == "org.autojs.autoxjs.v7") {
         log("当前在autoxjs,禁用setText")
@@ -6486,6 +6572,7 @@ module.exports = {
     creatContentData: creatContentData,
     rawContentData2: rawContentData2,
     convertToTable: convertToTable,
+    convertToText: convertToText,
     pushTo: pushTo,
 
     // 计时器

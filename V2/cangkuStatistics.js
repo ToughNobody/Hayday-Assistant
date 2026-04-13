@@ -119,7 +119,7 @@ function main_email() {
         });
 
         //输出原始数据
-        log(cangkuStatisticsData);
+        log(module.convertToText(cangkuStatisticsData));
 
         if (cangkuStatisticsData.length > 0) {
             //将仓库统计数据转换为表格数据
