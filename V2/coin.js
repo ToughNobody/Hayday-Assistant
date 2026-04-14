@@ -87,7 +87,9 @@ function main() {
         sleep(500)
         module.huadong();
         sleep(1200);
-        while (!openshop()) { }
+        while (!openshop()) { 
+            module.huadong();
+        }
         let sellPlan = sell
         sellPlan = module.sellPlanValidate(sellPlan);
         if (sellPlan) {
@@ -115,13 +117,14 @@ function main() {
 
         module.huadong()
         sleep(1500)
-        while (!openshop()) { }
+        while (!openshop()) {
+            module.huadong();
+         }
 
         sleep(1000)
         gestures([0, 100, [250, 270]], [0, 100, [430, 270]], [0, 100, [620, 270]], [0, 100, [800, 270]], [0, 100, [990, 270]],
             [0, 100, [250, 470]], [0, 100, [430, 470]], [0, 100, [620, 470]], [0, 100, [800, 470]], [0, 100, [990, 470]]
         )
-        //商店右滑
         sleep(1000)
         if (module.matchColor([{ x: 332, y: 64, color: "#dfb57a" },
         { x: 1119, y: 67, color: "#ed424d" }, { x: 1120, y: 109, color: "#f3c341" },
@@ -130,6 +133,7 @@ function main() {
             toastLog("倒金币完成")
             engines.myEngine().forceStop();
         }
+        //商店右滑
         const [x1, y1] = [960, 390];
         const [x2, y2] = [288, 390];
         swipe(x1 + module.ran(), y1 + module.ran(), x2 + module.ran(), y2 + module.ran(), 1000);
@@ -149,7 +153,9 @@ function main() {
         module.huadong();
         sleep(1500);
 
-        while (!openshop()) { }
+        while (!openshop()) { 
+            module.huadong();
+        }
 
         sellPlan = sell
         sellPlan = module.sellPlanValidate(sellPlan);
@@ -181,7 +187,9 @@ function main() {
         sleep(500)
         module.huadong()
         sleep(1500)
-        while (!openshop()) { }
+        while (!openshop()) { 
+            module.huadong();
+        }
 
         sleep(1000)
         gestures([0, 100, [250, 270]], [0, 100, [430, 270]], [0, 100, [620, 270]], [0, 100, [800, 270]], [0, 100, [990, 270]],

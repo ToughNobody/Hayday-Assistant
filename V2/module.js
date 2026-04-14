@@ -1813,7 +1813,7 @@ function huadong_pond() {
     sleep(200);
 
     //右滑
-    swipe(920 + ran(), 100 + ran(), 250 + ran(), 350, 100);
+    swipe(920 + ran(), 100 + ran(), 250 + ran(), 350, 450);
     sleep(300)
 
     //缩放
@@ -1823,7 +1823,7 @@ function huadong_pond() {
     sleep(200);
 
     //右滑
-    swipe(920 + ran(), 100 + ran(), 250 + ran(), 350, 100);
+    swipe(920 + ran(), 100 + ran(), 250 + ran(), 350, 450);
     sleep(300)
 
 }
@@ -3215,7 +3215,7 @@ function findshop(silence = false, maxTry = 5) {
         }
         if (center) break
         else {
-            find_close();
+            find_close(null,["except_homeBtn"]);
             if (i < maxTry - 1) sleep(500);
         }
     }
@@ -4208,6 +4208,7 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
  * @returns 
  */
 function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
+    pos = pos || "货仓";
     sleep(500);
     if (inShop_sell()) {
         close();//点击叉号
@@ -4234,8 +4235,8 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             }
 
             //判断是否在货仓/粮仓界面
-            sleep(100)
-            if (matchColor(allItemColor["商店界面"])) {
+            sleep(500)
+            if (matchColor(allItemColor["商店粮仓界面"])) {
                 if (pos == "货仓") {
                     click(205 + ran(), 350 + ran());//点击售卖货仓按钮
                     sleep(100);
@@ -4643,9 +4644,7 @@ function find_close(screenshot1, action = null) {
 
         //进入加载界面
         if (!action || !action.includes("except_jiazai")) {
-            let jiazai = matchColor([{ x: 438, y: 565, color: "#fcffa2" },
-            { x: 409, y: 550, color: "#85cbec" }, { x: 418, y: 585, color: "#c4e3e8" },
-            { x: 867, y: 546, color: "#7ec8ed" }, { x: 861, y: 587, color: "#c7e3e8" }], sc);
+            let jiazai = matchColor(allItemColor["加载界面"], sc);
             if (jiazai) {
                 checkmenu();
                 return true;
@@ -5026,7 +5025,7 @@ function switch_account(Account) {
             let huanhao3;
             if (configs.get("switchAccountX3", 0) != 0 || configs.get("switchAccountY3", 0) != 0) {
                 // 如果配置了坐标，则直接点击
-                sleep(300);
+                sleep(500);
                 huanhao3 = { x: configs.get("switchAccountX3", 0), y: configs.get("switchAccountY3", 0) };
                 click(huanhao3.x + ran(), huanhao3.y + ran());
                 log("点击切换账号3按钮(配置坐标)" + huanhao3.x + "," + huanhao3.y);
@@ -5181,7 +5180,18 @@ function switch_account(Account) {
 
         }
 
-        sleep(2000);
+        log("检测加载界面");
+        for (let i = 0; i < 5; i++) {
+            if (click_waitFor(null, allItemColor["加载界面"], null, null, 16, 200)) {
+                break;
+            }
+            if (i >= 4) {
+                log("未检测到加载界面");
+                showTip("未检测到加载界面");
+                switch_account(Account);
+                return num; // 切换账号后返回
+            }
+        }
         checkmenu();
         return num;
     } catch (e) {
@@ -5216,9 +5226,9 @@ function shengcang(h, l) {
                 isFindShop = findshop(true);
                 console.log("点击粮仓");
                 showTip("点击粮仓");
-                click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
+                click_cangku("lc", isFindShop); //点击粮仓
                 sleep(500);
-                if (click_waitFor(null, null, ["#ffffff", [156, -24, "#dfb57a"], [910, -20, "#ec404b"]], null, 0.8, 200)) {  //判断是否进入粮仓 左侧搜索按钮,棕色边框,右上叉号
+                if (click_waitFor(null, null, allItemColor["粮仓界面"], null, 0.8, 200)) {  //判断是否进入粮仓 左侧搜索按钮,棕色边框,右上叉号
                     click(700 + ran(), 610 + ran());
                     sleep(500);
                     if (matchColor([{ x: 904, y: 407, color: "#69b750" }])) {  //判断是否可以升级
@@ -5254,9 +5264,9 @@ function shengcang(h, l) {
             if (isFindShop) {  //判断是否找到商店
                 console.log("点击货仓");
                 showTip("点击货仓");
-                click(isFindShop.x + config.huocangOffset.x + ran(), isFindShop.y + config.huocangOffset.y + ran()); //点击货仓
+                click_cangku("hc", isFindShop); //点击货仓
                 sleep(500);
-                if (click_waitFor(null, null, ["#ffffff", [156, -24, "#dfb57a"], [910, -20, "#ec404b"]], null, 0.8, 200)) {  //判断是否进入货仓 左侧搜索按钮,棕色边框,右上叉号
+                if (click_waitFor(null, null, allItemColor["货仓界面"], null, 0.8, 200)) {  //判断是否进入货仓 左侧搜索按钮,棕色边框,右上叉号
                     click(700 + ran(), 625 + ran());
                     sleep(500);
                     if (matchColor([{ x: 904, y: 407, color: "#69b850" }])) {  //判断是否可以升级
@@ -5689,6 +5699,31 @@ function operation(Account) {
 
 }
 
+function click_cangku(type, shopPos) {
+    let offset = type === "lc" ? config.liangcangOffset : config.huocangOffset;
+    let targetX = shopPos.x + offset.x;
+    let targetY = shopPos.y + offset.y;
+
+    // 查找上下左右各10单位范围内的颜色点
+    let foundPoint = images.findColorInRegion(captureScreen(), "#ac0000", targetX - 10, targetY - 10, 20, 20, 16);
+    if (!foundPoint) {
+        foundPoint = images.findColorInRegion(captureScreen(), "#770000", targetX - 10, targetY - 10, 20, 20, 16);
+    }
+    if (!foundPoint) {
+        foundPoint = images.findColorInRegion(captureScreen(), "#82442c", targetX - 10, targetY - 10, 20, 20, 16);
+    }
+    if (!foundPoint) {
+        foundPoint = images.findColorInRegion(captureScreen(), "#343433", targetX - 10, targetY - 10, 20, 20, 16);
+    }
+    if (foundPoint) {
+        click(foundPoint.x + 10, foundPoint.y + 10);
+        return true;
+    } else {
+        log("未找到颜色#ac0000的点");
+        return false;
+    }
+}
+
 /**
  * 账号信息统计
  * 识别账号等级、金币、钻石
@@ -5741,6 +5776,51 @@ function accountInfoStatistics() {
 }
 
 /**
+ * 识别仓库容量和货仓信息
+ * @returns {Array} 包含仓库容量、货仓A、货仓B、货仓C的数组
+ */
+function recognize_ckInfo() {
+    let result = [];
+    let Capacity = "0/0";
+    let A = "0/0";
+    let B = "0/0";
+    let C = "0/0";
+    Capacity = findFont(captureScreen(), [643, 86, 883 - 643, 148 - 86], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
+    if (!Capacity) {
+        sleep(500);
+        Capacity = findFont(captureScreen(), [643, 86, 883 - 643, 148 - 86], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
+    }
+    log("仓库容量：" + Capacity);
+
+    result.push(Capacity);
+
+    //A 207,325,392,393
+    //B 393,323,581,389
+    //C 581,323,770,390
+    const regions = [
+        { name: 'A', x: 207, y: 325, width: 392 - 207, height: 425 - 325 },
+        { name: 'B', x: 393, y: 323, width: 581 - 393, height: 425 - 323 },
+        { name: 'C', x: 581, y: 323, width: 770 - 581, height: 425 - 323 }
+    ];
+
+    for (let region of regions) {
+        var value = findFont(captureScreen(), [region.x, region.y, region.width, region.height], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.7).toString();
+        let parts = value.split('/');
+        if (parts.length === 2 && parts[0].trim() === '') {
+            // 第一个元素为空，使用#ff6133重新检测并替换
+            let secondDetection = findFont(captureScreen(), [region.x, region.y, region.width, region.height], "#ff6133", 8, Font.FontLibrary_CKCapacityNum, 0.7).toString();
+            value = secondDetection + '/' + parts[1];
+        }
+        result.push(value);
+    }
+    log(value);
+    showTip(value);
+
+    return result;
+
+}
+
+/**
  * 仓库统计
  * 偏移
  * @param {number} maxPages 最大翻页次数
@@ -5767,10 +5847,10 @@ function cangkuStatistics(maxPages = 2) {
             isFindShop = findshop(true);
             console.log("点击粮仓");
             showTip("点击粮仓");
-            click(isFindShop.x + config.liangcangOffset.x + ran(), isFindShop.y + config.liangcangOffset.y + ran()); //点击粮仓
+            click_cangku("lc", isFindShop); //点击粮仓
             sleep(500);
 
-            if (click_waitFor(null, null, ["#ffffff", [156, -24, "#dfb57a"], [910, -20, "#ec404b"]], null, 0.8, 200)) {  //判断是否进入粮仓  左侧搜索按钮,棕色边框,右上叉号
+            if (click_waitFor(null, null, allItemColor["粮仓界面"], null, 0.8, 200)) {  //判断是否进入粮仓  左侧搜索按钮,棕色边框,右上叉号
                 lcCapacity = findFont(captureScreen(), [643, 86, 883 - 643, 148 - 86], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
                 if (!lcCapacity) {
                     sleep(500);
@@ -5802,11 +5882,11 @@ function cangkuStatistics(maxPages = 2) {
 
         console.log("点击货仓");
         showTip("点击货仓");
-        click(isFindShop.x + config.huocangOffset.x + ran(), isFindShop.y + config.huocangOffset.y + ran()); //点击货仓
+        click_cangku("hc", isFindShop); //点击货仓
         sleep(500);
 
         //判断是否进入货仓
-        if (!click_waitFor(null, null, ["#ffffff", [156, -24, "#dfb57a"], [910, -20, "#ec404b"]], null, 0.8, 200)) {  //未进入货仓
+        if (!click_waitFor(null, null, allItemColor["货仓界面"], null, 0.8, 200)) {  //未进入货仓
             console.log("未进入货仓");
             showTip("未进入货仓");
             find_close();
@@ -6179,7 +6259,7 @@ function convertToTable(data) {
     const hours = Math.floor(runTime / (1000 * 60 * 60));
     const minutes = Math.floor((runTime % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((runTime % (1000 * 60)) / 1000);
-    
+
     // 在表格前面添加标题、说明和运行时间
     return `### 卡通农场小助手仓库统计
 *数据仅供参考*
@@ -6195,16 +6275,16 @@ function convertToText(data) {
     const hours = Math.floor(runTime / (1000 * 60 * 60));
     const minutes = Math.floor((runTime % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((runTime % (1000 * 60)) / 1000);
-    
+
     let text = "### 卡通农场小助手仓库统计\n";
     text += "*数据仅供参考*\n";
     text += `*小助手已运行 ${hours}小时${minutes}分钟${seconds}秒*\n\n`;
-    
+
     // 为每个账号生成文本
     data.forEach(item => {
         text += `**${item["账号"]}**\n`;
         text += "-------------------\n";
-        
+
         // 手动处理需要放在同一行的项目
         const accountLevel = item["账号等级"] ? `账号等级: ${item["账号等级"]}` : "";
         const line1 = [];
@@ -6213,12 +6293,12 @@ function convertToText(data) {
         const line4 = [];
         const line5 = [];
         const otherLines = [];
-        
+
         Object.keys(item).forEach(key => {
             if (key !== "账号" && key !== "账号等级" && key !== "粮仓容量" && key !== "货仓容量") {
                 const value = item[key];
                 const entry = `${key}: ${value}`;
-                
+
                 // 将指定项目放在同一行
                 if (key === "金币" || key === "钻石") {
                     line1.push(entry);
@@ -6235,7 +6315,7 @@ function convertToText(data) {
                 }
             }
         });
-        
+
         // 按照指定顺序添加行
         if (accountLevel) {
             text += `${accountLevel}\n`;
@@ -6262,15 +6342,15 @@ function convertToText(data) {
         if (line5.length > 0) {
             text += `${line5.join(" | ")}\n`;
         }
-        
+
         // 添加其他行
         if (otherLines.length > 0) {
             text += `${otherLines.join(" | ")}\n`;
         }
-        
+
         text += "\n";
     });
-    
+
     return text;
 }
 
@@ -6508,6 +6588,7 @@ module.exports = {
     find_youxiang: find_youxiang,
     find_honeyTree: find_honeyTree,
     machine_produce: machine_produce,
+    click_cangku: click_cangku,
 
     //鱼塘相关
     pond_operation: pond_operation,
@@ -6567,6 +6648,7 @@ module.exports = {
     accountInfoStatistics: accountInfoStatistics,
     shengcang: shengcang,
     cangkuStatistics: cangkuStatistics,
+    recognize_ckInfo: recognize_ckInfo,
 
     //推送相关
     creatContentData: creatContentData,

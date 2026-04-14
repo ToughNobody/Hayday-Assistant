@@ -1258,7 +1258,7 @@ ui.layout(
                                         {/* 主功能选择 */}
                                         <horizontal gravity="center_vertical">
                                             <text text="选择功能：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|仅鱼塘|物品售卖|倒金币"
+                                            <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|仅鱼塘|物品售卖|倒金币|升仓"
                                                 w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                             <img id="helpIcon_functionSelect" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
                                         </horizontal>
@@ -1432,6 +1432,26 @@ ui.layout(
                                             <horizontal gravity="center_vertical">
                                                 <text text="照片文件夹路径:" textSize="14" w="auto" marginRight="10" />
                                                 <input id="coin_picDirPath" marginRight="8" w="*" h="auto" textSize="14" bg="#FFFFFF" />
+                                            </horizontal>
+                                        </vertical>
+
+                                        {/* 升仓 - 仅在升仓时显示 */}
+                                        <vertical id="storageUpgradeContainer" gravity="center_vertical" visibility="gone">
+                                            <horizontal gravity="center_vertical">
+                                                <text text="升仓选项" textSize="14" w="100" marginRight="8" />
+                                                <radiogroup id="storageUpgradeMethod" orientation="horizontal">
+                                                    <radio id="storageUpgrade_l" checked="false" text="粮仓" />
+                                                    <frame w="2" />
+                                                    <radio id="storageUpgrade_h" checked="true" text="货仓" />
+                                                </radiogroup>
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical">
+                                                <text text="好友界面" textSize="14" w="100" marginRight="8" />
+                                                <radiogroup id="friendInterface" orientation="horizontal">
+                                                    <radio id="friendInterface_community" checked="false" text="社区" />
+                                                    <frame w="2" />
+                                                    <radio id="friendInterface_friendbook" checked="true" text="好友簿" />
+                                                </radiogroup>
                                             </horizontal>
                                         </vertical>
 
@@ -1633,14 +1653,22 @@ ui.layout(
                                             <text text="推送方式" textSize="14" w="60" marginRight="8" />
                                             <button id="pushTestBtn" textSize="14" w="80" h="40" text="推送测试" style="Widget.AppCompat.Button.Borderless.Colored" />
                                             <button id="pushSettingBtn" textSize="14" w="80" h="40" text="推送设置" style="Widget.AppCompat.Button.Borderless.Colored" />
-                                            <spinner id="serverPlatform" entries="Pushplus|Server酱|WxPusher"
+                                            <spinner id="serverPlatform" entries="Pushplus|Server酱|WxPusher|Telegram"
                                                 w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                         </horizontal>
-                                        <horizontal gravity="center_vertical" padding="8">
+                                        <horizontal gravity="center_vertical" >
                                             <text text="token" textSize="14" w="60" marginRight="12" />
                                             <img id="eyeIcon" w="20dp" h="20dp" src="@drawable/ic_visibility_off_black_48dp" />
                                             <input id="tokenInput" password="true" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" marginRight="8" gravity="center_vertical" visibility="visible" />
                                             <input id="tokenInputPlain" password="false" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" visibility="gone" />
+                                        </horizontal>
+                                        <horizontal id="telegramChatRow" gravity="center_vertical" visibility="gone">
+                                            <text text="chat_id" textSize="14" w="60" marginRight="12" />
+                                            <input id="telegramChatIdInput" hint="Telegram聊天ID" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" />
+                                        </horizontal>
+                                        <horizontal id="telegramCommandRow" gravity="center_vertical" visibility="gone">
+                                            <button id="telegramCmdStartBtn" textSize="14" w="auto" text="启动监听" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                            <button id="telegramCmdStopBtn" textSize="14" w="auto" text="停止监听" style="Widget.AppCompat.Button.Borderless.Colored" />
                                         </horizontal>
                                     </vertical>
                                 </card>
@@ -3282,6 +3310,82 @@ ui.pushTestBtn.setOnClickListener(() => {
 });
 
 
+function isTelegramListenerRunning() {
+    try {
+        let engineArray = engines.all();
+        for (let i = 0; i < engineArray.length; i++) {
+            let engine = engineArray[i];
+            try {
+                let source = engine.getSource();
+                let sourcePath = source ? String(source.toString()) : "";
+                if (sourcePath.indexOf("tg_command_listener.js") > -1) {
+                    return true;
+                }
+            } catch (e) { }
+        }
+    } catch (e) {
+        log(e);
+    }
+    return false;
+}
+
+function stopTelegramListenerEngines() {
+    let stoppedCount = 0;
+    try {
+        let engineArray = engines.all();
+        for (let i = 0; i < engineArray.length; i++) {
+            let engine = engineArray[i];
+            try {
+                let source = engine.getSource();
+                let sourcePath = source ? String(source.toString()) : "";
+                if (sourcePath.indexOf("tg_command_listener.js") > -1) {
+                    engine.forceStop();
+                    stoppedCount++;
+                }
+            } catch (e) {
+                log("停止Telegram监听失败: " + e);
+            }
+        }
+    } catch (e) {
+        log(e);
+    }
+    return stoppedCount;
+}
+
+ui.telegramCmdStartBtn.setOnClickListener(() => {
+    if (isTelegramListenerRunning()) {
+        toast("Telegram指令监听已在运行");
+        return;
+    }
+    let chatId = configs.get("telegramChatId", "");
+    if (!chatId) {
+        dialogs.build({
+            title: "Telegram指令监听",
+            content: "请先填写Telegram chat_id，再启动监听。",
+            positive: "知道了"
+        }).show();
+        return;
+    }
+    threads.start(() => {
+        try {
+            let newEngine = engines.execScriptFile("./tg_command_listener.js");
+            log("启动Telegram指令监听引擎，ID: " + newEngine.id);
+            toast("Telegram指令监听已启动");
+        } catch (e) {
+            log("启动Telegram指令监听失败: " + e);
+            toast("启动Telegram监听失败");
+        }
+    });
+});
+
+ui.telegramCmdStopBtn.setOnClickListener(() => {
+    threads.start(() => {
+        let stoppedCount = stopTelegramListenerEngines();
+        toast(stoppedCount > 0 ? "Telegram指令监听已停止" : "未发现运行中的Telegram监听");
+    });
+});
+
+
 // 更新按钮颜色函数
 function updateButtonColors() {
     // 更新菜单图标颜色
@@ -4020,6 +4124,7 @@ function getConfig() {
             y: configs.get("huocangOffsetY")
         },
         token: configs.get("token"),
+        telegramChatId: configs.get("telegramChatId"),
         serverPlatform: configs.get("serverPlatform"),
         harvestMode: configs.get("harvestMode"),
         tomFind: {
@@ -4082,6 +4187,8 @@ function getConfig() {
         coin_item: configs.get("coin_item"),
         coin_picDirPath: configs.get("coin_picDirPath"),
         account_config: configs.get("account_config"),
+        storageUpgradeMethod: configs.get("storageUpgradeMethod"),
+        friendInterface: configs.get("friendInterface"),
     };
     return storedConfig;
 }
@@ -4149,6 +4256,7 @@ function saveConfig(con) {
         configs.put("huocangOffsetY", con.huocangOffset.y);
 
         configs.put("token", con.token);
+        configs.put("telegramChatId", con.telegramChatId);
         configs.put("serverPlatform", con.serverPlatform);
         configs.put("harvestMode", con.harvestMode);
 
@@ -4197,6 +4305,10 @@ function saveConfig(con) {
         configs.put("coin_subAccount_picName", con.coin_subAccount_picName);
         configs.put("coin_item", con.coin_item);
         configs.put("coin_picDirPath", con.coin_picDirPath);
+
+        //升仓
+        configs.put("storageUpgradeMethod", con.storageUpgradeMethod);
+        configs.put("friendInterface", con.friendInterface);
 
         // 存储其他配置项
         configs.put("restartWithShell", con.restartWithShell);
@@ -4310,6 +4422,11 @@ function validateConfig(config) {
 
     if (config.coinCollectionMethod != "一键收取" && config.coinCollectionMethod != "逐个点击") config.coinCollectionMethod = defaultConfig.coinCollectionMethod;
 
+    // 验证升仓方式
+    if (config.storageUpgradeMethod != "粮仓" && config.storageUpgradeMethod != "货仓") config.storageUpgradeMethod = defaultConfig.storageUpgradeMethod;
+    // 验证好友界面
+    if (config.friendInterface != "社区" && config.friendInterface != "好友簿") config.friendInterface = defaultConfig.friendInterface;
+
     // 验证syncHarvest
     if (config.syncHarvest == undefined || typeof config.syncHarvest !== "boolean") {
         config.syncHarvest = defaultConfig.syncHarvest;
@@ -4322,7 +4439,7 @@ function validateConfig(config) {
 
     // 验证功能选择
     if (!config.selectedFunction) config.selectedFunction = defaultConfig.selectedFunction;
-    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆", "仅鱼塘", "物品售卖", "倒金币"];
+    const functionOptions = ["刷地", "种树", "创新号", "仅汤姆", "仅鱼塘", "物品售卖", "倒金币", "升仓"];
     if (config.selectedFunction.code < 0 || config.selectedFunction.code >= functionOptions.length) {
         config.selectedFunction.code = defaultConfig.selectedFunction.code;
     }
@@ -4685,6 +4802,25 @@ function validateConfig(config) {
     if (!config.photoPath || (config.photoPath && config.photoPath.length == 0)) config.photoPath = "./res/pictures.1280_720"
     if (!config.accountImgPath || (config.accountImgPath && config.accountImgPath.length == 0)) config.accountImgPath = accountImgDir
 
+    configs.put("shengcang_h", config.shengcang_h);
+    configs.put("shengcang_l", config.shengcang_l);
+
+    // 存储汤姆查找配置
+    configs.put("Tom_enabled", config.tomFind.enabled);
+    configs.put("Tom_itemType", config.tomFind.type);
+    configs.put("Tom_code", config.tomFind.code);
+    configs.put("Tom_itemName", config.tomFind.text);
+
+    // 存储鱼塘配置
+    configs.put("pond_enabled", config.pond.enabled);
+    configs.put("pond_itemName", config.pond.name);
+    configs.put("pond_ponds", config.pond.ponds);
+
+    // 存储蜂蜜comb配置
+    configs.put("honeycomb_enabled", config.honeycomb.enabled);
+    configs.put("honeycomb_name", config.honeycomb.name);
+    configs.put("honeycomb_addFlower", config.honeycomb.addFlower);
+
     return config;
 }
 
@@ -4720,6 +4856,8 @@ function getDefaultConfig() {
         pauseTime: 5, // 默认顶号延迟为5分钟
         landFindMethod: "商店", // 默认使用商店查找
         coinCollectionMethod: "一键收取", // 默认使用一键收取金币
+        storageUpgradeMethod: "货仓", // 默认升仓货仓
+        friendInterface: "好友簿", // 默认好友界面好友簿
         syncHarvest: false, // 默认不开启同步
         landOffset: {
             x: 60,
@@ -4923,6 +5061,19 @@ function loadConfigToUI(loadConfigFromFile = false) {
         ui.coinCollect_single.setChecked(true);
     }
 
+    // 设置升仓选项
+    if (config.storageUpgradeMethod == "粮仓") {
+        ui.storageUpgrade_l.setChecked(true);
+    } else {
+        ui.storageUpgrade_h.setChecked(true);
+    }
+    // 设置好友界面
+    if (config.friendInterface == "社区") {
+        ui.friendInterface_community.setChecked(true);
+    } else {
+        ui.friendInterface_friendbook.setChecked(true);
+    }
+
     // 设置同步收割
     ui.syncHarvest.setChecked(config.syncHarvest);
 
@@ -4984,6 +5135,10 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 设置推送方式
     ui.serverPlatform.setSelection(config.serverPlatform.code);
+
+    //设置telegram chat id
+    const telegram_chat_id = config.telegramChatId || "";
+    ui.telegramChatIdInput.setText(telegram_chat_id);
 
     // 设置收割模式
     ui.harvestMode.setSelection(config.harvestMode);
@@ -5503,6 +5658,17 @@ function startButton() {
             });
             break;
 
+        case 7: //升仓
+            stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./storageUpgrade.js");
+                log("启动升仓引擎，ID: " + newEngine.id);
+
+            });
+            break;
+
         default:
             toast("未知功能", "long");
     }
@@ -5609,6 +5775,16 @@ function winStartButton() {
             });
             break;
 
+        case 7: //升仓
+            stopOtherEngines();
+            threads.start(() => {
+                launch("com.supercell.hayday");
+                sleep(100);
+                let newEngine = engines.execScriptFile("./storageUpgrade.js");
+                log("启动升仓引擎，ID: " + newEngine.id);
+            });
+            break;
+
         default:
             toast("未知功能", "long");
     }
@@ -5687,6 +5863,24 @@ function initUI() {
         configs.put("coinCollectionMethod", selectedText);
     });
 
+    // 绑定升仓方式单选框事件
+    ui.storageUpgradeMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
+        // 获取被选中的单选框
+        let selectedRadioButton = radioGroup.findViewById(isCheckedId);
+        // 获取被选中的单选框的文字内容
+        let selectedText = selectedRadioButton.getText();
+        configs.put("storageUpgradeMethod", selectedText);
+    });
+
+    // 绑定好友界面单选框事件
+    ui.friendInterface.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
+        // 获取被选中的单选框
+        let selectedRadioButton = radioGroup.findViewById(isCheckedId);
+        // 获取被选中的单选框的文字内容
+        let selectedText = selectedRadioButton.getText();
+        configs.put("friendInterface", selectedText);
+    });
+
     // 绑定账号识别方式单选框事件
     ui.findAccountMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
         // 获取被选中的单选框
@@ -5739,7 +5933,8 @@ function initUI() {
                     "pondItemContainer",
                     "honeyInfoContainer",
                     "sell_itemSoldContainer",
-                    "coinContainer"
+                    "coinContainer",
+                    "storageUpgradeContainer"
                 ];
 
                 // 遍历所有元素，显示在 visibleElements 中的，隐藏不在其中的
@@ -5790,6 +5985,9 @@ function initUI() {
             } else if (selectedFunction === "倒金币") {
                 // 显示倒金币相关控件
                 setUIVisibility(["coinContainer"]);
+            } else if (selectedFunction === "升仓") {
+                // 显示升仓相关控件
+                setUIVisibility(["storageUpgradeContainer"]);
             }
 
 
@@ -6459,6 +6657,15 @@ function initUI() {
         afterTextChanged: function (s) { }
     }));
 
+    // 为telegram chat id输入框添加变化监听
+    ui.telegramChatIdInput.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            configs.put("telegramChatId", s.toString().trim());
+        },
+        afterTextChanged: function (s) { }
+    }));
+
     // 为itemName输入框添加变化监听
     ui.Tom_itemName.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
@@ -6731,6 +6938,13 @@ function initUI() {
             const item = parent.getItemAtPosition(position).toString();
             // 保存选择的推送方式到配置
             configs.put("serverPlatform", { "text": item, "code": position });
+            if (item === "Telegram") {
+                ui.telegramChatRow.attr("visibility", "visible");
+                ui.telegramCommandRow.attr("visibility", "visible");
+            } else {
+                ui.telegramChatRow.attr("visibility", "gone");
+                ui.telegramCommandRow.attr("visibility", "gone");
+            }
         },
         onNothingSelected: function (parent) { }
     }));
