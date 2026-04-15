@@ -614,11 +614,11 @@ function checkRoot() {
                     console.log("✅ Root检测(Shell方式): 已Root");
                     return true;
                 } else {
-                    console.log("❌ Root检测(Shell方式): 未Root");
+                    console.log("Root检测(Shell方式): 未Root");
                     return false;
                 }
             } catch (e) {
-                console.log("⚠️ Root检测(Shell方式)异常: " + e);
+                console.log("Root检测(Shell方式)异常: " + e);
                 return false;
             }
         }
@@ -4568,8 +4568,55 @@ function validateConfig(config) {
         config.switchAccount = defaultConfig.switchAccount;
     }
 
+    // 验证账号配置，确保 accountList 中的所有账号都有对应的配置
     let accountConfig = configs.get("account_config", []);
-    configs.put("account_config", validateAccountConfig(accountConfig));;
+    
+    // 确保 accountList 中的每个账号都有配置
+    if (config.accountList && Array.isArray(config.accountList)) {
+        let updatedAccountConfig = accountConfig.slice(); // 复制现有配置
+        
+        config.accountList.forEach(account => {
+            // 查找该账号对应的配置
+            let existingAccountConfig = updatedAccountConfig.find(item => item.title === account.title);
+            if (!existingAccountConfig) {
+                // 如果没有配置，创建默认配置
+                //默认account_config
+                updatedAccountConfig.push({
+                    title: account.title,
+                    shengcang_h: {
+                        enabled: true,
+                    },
+                    shengcang_l: {
+                        enabled: true,
+                    },
+                    tomFind: {
+                        enabled: true,
+                        type: "货仓",
+                        code: 0,
+                        text: ""
+                    },
+                    pond: {
+                        enabled: true,
+                        name: "鱼片",
+                        code: 0,
+                        ponds: []
+                    },
+                    honeycomb: {
+                        enabled: true,
+                        name: "蜂蜜",
+                        addFlower: false
+                    },
+                });
+            }
+        });
+        
+        accountConfig = updatedAccountConfig;
+    }
+    
+    config.account_config = validateAccountConfig(accountConfig);
+    configs.put("account_config", config.account_config);
+    // log(config.account_config);
+    // log("==================");
 
     // 验证商店价格选项
     if (!config.shopPrice) config.shopPrice = defaultConfig.shopPrice;
@@ -4795,31 +4842,13 @@ function validateConfig(config) {
     if (!config.coin_picDirPath || (config.coin_picDirPath && config.coin_picDirPath.length == 0)) config.coin_picDirPath = defaultConfig.coin_picDirPath;
 
 
-    if (!Array.isArray(config.account_config)) config.account_config = [];
+
 
 
     // 其他验证...
     if (!config.photoPath || (config.photoPath && config.photoPath.length == 0)) config.photoPath = "./res/pictures.1280_720"
     if (!config.accountImgPath || (config.accountImgPath && config.accountImgPath.length == 0)) config.accountImgPath = accountImgDir
 
-    configs.put("shengcang_h", config.shengcang_h);
-    configs.put("shengcang_l", config.shengcang_l);
-
-    // 存储汤姆查找配置
-    configs.put("Tom_enabled", config.tomFind.enabled);
-    configs.put("Tom_itemType", config.tomFind.type);
-    configs.put("Tom_code", config.tomFind.code);
-    configs.put("Tom_itemName", config.tomFind.text);
-
-    // 存储鱼塘配置
-    configs.put("pond_enabled", config.pond.enabled);
-    configs.put("pond_itemName", config.pond.name);
-    configs.put("pond_ponds", config.pond.ponds);
-
-    // 存储蜂蜜comb配置
-    configs.put("honeycomb_enabled", config.honeycomb.enabled);
-    configs.put("honeycomb_name", config.honeycomb.name);
-    configs.put("honeycomb_addFlower", config.honeycomb.addFlower);
 
     return config;
 }
@@ -5270,6 +5299,11 @@ function stopOtherEngines(stopAll = false) {
                 let engine = engineArray[i];
                 // 如果当前引擎是主引擎，则跳过
                 if (!stopAll && engine === engine0) {
+                    continue;
+                }
+                let source = engine.getSource();
+                let sourcePath = source ? String(source.toString()) : "";
+                if (sourcePath.indexOf("tg_command_listener.js") > -1) {
                     continue;
                 }
                 enginesToStop.push(engine);

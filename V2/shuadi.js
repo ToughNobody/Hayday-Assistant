@@ -113,8 +113,10 @@ function main_email() {
 
             //执行升仓
             if ((config.shengcang_h || config.shengcang_l) && config.shengcangTime >= 0 && !module.getTimerState("shengcangTime")) {
-                log(AccountConfig.shengcang_h.enabled, AccountConfig.shengcang_l.enabled);
-                module.shengcang(AccountConfig.shengcang_h.enabled, AccountConfig.shengcang_l.enabled);
+                let shengcang_h = !!AccountConfig.shengcang_h.enabled;
+                let shengcang_l = !!AccountConfig.shengcang_l.enabled;
+                log("升仓状态:" + shengcang_h + " " + shengcang_l);
+                module.shengcang(shengcang_h, shengcang_l);
                 module.timer("shengcangTime", config.shengcangTime * 60);
             }
             //执行仓库统计
@@ -205,8 +207,13 @@ function main_email() {
                 if (shengcangForEach) {
                     accountList_config = configs.get("account_config", null);
                     account_config = accountList_config.find(item => item.title === Account.title)
-                    log(account_config.shengcang_h.enabled, account_config.shengcang_l.enabled);
-                    module.shengcang(account_config.shengcang_h.enabled, account_config.shengcang_l.enabled); //执行升仓
+                    log(accountList_config)
+                    log(account_config);
+                    log(Account.title)
+                    let shengcang_h = !!account_config?.shengcang_h.enabled;
+                    let shengcang_l = !!account_config?.shengcang_l.enabled;
+                    log("账号" + Account.title + "升仓状态:" + shengcang_h, shengcang_l);
+                    module.shengcang(shengcang_h, shengcang_l); //执行升仓
                 }
                 //仓库统计
                 if (cangkuStatisticsForEach) {
@@ -496,7 +503,9 @@ function main_save() {
 
             //升仓
             if (shengcangForEach) {
-                module.shengcang(currentAccount.shengcang_h.enabled, currentAccount.shengcang_l.enabled); //执行升仓
+                let shengcang_h = !!currentAccount.shengcang_h.enabled;
+                let shengcang_l = !!currentAccount.shengcang_l.enabled;
+                module.shengcang(shengcang_h, shengcang_l); //执行升仓
             }
             //仓库统计
             if (cangkuStatisticsForEach) {

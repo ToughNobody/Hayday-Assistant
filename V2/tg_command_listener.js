@@ -169,7 +169,7 @@ function initOffset() {
 function pollLoop() {
     let key = getOffsetKey();
     let offset = initOffset();
-    sendTelegramText("Telegram 指令监听已启动。发送 /help 查看命令。\n当前只建议一台模拟器绑定一个 bot。");
+    sendTelegramText("Telegram 指令监听已启动。发送 /help 查看命令。");
     while (true) {
         try {
             let url = apiBase + "/getUpdates?timeout=20";
