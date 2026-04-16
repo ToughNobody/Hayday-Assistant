@@ -129,7 +129,7 @@ function main_email() {
                 }
                 rawData["账号"] = "账号"
                 //将仓库统计结果转换为表格数据
-                let contentData = module.convertToTable(rawData);
+                let contentData = configs.get("serverPlatform").text === "Telegram" ? module.convertToText(rawData) : module.convertToTable(rawData);
                 //推送
                 module.pushTo(contentData);
                 module.timer("cangkuStatisticsTime", config.cangkuStatisticsTime * 60);
@@ -258,7 +258,7 @@ function main_email() {
             ;
             if (cangkuStatisticsForEach && cangkuStatisticsData.length > 0) {
                 //将仓库统计数据转换为表格数据
-                let contentData = module.convertToTable(cangkuStatisticsData);
+                let contentData = configs.get("serverPlatform").text === "Telegram" ? module.convertToText(cangkuStatisticsData) : module.convertToTable(cangkuStatisticsData);
                 //推送
                 module.pushTo(contentData);
             }
@@ -549,7 +549,7 @@ function main_save() {
 
             if (cangkuStatisticsForEach && cangkuStatisticsData.length > 0) {
                 //将仓库统计数据转换为表格数据
-                let contentData = module.convertToTable(cangkuStatisticsData);
+                let contentData = configs.get("serverPlatform").text === "Telegram" ? module.convertToText(cangkuStatisticsData) : module.convertToTable(cangkuStatisticsData);
                 //推送
                 module.pushTo(contentData);
             }

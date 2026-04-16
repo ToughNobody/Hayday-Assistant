@@ -6397,7 +6397,12 @@ function pushTo(contentData) {
             });
         }
         else if (configs.get("serverPlatform").code == 3) {
-
+            let botToken = configs.get("telegramBotToken", "");
+            let url = "https://api.telegram.org/bot" + botToken + "/sendMessage"
+            response = http.post(url, {
+                "chat_id": String(configs.get("telegramChatId", "")),
+                "text": String(contentData),
+            });
         }
     } catch (error) {
         log(error);

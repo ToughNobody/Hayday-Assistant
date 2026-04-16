@@ -1657,14 +1657,20 @@ ui.layout(
                                                 w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                         </horizontal>
                                         <horizontal gravity="center_vertical" >
-                                            <text text="token" textSize="14" w="60" marginRight="12" />
+                                            <text text="token" textSize="14" w="65" marginRight="12" />
                                             <img id="eyeIcon" w="20dp" h="20dp" src="@drawable/ic_visibility_off_black_48dp" />
                                             <input id="tokenInput" password="true" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" marginRight="8" gravity="center_vertical" visibility="visible" />
                                             <input id="tokenInputPlain" password="false" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" visibility="gone" />
                                         </horizontal>
                                         <horizontal id="telegramChatRow" gravity="center_vertical" visibility="gone">
-                                            <text text="chat_id" textSize="14" w="60" marginRight="12" />
+                                            <text text="chat_id" textSize="14" w="85" marginRight="12" />
                                             <input id="telegramChatIdInput" hint="Telegram聊天ID" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" />
+                                        </horizontal>
+                                        <horizontal id="telegramBotTokenRow" gravity="center_vertical" visibility="gone">
+                                            <text text="bot_token" textSize="14" w="65" marginRight="12" />
+                                            <img id="telegramBotTokenEyeIcon" w="20dp" h="20dp" src="@drawable/ic_visibility_off_black_48dp" />
+                                            <input id="telegramBotTokenInput" password="true" hint="bot token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" marginRight="8" gravity="center_vertical" visibility="visible" />
+                                            <input id="telegramBotTokenInputPlain" password="false" hint="bot token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" gravity="center_vertical" visibility="gone" />
                                         </horizontal>
                                         <horizontal id="telegramCommandRow" gravity="center_vertical" visibility="gone">
                                             <button id="telegramCmdStartBtn" textSize="14" w="auto" text="启动监听" style="Widget.AppCompat.Button.Borderless.Colored" />
@@ -3358,10 +3364,11 @@ ui.telegramCmdStartBtn.setOnClickListener(() => {
         return;
     }
     let chatId = configs.get("telegramChatId", "");
-    if (!chatId) {
+    let botToken = configs.get("telegramBotToken", "");
+    if (!chatId || !botToken) {
         dialogs.build({
             title: "Telegram指令监听",
-            content: "请先填写Telegram chat_id，再启动监听。",
+            content: "请先填写Telegram chat_id和bot_token，再启动监听。",
             positive: "知道了"
         }).show();
         return;
@@ -4125,6 +4132,7 @@ function getConfig() {
         },
         token: configs.get("token"),
         telegramChatId: configs.get("telegramChatId"),
+        telegramBotToken: configs.get("telegramBotToken"),
         serverPlatform: configs.get("serverPlatform"),
         harvestMode: configs.get("harvestMode"),
         tomFind: {
@@ -4257,6 +4265,7 @@ function saveConfig(con) {
 
         configs.put("token", con.token);
         configs.put("telegramChatId", con.telegramChatId);
+        configs.put("telegramBotToken", con.telegramBotToken);
         configs.put("serverPlatform", con.serverPlatform);
         configs.put("harvestMode", con.harvestMode);
 
@@ -4697,7 +4706,7 @@ function validateConfig(config) {
     // 验证推送方式
     if (!config.serverPlatform) config.serverPlatform = defaultConfig.serverPlatform;
 
-    config.serverPlatform.text = ["Pushplus", "Server酱", "WxPusher"][config.serverPlatform.code];
+    config.serverPlatform.text = ["Pushplus", "Server酱", "WxPusher", "Telegram"][config.serverPlatform.code];
 
     // 验证收割模式
     if (config.harvestMode == undefined || config.harvestMode < 0) {
@@ -5169,6 +5178,11 @@ function loadConfigToUI(loadConfigFromFile = false) {
     const telegram_chat_id = config.telegramChatId || "";
     ui.telegramChatIdInput.setText(telegram_chat_id);
 
+    // 设置telegram bot token
+    const telegram_bot_token = config.telegramBotToken || "";
+    ui.telegramBotTokenInput.setText(telegram_bot_token);
+    ui.telegramBotTokenInputPlain.setText(telegram_bot_token);
+
     // 设置收割模式
     ui.harvestMode.setSelection(config.harvestMode);
 
@@ -5537,7 +5551,12 @@ function pushTo(contentData) {
                 });
             }
             else if (configs.get("serverPlatform").code == 3) {
-
+                let botToken = configs.get("telegramBotToken", "");
+                let url = "https://api.telegram.org/bot" + botToken + "/sendMessage"
+                response = http.post(url, {
+                    "chat_id": String(configs.get("telegramChatId", "")),
+                    "text": String(contentData),
+                });
             }
         } catch (error) {
             log(error);
@@ -6700,6 +6719,24 @@ function initUI() {
         afterTextChanged: function (s) { }
     }));
 
+    // 为telegram bot token输入框添加变化监听
+    ui.telegramBotTokenInput.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            configs.put("telegramBotToken", s.toString().trim());
+        },
+        afterTextChanged: function (s) { }
+    }));
+
+    // 为telegram bot token普通输入框添加变化监听
+    ui.telegramBotTokenInputPlain.addTextChangedListener(new android.text.TextWatcher({
+        beforeTextChanged: function (s, start, count, after) { },
+        onTextChanged: function (s, start, before, count) {
+            configs.put("telegramBotToken", s.toString().trim());
+        },
+        afterTextChanged: function (s) { }
+    }));
+
     // 为itemName输入框添加变化监听
     ui.Tom_itemName.addTextChangedListener(new android.text.TextWatcher({
         beforeTextChanged: function (s, start, count, after) { },
@@ -6963,6 +7000,26 @@ function initUI() {
         }
     });
 
+    // 为telegramBotTokenEyeIcon添加点击事件
+    ui.telegramBotTokenEyeIcon.click(() => {
+        // 检查当前输入框是否是密码模式
+        const isPassword = ui.telegramBotTokenInput.attr("visibility") === "visible";
+
+        if (isPassword) {
+            // 如果是密码模式，则切换为显示模式
+            ui.telegramBotTokenInputPlain.setText(configs.get("telegramBotToken", ""));
+            ui.telegramBotTokenInputPlain.attr("visibility", "visible"); // 显示普通输入框
+            ui.telegramBotTokenInput.attr("visibility", "gone"); // 隐藏密码输入框
+            ui.telegramBotTokenEyeIcon.attr("src", "@drawable/ic_visibility_black_48dp");
+        } else {
+            // 如果是显示模式，则切换为密码模式
+            ui.telegramBotTokenInput.setText(configs.get("telegramBotToken", ""));
+            ui.telegramBotTokenInputPlain.attr("visibility", "gone"); // 隐藏普通输入框
+            ui.telegramBotTokenInput.attr("visibility", "visible"); // 显示密码输入框
+            ui.telegramBotTokenEyeIcon.attr("src", "@drawable/ic_visibility_off_black_48dp");
+        }
+    });
+
 
 
 
@@ -6974,9 +7031,11 @@ function initUI() {
             configs.put("serverPlatform", { "text": item, "code": position });
             if (item === "Telegram") {
                 ui.telegramChatRow.attr("visibility", "visible");
+                ui.telegramBotTokenRow.attr("visibility", "visible");
                 ui.telegramCommandRow.attr("visibility", "visible");
             } else {
                 ui.telegramChatRow.attr("visibility", "gone");
+                ui.telegramBotTokenRow.attr("visibility", "gone");
                 ui.telegramCommandRow.attr("visibility", "gone");
             }
         },

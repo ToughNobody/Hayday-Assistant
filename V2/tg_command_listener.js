@@ -4,7 +4,7 @@ let configs = storages.create("config");
 
 
 const telegramChatId = configs.get("telegramChatId", "");
-const botToken = "8401328962:AAEUF6FBXxf_CL4dTy0MroVTvlxRtEkxM5s"; // Bot Token
+const botToken = configs.get("telegramBotToken", "");
 const apiBase = "https://api.telegram.org/bot" + botToken;
 const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
@@ -95,6 +95,7 @@ function buildHelpMessage() {
         "/stats  立即执行一次仓库统计",
         "/status 查看监听与统计状态",
         "/ping  测试是否在线",
+        "/screenshot 屏幕截图并发送到Telegram",
         "/help  查看帮助",
         "提示: 一台模拟器建议使用一个独立 bot，避免多个实例抢同一条命令。"
     ].join("\n");
@@ -129,6 +130,34 @@ function handleCommand(text) {
         } catch (e) {
             log("启动仓库统计失败: " + e);
             sendTelegramText("启动仓库统计失败: " + e);
+        }
+        return;
+    }
+    if (command == "/screenshot") {
+        try {
+
+            // 保存截图到临时文件
+            let tempPath = files.join(files.cwd(), "temp_screenshot.png");
+            images.save(captureScreen(), tempPath);
+
+            // 上传截图到Telegram
+            let url = apiBase + "/sendPhoto";
+            let response = http.postMultipart(url, {
+                "chat_id": String(telegramChatId),
+                "photo": files.open(tempPath)
+            });
+
+            // 删除临时文件
+            files.remove(tempPath);
+
+            if (response && response.statusCode == 200) {
+                log("屏幕截图已成功发送到Telegram。");
+            } else {
+                log("屏幕截图发送失败。");
+            }
+        } catch (e) {
+            log("屏幕截图失败: " + e);
+            sendTelegramText("屏幕截图失败: " + e);
         }
         return;
     }
