@@ -40,32 +40,69 @@ function normalizeCommand(text) {
 }
 
 
-function isStatsRunning() {
+
+/**
+ * @returns {boolean} - 是否正在运行主引擎
+ */
+function isEngineRunning(engineName) {
     try {
         let arr = engines.all();
         for (let i = 0; i < arr.length; i++) {
             let source = arr[i].getSource();
             let sourcePath = source ? String(source.toString()) : "";
-            if (sourcePath.indexOf("cangkuStatistics.js") > -1) return true;
+            if (sourcePath.indexOf(engineName + ".js") > -1) return true;
         }
     } catch (e) { log(e); }
     return false;
 }
 
-
-/**
- * @returns {boolean} - 是否正在运行主引擎
- */
-function isMainRunning() {
+function startEngine(engineName) {
+    if (isEngineRunning(engineName)) return;
     try {
-        let arr = engines.all();
-        for (let i = 0; i < arr.length; i++) {
-            let source = arr[i].getSource();
+        let newEngine = engines.execScriptFile("./" + engineName + ".js");
+        log("启动" + engineName + "引擎，ID: " + newEngine.id);
+    } catch (e) {
+        log("启动" + engineName + "引擎失败: " + e);
+        sendTelegramText("启动" + engineName + "引擎失败: " + e);
+    }
+}
+
+function stopEngine(engineName) {
+    if (!isEngineRunning(engineName)) return;
+    
+    let maxAttempts = 10; // 防止无限循环
+    let attempts = 0;
+    
+    while (isEngineRunning(engineName) && attempts < maxAttempts) {
+        attempts++;
+        let engineArray = engines.all();
+        let stopped = false;
+
+        // 直接停止目标引擎
+        for (let i = 0; i < engineArray.length; i++) {
+            let engine = engineArray[i];
+            let source = engine.getSource();
             let sourcePath = source ? String(source.toString()) : "";
-            if (sourcePath.indexOf("/main.js") > -1) return true;
+            if (sourcePath.indexOf(engineName + ".js") > -1) {
+                try {
+                    engine.forceStop();
+                    log(`关闭${engineName}引擎，ID: ${engine.id}，出现红字报错属于正常现象`);
+                    stopped = true;
+                } catch (e) {
+                    log(`停止${engineName}引擎失败(ID: ${engine.id}): ${e}`);
+                }
+            }
         }
-    } catch (e) { }
-    return false;
+
+        // 如果没有引擎被停止，跳出循环防止无限循环
+        if (!stopped) {
+            log(`无法停止${engineName}引擎，跳出循环`);
+            break;
+        }
+
+        // 短暂等待以确保引擎完全停止
+        sleep(100);
+    }
 }
 
 /**
@@ -81,7 +118,7 @@ function buildStatusMessage() {
     } catch (e) { }
     let lines = [];
     lines.push("卡通农场小助手 Telegram 指令监听在线");
-    lines.push("主界面: " + (isMainRunning() ? "运行中" : "未打开"));
+    lines.push("主界面: " + (isEngineRunning("main") ? "运行中" : "未打开"));
     lines.push("启用账号: " + doneCount);
     return lines.join("\n");
 }
@@ -92,11 +129,14 @@ function buildStatusMessage() {
 function buildHelpMessage() {
     return [
         "Telegram 指令说明",
+        "/help  查看帮助",
+        "/ping  测试是否在线",
+        "/start_main  启动主界面 /stop_main  关闭主界面",
+        "/start_shuadi  启动刷地 /stop_shuadi  关闭刷地",
+        "/start_cangkuStatistics  启动仓库统计 /stop_cangkuStatistics  关闭仓库统计",
         "/stats  立即执行一次仓库统计",
         "/status 查看监听与统计状态",
-        "/ping  测试是否在线",
         "/screenshot 屏幕截图并发送到Telegram",
-        "/help  查看帮助",
         "提示: 一台模拟器建议使用一个独立 bot，避免多个实例抢同一条命令。"
     ].join("\n");
 }
@@ -110,27 +150,6 @@ function handleCommand(text) {
     }
     if (command == "/help" || command == "/start") {
         sendTelegramText(buildHelpMessage());
-        return;
-    }
-    if (command == "/status") {
-        sendTelegramText(buildStatusMessage());
-        return;
-    }
-    if (command == "/stats") {
-        if (isStatsRunning()) {
-            sendTelegramText("仓库统计正在运行中，请稍后再试。");
-            return;
-        }
-        sendTelegramText("已收到 /stats，开始执行仓库统计。统计完成后会推送至 Telegram。");
-        try {
-            launch("com.supercell.hayday");
-            sleep(100);
-            let newEngine = engines.execScriptFile("./cangkuStatistics.js");
-            log("启动仓库统计引擎，ID: " + newEngine.id);
-        } catch (e) {
-            log("启动仓库统计失败: " + e);
-            sendTelegramText("启动仓库统计失败: " + e);
-        }
         return;
     }
     if (command == "/screenshot") {
@@ -160,6 +179,97 @@ function handleCommand(text) {
             sendTelegramText("屏幕截图失败: " + e);
         }
         return;
+    }
+    if (command == "/status") {
+        sendTelegramText(buildStatusMessage());
+        return;
+    }
+    // 引擎管理命令处理
+    //处理命令需小写
+    const engineCommands = {
+        "start_cangkustatistics": {
+            engineName: "cangkuStatistics",
+            runningMsg: "仓库统计正在运行中，请稍后再试。",
+            startMsg: "已收到 /start_cangkuStatistics，开始启动仓库统计。统计完成后会推送至 Telegram。",
+            startFailedMsg: "启动cangkuStatistics引擎失败: "
+        },
+        "stop_cangkustatistics": {
+            engineName: "cangkuStatistics",
+            notRunningMsg: "仓库统计未运行...",
+            stopMsg: "已收到 /stop_cangkuStatistics，开始关闭仓库统计。",
+            stopFailedMsg: "关闭cangkuStatistics引擎失败: "
+        },
+        "start_main": {
+            engineName: "main",
+            runningMsg: "主界面运行中...",
+            startMsg: "已收到 /start_main，开始启动主界面。",
+            startFailedMsg: "启动主界面失败: "
+        },
+        "stop_main": {
+            engineName: "main",
+            notRunningMsg: "主界面未运行...",
+            stopMsg: "已收到 /stop_main，开始关闭主界面。",
+            stopFailedMsg: "关闭主界面失败: "
+        },
+        "start_shuadi": {
+            engineName: "shuadi",
+            runningMsg: "刷地正在运行中，请稍后再试。",
+            startMsg: "已收到 /start_shuadi，开始启动刷地。",
+            startFailedMsg: "启动刷地引擎失败: "
+        },
+        "stop_shuadi": {
+            engineName: "shuadi",
+            notRunningMsg: "刷地未运行...",
+            stopMsg: "已收到 /stop_shuadi，开始关闭刷地。",
+            stopFailedMsg: "关闭刷地引擎失败: "
+        },
+    };
+
+    // 处理启动命令
+    if (command.startsWith("/start_")) {
+        let cmdKey = command.slice(1);
+        log(cmdKey);
+        let cmdConfig = engineCommands[cmdKey];
+        log(cmdConfig);
+        if (cmdConfig) {
+            if (isEngineRunning(cmdConfig.engineName)) {
+                sendTelegramText(cmdConfig.runningMsg);
+                return;
+            }
+            sendTelegramText(cmdConfig.startMsg);
+            try {
+                // 如果启动的是main引擎，则不自动启动卡通农场
+                if (cmdConfig.engineName !== "main") {
+                    launch("com.supercell.hayday");
+                    sleep(100);
+                }
+                startEngine(cmdConfig.engineName);
+            } catch (e) {
+                log(cmdConfig.startFailedMsg + e);
+                sendTelegramText(cmdConfig.startFailedMsg + e);
+            }
+            return;
+        }
+    }
+
+    // 处理停止命令
+    if (command.startsWith("/stop_")) {
+        let cmdKey = command.slice(1);
+        let cmdConfig = engineCommands[cmdKey];
+        if (cmdConfig) {
+            if (!isEngineRunning(cmdConfig.engineName)) {
+                sendTelegramText(cmdConfig.notRunningMsg);
+                return;
+            }
+            sendTelegramText(cmdConfig.stopMsg);
+            try {
+                stopEngine(cmdConfig.engineName);
+            } catch (e) {
+                log(cmdConfig.stopFailedMsg + e);
+                sendTelegramText(cmdConfig.stopFailedMsg + e);
+            }
+            return;
+        }
     }
 }
 
@@ -236,5 +346,5 @@ try {
     pollLoop();
 } catch (e) {
     log("Telegram指令监听退出: " + e);
-    sendTelegramText("Telegram 指令监听异常退出: " + e);
+    sendTelegramText("Telegram 指令监听异常退出(如在停止监听引擎,则为正常现象): " + e);
 }

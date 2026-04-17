@@ -1465,13 +1465,10 @@ function checkmenu() {
 
         try {
             //新版界面
-            let allMatch = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+            let allMatch = findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
 
             //老板界面
-            let allMatch2 = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-                [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-                [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+            let allMatch2 = findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
 
             if (allMatch || allMatch2) {
                 log(`第 ${i + 1} 次检测: 已进入主界面`);
@@ -1498,6 +1495,10 @@ function checkmenu() {
     log("尝试重启");
     restartgame();
     checkmenu();
+}
+
+function inMenu() {
+
 }
 
 /**
@@ -2230,16 +2231,12 @@ function pond_operation(account_config) {
                 sleep(1000);
                 let sc = captureScreen();
                 //新版界面
-                let allMatch = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-                    [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+                let allMatch = findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
 
                 //老板界面
-                let allMatch2 = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-                    [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-                    [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+                let allMatch2 = findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
 
-                let homebtn = findMC(["#62d365", [-5, -12, "#c787db"], [1, 11, "#55cf58"]],
-                    screenshot = sc, [0, 600, 240, 110]);
+                let homebtn = findMC(allItemColor["homeBtn"], sc, [0, 600, 240, 110]);
 
                 if ((allMatch || allMatch2) && homebtn) {
                     log(`第 ${j + 1} 次检测: 已进入鱼塘`);
@@ -2788,8 +2785,8 @@ function tomMenu() {
         return "没有雇佣汤姆"
     }
     //寻找页面
-    let menu1 = findMC(["#deb477", [583, 22, "#d3a265"], [694, 1, "#ec414b"],
-        [676, 98, "#fcd05c"], [628, 102, "#fff9db"]]);
+    let menu1 = findMC(["#e0b77b", [733, 18, "#ec404a"], [703, 19, "#f9c83f"],
+        [677, 117, "#fff9db"], [727, 536, "#ffb700"], [-59, 16, "#ffffff"], [-47, 37, "#f5bd00"], [-31, 550, "#fff9db"]]);
     if (menu1) {
         return "寻找"
     }
@@ -2800,11 +2797,23 @@ function tomMenu() {
     if (menu2) {
         return "等待"
     }
-    //没有雇佣汤姆页面
+    // //没有雇佣汤姆页面
+    // if (findMC(["#f4ead9", [576, -31, "#e83d47"], [579, -10, "#f4c442"],
+    //     [-18, 268, "#fbe35b"], [556, 461, "#61df5c"], [546, 168, "#f3e8cb"]])) {
+    //     log("花钻雇佣界面(带下方绿色免费框)")
+    // }
+    // if (findMC(["#f4ead7", [554, -46, "#ee444e"], [518, 151, "#f3e8cc"],
+    //     [528, 507, "#5bc739"]])) {
+    //     log("花钻雇佣界面(带下方绿色免费框) 第二版(回归)")
+    // }
+    // if (findMC(["#f4eada", [-51, 116, "#f3e8cd"], [-181, 188, "#a45c25"],
+    //     [-163, 238, "#8e3e12"], [-251, 247, "#c2742e"], [-133, 276, "#a25b25"]])) {
+    //     log("小盒界面")
+    // }
     let menu3 =
         //花钻雇佣界面(带下方绿色免费框)
-        findMC(["#ea3e48", [-212, 46, "#f4eadb"], [-237, 144, "#f3e7c7"],
-            [-51, 296, "#fdc025"], [-262, 302, "#febc1e"], [-478, 298, "#fdbe23"]]) ||
+        findMC(["#f4ead9", [576, -31, "#e83d47"], [579, -10, "#f4c442"],
+            [-18, 268, "#fbe35b"], [556, 461, "#61df5c"], [546, 168, "#f3e8cb"]]) ||
         //花钻雇佣界面(带下方绿色免费框) 第二版(回归)
         findMC(["#f4ead7", [554, -46, "#ee444e"], [518, 151, "#f3e8cc"],
             [528, 507, "#5bc739"]]) ||
@@ -3215,7 +3224,7 @@ function findshop(silence = false, maxTry = 5) {
         }
         if (center) break
         else {
-            find_close(null,["except_homeBtn"]);
+            find_close(null, ["except_homeBtn"]);
             if (i < maxTry - 1) sleep(500);
         }
     }
@@ -4520,8 +4529,7 @@ function find_close(screenshot1, action = null) {
 
         //进入小镇，鱼塘，其他农场
         if (!action || !action.includes("except_homeBtn")) {
-            let homeBtn = findMC(["#62d365", [-5, -12, "#c787db"], [1, 11, "#55cf58"]],
-                screenshot = sc, [0, 600, 240, 110]);
+            let homeBtn = findMC(allItemColor["homeBtn"], sc, [0, 600, 240, 110]);
             if (homeBtn) {
                 click(homeBtn.x - 30 + ran(), homeBtn.y + ran());
                 console.log("当前在其他界面，回到主界面");
@@ -4561,7 +4569,7 @@ function find_close(screenshot1, action = null) {
         }
 
         //Tom界面
-        if (tomMenu()) {
+        if (!(findMC(allItemColor["新版界面"], null, [1140, 570, 120, 130]) || findMC(allItemColor["老版界面"], null, [1140, 570, 120, 130])) && tomMenu()) {
             log("汤姆界面")
             showTip("汤姆界面")
             click(200 + ran(), 420 + ran());
@@ -5705,21 +5713,26 @@ function click_cangku(type, shopPos) {
     let targetY = shopPos.y + offset.y;
 
     // 查找上下左右各10单位范围内的颜色点
-    let foundPoint = images.findColorInRegion(captureScreen(), "#ac0000", targetX - 10, targetY - 10, 20, 20, 16);
+    let foundPoint = images.findColorInRegion(captureScreen(), "#ac0000", targetX - 10, targetY - 10, 20, 20, 24);
     if (!foundPoint) {
-        foundPoint = images.findColorInRegion(captureScreen(), "#770000", targetX - 10, targetY - 10, 20, 20, 16);
+        foundPoint = images.findColorInRegion(captureScreen(), "#770000", targetX - 10, targetY - 10, 20, 20, 24);
     }
     if (!foundPoint) {
-        foundPoint = images.findColorInRegion(captureScreen(), "#82442c", targetX - 10, targetY - 10, 20, 20, 16);
+        foundPoint = images.findColorInRegion(captureScreen(), "#82442c", targetX - 10, targetY - 10, 20, 20, 24);
     }
     if (!foundPoint) {
-        foundPoint = images.findColorInRegion(captureScreen(), "#343433", targetX - 10, targetY - 10, 20, 20, 16);
+        foundPoint = images.findColorInRegion(captureScreen(), "#343433", targetX - 10, targetY - 10, 20, 20, 24);
     }
+    if (!foundPoint) {
+        foundPoint = images.findColorInRegion(captureScreen(), "#ba0000", targetX - 10, targetY - 10, 20, 20, 24);
+    }
+
     if (foundPoint) {
         click(foundPoint.x + 10, foundPoint.y + 10);
         return true;
     } else {
-        log("未找到颜色#ac0000的点");
+        log("未找到颜色点,点击固定点");
+        click(targetX, targetY);
         return false;
     }
 }
@@ -6033,7 +6046,7 @@ function cangkuStatistics(maxPages = 2) {
         find_close();
 
         // 返回处理后的结果
-        return processedResult;
+        return processedResult ? processedResult : {};
 
     } catch (error) {
         log("仓库统计出错" + error);

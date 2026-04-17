@@ -1446,12 +1446,16 @@ ui.layout(
                                                 </radiogroup>
                                             </horizontal>
                                             <horizontal gravity="center_vertical">
-                                                <text text="好友界面" textSize="14" w="100" marginRight="8" />
+                                                <text text="访问方式" textSize="14" w="100" marginRight="8" />
                                                 <radiogroup id="friendInterface" orientation="horizontal">
                                                     <radio id="friendInterface_community" checked="false" text="社区" />
                                                     <frame w="2" />
                                                     <radio id="friendInterface_friendbook" checked="true" text="好友簿" />
                                                 </radiogroup>
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical">
+                                                <text text="照片文件夹路径:" textSize="14" w="auto" marginRight="10" />
+                                                <input id="storageUpgrade_picDirPath" marginRight="8" w="*" h="auto" textSize="14" bg="#FFFFFF" />
                                             </horizontal>
                                         </vertical>
 
@@ -4194,6 +4198,7 @@ function getConfig() {
         coin_subAccount_picName: configs.get("coin_subAccount_picName"),
         coin_item: configs.get("coin_item"),
         coin_picDirPath: configs.get("coin_picDirPath"),
+        storageUpgrade_picDirPath: configs.get("storageUpgrade_picDirPath"),
         account_config: configs.get("account_config"),
         storageUpgradeMethod: configs.get("storageUpgradeMethod"),
         friendInterface: configs.get("friendInterface"),
@@ -4318,6 +4323,7 @@ function saveConfig(con) {
         //升仓
         configs.put("storageUpgradeMethod", con.storageUpgradeMethod);
         configs.put("friendInterface", con.friendInterface);
+        configs.put("storageUpgrade_picDirPath", con.storageUpgrade_picDirPath);
 
         // 存储其他配置项
         configs.put("restartWithShell", con.restartWithShell);
@@ -4579,11 +4585,11 @@ function validateConfig(config) {
 
     // 验证账号配置，确保 accountList 中的所有账号都有对应的配置
     let accountConfig = configs.get("account_config", []);
-    
+
     // 确保 accountList 中的每个账号都有配置
     if (config.accountList && Array.isArray(config.accountList)) {
         let updatedAccountConfig = accountConfig.slice(); // 复制现有配置
-        
+
         config.accountList.forEach(account => {
             // 查找该账号对应的配置
             let existingAccountConfig = updatedAccountConfig.find(item => item.title === account.title);
@@ -4618,10 +4624,10 @@ function validateConfig(config) {
                 });
             }
         });
-        
+
         accountConfig = updatedAccountConfig;
     }
-    
+
     config.account_config = validateAccountConfig(accountConfig);
     configs.put("account_config", config.account_config);
     // log(config.account_config);
@@ -4851,6 +4857,12 @@ function validateConfig(config) {
     if (!config.coin_picDirPath || (config.coin_picDirPath && config.coin_picDirPath.length == 0)) config.coin_picDirPath = defaultConfig.coin_picDirPath;
 
 
+    // 设置升仓照片文件夹路径
+    if (!config.storageUpgrade_picDirPath || (config.storageUpgrade_picDirPath && config.storageUpgrade_picDirPath.length == 0)) config.storageUpgrade_picDirPath = defaultConfig.storageUpgrade_picDirPath;
+
+
+
+
 
 
 
@@ -4896,6 +4908,7 @@ function getDefaultConfig() {
         coinCollectionMethod: "一键收取", // 默认使用一键收取金币
         storageUpgradeMethod: "货仓", // 默认升仓货仓
         friendInterface: "好友簿", // 默认好友界面好友簿
+        storageUpgrade_picDirPath: "", // 默认升仓照片文件夹路径为空
         syncHarvest: false, // 默认不开启同步
         landOffset: {
             x: 60,
@@ -5019,6 +5032,7 @@ function getDefaultConfig() {
         coin_subAccount_picName: "",
         coin_item: "",
         coin_picDirPath: "",
+
     };
 }
 
@@ -5111,6 +5125,11 @@ function loadConfigToUI(loadConfigFromFile = false) {
     } else {
         ui.friendInterface_friendbook.setChecked(true);
     }
+
+    // 设置升仓照片文件夹路径
+    ui.storageUpgrade_picDirPath.setText(config.storageUpgrade_picDirPath);
+
+
 
     // 设置同步收割
     ui.syncHarvest.setChecked(config.syncHarvest);
@@ -5374,7 +5393,7 @@ ui.btnInstructions.click(() => {
                 <text text="" />
                 <text text="如果您是从第三方付费购买，请立即申请退款并举报！" />
                 <text text="" />
-                <text text="在线文档" />
+                <text text="使用文档" />
                 <text autoLink="web" text="• 腾讯文档: https://docs.qq.com/doc/DWEtDUXB0U0dISGxo" />
                 <text text="" />
             </vertical>
@@ -6642,19 +6661,22 @@ function initUI() {
                 "- 照片名：在照片文件夹路径下的照片名称。这里的照片需要时在好友簿中的截图。\n" +
                 "- 倒金币物品：倒金币时使用的物品,越贵越好\n" +
                 "- 照片文件夹路径：存放照片的位置,可以随意设置。\n" +
+                "- 照片样式详情请看使用文档\n" +
                 "- 倒金币的账号最好不要参加游戏内的全球活动,参加后其他的非好友也可进入你的农场,可能会偷你的1金物品\n\n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
-                "- \n" +
+                "升仓:\n" +
+                "- 转移逻辑：\n" +
+                "  1. 先进行仓库统计,对数据进行处理\n" +
+                "  2. 排序账号：按货仓容量从小到大，货仓相同则按缺量总和从小到大\n" +
+                "  3. 第一轮处理：按货仓总容量从小到大处理剩余货仓容量足够升级账号\n" +
+                "     优先从剩余容量最小的账号获取材料\n" +
+                "  4. 第二轮处理：处理之前因为容量不够的账号\n" +
+                "     检查是否可以通过给出多余材料来腾出空间\n" +
+                "     先给出多余的材料，腾出足够的空间\n" +
+                "     然后尝试获取所需材料进行升级\n" +
+                "  5. 生成分配结果和统计信息\n" +
+                "  6. 进行升级\n" +
+                "- 照片文件夹路径: 存放照片仓照片的位置,可以随意设置。\n" +
+                "- 照片样式详情请看使用文档\n" +
                 "\n",
             positive: "确定"
         }).show();
@@ -7125,6 +7147,13 @@ function initUI() {
         }
     }));
     // /storage/emulated/0/$MuMu12Shared/Screenshots/账号/好友图片/
+    ui.storageUpgrade_picDirPath.addTextChangedListener(new android.text.TextWatcher({
+        afterTextChanged: function (s) {
+            // 保存修改后的升仓照片文件夹路径到配置
+            configs.put("storageUpgrade_picDirPath", s.toString());
+        }
+    }));
+
 
 
     // 是否使用shell命令重启游戏监听
