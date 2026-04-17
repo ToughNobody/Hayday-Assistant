@@ -1,8 +1,8 @@
 // 导入module模块
 let module;
 try {
-    // module = require("./module.js");
-    module = require("/storage/emulated/0/脚本/Hayday-Assistant/V2/module.js");
+    module = require("./module.js");
+    // module = require("/storage/emulated/0/脚本/Hayday-Assistant/V2/module.js");
     if (!module) {
         throw new Error("模块导入结果为空");
     }
