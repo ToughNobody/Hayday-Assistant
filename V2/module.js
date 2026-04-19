@@ -1662,9 +1662,8 @@ function clearFans() {
 
 
 //点击叉号
-function close() {
+function close(isClick = true) {
     try {
-
         //识别叉叉
         let sc = captureScreen();
         let close_button = findMC(["#ef444f", [-7, -1, "#ef444d"], [26, 2, "#faca3f"],
@@ -1676,19 +1675,18 @@ function close() {
                 [-2, -23, "#f7df5c"], [-29, 1, "#f9cd42"], [-1, 29, "#f6cc44"]], sc);//大×
         }
 
-        if (close_button) {
+        if (close_button && isClick) {
             click(close_button.x + ran(), close_button.y + ran())
             console.log("点击叉叉,close")
-            // showTip("点击叉叉")
-        } else {
-            // click(2110, 125)
-            // console.log("未识别到叉，点击默认坐标")
-
         }
+        return !!close_button;
     } catch (error) {
         log("close函数出错" + error)
     }
 }
+
+
+
 
 
 //滑动
@@ -5236,7 +5234,7 @@ function shengcang(h, l) {
                 showTip("点击粮仓");
                 click_cangku("lc", isFindShop); //点击粮仓
                 sleep(500);
-                if (click_waitFor(null, null, allItemColor["粮仓界面"], null, 0.8, 200)) {  //判断是否进入粮仓 左侧搜索按钮,棕色边框,右上叉号
+                if (click_waitFor(null, null, allItemColor["close1"], null, 16, 200)) {  //判断是否进入粮仓 左侧搜索按钮,棕色边框,右上叉号
                     click(700 + ran(), 610 + ran());
                     sleep(500);
                     if (matchColor([{ x: 904, y: 407, color: "#69b750" }])) {  //判断是否可以升级
@@ -5274,7 +5272,7 @@ function shengcang(h, l) {
                 showTip("点击货仓");
                 click_cangku("hc", isFindShop); //点击货仓
                 sleep(500);
-                if (click_waitFor(null, null, allItemColor["货仓界面"], null, 0.8, 200)) {  //判断是否进入货仓 左侧搜索按钮,棕色边框,右上叉号
+                if (click_waitFor(null, null, allItemColor["close1"], null, 16, 200)) {  //判断是否进入货仓 左侧搜索按钮,棕色边框,右上叉号
                     click(700 + ran(), 625 + ran());
                     sleep(500);
                     if (matchColor([{ x: 904, y: 407, color: "#69b850" }])) {  //判断是否可以升级
@@ -5341,9 +5339,50 @@ function timer(timer_Name, seconds = 120) {
     }
 }
 
+/**
+ * 初始化所有计时器
+ * @param {Array} Account_config - 账号配置数组
+ */
+function initAllTimers(Account_config) {
+    for (let account of Account_config) {
+        let AccountName = account.title;
+        let currentTime = new Date().getTime();
+
+        let timerState = {
+            startTime: currentTime,
+            duration: 0,
+            endTime: currentTime
+        }
+
+        // 初始化鱼塘计时器
+        if (config.pond.enabled &&account.pond && account.pond.enabled) {
+            log(`初始化鱼塘计时器: ${AccountName}`);
+            timer(AccountName + "鱼塘计时器", timerState);
+        }
+
+        // 初始化蜂糖计时器
+        if (config.honeycomb.enabled && account.honeycomb && account.honeycomb.enabled) {
+            log(`初始化蜂糖计时器: ${AccountName}`);
+            timer(AccountName + "蜂糖计时器", timerState);
+        }
+
+        // 初始化Tom计时器
+        if (config.tomFind.enabled && account.tomFind && account.tomFind.enabled) {
+            log(`初始化Tom计时器: ${AccountName}`);
+            timer(AccountName + "Tom计时器", timerState);
+        }
+    }
+}
+
+
 // 获取特定计时器的状态
 /**
  * 获取特定计时器的状态
+ * 升仓时间 shengcangTime 
+ * 仓库统计 cangkuStatisticsTime
+ * 鱼塘  accountName + "鱼塘计时器"
+ * 蜂蜜  accountName + "蜂糖计时器"
+ * Tom  accountName + "Tom计时器"
  * @param {string} timer_Name - 计时器的唯一标识名称（用于区分不同计时器）
  * @returns {number|null} - 剩余时间（单位：秒）,计时结束返回0，如果计时器不存在则返回null
  */
@@ -5567,6 +5606,10 @@ function harvest_crop(center_sickle) {
 }
 
 //循环操作
+/**
+ * 循环操作
+ * @param {Object} Account - 账号对象，包含账号名称、标题等信息
+ */
 function operation(Account) {
     let accountName = Account ? Account.title : "账号";
     sleep(200);
@@ -5863,7 +5906,7 @@ function cangkuStatistics(maxPages = 2) {
             click_cangku("lc", isFindShop); //点击粮仓
             sleep(500);
 
-            if (click_waitFor(null, null, allItemColor["粮仓界面"], null, 0.8, 200)) {  //判断是否进入粮仓  左侧搜索按钮,棕色边框,右上叉号
+            if (click_waitFor(null, null, allItemColor["close1"], null, 16, 200)) {  //判断是否进入粮仓  左侧搜索按钮,棕色边框,右上叉号
                 lcCapacity = findFont(captureScreen(), [643, 86, 883 - 643, 148 - 86], "#FFFFFF", 8, Font.FontLibrary_CKCapacityNum, 0.8).toString();
                 if (!lcCapacity) {
                     sleep(500);
@@ -5899,7 +5942,7 @@ function cangkuStatistics(maxPages = 2) {
         sleep(500);
 
         //判断是否进入货仓
-        if (!click_waitFor(null, null, allItemColor["货仓界面"], null, 0.8, 200)) {  //未进入货仓
+        if (!click_waitFor(null, null, allItemColor["close1"], null, 16, 200)) {  //未进入货仓
             console.log("未进入货仓");
             showTip("未进入货仓");
             find_close();
@@ -6677,6 +6720,7 @@ module.exports = {
 
     // 计时器
     timer: timer,
+    initAllTimers: initAllTimers,
     getTimerState: getTimerState,
     stopTimer: stopTimer,
 

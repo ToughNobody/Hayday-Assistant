@@ -1293,6 +1293,13 @@ ui.layout(
 
                                         </vertical>
 
+                                        {/* 刷地 - 仅在刷地时显示*/}
+                                        <horizontal id="shuadiSwitchContainer" gravity="center_vertical" visibility="visible">
+                                            <text text="开启刷地：" textSize="14" w="80" marginRight="8" />
+                                            <View w="0" h="0" layout_weight="1" />
+                                            <Switch id="shuadiSwitch" />
+                                        </horizontal>
+
                                         {/* 汤姆 - 仅在刷地时显示*/}
                                         <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="visible">
                                             <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
@@ -4139,6 +4146,7 @@ function getConfig() {
         telegramBotToken: configs.get("telegramBotToken"),
         serverPlatform: configs.get("serverPlatform"),
         harvestMode: configs.get("harvestMode"),
+        shuadi_enabled: configs.get("shuadi_enabled"),
         tomFind: {
             enabled: configs.get("Tom_enabled"),
             type: configs.get("Tom_itemType"),
@@ -4213,6 +4221,7 @@ function saveConfig(con) {
     try {
         // 将配置项分散存储到不同的键中
         configs.put("selectedFunction", con.selectedFunction);
+        configs.put("shuadi_enabled", con.shuadi_enabled);
         configs.put("selectedCrop", con.selectedCrop);
         configs.put("selectedTree", con.selectedTree);
         configs.put("switchAccount", con.switchAccount);
@@ -4459,6 +4468,11 @@ function validateConfig(config) {
         config.selectedFunction.code = defaultConfig.selectedFunction.code;
     }
     config.selectedFunction.text = functionOptions[config.selectedFunction.code];
+
+    // 验证刷地开关
+    if (config.shuadi_enabled == undefined || typeof config.shuadi_enabled !== "boolean") {
+        config.shuadi_enabled = defaultConfig.shuadi_enabled;
+    }
 
     // 验证作物选择
     if (!config.selectedCrop) config.selectedCrop = defaultConfig.selectedCrop;
@@ -4892,6 +4906,7 @@ function getDefaultConfig() {
             text: "苹果树",
             code: 0
         },
+        shuadi_enabled: true,
         switchAccount: false,
         accountMethod: "email", // 账号切换方式，默认使用邮箱切换
         findAccountMethod: "ocr", // 账号识别方式，默认为文字识别
@@ -5227,6 +5242,9 @@ function loadConfigToUI(loadConfigFromFile = false) {
     ui.clearFans.setChecked(config.clearFans);
 
     ui.waitShelf.setChecked(config.waitShelf);
+
+    // 设置是否开启刷地
+    ui.shuadiSwitch.setChecked(config.shuadi_enabled);
 
     // 加载汤姆相关配置
     if (config.tomFind.enabled !== undefined) {
@@ -5635,7 +5653,8 @@ function startButton() {
         case 0: // 刷地
             stopOtherEngines(); // 先清理所有任务
             log(config.accountMethod);
-            if (config.accountMethod == "email") {
+
+            if (config.shuadi_enabled && config.accountMethod == "email") {
                 threads.start(() => {
                     log("开始启动刷地引擎");
                     launch("com.supercell.hayday");
@@ -5645,7 +5664,7 @@ function startButton() {
                     configs.put("currentEngineId", newEngine.id);
                 })
             }
-            else if (config.accountMethod == "save") {
+            else if (config.shuadi_enabled && config.accountMethod == "save") {
                 threads.start(() => {
                     if (!checkRoot()) {
                         toastLog("请先获取Root权限");
@@ -5657,6 +5676,16 @@ function startButton() {
                     sleep(100);
                     let newEngine = engines.execScriptFile("./shuadi.js");
                     log("启动刷地引擎，ID: " + newEngine.id);
+                    configs.put("currentEngineId", newEngine.id);
+                })
+            }
+            else if (!config.shuadi_enabled) {
+                threads.start(() => {
+                    log("开始启动引擎");
+                    launch("com.supercell.hayday");
+                    sleep(100);
+                    let newEngine = engines.execScriptFile("./enabled_options.js");
+                    log("启动引擎，ID: " + newEngine.id);
                     configs.put("currentEngineId", newEngine.id);
                 })
             }
@@ -5996,6 +6025,7 @@ function initUI() {
                 // 所有可能的 UI 元素
                 const allElements = [
                     "cropSelectContainer",
+                    "shuadiSwitchContainer",
                     "tomSwitchContainer",
                     "pondSwitchContainer",
                     "treeSelectContainer",
@@ -6022,10 +6052,15 @@ function initUI() {
             // 根据选择的功能显示/隐藏相应的选项
             if (selectedFunction === "刷地") {
                 let visibleElements = ["cropSelectContainer",
+                    "shuadiSwitchContainer",
                     "tomSwitchContainer",
                     "pondSwitchContainer",
                     "honeySwitchContainer",
                 ];
+                // 根据是否开启刷地显示/隐藏相关控件
+                if (ui.shuadiSwitch.isChecked()) {
+                    visibleElements.push("shuadiSwitchContainer");
+                }
 
                 if (ui.tomSwitch.isChecked()) {
                     visibleElements.push("tomItemContainer");
@@ -6069,9 +6104,16 @@ function initUI() {
         }
     }))
 
+
+
+    // 刷地开关状态变化监听
+    ui.shuadiSwitch.on("check", (checked) => {
+        // 保存修改后的刷地开关状态到配置
+        configs.put("shuadi_enabled", checked);
+    });
+
     // 汤姆开关状态变化监听
     ui.tomSwitch.on("check", (checked) => {
-        // console.log("汤姆开关状态变化:", checked);
         // 根据开关状态控制物品类型和名称输入框的显示
         if (checked) {
             ui.tomItemContainer.attr("visibility", "visible");

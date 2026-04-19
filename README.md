@@ -23,7 +23,7 @@
 
 ### 📊 数据统计与推送
 - 仓库物品统计功能
-- 支持多种推送方式（pushplus、Server酱、WxPusher）
+- 支持多种推送方式（pushplus、Server酱、WxPusher、Telegram）
 - 统计结果可通过消息推送给用户
 
 ### 🎯 汤姆功能
