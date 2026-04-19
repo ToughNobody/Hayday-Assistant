@@ -207,9 +207,6 @@ function main_email() {
                 if (shengcangForEach) {
                     accountList_config = configs.get("account_config", null);
                     account_config = accountList_config.find(item => item.title === Account.title)
-                    log(accountList_config)
-                    log(account_config);
-                    log(Account.title)
                     let shengcang_h = !!account_config?.shengcang_h.enabled;
                     let shengcang_l = !!account_config?.shengcang_l.enabled;
                     log("账号" + Account.title + "升仓状态:" + shengcang_h, shengcang_l);
