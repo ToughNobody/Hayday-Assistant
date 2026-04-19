@@ -4080,136 +4080,137 @@ ui.emitter.on("resume", function () {
  * 获取当前配置
  */
 function getConfig() {
+    let defaultConfig = getDefaultConfig();
     // 从存储对象的不同键中获取配置项并组合成完整的配置对象
     const storedConfig = {
-        selectedFunction: configs.get("selectedFunction"),
-        selectedCrop: configs.get("selectedCrop"),
-        selectedTree: configs.get("selectedTree"),
-        switchAccount: configs.get("switchAccount"),
-        findAccountMethod: configs.get("findAccountMethod"),
-        accountMethod: configs.get("accountMethod"),
-        accountList: configs.get("accountList"),
-        saveAccountList: configs.get("saveAccountList"),
-        addFriendsList: configs.get("addFriendsList"),
-        shopPrice: configs.get("shopPrice"),
-        ReservedQuantity: configs.get("ReservedQuantity"),
-        pauseTime: configs.get("pauseTime"),
-        landFindMethod: configs.get("landFindMethod"),
-        coinCollectionMethod: configs.get("coinCollectionMethod"),
-        syncHarvest: configs.get("syncHarvest"),
-        tom_FirstHire: configs.get("tom_FirstHire"),
+        selectedFunction: configs.get("selectedFunction", defaultConfig.selectedFunction),
+        selectedCrop: configs.get("selectedCrop", defaultConfig.selectedCrop),
+        selectedTree: configs.get("selectedTree", defaultConfig.selectedTree),
+        switchAccount: configs.get("switchAccount", defaultConfig.switchAccount),
+        findAccountMethod: configs.get("findAccountMethod", defaultConfig.findAccountMethod),
+        accountMethod: configs.get("accountMethod", defaultConfig.accountMethod),
+        accountList: configs.get("accountList", defaultConfig.accountList),
+        saveAccountList: configs.get("saveAccountList", defaultConfig.saveAccountList),
+        addFriendsList: configs.get("addFriendsList", defaultConfig.addFriendsList),
+        shopPrice: configs.get("shopPrice", defaultConfig.shopPrice),
+        ReservedQuantity: configs.get("ReservedQuantity", defaultConfig.ReservedQuantity),
+        pauseTime: configs.get("pauseTime", defaultConfig.pauseTime),
+        landFindMethod: configs.get("landFindMethod", defaultConfig.landFindMethod),
+        coinCollectionMethod: configs.get("coinCollectionMethod", defaultConfig.coinCollectionMethod),
+        syncHarvest: configs.get("syncHarvest", defaultConfig.syncHarvest),
+        tom_FirstHire: configs.get("tom_FirstHire", defaultConfig.tom_FirstHire),
         landOffset: {
-            x: configs.get("landOffsetX"),
-            y: configs.get("landOffsetY")
+            x: configs.get("landOffsetX", defaultConfig.landOffset.x),
+            y: configs.get("landOffsetY", defaultConfig.landOffset.y)
         },
         shopOffset: {
-            x: configs.get("shopOffsetX"),
-            y: configs.get("shopOffsetY")
+            x: configs.get("shopOffsetX", defaultConfig.shopOffset.x),
+            y: configs.get("shopOffsetY", defaultConfig.shopOffset.y)
         },
         firstland: {
-            x: configs.get("firstlandX"),
-            y: configs.get("firstlandY")
+            x: configs.get("firstlandX", defaultConfig.firstland.x),
+            y: configs.get("firstlandY", defaultConfig.firstland.y)
         },
-        distanceX: configs.get("distanceX"),
-        distanceY: configs.get("distanceY"),
-        matureTime: configs.get("matureTime"),
-        harvestTime: configs.get("harvestTime"),
-        harvestX: configs.get("harvestX"),
-        harvestY: configs.get("harvestY"),
-        harvestRepeat: configs.get("harvestRepeat"),
+        distanceX: configs.get("distanceX", defaultConfig.distanceX),
+        distanceY: configs.get("distanceY", defaultConfig.distanceY),
+        matureTime: configs.get("matureTime", defaultConfig.matureTime),
+        harvestTime: configs.get("harvestTime", defaultConfig.harvestTime),
+        harvestX: configs.get("harvestX", defaultConfig.harvestX),
+        harvestY: configs.get("harvestY", defaultConfig.harvestY),
+        harvestRepeat: configs.get("harvestRepeat", defaultConfig.harvestRepeat),
         showText: {
-            x: configs.get("showTextX"),
-            y: configs.get("showTextY")
+            x: configs.get("showTextX", defaultConfig.showText.x),
+            y: configs.get("showTextY", defaultConfig.showText.y)
         },
-        photoPath: configs.get("photoPath"),
-        accountImgPath: configs.get("accountImgPath"),
-        themeColor: configs.get("themeColor"),
-        shengcang_h: configs.get("shengcang_h"),
-        shengcang_l: configs.get("shengcang_l"),
-        shengcangTime: configs.get("shengcangTime"),
-        isCangkuStatistics: configs.get("isCangkuStatistics"),
-        cangkuStatistics_settings: configs.get("cangkuStatistics_settings"),
-        push_settings: configs.get("push_settings"),
-        cangkuStatisticsTime: configs.get("cangkuStatisticsTime"),
-        cangkuStatisticsPage: configs.get("cangkuStatisticsPage"),
-        treeShouldSwipe: configs.get("treeShouldSwipe"),
+        photoPath: configs.get("photoPath", defaultConfig.photoPath),
+        accountImgPath: configs.get("accountImgPath", defaultConfig.accountImgPath),
+        themeColor: configs.get("themeColor", defaultConfig.themeColor),
+        shengcang_h: configs.get("shengcang_h", defaultConfig.shengcang_h),
+        shengcang_l: configs.get("shengcang_l", defaultConfig.shengcang_l),
+        shengcangTime: configs.get("shengcangTime", defaultConfig.shengcangTime),
+        isCangkuStatistics: configs.get("isCangkuStatistics", defaultConfig.isCangkuStatistics),
+        cangkuStatistics_settings: configs.get("cangkuStatistics_settings", defaultConfig.cangkuStatistics_settings),
+        push_settings: configs.get("push_settings", defaultConfig.push_settings),
+        cangkuStatisticsTime: configs.get("cangkuStatisticsTime", defaultConfig.cangkuStatisticsTime),
+        cangkuStatisticsPage: configs.get("cangkuStatisticsPage", defaultConfig.cangkuStatisticsPage),
+        treeShouldSwipe: configs.get("treeShouldSwipe", defaultConfig.treeShouldSwipe),
         liangcangOffset: {
-            x: configs.get("liangcangOffsetX"),
-            y: configs.get("liangcangOffsetY")
+            x: configs.get("liangcangOffsetX", defaultConfig.liangcangOffset.x),
+            y: configs.get("liangcangOffsetY", defaultConfig.liangcangOffset.y)
         },
         huocangOffset: {
-            x: configs.get("huocangOffsetX"),
-            y: configs.get("huocangOffsetY")
+            x: configs.get("huocangOffsetX", defaultConfig.huocangOffset.x),
+            y: configs.get("huocangOffsetY", defaultConfig.huocangOffset.y)
         },
-        token: configs.get("token"),
-        telegramChatId: configs.get("telegramChatId"),
-        telegramBotToken: configs.get("telegramBotToken"),
-        serverPlatform: configs.get("serverPlatform"),
-        harvestMode: configs.get("harvestMode"),
-        shuadi_enabled: configs.get("shuadi_enabled"),
+        token: configs.get("token", defaultConfig.token),
+        telegramChatId: configs.get("telegramChatId", defaultConfig.telegramChatId),
+        telegramBotToken: configs.get("telegramBotToken", defaultConfig.telegramBotToken),
+        serverPlatform: configs.get("serverPlatform", defaultConfig.serverPlatform),
+        harvestMode: configs.get("harvestMode", defaultConfig.harvestMode),
+        shuadi_enabled: configs.get("shuadi_enabled", defaultConfig.shuadi_enabled),
         tomFind: {
-            enabled: configs.get("Tom_enabled"),
-            type: configs.get("Tom_itemType"),
-            code: configs.get("Tom_code"),
-            text: configs.get("Tom_itemName")
+            enabled: configs.get("Tom_enabled", defaultConfig.tomFind.enabled),
+            type: configs.get("Tom_itemType", defaultConfig.tomFind.type),
+            code: configs.get("Tom_code", defaultConfig.tomFind.code),
+            text: configs.get("Tom_itemName", defaultConfig.tomFind.text)
         },
         pond: {
-            enabled: configs.get("pond_enabled"),
-            name: configs.get("pond_itemName"),
-            ponds: configs.get("pond_ponds")
+            enabled: configs.get("pond_enabled", defaultConfig.pond.enabled),
+            name: configs.get("pond_itemName", defaultConfig.pond.name),
+            ponds: configs.get("pond_ponds", defaultConfig.pond.ponds)
         },
         honeycomb: {
-            enabled: configs.get("honeycomb_enabled"),
-            name: configs.get("honeycomb_name"),
-            addFlower: configs.get("honeycomb_addFlower")
+            enabled: configs.get("honeycomb_enabled", defaultConfig.honeycomb.enabled),
+            name: configs.get("honeycomb_name", defaultConfig.honeycomb.name),
+            addFlower: configs.get("honeycomb_addFlower", defaultConfig.honeycomb.addFlower)
         },
-        CangkuSoldList: configs.get("CangkuSoldList", CangkuSoldList),
-        isCangkuSold: configs.get("isCangkuSold", false),
-        CangkuSold_triggerNum: configs.get("CangkuSold_triggerNum", 10),
-        CangkuSold_targetNum: configs.get("CangkuSold_targetNum", 25),
-        restartWithShell: configs.get("restartWithShell", false),
-        returnDesktop: configs.get("returnDesktop", false),
+        CangkuSoldList: configs.get("CangkuSoldList", defaultConfig.CangkuSoldList),
+        isCangkuSold: configs.get("isCangkuSold", defaultConfig.isCangkuSold),
+        CangkuSold_triggerNum: configs.get("CangkuSold_triggerNum", defaultConfig.CangkuSold_triggerNum),
+        CangkuSold_targetNum: configs.get("CangkuSold_targetNum", defaultConfig.CangkuSold_targetNum),
+        restartWithShell: configs.get("restartWithShell", defaultConfig.restartWithShell),
+        returnDesktop: configs.get("returnDesktop", defaultConfig.returnDesktop),
         screenshotCoords: {
             coord1: {
-                x: configs.get("screenshotX1"),
-                y: configs.get("screenshotY1")
+                x: configs.get("screenshotX1", defaultConfig.screenshotCoords.coord1.x),
+                y: configs.get("screenshotY1", defaultConfig.screenshotCoords.coord1.y)
             },
             coord2: {
-                x: configs.get("screenshotX2"),
-                y: configs.get("screenshotY2")
+                x: configs.get("screenshotX2", defaultConfig.screenshotCoords.coord2.x),
+                y: configs.get("screenshotY2", defaultConfig.screenshotCoords.coord2.y)
             },
             coord3: {
-                x: configs.get("screenshotX3"),
-                y: configs.get("screenshotY3")
+                x: configs.get("screenshotX3", defaultConfig.screenshotCoords.coord3.x),
+                y: configs.get("screenshotY3", defaultConfig.screenshotCoords.coord3.y)
             },
         },
         switchAccountCoords: {
             coord1: {
-                x: configs.get("switchAccountX1"),
-                y: configs.get("switchAccountY1")
+                x: configs.get("switchAccountX1", defaultConfig.switchAccountCoords.coord1.x),
+                y: configs.get("switchAccountY1", defaultConfig.switchAccountCoords.coord1.y)
             },
             coord2: {
-                x: configs.get("switchAccountX2"),
-                y: configs.get("switchAccountY2")
+                x: configs.get("switchAccountX2", defaultConfig.switchAccountCoords.coord2.x),
+                y: configs.get("switchAccountY2", defaultConfig.switchAccountCoords.coord2.y)
             },
             coord3: {
-                x: configs.get("switchAccountX3"),
-                y: configs.get("switchAccountY3")
+                x: configs.get("switchAccountX3", defaultConfig.switchAccountCoords.coord3.x),
+                y: configs.get("switchAccountY3", defaultConfig.switchAccountCoords.coord3.y)
             },
         },
-        clearFans: configs.get("clearFans"),
-        sell_accountList: configs.get("sell_accountList"),
-        waitShelf: configs.get("waitShelf"),
-        coin_mainAccount: configs.get("coin_mainAccount"),
-        coin_mainAccount_picName: configs.get("coin_mainAccount_picName"),
-        coin_subAccount: configs.get("coin_subAccount"),
-        coin_subAccount_picName: configs.get("coin_subAccount_picName"),
-        coin_item: configs.get("coin_item"),
-        coin_picDirPath: configs.get("coin_picDirPath"),
-        storageUpgrade_picDirPath: configs.get("storageUpgrade_picDirPath"),
-        account_config: configs.get("account_config"),
-        storageUpgradeMethod: configs.get("storageUpgradeMethod"),
-        friendInterface: configs.get("friendInterface"),
+        clearFans: configs.get("clearFans", defaultConfig.clearFans),
+        sell_accountList: configs.get("sell_accountList", defaultConfig.sell_accountList),
+        waitShelf: configs.get("waitShelf", defaultConfig.waitShelf),
+        coin_mainAccount: configs.get("coin_mainAccount", defaultConfig.coin_mainAccount),
+        coin_mainAccount_picName: configs.get("coin_mainAccount_picName", defaultConfig.coin_mainAccount_picName),
+        coin_subAccount: configs.get("coin_subAccount", defaultConfig.coin_subAccount),
+        coin_subAccount_picName: configs.get("coin_subAccount_picName", defaultConfig.coin_subAccount_picName),
+        coin_item: configs.get("coin_item", defaultConfig.coin_item),
+        coin_picDirPath: configs.get("coin_picDirPath", defaultConfig.coin_picDirPath),
+        storageUpgrade_picDirPath: configs.get("storageUpgrade_picDirPath", defaultConfig.storageUpgrade_picDirPath),
+        account_config: configs.get("account_config", defaultConfig.account_config),
+        storageUpgradeMethod: configs.get("storageUpgradeMethod", defaultConfig.storageUpgradeMethod),
+        friendInterface: configs.get("friendInterface", defaultConfig.friendInterface),
     };
     return storedConfig;
 }
@@ -4219,124 +4220,130 @@ function getConfig() {
  */
 function saveConfig(con) {
     try {
+        let defaultConfig = getDefaultConfig();
         // 将配置项分散存储到不同的键中
-        configs.put("selectedFunction", con.selectedFunction);
-        configs.put("shuadi_enabled", con.shuadi_enabled);
-        configs.put("selectedCrop", con.selectedCrop);
-        configs.put("selectedTree", con.selectedTree);
-        configs.put("switchAccount", con.switchAccount);
-        configs.put("findAccountMethod", con.findAccountMethod);
-        configs.put("accountMethod", con.accountMethod);
-        configs.put("accountList", con.accountList);
-        configs.put("account_config", con.account_config);
-        configs.put("saveAccountList", con.saveAccountList);
-        configs.put("addFriendsList", con.addFriendsList);
-        configs.put("shopPrice", con.shopPrice);
-        configs.put("ReservedQuantity", con.ReservedQuantity);
-        configs.put("pauseTime", con.pauseTime);
-        configs.put("landFindMethod", con.landFindMethod);
-        configs.put("coinCollectionMethod", con.coinCollectionMethod);
-        configs.put("syncHarvest", con.syncHarvest);
-        configs.put("tom_FirstHire", con.tom_FirstHire);
+        configs.put("selectedFunction", con.selectedFunction !== undefined ? con.selectedFunction : defaultConfig.selectedFunction);
+        configs.put("shuadi_enabled", con.shuadi_enabled !== undefined ? con.shuadi_enabled : defaultConfig.shuadi_enabled);
+        configs.put("selectedCrop", con.selectedCrop !== undefined ? con.selectedCrop : defaultConfig.selectedCrop);
+        configs.put("selectedTree", con.selectedTree !== undefined ? con.selectedTree : defaultConfig.selectedTree);
+        configs.put("switchAccount", con.switchAccount !== undefined ? con.switchAccount : defaultConfig.switchAccount);
+        configs.put("findAccountMethod", con.findAccountMethod !== undefined ? con.findAccountMethod : defaultConfig.findAccountMethod);
+        configs.put("accountMethod", con.accountMethod !== undefined ? con.accountMethod : defaultConfig.accountMethod);
+        configs.put("accountList", con.accountList !== undefined ? con.accountList : defaultConfig.accountList);
+        configs.put("account_config", con.account_config !== undefined ? con.account_config : defaultConfig.account_config);
+        configs.put("saveAccountList", con.saveAccountList !== undefined ? con.saveAccountList : defaultConfig.saveAccountList);
+        configs.put("addFriendsList", con.addFriendsList !== undefined ? con.addFriendsList : defaultConfig.addFriendsList);
+        configs.put("shopPrice", con.shopPrice !== undefined ? con.shopPrice : defaultConfig.shopPrice);
+        configs.put("ReservedQuantity", con.ReservedQuantity !== undefined ? con.ReservedQuantity : defaultConfig.ReservedQuantity);
+        configs.put("pauseTime", con.pauseTime !== undefined ? con.pauseTime : defaultConfig.pauseTime);
+        configs.put("landFindMethod", con.landFindMethod !== undefined ? con.landFindMethod : defaultConfig.landFindMethod);
+        configs.put("coinCollectionMethod", con.coinCollectionMethod !== undefined ? con.coinCollectionMethod : defaultConfig.coinCollectionMethod);
+        configs.put("syncHarvest", con.syncHarvest !== undefined ? con.syncHarvest : defaultConfig.syncHarvest);
+        configs.put("tom_FirstHire", con.tom_FirstHire !== undefined ? con.tom_FirstHire : defaultConfig.tom_FirstHire);
 
         // 存储偏移量配置
-        configs.put("landOffsetX", con.landOffset.x);
-        configs.put("landOffsetY", con.landOffset.y);
-        configs.put("shopOffsetX", con.shopOffset.x);
-        configs.put("shopOffsetY", con.shopOffset.y);
-        configs.put("firstlandX", con.firstland.x);
-        configs.put("firstlandY", con.firstland.y);
+        configs.put("landOffsetX", con.landOffset && con.landOffset.x !== undefined ? con.landOffset.x : defaultConfig.landOffset.x);
+        configs.put("landOffsetY", con.landOffset && con.landOffset.y !== undefined ? con.landOffset.y : defaultConfig.landOffset.y);
+        configs.put("shopOffsetX", con.shopOffset && con.shopOffset.x !== undefined ? con.shopOffset.x : defaultConfig.shopOffset.x);
+        configs.put("shopOffsetY", con.shopOffset && con.shopOffset.y !== undefined ? con.shopOffset.y : defaultConfig.shopOffset.y);
+        configs.put("firstlandX", con.firstland && con.firstland.x !== undefined ? con.firstland.x : defaultConfig.firstland.x);
+        configs.put("firstlandY", con.firstland && con.firstland.y !== undefined ? con.firstland.y : defaultConfig.firstland.y);
 
-        configs.put("distanceX", con.distanceX);
-        configs.put("distanceY", con.distanceY);
-        configs.put("matureTime", con.matureTime);
-        configs.put("harvestTime", con.harvestTime);
-        configs.put("harvestX", con.harvestX);
-        configs.put("harvestY", con.harvestY);
-        configs.put("harvestRepeat", con.harvestRepeat);
+        configs.put("distanceX", con.distanceX !== undefined ? con.distanceX : defaultConfig.distanceX);
+        configs.put("distanceY", con.distanceY !== undefined ? con.distanceY : defaultConfig.distanceY);
+        configs.put("matureTime", con.matureTime !== undefined ? con.matureTime : defaultConfig.matureTime);
+        configs.put("harvestTime", con.harvestTime !== undefined ? con.harvestTime : defaultConfig.harvestTime);
+        configs.put("harvestX", con.harvestX !== undefined ? con.harvestX : defaultConfig.harvestX);
+        configs.put("harvestY", con.harvestY !== undefined ? con.harvestY : defaultConfig.harvestY);
+        configs.put("harvestRepeat", con.harvestRepeat !== undefined ? con.harvestRepeat : defaultConfig.harvestRepeat);
 
         // 存储悬浮窗坐标
-        configs.put("showTextX", con.showText.x);
-        configs.put("showTextY", con.showText.y);
+        configs.put("showTextX", con.showText && con.showText.x !== undefined ? con.showText.x : defaultConfig.showText.x);
+        configs.put("showTextY", con.showText && con.showText.y !== undefined ? con.showText.y : defaultConfig.showText.y);
 
-        configs.put("photoPath", con.photoPath);
-        configs.put("themeColor", con.themeColor);
-        configs.put("shengcang_h", con.shengcang_h);
-        configs.put("shengcang_l", con.shengcang_l);
-        configs.put("shengcangTime", con.shengcangTime);
-        configs.put("isCangkuStatistics", con.isCangkuStatistics);
-        configs.put("cangkuStatisticsTime", con.cangkuStatisticsTime);
-        configs.put("cangkuStatisticsPage", con.cangkuStatisticsPage);
-        configs.put("treeShouldSwipe", con.treeShouldSwipe);
-        configs.put("clearFans", con.clearFans);
-        configs.put("waitShelf", con.waitShelf);
+        configs.put("photoPath", con.photoPath !== undefined ? con.photoPath : defaultConfig.photoPath);
+        configs.put("themeColor", con.themeColor !== undefined ? con.themeColor : defaultConfig.themeColor);
+        configs.put("shengcang_h", con.shengcang_h !== undefined ? con.shengcang_h : defaultConfig.shengcang_h);
+        configs.put("shengcang_l", con.shengcang_l !== undefined ? con.shengcang_l : defaultConfig.shengcang_l);
+        configs.put("shengcangTime", con.shengcangTime !== undefined ? con.shengcangTime : defaultConfig.shengcangTime);
+        configs.put("isCangkuStatistics", con.isCangkuStatistics !== undefined ? con.isCangkuStatistics : defaultConfig.isCangkuStatistics);
+        configs.put("cangkuStatistics_settings", con.cangkuStatistics_settings !== undefined ? con.cangkuStatistics_settings : defaultConfig.cangkuStatistics_settings);
+        configs.put("push_settings", con.push_settings !== undefined ? con.push_settings : defaultConfig.push_settings);
+        configs.put("cangkuStatisticsTime", con.cangkuStatisticsTime !== undefined ? con.cangkuStatisticsTime : defaultConfig.cangkuStatisticsTime);
+        configs.put("cangkuStatisticsPage", con.cangkuStatisticsPage !== undefined ? con.cangkuStatisticsPage : defaultConfig.cangkuStatisticsPage);
+        configs.put("treeShouldSwipe", con.treeShouldSwipe !== undefined ? con.treeShouldSwipe : defaultConfig.treeShouldSwipe);
+        configs.put("clearFans", con.clearFans !== undefined ? con.clearFans : defaultConfig.clearFans);
+        configs.put("waitShelf", con.waitShelf !== undefined ? con.waitShelf : defaultConfig.waitShelf);
 
         // 存储粮仓和货仓偏移量
-        configs.put("liangcangOffsetX", con.liangcangOffset.x);
-        configs.put("liangcangOffsetY", con.liangcangOffset.y);
-        configs.put("huocangOffsetX", con.huocangOffset.x);
-        configs.put("huocangOffsetY", con.huocangOffset.y);
+        configs.put("liangcangOffsetX", con.liangcangOffset && con.liangcangOffset.x !== undefined ? con.liangcangOffset.x : defaultConfig.liangcangOffset.x);
+        configs.put("liangcangOffsetY", con.liangcangOffset && con.liangcangOffset.y !== undefined ? con.liangcangOffset.y : defaultConfig.liangcangOffset.y);
+        configs.put("huocangOffsetX", con.huocangOffset && con.huocangOffset.x !== undefined ? con.huocangOffset.x : defaultConfig.huocangOffset.x);
+        configs.put("huocangOffsetY", con.huocangOffset && con.huocangOffset.y !== undefined ? con.huocangOffset.y : defaultConfig.huocangOffset.y);
 
-        configs.put("token", con.token);
-        configs.put("telegramChatId", con.telegramChatId);
-        configs.put("telegramBotToken", con.telegramBotToken);
-        configs.put("serverPlatform", con.serverPlatform);
-        configs.put("harvestMode", con.harvestMode);
+        configs.put("token", con.token !== undefined ? con.token : defaultConfig.token);
+        configs.put("telegramChatId", con.telegramChatId !== undefined ? con.telegramChatId : defaultConfig.telegramChatId);
+        configs.put("telegramBotToken", con.telegramBotToken !== undefined ? con.telegramBotToken : defaultConfig.telegramBotToken);
+        configs.put("serverPlatform", con.serverPlatform !== undefined ? con.serverPlatform : defaultConfig.serverPlatform);
+        configs.put("harvestMode", con.harvestMode !== undefined ? con.harvestMode : defaultConfig.harvestMode);
 
         // 存储汤姆查找配置
-        configs.put("Tom_enabled", con.tomFind.enabled);
-        configs.put("Tom_itemType", con.tomFind.type);
-        configs.put("Tom_code", con.tomFind.code);
-        configs.put("Tom_itemName", con.tomFind.text);
+        configs.put("Tom_enabled", con.tomFind && con.tomFind.enabled !== undefined ? con.tomFind.enabled : defaultConfig.tomFind.enabled);
+        configs.put("Tom_itemType", con.tomFind && con.tomFind.type !== undefined ? con.tomFind.type : defaultConfig.tomFind.type);
+        configs.put("Tom_code", con.tomFind && con.tomFind.code !== undefined ? con.tomFind.code : defaultConfig.tomFind.code);
+        configs.put("Tom_itemName", con.tomFind && con.tomFind.text !== undefined ? con.tomFind.text : defaultConfig.tomFind.text);
 
         // 存储鱼塘配置
-        configs.put("pond_enabled", con.pond.enabled);
-        configs.put("pond_itemName", con.pond.name);
-        configs.put("pond_ponds", con.pond.ponds);
+        configs.put("pond_enabled", con.pond && con.pond.enabled !== undefined ? con.pond.enabled : defaultConfig.pond.enabled);
+        configs.put("pond_itemName", con.pond && con.pond.name !== undefined ? con.pond.name : defaultConfig.pond.name);
+        configs.put("pond_ponds", con.pond && con.pond.ponds !== undefined ? con.pond.ponds : defaultConfig.pond.ponds);
 
         // 存储蜂蜜comb配置
-        configs.put("honeycomb_enabled", con.honeycomb.enabled);
-        configs.put("honeycomb_name", con.honeycomb.name);
-        configs.put("honeycomb_addFlower", con.honeycomb.addFlower);
+        configs.put("honeycomb_enabled", con.honeycomb && con.honeycomb.enabled !== undefined ? con.honeycomb.enabled : defaultConfig.honeycomb.enabled);
+        configs.put("honeycomb_name", con.honeycomb && con.honeycomb.name !== undefined ? con.honeycomb.name : defaultConfig.honeycomb.name);
+        configs.put("honeycomb_addFlower", con.honeycomb && con.honeycomb.addFlower !== undefined ? con.honeycomb.addFlower : defaultConfig.honeycomb.addFlower);
 
         // 存储截图坐标
-        configs.put("screenshotX1", con.screenshotCoords.coord1.x);
-        configs.put("screenshotY1", con.screenshotCoords.coord1.y);
-        configs.put("screenshotX2", con.screenshotCoords.coord2.x);
-        configs.put("screenshotY2", con.screenshotCoords.coord2.y);
-        configs.put("screenshotX3", con.screenshotCoords.coord3.x);
-        configs.put("screenshotY3", con.screenshotCoords.coord3.y);
+        configs.put("screenshotX1", con.screenshotCoords && con.screenshotCoords.coord1 && con.screenshotCoords.coord1.x !== undefined ? con.screenshotCoords.coord1.x : defaultConfig.screenshotCoords.coord1.x);
+        configs.put("screenshotY1", con.screenshotCoords && con.screenshotCoords.coord1 && con.screenshotCoords.coord1.y !== undefined ? con.screenshotCoords.coord1.y : defaultConfig.screenshotCoords.coord1.y);
+        configs.put("screenshotX2", con.screenshotCoords && con.screenshotCoords.coord2 && con.screenshotCoords.coord2.x !== undefined ? con.screenshotCoords.coord2.x : defaultConfig.screenshotCoords.coord2.x);
+        configs.put("screenshotY2", con.screenshotCoords && con.screenshotCoords.coord2 && con.screenshotCoords.coord2.y !== undefined ? con.screenshotCoords.coord2.y : defaultConfig.screenshotCoords.coord2.y);
+        configs.put("screenshotX3", con.screenshotCoords && con.screenshotCoords.coord3 && con.screenshotCoords.coord3.x !== undefined ? con.screenshotCoords.coord3.x : defaultConfig.screenshotCoords.coord3.x);
+        configs.put("screenshotY3", con.screenshotCoords && con.screenshotCoords.coord3 && con.screenshotCoords.coord3.y !== undefined ? con.screenshotCoords.coord3.y : defaultConfig.screenshotCoords.coord3.y);
 
         // 存储切换账号坐标
-        configs.put("switchAccountX1", con.switchAccountCoords.coord1.x);
-        configs.put("switchAccountY1", con.switchAccountCoords.coord1.y);
-        configs.put("switchAccountX2", con.switchAccountCoords.coord2.x);
-        configs.put("switchAccountY2", con.switchAccountCoords.coord2.y);
-        configs.put("switchAccountX3", con.switchAccountCoords.coord3.x);
-        configs.put("switchAccountY3", con.switchAccountCoords.coord3.y);
+        configs.put("switchAccountX1", con.switchAccountCoords && con.switchAccountCoords.coord1 && con.switchAccountCoords.coord1.x !== undefined ? con.switchAccountCoords.coord1.x : defaultConfig.switchAccountCoords.coord1.x);
+        configs.put("switchAccountY1", con.switchAccountCoords && con.switchAccountCoords.coord1 && con.switchAccountCoords.coord1.y !== undefined ? con.switchAccountCoords.coord1.y : defaultConfig.switchAccountCoords.coord1.y);
+        configs.put("switchAccountX2", con.switchAccountCoords && con.switchAccountCoords.coord2 && con.switchAccountCoords.coord2.x !== undefined ? con.switchAccountCoords.coord2.x : defaultConfig.switchAccountCoords.coord2.x);
+        configs.put("switchAccountY2", con.switchAccountCoords && con.switchAccountCoords.coord2 && con.switchAccountCoords.coord2.y !== undefined ? con.switchAccountCoords.coord2.y : defaultConfig.switchAccountCoords.coord2.y);
+        configs.put("switchAccountX3", con.switchAccountCoords && con.switchAccountCoords.coord3 && con.switchAccountCoords.coord3.x !== undefined ? con.switchAccountCoords.coord3.x : defaultConfig.switchAccountCoords.coord3.x);
+        configs.put("switchAccountY3", con.switchAccountCoords && con.switchAccountCoords.coord3 && con.switchAccountCoords.coord3.y !== undefined ? con.switchAccountCoords.coord3.y : defaultConfig.switchAccountCoords.coord3.y);
 
 
-        configs.put("CangkuSold_triggerNum", con.CangkuSold_triggerNum);
-        configs.put("CangkuSold_targetNum", con.CangkuSold_targetNum);
+        configs.put("CangkuSoldList", con.CangkuSoldList !== undefined ? con.CangkuSoldList : defaultConfig.CangkuSoldList);
+        configs.put("isCangkuSold", con.isCangkuSold !== undefined ? con.isCangkuSold : defaultConfig.isCangkuSold);
+        configs.put("CangkuSold_triggerNum", con.CangkuSold_triggerNum !== undefined ? con.CangkuSold_triggerNum : defaultConfig.CangkuSold_triggerNum);
+        configs.put("CangkuSold_targetNum", con.CangkuSold_targetNum !== undefined ? con.CangkuSold_targetNum : defaultConfig.CangkuSold_targetNum);
 
-        configs.put("sell_accountList", con.sell_accountList || []);
+        configs.put("sell_accountList", con.sell_accountList !== undefined ? con.sell_accountList : defaultConfig.sell_accountList);
 
         //倒金币
-        configs.put("coin_mainAccount", con.coin_mainAccount);
-        configs.put("coin_mainAccount_picName", con.coin_mainAccount_picName);
-        configs.put("coin_subAccount", con.coin_subAccount);
-        configs.put("coin_subAccount_picName", con.coin_subAccount_picName);
-        configs.put("coin_item", con.coin_item);
-        configs.put("coin_picDirPath", con.coin_picDirPath);
+        configs.put("coin_mainAccount", con.coin_mainAccount !== undefined ? con.coin_mainAccount : defaultConfig.coin_mainAccount);
+        configs.put("coin_mainAccount_picName", con.coin_mainAccount_picName !== undefined ? con.coin_mainAccount_picName : defaultConfig.coin_mainAccount_picName);
+        configs.put("coin_subAccount", con.coin_subAccount !== undefined ? con.coin_subAccount : defaultConfig.coin_subAccount);
+        configs.put("coin_subAccount_picName", con.coin_subAccount_picName !== undefined ? con.coin_subAccount_picName : defaultConfig.coin_subAccount_picName);
+        configs.put("coin_item", con.coin_item !== undefined ? con.coin_item : defaultConfig.coin_item);
+        configs.put("coin_picDirPath", con.coin_picDirPath !== undefined ? con.coin_picDirPath : defaultConfig.coin_picDirPath);
+        configs.put("accountImgPath", con.accountImgPath !== undefined ? con.accountImgPath : defaultConfig.accountImgPath);
 
         //升仓
-        configs.put("storageUpgradeMethod", con.storageUpgradeMethod);
-        configs.put("friendInterface", con.friendInterface);
-        configs.put("storageUpgrade_picDirPath", con.storageUpgrade_picDirPath);
+        configs.put("storageUpgradeMethod", con.storageUpgradeMethod !== undefined ? con.storageUpgradeMethod : defaultConfig.storageUpgradeMethod);
+        configs.put("friendInterface", con.friendInterface !== undefined ? con.friendInterface : defaultConfig.friendInterface);
+        configs.put("storageUpgrade_picDirPath", con.storageUpgrade_picDirPath !== undefined ? con.storageUpgrade_picDirPath : defaultConfig.storageUpgrade_picDirPath);
 
         // 存储其他配置项
-        configs.put("restartWithShell", con.restartWithShell);
-        configs.put("returnDesktop", con.returnDesktop);
+        configs.put("restartWithShell", con.restartWithShell !== undefined ? con.restartWithShell : defaultConfig.restartWithShell);
+        configs.put("returnDesktop", con.returnDesktop !== undefined ? con.returnDesktop : defaultConfig.returnDesktop);
 
         // console.log("配置保存成功");
         return true;
@@ -4721,7 +4728,13 @@ function validateConfig(config) {
     } else config.CangkuSold_targetNum = Number(config.CangkuSold_targetNum);
 
     // 验证token
-    if (config.token == undefined || config.token === undefined) config.token = defaultConfig.token;
+    if (config.token == undefined) config.token = defaultConfig.token;
+
+    //验证telegramBotToken
+    if (config.telegramBotToken == undefined) config.telegramBotToken = defaultConfig.telegramBotToken;
+
+    //验证telegramChatId
+    if (config.telegramChatId == undefined) config.telegramChatId = defaultConfig.telegramChatId;
 
     // 验证推送方式
     if (!config.serverPlatform) config.serverPlatform = defaultConfig.serverPlatform;
@@ -5047,6 +5060,14 @@ function getDefaultConfig() {
         coin_subAccount_picName: "",
         coin_item: "",
         coin_picDirPath: "",
+
+        // Telegram相关配置
+        telegramBotToken: "",
+        telegramChatId: "",
+
+        // 其他配置
+        sell_accountList: [],
+        account_config: [],
 
     };
 }
