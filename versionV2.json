@@ -1,7 +1,7 @@
 {
-  "version": "2.3.1",
-  "description": "v2.3.1\n\n### Bug修复\n修复升仓功能的Bug(晕头了,测试的内容没改过来)\n\n功能优化\n更改仓库进入页面识别方式\n\n新增功能\n添加刷地开关,可选择是否进行刷地,自由选择鱼塘,汤姆,蜂蜜功能.仅鱼塘,仅汤姆可以失业了",
-  "zip_name": "卡通农场小助手v2.3.1.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.1/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.1.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.1/v2.3.1.zip"
+  "version": "2.3.2",
+  "description": "v2.3.2\n\n### Bug修复\n修复配置的读取和存储问题\n\n\n",
+  "zip_name": "卡通农场小助手v2.3.2.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.2/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.2.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.2/v2.3.2.zip"
 }
