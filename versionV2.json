@@ -1,7 +1,7 @@
 {
-  "version": "2.3.2",
-  "description": "v2.3.2\n\n### Bug修复\n修复配置的读取和存储问题\n\n\n",
-  "zip_name": "卡通农场小助手v2.3.2.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.2/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.2.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.2/v2.3.2.zip"
+  "version": "2.3.3",
+  "description": "v2.3.3\n\nBug修复\n- 修复关闭刷地后,开启蜂蜜功能后频繁切号的问题\n- 修复升仓的仓库界面判断问题\n- 创新号功能已可以正常使用\n- 修复关闭刷地后,仅开启汤姆功能的计时器问题\n\n功能优化\n- 优化蜂糖未成熟时的计时器,如果蜂窝未成熟,按剩余时间百分比设置计时器\n\n\n",
+  "zip_name": "卡通农场小助手v2.3.3.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.3/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.3.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.3/v2.3.3.zip"
 }

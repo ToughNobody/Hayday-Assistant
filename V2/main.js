@@ -5701,6 +5701,16 @@ function startButton() {
                 })
             }
             else if (!config.shuadi_enabled) {
+                log(config.pond.enabled, config.tomFind.enabled, config.honeycomb.enabled);
+                if (!(config.pond.enabled || config.tomFind.enabled || config.honeycomb.enabled)) {
+                    toast("请先开启鱼塘、汤姆、蜂蜜的任意一项");
+                    return;
+                }
+                if (config.tomFind.enabled && !config.tomFind.text) {
+                    toast("请输入汤姆寻找的物品");
+                    return;
+                }
+
                 threads.start(() => {
                     log("开始启动引擎");
                     launch("com.supercell.hayday");

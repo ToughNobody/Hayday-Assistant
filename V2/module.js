@@ -2448,6 +2448,20 @@ function honeycomb_operation(account_config) {
             } else if (findMC(allItemColor["蜂糖篮_不可收集"])) {
                 log("蜂糖未成熟")
                 showTip("蜂糖未成熟")
+                let jiasu = findMC(allItemColor["jiasuButton"])
+                log(jiasu)
+                if (jiasu) {
+                    let region0 = [jiasu.x - 351, jiasu.y + 27, jiasu.x - 147, jiasu.y + 88]
+                    let region = [region0[0], region0[1], region0[2] - region0[0], region0[3] - region0[1]]
+                    let result = findFont(captureScreen(), region, "#ffffff", 8,  Font.FontLibrary_timeRemaining, 0.8,);
+                    let splitResult = result.split("/")
+                    if (splitResult.length == 2) {
+                        let difference = Number(splitResult[1]) - Number(splitResult[0])
+                        let remainingTime = Math.ceil(difference / 100 * 35 * 60)  //剩余时间 总共35分钟
+                        timer(currentHoneycombTimerName, remainingTime)
+                        break;
+                    }
+                }
                 break;
             } else {
                 log("第" + (i + 1) + "次,未检测到蜂蜜树界面")
@@ -2617,7 +2631,7 @@ function tomOperation(account_config) {
 
     //如果没有雇佣汤姆，输出提示，并返回false
     if (!tom_isWork) {
-        log("没有雇佣汤姆")
+        log("没有雇佣汤姆.1")
         showTip("没有雇佣汤姆");
         return false;
     }
@@ -5331,7 +5345,7 @@ function timer(timer_Name, seconds = 120) {
             duration: duration,
             endTime: endTime
         });
-        log(`已启动计时器: ${timer_Name}，倒计时 ${seconds} 秒`);
+        log((`已启动计时器: ${timer_Name}，倒计时 ${seconds} 秒`));
 
     } catch (e) {
         console.error("timer函数出错:", e);
@@ -5357,19 +5371,19 @@ function initAllTimers(Account_config) {
         // 初始化鱼塘计时器
         if (config.pond.enabled &&account.pond && account.pond.enabled) {
             log(`初始化鱼塘计时器: ${AccountName}`);
-            timer(AccountName + "鱼塘计时器", timerState);
+            timeStorage.put(AccountName + "鱼塘计时器", timerState);
         }
 
         // 初始化蜂糖计时器
         if (config.honeycomb.enabled && account.honeycomb && account.honeycomb.enabled) {
             log(`初始化蜂糖计时器: ${AccountName}`);
-            timer(AccountName + "蜂糖计时器", timerState);
+            timeStorage.put(AccountName + "蜂糖计时器", timerState);
         }
 
         // 初始化Tom计时器
         if (config.tomFind.enabled && account.tomFind && account.tomFind.enabled) {
             log(`初始化Tom计时器: ${AccountName}`);
-            timer(AccountName + "Tom计时器", timerState);
+            timeStorage.put(AccountName + "Tom计时器", timerState);
         }
     }
 }

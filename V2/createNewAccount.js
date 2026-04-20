@@ -6,6 +6,11 @@ const module = require("./module.js");
 let config = module.config;
 const doneAddFriendsList = config.addFriendsList.filter(account => account.addFriendsdone === true);
 
+
+const 收集篮子 = ["#ffec51", [-2, -26, "#aa5b16"], [60, 22, "#ffef8c"],
+    [76, 38, "#ffef8c"], [-22, 2, "#f6c539"]]
+const 对话 = [{ x: 523, y: 112, color: "#f4ebdc" }, { x: 1150, y: 125, color: "#f4ebdf" },
+{ x: 531, y: 489, color: "#f3e7c8" }, { x: 1162, y: 505, color: "#f3e8c8" }]
 // 启动自动点击权限请求
 // module.autoSc();
 
@@ -79,7 +84,13 @@ function inputAge() {
     }
 };
 
-
+/**
+ * 查找箭头
+ * @param {boolean} isClick - 是否点击箭头
+ * @param {number} posY - 箭头垂直偏移量
+ * @param {number} maxNum - 最大查找次数,每次查找间隔100ms,最多查找30次
+ * @returns {object|null} 箭头位置对象或null
+ */
 function findArrow(isClick = true, posY = 35, maxNum = 30) {
     try {
         let arrow = null;
@@ -310,7 +321,7 @@ function findJiaSuBtn() {
                 module.showTip("找到加速按钮")
                 log("找到加速按钮")
                 num = 0; // 重置计数器
-                sleep(300);
+                sleep(800);
                 click(jiasu.x, jiasu.y);
                 break; // 找到并点击后退出当前循环
             }
@@ -482,8 +493,7 @@ function jiazai() {
                 break
             };
 
-            duihua = module.matchColor([{ x: 523, y: 112, color: "#f4ebdc" }, { x: 1150, y: 125, color: "#f4ebdf" },
-            { x: 531, y: 489, color: "#f3e7c8" }, { x: 1162, y: 505, color: "#f3e8c8" }], sc);
+            duihua = module.matchColor(对话, sc);
             // log("duihua", duihua);
             if (duihua) {
                 // click(850, 400);
@@ -597,21 +607,39 @@ function main() {
         sleep(500);
         plantCrop(["#ffffff", [-50, 26, "#d3ab83"], [1, 27, "#ff655a"], [35, -7, "#d1a87f"], [-5, -13, "#ff5949"]])
         sleep(500);
-        findJiaSuBtn();
-        if (!plantCrop(["#ffec51", [-2, -26, "#aa5b16"], [60, 22, "#ffef8c"],
-            [76, 38, "#ffef8c"], [-22, 2, "#f6c539"]])) {
-            findArrow();
-            sleep(1000);
-            plantCrop(["#ffec51", [-2, -26, "#aa5b16"], [60, 22, "#ffef8c"],
-                [76, 38, "#ffef8c"], [-22, 2, "#f6c539"]]);
+
+        while (true) {
+            var num = 0;
+            if (num != 0 && !(findArrow(true, 0, 30) && module.findMC(收集篮子))) break;  //没找到篮子和箭头且不是第一次
+            findJiaSuBtn();
+            sleep(500);
+            if (module.findMC(收集篮子)) {
+                plantCrop(收集篮子);   //收集
+                sleep(500);
+                if (module.findMC(收集篮子)) click(220, 480);     //如果收集后还有,说明加速按钮没按完,点到可收集的母鸡,点其他地方取消
+            }
+            if (module.matchColor(对话)) {
+                break;
+            }
+            num++;
         }
-        sleep(1000);
+
+
+        // sleep(1000);
+        // if (!plantCrop(收集篮子)) {
+        //     findArrow();
+        //     sleep(1000);
+        //     plantCrop(收集篮子);
+        // }
+        // sleep(1000);
         clickDuihua();
         //点击卡车订单面板
         findArrow(true, 100);//订单
         dingdan();
         clickDuihua();
         sleep(2000);
+        clickDuihua();
+        sleep(1000);
         //点击卡车
         findArrow(true, 50);
         sleep(500);

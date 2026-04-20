@@ -69,7 +69,7 @@ function storageUpgradeStatistics(type) {
         module.click_cangku("lc", isFindShop);
         sleep(500);
 
-        if (module.click_waitFor(null, null, allItemColor["粮仓界面"], null, 0.8, 200)) {  //判断是否进入粮仓  左侧搜索按钮,棕色边框,右上叉号
+        if (module.click_waitFor(null, null, allItemColor["close1"], null, 16, 200)) {  //判断是否进入粮仓  左侧搜索按钮,棕色边框,右上叉号
             log("成功进入粮仓");
             module.showTip("成功进入粮仓");
             sleep(200);
@@ -92,7 +92,7 @@ function storageUpgradeStatistics(type) {
         module.click_cangku("hc", isFindShop);
         sleep(500);
 
-        if (module.click_waitFor(null, null, allItemColor["货仓界面"], null, 0.8, 200)) {  //判断是否进入货仓  左侧搜索按钮,棕色边框,右上叉号
+        if (module.click_waitFor(null, null, allItemColor["close1"], null, 16, 200)) {  //判断是否进入货仓  左侧搜索按钮,棕色边框,右上叉号
             log("成功进入货仓");
             module.showTip("成功进入货仓");
             sleep(200);

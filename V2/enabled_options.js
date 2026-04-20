@@ -57,7 +57,8 @@ function getAccountTime(AccountNameArray) {
     for (let AccountName of AccountNameArray) {
         for (let timerType of timerTypes) {
             //排除未雇佣汤姆的账号
-            if (timerType == "Tom计时器" && timeStorage.get(AccountName + "TomIsWork") == null) {
+            if (timerType == "Tom计时器" && !(timeStorage.get(AccountName + "TomIsWork") !== null)) {
+                log(`账号${AccountName}未雇佣汤姆.2`);
                 continue;
             }
             let timerState = module.getTimerState(AccountName + timerType);
@@ -74,14 +75,14 @@ function getAccountTime(AccountNameArray) {
             }
         }
     }
-    log(timerResults);
+    log("timerResults:", timerResults);
 
     if (timerResults.length === 0) {
         return null;
     }
 
     timerResults.sort((a, b) => a.time - b.time);
-    log(timerResults);
+    log("timerResults排序后:", timerResults);
     return timerResults[0];
 }
 
