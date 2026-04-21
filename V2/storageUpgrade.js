@@ -2,6 +2,7 @@
 let module;
 try {
     module = require("./module.js");
+    // module = require("/storage/emulated/0/脚本/Hayday-Assistant/V2/module.js");
     if (!module) {
         throw new Error("模块导入结果为空");
     }
@@ -32,15 +33,20 @@ function ran() {
 
 
 
-
 let config = module.config;
+let shengcang_h = config.storageUpgradeMethod === "粮仓" ? false : true;
+let shengcang_l = config.storageUpgradeMethod === "粮仓" ? true : false;
+log("升仓:", "货仓:" + shengcang_h, "粮仓:" + shengcang_l)
 
 const color_lib = require("./color_lib.js");
 const shopItemColor = color_lib.shopItemColor;
 const shopSellItemColor = color_lib.shopSellItemColor;
 const allItemColor = color_lib.allItemColor;
 
-照片文件夹 = config.coin_picDirPath
+const 照片文件夹 = config.storageUpgrade_picDirPath
+log("照片文件夹:", 照片文件夹)
+
+
 
 let storageType = config.storageUpgradeMethod === "粮仓" ? "lc" : "hc";
 
@@ -816,20 +822,14 @@ function allocateMaterials(accounts) {
 
 function friendButton() {
     while (true) {//点开好友栏
-        let friendMenu = module.matchColor([{ x: 256, y: 542, color: "#ffcb42" },
-        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
-        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
-        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }])
+        let friendMenu = module.matchColor(allItemColor["好友簿"])
 
         let sc = captureScreen();
         //新版界面
-        let allMatch = module.findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-            [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+        let allMatch = module.findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
 
-        //老板界面
-        let allMatch2 = module.findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-            [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-            [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+        //老版界面
+        let allMatch2 = module.findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
 
         if (allMatch || allMatch2) {
             log("进入界面")
@@ -840,18 +840,15 @@ function friendButton() {
         if (friendMenu) {
             module.showTip("关闭好友栏");
             log("关闭好友栏")
-            let friendButton = module.findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]]);
+            let friendButton = module.findMC(allItemColor["新版界面"]);
             if (friendButton) {
                 log("点击好友按钮")
                 click(friendButton.x + module.ran(), friendButton.y + module.ran());
                 sleep(200);
             }
             else {
-                //老板界面
-                friendButton = module.findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-                    [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-                    [37, 26, "#a54b00"]]);
+                //老版界面
+                friendButton = module.findMC(allItemColor["老版界面"]);
                 if (friendButton) {
                     log("点击好友按钮")
                     click(friendButton.x + module.ran(), friendButton.y + module.ran());
@@ -867,7 +864,7 @@ function friendButton() {
 }
 
 function findFriend(Account, isclick = true) {
-    const MAX_SCROLL_DOWN = 5; // 最多下滑5次
+    const MAX_SCROLL_DOWN = 10; // 最多下滑10次
 
     let found = false; // 是否找到目标
     let scrollDownCount = 0; // 当前下滑次数
@@ -880,9 +877,7 @@ function findFriend(Account, isclick = true) {
     while (!found) {
         sleep(500);
 
-        let addFriendMenu = module.matchColor([{ x: 146, y: 84, color: "#f4da4e" },
-        { x: 132, y: 106, color: "#fefdfc" }, { x: 346, y: 45, color: "#dfb479" },
-        { x: 1109, y: 76, color: "#f34853" }])
+        let addFriendMenu = module.matchColor(allItemColor["好友簿界面"])
         if (!addFriendMenu) {
             module.openFriendMenu();
             sleep(500)
@@ -911,7 +906,7 @@ function findFriend(Account, isclick = true) {
 
 
         //检测是否在好友簿界面
-        if (!module.matchColor([{ x: 544, y: 130, color: "#fff9db" }, { x: 425, y: 55, color: "#deb476" }])) {
+        if (!module.matchColor(allItemColor["好友簿界面"])) {
             module.openFriendMenu();
             sleep(500)
             click(550, 150)
@@ -931,10 +926,11 @@ function findFriend(Account, isclick = true) {
         else if (scrollDownCount >= MAX_SCROLL_DOWN) {
             log(`未找到账号，上滑回顶部...`);
             // module.showTip("未找到账号，上滑回顶部");
-            swipe(600, 350, 600, 630, 300);
-            sleep(500)
-            swipe(600, 350, 600, 630, 300);
-            sleep(500)
+            for (var i = 0; i < scrollDownCount + 1; i++) {
+                swipe(600, 350, 600, 630, 300);
+                sleep(500)
+            }
+
             scrollDownCount = 0;
         }
     }
@@ -942,12 +938,27 @@ function findFriend(Account, isclick = true) {
 }
 
 
+/**
+ * 找到社区好友界面
+ */
 function findCommunityFriendMenu() {
     for (var i = 0; i < 2; i++) {
         module.huadong_adjust([60, 50], [640, 450]);
         sleep(500)
         let shopPos = module.findshop();
-        click(shopPos.x - 420, shopPos.y - 20)
+        if (shopPos) {
+            click(shopPos.x - 420, shopPos.y - 20)
+        } else {
+            module.find_close();
+            sleep(500)
+            module.huadong();
+            sleep(500)
+            module.huadong_adjust([60, 50], [640, 450]);
+            sleep(500)
+            if (shopPos) {
+                click(shopPos.x - 420, shopPos.y - 20)
+            } else { }
+        }
         sleep(700)
         if (module.matchColor(allItemColor["社区界面"])) {
             click(540 + ran(), 130 + ran())
@@ -988,8 +999,7 @@ function findCommunityFriend(Account, isclick = true) {
             sleep(500);
             click(is_find_Account.x + module.ran(), is_find_Account.y + module.ran());
             sleep(600);
-            let button = module.findMC(["#f5ce52", [30, 1, "#ffffff"], [108, 3, "#f5cd51"],
-                [76, 3, "#fefdf8"], [-56, -17, "#f9c859"]])
+            let button = module.findMC(allItemColor["参观按钮"])
             if (button) {
                 click(button.x, button.y);
             }
@@ -1015,10 +1025,10 @@ function findCommunityFriend(Account, isclick = true) {
 
         else if (scrollDownCount >= MAX_SCROLL_DOWN) {
             log(`未找到账号，上滑回顶部...`);
-            swipe(600, 350, 600, 630, 300);
-            sleep(500)
-            swipe(600, 350, 600, 630, 300);
-            sleep(500)
+            for (var i = 0; i < scrollDownCount + 1; i++) {
+                swipe(600, 350, 600, 630, 300);
+                sleep(500)
+            }
             scrollDownCount = 0;
         }
     }
@@ -1032,7 +1042,7 @@ function upgradeOperation(data) {
     // 从供给号卖出物品
     for (let 接收 of data.接收详情) {
         let 供给号 = 接收.从账号;
-        let sellPlan = [{ title: 接收.接收材料, num: 接收.数量}];
+        let sellPlan = [{ title: 接收.接收材料, num: 接收.数量 }];
         log("切换账号: " + 供给号);
         module.switch_account(供给号);
         sleep(500);
@@ -1068,6 +1078,7 @@ function upgradeOperation(data) {
         } else {
             module.openFriendMenu();
             sleep(500);
+            click(550, 150)
             if (!findFriend(供给)) continue;
         }
 
@@ -1079,7 +1090,7 @@ function upgradeOperation(data) {
         sleep(1500)
         while (!module.openshop()) {
             module.huadong();
-         }
+        }
 
         sleep(1000)
         gestures([0, 100, [250, 270]], [0, 100, [430, 270]], [0, 100, [620, 270]], [0, 100, [800, 270]], [0, 100, [990, 270]],
@@ -1097,7 +1108,7 @@ function upgradeOperation(data) {
         )
         sleep(500)
         //点击叉号
-        module.find_close(null,["except_homeBtn"]);
+        module.find_close(null, ["except_homeBtn"]);
         sleep(500)
         //点击Home
         module.find_close();
@@ -1130,11 +1141,31 @@ function main() {
     //新建账号列表
     const doneAccountsList = config.accountList.filter(account => account.done === true);
 
+    // 判断照片是否存在
+    function isPhotoExists(accountTitle) {
+        const photoPath = `${照片文件夹}/${accountTitle}.png`;
+        return files.exists(photoPath);
+    }
+
+    // 遍历所有账号检查照片是否存在
+    log("============检查所有账号照片============");
+    for (let i = 0; i < doneAccountsList.length; i++) {
+        let account = doneAccountsList[i];
+        if (!isPhotoExists(account.title)) {
+            toastLog(`账号${account.title}的照片不存在,已退出`);
+            module.showTip(`账号${account.title}的照片不存在,已退出`);
+            exit();
+        } else {
+            log(`账号${account.title}的照片存在`);
+        }
+    }
 
     //设定初始仓库数据
     let storageUpgradeStatisticsData = [];
 
     doneAccountsList.forEach(account => {
+
+        // 已在前面统一检查过照片存在性，此处无需重复检查
 
         module.switch_account(account.title);
         log("============当前账号: " + account.title + "============");
@@ -1183,3 +1214,16 @@ function main() {
 
 main();
 
+// let friendInterface = "社区"
+// if (friendInterface === "社区") {
+//     findCommunityFriendMenu();
+//     sleep(500)
+//     click(550, 150)
+//     sleep(1000)
+//     findCommunityFriend("z1");
+// } else {
+//     module.openFriendMenu();
+//     sleep(500);
+//     click(550, 150)
+//     findFriend("z1")
+// }

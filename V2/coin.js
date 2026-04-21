@@ -39,7 +39,8 @@ const shopSellItemColor = color_lib.shopSellItemColor;
 
 //改此处============================
 
-照片文件夹 = config.coin_picDirPath
+const 照片文件夹 = config.coin_picDirPath
+log("照片文件夹:", 照片文件夹)
 
 let 主号 = config.coin_mainAccount;
 let 主号农场名 = config.coin_mainAccount_picName   //照片名称
@@ -49,7 +50,33 @@ let 小号农场名 = config.coin_subAccount_picName     //照片名称
 
 let 导金币物品 = config.coin_item
 
+
+
 //==================================
+
+// 判断主号和小号农场名照片是否存在
+function isPhotoExists(photoName) {
+    const photoPath = `${照片文件夹}/${photoName}.png`;
+    return files.exists(photoPath);
+}
+
+// 检查主号农场名照片
+if (!isPhotoExists(主号农场名)) {
+    log(`警告: 主号农场名${主号农场名}的照片不存在`);
+    module.showTip(`警告: 主号农场名${主号农场名}的照片不存在`);
+    exit();
+} else {
+    log(`主号农场名${主号农场名}的照片存在`);
+}
+
+// 检查小号农场名照片
+if (!isPhotoExists(小号农场名)) {
+    log(`警告: 小号农场名${小号农场名}的照片不存在`);
+    module.showTip(`警告: 小号农场名${小号农场名}的照片不存在`);
+    exit();
+} else {
+    log(`小号农场名${小号农场名}的照片存在`);
+}
 
 sell = [{ item: 导金币物品, sellNum: -1, "done": true }]
 
@@ -216,20 +243,16 @@ function main() {
 
 function friendButton() {
     while (true) {//点开好友栏
-        let friendMenu = module.matchColor([{ x: 256, y: 542, color: "#ffcb42" },
-        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
-        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
-        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }])
+        let friendMenu = module.matchColor(allItemColor["好友簿"])
+
+
 
         let sc = captureScreen();
         //新版界面
-        let allMatch = module.findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-            [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+        let allMatch = module.findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
 
-        //老板界面
-        let allMatch2 = module.findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-            [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-            [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+        //老版界面
+        let allMatch2 = module.findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
 
         if (allMatch || allMatch2) {
             log("进入界面")
@@ -240,18 +263,15 @@ function friendButton() {
         if (friendMenu) {
             module.showTip("关闭好友栏");
             log("关闭好友栏")
-            let friendButton = module.findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]]);
+            let friendButton = module.findMC(allItemColor["新版界面"]);
             if (friendButton) {
                 log("点击好友按钮")
                 click(friendButton.x + module.ran(), friendButton.y + module.ran());
                 sleep(200);
             }
             else {
-                //老板界面
-                friendButton = module.findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-                    [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-                    [37, 26, "#a54b00"]]);
+                //老版界面
+                friendButton = module.findMC(allItemColor["老版界面"]);
                 if (friendButton) {
                     log("点击好友按钮")
                     click(friendButton.x + module.ran(), friendButton.y + module.ran());

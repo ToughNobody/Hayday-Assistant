@@ -1467,7 +1467,7 @@ function checkmenu() {
             //新版界面
             let allMatch = findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
 
-            //老板界面
+            //老版界面
             let allMatch2 = findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
 
             if (allMatch || allMatch2) {
@@ -1510,18 +1510,13 @@ function openFriendMenu() {
 
         let sc = captureScreen();
 
-        if (matchColor([{ x: 146, y: 84, color: "#f4da4e" },
-        { x: 132, y: 106, color: "#fefdfc" }, { x: 346, y: 45, color: "#dfb479" },
-        { x: 1109, y: 76, color: "#f34853" }], sc)) {
-            log("已打开好友菜单")
+        if (matchColor(allItemColor["好友簿好友界面"], sc)) {
+            log("已打开好友簿菜单")
             break;
         }
 
         //好友簿
-        let friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
-        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
-        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
-        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }], sc)
+        let friendMenu = matchColor(allItemColor["好友簿"], sc)
         if (friendMenu) {
             log("已打开好友栏,点击好友簿")
             click(255, 600);
@@ -1529,18 +1524,15 @@ function openFriendMenu() {
             break;
         }
         //新版界面
-        let friendButton = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-            [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+        let friendButton = findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
         if (friendButton) {
             log("点击好友按钮")
             click(friendButton.x + ran(), friendButton.y + ran());
             sleep(200);
         }
         else {
-            //老板界面
-            friendButton = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-                [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-                [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+            //老版界面
+            friendButton = findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
             if (friendButton) {
                 log("点击好友按钮")
                 click(friendButton.x + ran(), friendButton.y + ran());
@@ -1548,10 +1540,9 @@ function openFriendMenu() {
             }
         }
 
-        friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
-        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
-        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
-        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }])
+        friendMenu = matchColor(allItemColor["好友簿"])
+
+
 
         if (friendMenu) click(255, 600);
         sleep(200);
@@ -1577,24 +1568,18 @@ function openFriend() {
 
     for (let i = 0; i < 6; i++) {//好友簿
         let sc = captureScreen();
-        let friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
-        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
-        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
-        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }], sc)
+        let friendMenu = matchColor(allItemColor["好友簿"], sc)
         if (!friendMenu) {
             //新版界面
-            let friendButton = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+            let friendButton = findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
             if (friendButton) {
                 log("点击好友按钮")
                 click(friendButton.x + ran(), friendButton.y + ran());
                 sleep(200);
             }
             else {
-                //老板界面
-                friendButton = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-                    [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-                    [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+                //老版界面
+                friendButton = findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
                 if (friendButton) {
                     log("点击好友按钮")
                     click(friendButton.x + ran(), friendButton.y + ran());
@@ -1603,10 +1588,9 @@ function openFriend() {
             }
         }
 
-        friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
-        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
-        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
-        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }])
+        friendMenu = matchColor(allItemColor["好友簿"])
+
+
 
         if (friendMenu) return true;
         sleep(300)
@@ -1697,18 +1681,18 @@ function huadong(right = false) {
         gestures([0, 200, [420 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]],
             [0, 200, [1000 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]
             ]);
-        sleep(200);
+        sleep(300);
         //缩放
         gestures([0, 200, [420 + ran(), 250 + ran()], [860 + ran(), 250 + ran()]],
             [0, 200, [1000 + ran(), 250 + ran()], [860 + ran(), 250 + ran()]
             ]);
-        sleep(100);
+        sleep(200);
         //右滑
         swipe(600 + ran(), 300 + ran(), 550 + ran(), 250 + ran(), 100);
         sleep(50)
         //左滑
-        swipe(250 + ran(), 150 + ran(), 980 + ran(), 720, 200);
-        sleep(200)
+        swipe(250 + ran(), 180 + ran(), 980 + ran(), 720, 200);
+        sleep(400)
         //左滑
         if (right) {
             swipe(300 + ran(), 150 + ran(), 980 + ran(), 720, 200);
@@ -2231,7 +2215,7 @@ function pond_operation(account_config) {
                 //新版界面
                 let allMatch = findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
 
-                //老板界面
+                //老版界面
                 let allMatch2 = findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
 
                 let homebtn = findMC(allItemColor["homeBtn"], sc, [0, 600, 240, 110]);
@@ -3757,7 +3741,7 @@ function shop() {
             }
 
             // 识别数字
-            let region = [wheat_sell.x, wheat_sell.y, 130, 80]
+            let region = [wheat_sell.x - 30, wheat_sell.y, 150, 80]
             sleep(100);//上架有残影，有时识别不到
             let wheat_num = findFont(null, region, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
             if (wheat_num == "") {
@@ -4032,7 +4016,7 @@ function shopStatistic(sc) {
                     }
                     // 找到物品
                     let itemNum = 0;
-                    let numRegion = [position.x - 20, position.y, 150, 80];
+                    let numRegion = [position.x - 30, position.y, 150, 80];
                     itemNum = findFont(sc1, numRegion, "#FFFFFF", 8, Font.FontLibrary_ShopNum, 0.8);
                     // 如果第一次检测为空，再检测一遍
                     if (!itemNum || itemNum.trim() === "") {
@@ -4589,25 +4573,19 @@ function find_close(screenshot1, action = null) {
         }
 
         //点开好友栏
-        let friendMenu = matchColor([{ x: 256, y: 542, color: "#ffcb42" },
-        { x: 214, y: 591, color: "#c48f4c" }, { x: 265, y: 647, color: "#c48f4c" },
-        { x: 302, y: 630, color: "#c48f4c" }, { x: 210, y: 672, color: "#ffbf1d" },
-        { x: 262, y: 615, color: "#ca922b" }, { x: 430, y: 540, color: "#fff9db" }], sc)
+        let friendMenu = matchColor(allItemColor["好友簿"], sc)
         if (friendMenu) {
             showTip("关闭好友栏");
             log("关闭好友栏")
-            let friendButton = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc);
+            let friendButton = findMC(allItemColor["新版界面"], sc);
             if (friendButton) {
                 log("点击好友按钮")
                 click(friendButton.x + ran(), friendButton.y + ran());
                 sleep(200);
             }
             else {
-                //老板界面
-                friendButton = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-                    [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-                    [37, 26, "#a54b00"]], sc);
+                //老版界面
+                friendButton = findMC(allItemColor["老版界面"], sc);
                 if (friendButton) {
                     log("点击好友按钮")
                     click(friendButton.x + ran(), friendButton.y + ran());
@@ -4877,13 +4855,10 @@ function jiaocheng() {
             sleep(1000);
             let sc = captureScreen();
             //新版界面
-            let allMatch = findMC(["#f0e0d6", [-2, -28, "#fbf5f4"],
-                [-20, -10, "#a24801"], [7, 30, "#f3bf41"]], sc, [1140, 570, 120, 130]);
+            let allMatch = findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
 
-            //老板界面
-            let allMatch2 = findMC(["#fdf8f4", [5, 32, "#f2ded3"],
-                [-17, 18, "#a44900"], [11, 54, "#f7c342"],
-                [37, 26, "#a54b00"]], sc, [1140, 570, 120, 130]);
+            //老版界面
+            let allMatch2 = findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
 
             if (allMatch || allMatch2) {
                 log(`教程：已进入主界面`);
@@ -5235,9 +5210,10 @@ function shengcang(h, l) {
     try {
         let shengcang_h = h !== false;
         let shengcang_l = l !== false;
+        log("升仓:", shengcang_h, shengcang_l)
 
         //升粮仓
-        if (config.shengcang_l && shengcang_l) {
+        if (shengcang_l) {
             sleep(100);
             let isFindShop = findshop(true);
             if (isFindShop) {  //判断是否找到商店
@@ -5278,7 +5254,7 @@ function shengcang(h, l) {
         }
 
         //升货仓
-        if (config.shengcang_h && shengcang_h) {
+        if (shengcang_h) {
             sleep(100);
             let isFindShop = findshop(true);
             if (isFindShop) {  //判断是否找到商店
