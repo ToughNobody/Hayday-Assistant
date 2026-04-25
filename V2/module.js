@@ -1678,15 +1678,15 @@ function huadong(right = false) {
     try {
         showTip("滑动寻找")
         //缩放
-        gestures([0, 200, [420 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]],
+        gestures([0, 400, [420 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]],
             [0, 200, [1000 + ran(), 200 + ran()], [860 + ran(), 200 + ran()]
             ]);
-        sleep(300);
+        sleep(400);
         //缩放
-        gestures([0, 200, [420 + ran(), 250 + ran()], [860 + ran(), 250 + ran()]],
+        gestures([0, 400, [420 + ran(), 250 + ran()], [860 + ran(), 250 + ran()]],
             [0, 200, [1000 + ran(), 250 + ran()], [860 + ran(), 250 + ran()]
             ]);
-        sleep(200);
+        sleep(300);
         //右滑
         swipe(600 + ran(), 300 + ran(), 550 + ran(), 250 + ran(), 100);
         sleep(50)
@@ -1707,6 +1707,8 @@ function huadong(right = false) {
             swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
             sleep(350)
         }
+
+        sleep(600);
 
     } catch (error) {
         log(error)
@@ -2437,7 +2439,7 @@ function honeycomb_operation(account_config) {
                 if (jiasu) {
                     let region0 = [jiasu.x - 351, jiasu.y + 27, jiasu.x - 147, jiasu.y + 88]
                     let region = [region0[0], region0[1], region0[2] - region0[0], region0[3] - region0[1]]
-                    let result = findFont(captureScreen(), region, "#ffffff", 8,  Font.FontLibrary_timeRemaining, 0.8,);
+                    let result = findFont(captureScreen(), region, "#ffffff", 8, Font.FontLibrary_timeRemaining, 0.8,);
                     let splitResult = result.split("/")
                     if (splitResult.length == 2) {
                         let difference = Number(splitResult[1]) - Number(splitResult[0])
@@ -3558,43 +3560,18 @@ function coin() {
     // showTip("收金币");
     let allcenters = [];
     let sc = captureScreen();
-    let region = [158, 160, 1117 - 158, 542 - 160]
-    let centers1 = findimages(files.join(config.photoPath, "shopsold1.png"), 0.8, 10, sc);
-    //汤姆
-    let centers2 = findMC(["#cae588", [48, -6, "#875324"], [53, 32, "#ffe875"],
-        [8, 51, "#e15526"], [3, 71, "#97b058"],
-        [74, 76, "#94b155"], [48, 76, "#762512"]], sc, region)
-    //格雷格
-    let centers3 = findMC(["#6ac7e9", [52, 19, "#f0b7a1"], [71, 168, "#ffea32"],
-        [31, 9, "#ffffff"], [-2, 66, "#77282f"], [49, 59, "#e3722b"],
-        [79, 8, "#6bcae7"]], sc, region)
-    //抱礼物的格雷格
-    let centers4 = findMC(["#6bc9e9", [49, 12, "#ebb199"], [51, 36, "#e0823c"],
-        [28, 74, "#1265b5"], [6, 50, "#823439"], [69, 167, "#ffeb37"],
-        [29, 11, "#ffffff"]], sc, region)
-
-    // 合并所有点并过滤距离过近的点
-    let allPoints = centers1.concat(centers2, centers3, centers4);
-    let filteredPoints = [];
+    let region = [158, 160, 1117, 542] // 收集区域,[x1,y1,x2,y2]
+    let templateImg = images.interval(images.fromBase64(Font.img.shopSold), "#FFFFFF", 16);
+    let centers1 = findimages(templateImg, 0.6, 10, images.interval(sc, "#FFFFFF", 16));
 
     try {
-        for (let i = 0; i < allPoints.length; i++) {
-            if (!allPoints[i]) continue;
-            let shouldKeep = true;
-            // 检查当前点是否与已保留的点距离过近
-            for (let j = 0; j < filteredPoints.length; j++) {
-                let dx = Math.abs(allPoints[i].x - filteredPoints[j].x);
-                let dy = Math.abs(allPoints[i].y - filteredPoints[j].y);
-                // 如果x和y坐标差值都小于20，则排除当前点
-                if (dx < 20 && dy < 20) {
-                    shouldKeep = false;
-                    break;
-                }
+        let filteredPoints = [];
+        for (let i = 0; i < centers1.length; i++) {
+            let point = centers1[i];
+            if (point.x < region[0] || point.x > region[2] || point.y < region[1] || point.y > region[3]) {
+                continue;
             }
-            // 如果没有距离过近的点，则保留当前点
-            if (shouldKeep) {
-                filteredPoints.push(allPoints[i]);
-            }
+            filteredPoints.push(point);
         }
 
         allcenters = allcenters.concat(filteredPoints);
@@ -5345,7 +5322,7 @@ function initAllTimers(Account_config) {
         }
 
         // 初始化鱼塘计时器
-        if (config.pond.enabled &&account.pond && account.pond.enabled) {
+        if (config.pond.enabled && account.pond && account.pond.enabled) {
             log(`初始化鱼塘计时器: ${AccountName}`);
             timeStorage.put(AccountName + "鱼塘计时器", timerState);
         }

@@ -1,7 +1,7 @@
 {
-  "version": "2.3.4",
-  "description": "v2.3.4\n\nBug修复\n- 修复仓库升级功能的图片路径读取问题\n- 修复点击第一个账号的参观按钮点击位置错误问题\n- 修复未开启自动升仓选项,选择升仓功能后倒完材料不会升仓的问题\n- 修复进入非好友农场的滑动问题\n\n功能优化\n- 扩大商店界面数字识别范围\n- 倒金币和升仓功能开始时会检测图片是否存在,如果不存在则会直接退出并提示\n- 找好友向上的滑动次数增加,防止滑动不到顶部\n\n",
-  "zip_name": "卡通农场小助手v2.3.4.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.4/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.4.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.4/v2.3.4.zip"
+  "version": "2.3.5",
+  "description": "v2.3.5\n\n功能优化\n- 增加滑动操作中间的间隔\n- 更好的识别商店中带头像的已售标识\n\n",
+  "zip_name": "卡通农场小助手v2.3.5.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.5/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.5.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.5/v2.3.5.zip"
 }
