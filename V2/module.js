@@ -365,7 +365,7 @@ function createWindow(position) {
                         <text
                             id="text"
                             singleLine="false"
-                            minWidth="60"
+                            minWidth="40"
                             w="auto"
                             maxWidth="500"
                             textSize="12"
@@ -3561,14 +3561,21 @@ function coin() {
     let allcenters = [];
     let sc = captureScreen();
     let region = [158, 160, 1117, 542] // 收集区域,[x1,y1,x2,y2]
-    let templateImg = images.interval(images.fromBase64(Font.img.shopSold), "#FFFFFF", 16);
-    let centers1 = findimages(templateImg, 0.6, 10, images.interval(sc, "#FFFFFF", 16));
+    let templateImg = images.interval(images.fromBase64(Font.img.shopSold), "#FFFFFF", 32);
+    let centers1 = findimages(templateImg, 0.6, 10, images.interval(sc, "#FFFFFF", 32));
+    // images.save(templateImg, "/storage/emulated/0/$MuMu12Shared/Screenshots/coin.png");
+    // images.save(images.interval(sc, "#FFFFFF", 32), "/storage/emulated/0/$MuMu12Shared/Screenshots/coin_centers.png");
+    // log(images.matchTemplate(images.interval(sc, "#FFFFFF", 32), templateImg, {
+    //         max: 10,
+    //         threshold: 0.6
+    //     }))
 
     try {
         let filteredPoints = [];
         for (let i = 0; i < centers1.length; i++) {
             let point = centers1[i];
             if (point.x < region[0] || point.x > region[2] || point.y < region[1] || point.y > region[3]) {
+                log("金币不在收集区域");
                 continue;
             }
             filteredPoints.push(point);
@@ -4218,17 +4225,21 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
 
             //判断是否在货仓/粮仓界面
             sleep(500)
-            if (matchColor(allItemColor["商店粮仓界面"])) {
+            if (matchColor(allItemColor["商店售卖界面1"]) || matchColor(allItemColor["商店售卖界面2"])) {
                 if (pos == "货仓") {
-                    click(205 + ran(), 350 + ran());//点击售卖货仓按钮
-                    sleep(100);
-                    console.log("点击货仓按钮")
+                    if (!matchColor(allItemColor["商店货仓界面"])) {
+                        click(205 + ran(), 350 + ran());//点击售卖货仓按钮
+                        sleep(100);
+                        console.log("点击货仓按钮")
+                    }
                 }
-            } else {
-                if (pos == "粮仓") {
-                    click(200 + ran(), 220 + ran());//点击售卖粮仓按钮
-                    sleep(100);
-                    console.log("点击粮仓按钮")
+
+                else if (pos == "粮仓") {
+                    if (!matchColor(allItemColor["商店粮仓界面"])) {
+                        click(200 + ran(), 220 + ran());//点击售卖粮仓按钮
+                        sleep(100);
+                        console.log("点击粮仓按钮")
+                    }
                 }
             }
 
@@ -6344,7 +6355,7 @@ function convertToText(data) {
             text += `${accountLevel}\n`;
         }
         if (line1.length > 0) {
-            text += `${line1.join(" | ")}\n`;
+            text += `${line1.join(" • ")}\n`;
         }
         // 单独显示粮仓容量和货仓容量
         if (item["粮仓容量"]) {
@@ -6354,21 +6365,21 @@ function convertToText(data) {
             text += `货仓容量: ${item["货仓容量"]}\n`;
         }
         if (line2.length > 0) {
-            text += `${line2.join(" | ")}\n`;
+            text += `${line2.join(" • ")}\n`;
         }
         if (line3.length > 0) {
-            text += `${line3.join(" | ")}\n`;
+            text += `${line3.join(" • ")}\n`;
         }
         if (line4.length > 0) {
-            text += `${line4.join(" | ")}\n`;
+            text += `${line4.join(" • ")}\n`;
         }
         if (line5.length > 0) {
-            text += `${line5.join(" | ")}\n`;
+            text += `${line5.join(" • ")}\n`;
         }
 
         // 添加其他行
         if (otherLines.length > 0) {
-            text += `${otherLines.join(" | ")}\n`;
+            text += `${otherLines.join(" • ")}\n`;
         }
 
         text += "\n";

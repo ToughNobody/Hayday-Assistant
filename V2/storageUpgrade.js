@@ -947,6 +947,8 @@ function findCommunityFriendMenu() {
         sleep(500)
         let shopPos = module.findshop();
         if (shopPos) {
+            module.showTip("")
+            sleep(100);
             click(shopPos.x - 420, shopPos.y - 20)
         } else {
             module.find_close();
@@ -956,6 +958,8 @@ function findCommunityFriendMenu() {
             module.huadong_adjust([60, 50], [640, 450]);
             sleep(500)
             if (shopPos) {
+                module.showTip("")
+                sleep(100);
                 click(shopPos.x - 420, shopPos.y - 20)
             } else { }
         }
@@ -1206,7 +1210,7 @@ function main() {
         upgradeOperation(account);
     }
 
-    log("升仓完成");
+    toastLog("升仓完成");
     module.showTip("升仓完成");
 
 }

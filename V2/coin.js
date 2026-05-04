@@ -114,7 +114,7 @@ function main() {
         sleep(500)
         module.huadong();
         sleep(1200);
-        while (!openshop()) { 
+        while (!openshop()) {
             module.huadong();
         }
         let sellPlan = sell
@@ -139,14 +139,16 @@ function main() {
         if (!findFriend(主号农场名, 小号农场名)) continue;
 
         sleep(500)
-        while (!friendButton()) { module.close() }
+        while (!module.findMC(allItemColor["homeBtn"], captureScreen(), [0, 600, 240, 110])) { module.close() }
 
+        closeFriendButton()
 
         module.huadong()
         sleep(1500)
         while (!openshop()) {
+            closeFriendButton()
             module.huadong();
-         }
+        }
 
         sleep(1000)
         gestures([0, 100, [250, 270]], [0, 100, [430, 270]], [0, 100, [620, 270]], [0, 100, [800, 270]], [0, 100, [990, 270]],
@@ -180,7 +182,7 @@ function main() {
         module.huadong();
         sleep(1500);
 
-        while (!openshop()) { 
+        while (!openshop()) {
             module.huadong();
         }
 
@@ -205,16 +207,18 @@ function main() {
         click(550, 150)
         sleep(1000)
 
-        //双击账号
+        //点击账号
         if (!findFriend(小号农场名, 主号农场名)) continue;
 
         sleep(500)
-        while (!friendButton()) { }
+        while (!module.findMC(allItemColor["homeBtn"], captureScreen(), [0, 600, 240, 110])) { module.close() }
+        closeFriendButton()
 
         sleep(500)
         module.huadong()
         sleep(1500)
-        while (!openshop()) { 
+        while (!openshop()) {
+            closeFriendButton()
             module.huadong();
         }
 
@@ -241,49 +245,33 @@ function main() {
     }
 }
 
-function friendButton() {
-    while (true) {//点开好友栏
-        let friendMenu = module.matchColor(allItemColor["好友簿"])
+/**
+ * 关闭好友栏
+ */
+function closeFriendButton() {
+    //如果好友栏打开
+    let friendMenu = module.matchColor(allItemColor["好友簿"])
 
-
-
-        let sc = captureScreen();
-        //新版界面
-        let allMatch = module.findMC(allItemColor["新版界面"], sc, [1140, 570, 120, 130]);
-
-        //老版界面
-        let allMatch2 = module.findMC(allItemColor["老版界面"], sc, [1140, 570, 120, 130]);
-
-        if (allMatch || allMatch2) {
-            log("进入界面")
-            module.showTip("进入界面")
-            return true;
+    if (friendMenu) {
+        module.showTip("关闭好友栏");
+        log("关闭好友栏")
+        let friendButton = module.findMC(allItemColor["新版界面"]);
+        if (friendButton) {
+            log("点击好友按钮")
+            click(friendButton.x + module.ran(), friendButton.y + module.ran());
+            sleep(200);
         }
-
-        if (friendMenu) {
-            module.showTip("关闭好友栏");
-            log("关闭好友栏")
-            let friendButton = module.findMC(allItemColor["新版界面"]);
+        else {
+            //老版界面
+            friendButton = module.findMC(allItemColor["老版界面"]);
             if (friendButton) {
                 log("点击好友按钮")
                 click(friendButton.x + module.ran(), friendButton.y + module.ran());
                 sleep(200);
             }
-            else {
-                //老版界面
-                friendButton = module.findMC(allItemColor["老版界面"]);
-                if (friendButton) {
-                    log("点击好友按钮")
-                    click(friendButton.x + module.ran(), friendButton.y + module.ran());
-                    sleep(200);
-                }
-            }
-            return true;
         }
-        sleep(1000)
-        module.close();
+        return true;
     }
-
 }
 
 function openshop() {
@@ -297,7 +285,7 @@ function openshop() {
                 module.showTip("打开路边小店");
                 sleep(300);
                 click(findshop_1.x + config.shopOffset.x + module.ran(), findshop_1.y + config.shopOffset.y + module.ran());
-                sleep(100)
+                sleep(500)
                 if (module.inShop()) {
 
                     return true; // 成功找到并点击
@@ -367,7 +355,7 @@ function ran() {
 }
 
 function findFriend(Account, Account_1, isclick = true) {
-    const MAX_SCROLL_DOWN = 5; // 最多下滑5次
+    const MAX_SCROLL_DOWN = 10; // 最多下滑10次
 
     let found = false; // 是否找到目标
     let scrollDownCount = 0; // 当前下滑次数

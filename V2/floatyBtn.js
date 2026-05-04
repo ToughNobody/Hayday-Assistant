@@ -1,55 +1,4 @@
 
-//自动获取截图权限
-function autoSc() {
-
-    isclick = false;
-    // 如果配置了截图坐标，则依次点击填入的坐标
-    if ((config.screenshotCoords.coord1.x !== "" && config.screenshotCoords.coord1.y !== "") ||
-        (config.screenshotCoords.coord2.x !== "" && config.screenshotCoords.coord2.y !== "") ||
-        (config.screenshotCoords.coord3.x !== "" && config.screenshotCoords.coord3.y !== "")) {
-        sleep(1000);
-        isclick = true;
-    }
-    // 点击coord1坐标
-    if (config.screenshotCoords.coord1.x !== "" &&
-        config.screenshotCoords.coord1.y !== "") {
-        click(parseInt(config.screenshotCoords.coord1.x), parseInt(config.screenshotCoords.coord1.y));
-        sleep(500); // 等待500毫秒
-    }
-
-    // 点击coord2坐标
-    if (config.screenshotCoords.coord2.x !== "" &&
-        config.screenshotCoords.coord2.y !== "") {
-        click(parseInt(config.screenshotCoords.coord2.x), parseInt(config.screenshotCoords.coord2.y));
-        sleep(500); // 等待500毫秒
-    }
-
-    // 点击coord3坐标
-    if (config.screenshotCoords.coord3.x !== "" &&
-        config.screenshotCoords.coord3.y !== "") {
-        click(parseInt(config.screenshotCoords.coord3.x), parseInt(config.screenshotCoords.coord3.y));
-        sleep(500); // 等待500毫秒
-    }
-
-    if (isclick == false) {    // 再尝试点击 "允许"、"确定"、"同意"、"开始" 等按钮（最多 10 秒）
-
-        //等待截屏权限申请并同意
-        let testThread = threads.start(function () {
-            packageName("com.android.systemui").text("立即开始").waitFor();
-            text("立即开始").click();
-        });
-
-        threads.start(function () {
-            if (!requestScreenCapture(true)) {
-                toast("请求截图失败");
-                exit();
-            } else {
-                sleep(1000);
-                testThread.interrupt();
-            }
-        });
-    }
-}
 
 // 悬浮窗变量
 var win;
@@ -216,25 +165,26 @@ function suspendedWindow() {
                 threads.start(function () {
                     try {
                         // 获取截图权限
-                        autoSc();
-
-                        // 获取应用目录
-                        const scPath = "/storage/emulated/0/$MuMu12Shared/Screenshots"
-                        files.ensureDir(scPath + "/1");
-
-                        // 生成带时间戳的文件名
+                        // autoSc();
+                        let configs = storages.create("config"); // 创建配置存储对象
+                        // 生成时间戳
                         var timestamp = new Date().getTime();
                         var fileName = "screenshot_" + timestamp + ".png";
-                        var filePath = files.join(scPath, fileName);
+                        // 获取应用目录
+                        let raw_scPath = configs.get("scPath") || "/sdcard/Screenshots";
+                        let scPath = rawInput("截图保存路径:", files.join(raw_scPath, fileName));
+                        let dirPath = new java.io.File(scPath).getParent();
+                        files.ensureDir(dirPath + "/1");
+                        configs.put("scPath", dirPath);
 
                         // 截图并保存
-                        sleep(800);
+                        sleep(300);
                         var screenshot = captureScreen();
-                        screenshot.saveTo(filePath);
+                        screenshot.saveTo(scPath);
 
                         // 在UI线程中显示toast
                         ui.run(function () {
-                            toastLog("截图已保存到: " + filePath);
+                            toastLog("截图已保存到: " + scPath);
                         });
                     } catch (e) {
                         // 在UI线程中显示错误信息

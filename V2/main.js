@@ -1444,6 +1444,16 @@ ui.layout(
 
                                         {/* 升仓 - 仅在升仓时显示 */}
                                         <vertical id="storageUpgradeContainer" gravity="center_vertical" visibility="gone">
+                                            <horizontal gravity="center_vertical" marginBottom="12">
+                                                <text text="选择账号：" textSize="14" w="80" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <button id="storageUpgrade_selectAccount" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical" marginBottom="12">
+                                                <text text="升仓账号：" textSize="14" w="80" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <button id="storageUpgrade_upgradeAccount" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                            </horizontal>
                                             <horizontal gravity="center_vertical">
                                                 <text text="升仓选项" textSize="14" w="100" marginRight="8" />
                                                 <radiogroup id="storageUpgradeMethod" orientation="horizontal">
@@ -2105,7 +2115,8 @@ ui.emitter.on("options_item_selected", (e, item) => {
             showLogDialog();
             break;
         case "调试":
-            log("当前配置:", JSON.stringify(loadConfig(), null, 2));
+            // log("当前配置:", JSON.stringify(loadConfig(), null, 2));
+            log("当前配置:", loadConfig());
             // log(typeof config.harvestX)
             break;
     }
@@ -4210,6 +4221,8 @@ function getConfig() {
         storageUpgrade_picDirPath: configs.get("storageUpgrade_picDirPath", defaultConfig.storageUpgrade_picDirPath),
         account_config: configs.get("account_config", defaultConfig.account_config),
         storageUpgradeMethod: configs.get("storageUpgradeMethod", defaultConfig.storageUpgradeMethod),
+        storageUpgrade_selectedAccounts: configs.get("storageUpgrade_selectedAccounts", []),
+        storageUpgrade_upgradeAccount: configs.get("storageUpgrade_upgradeAccount", []),
         friendInterface: configs.get("friendInterface", defaultConfig.friendInterface),
     };
     return storedConfig;
@@ -6037,6 +6050,11 @@ function initUI() {
             ui['AccountList'].attr("visibility", "visible");
             ui['SaveAccountList'].attr("visibility", "gone");
         } else {
+            dialogs.build({
+                title: "确认选择使用存档切换账号",
+                content: "存档切换账号因长期未维护,升仓、汤姆、鱼塘、蜂蜜等功能均无法使用\n\n使用期间可能会出现未知问题。",
+                positive: "确认",
+            }).show();
             configs.put("accountMethod", "save");
             ui['AccountList'].attr("visibility", "gone");
             ui['SaveAccountList'].attr("visibility", "visible");
@@ -6281,6 +6299,179 @@ function initUI() {
             ui.pond_numbers_display.setText(selectedPonds.join(","));
 
             toast("鱼塘编号设置成功");
+        });
+
+        // 显示对话框
+        dialog.show();
+    });
+    
+    // 升仓账号选择按钮点击事件
+    ui.storageUpgrade_selectAccount.on("click", function () {
+        // 获取账号列表
+        let accounts = configs.get("accountList") || [];
+        if (accounts.length === 0) {
+            toast("请先添加账号");
+            return;
+        }
+        // 获取当前配置的账号
+        let selectedAccounts = config.storageUpgrade_selectedAccounts || [];
+
+        // log("当前配置的账号:", selectedAccounts);
+        // log("账号列表:", accounts);
+
+        let checkboxXml = "";
+        accounts.forEach(function (account) {
+            checkboxXml += "<horizontal gravity='center_vertical' marginBottom='8'><checkbox id='storageUpgrade_" + account.title + "' text='" + account.title + "' /></horizontal>";
+        });
+
+        let dialogXml = "<vertical padding='16'><text text='选择账号' textSize='16' textStyle='bold' marginBottom='16' /><horizontal><button id='selectAllBtn' text='选中全部' w='auto' marginRight='8'/><button id='clearAllBtn' text='清空选择' w='auto'/></horizontal><ScrollView><vertical h='*' paddingBottom='16'>" + checkboxXml + "</vertical></ScrollView></vertical>";
+
+        let customView = ui.inflate(dialogXml);
+
+        // 根据当前配置设置checkbox的初始状态
+        for (let i = 0; i < accounts.length; i++) {
+            let account = accounts[i];
+            let checkboxId = 'storageUpgrade_' + account.title;
+            if (customView[checkboxId]) {
+                customView[checkboxId].setChecked(selectedAccounts.includes(account.title));
+            }
+        }
+
+        // 选中全部按钮点击事件
+        customView.selectAllBtn.on("click", function () {
+            for (let i = 0; i < accounts.length; i++) {
+                let account = accounts[i];
+                let checkboxId = 'storageUpgrade_' + account.title;
+                if (customView[checkboxId]) {
+                    customView[checkboxId].setChecked(true);
+                }
+            }
+        });
+
+        // 清空选择按钮点击事件
+        customView.clearAllBtn.on("click", function () {
+            for (let i = 0; i < accounts.length; i++) {
+                let account = accounts[i];
+                let checkboxId = 'storageUpgrade_' + account.title;
+                if (customView[checkboxId]) {
+                    customView[checkboxId].setChecked(false);
+                }
+            }
+        });
+
+        // 创建对话框
+        let dialog = dialogs.build({
+            customView: customView,
+            positive: "确定",
+            negative: "取消",
+            wrapInScrollView: true,
+            cancelable: true
+        });
+
+        // 为确定按钮添加点击事件
+        dialog.on("positive", function () {
+            // 收集选中的账号
+            let selectedTitles = [];
+            for (let i = 0; i < accounts.length; i++) {
+                let account = accounts[i];
+                let checkboxId = 'storageUpgrade_' + account.title;
+                if (customView[checkboxId] && customView[checkboxId].isChecked()) {
+                    selectedTitles.push(account.title);
+                }
+            }
+
+            // 更新当前配置的账号
+            config.storageUpgrade_selectedAccounts = selectedTitles;
+
+            // 保存修改后的配置
+            configs.put("storageUpgrade_selectedAccounts", selectedTitles);
+
+            toast("账号选择设置成功");
+        });
+
+        // 显示对话框
+        dialog.show();
+    });
+
+    // 升仓账号选择按钮点击事件
+    ui.storageUpgrade_upgradeAccount.on("click", function () {
+        // 获取账号列表
+        let accounts = configs.get("storageUpgrade_selectedAccounts") || [];
+        if (accounts.length === 0) {
+            toast("请先添加账号");
+            return;
+        }
+        // 获取当前配置的账号
+        let selectedAccounts = config.storageUpgrade_upgradeAccount || [];
+
+        let checkboxXml = "";
+        accounts.forEach(function (account) {
+            checkboxXml += "<horizontal gravity='center_vertical' marginBottom='8'><checkbox id='storageUpgrade_" + account + "' text='" + account + "' /></horizontal>";
+        });
+
+        let dialogXml = "<vertical padding='16'><text text='选择账号' textSize='16' textStyle='bold' marginBottom='16' /><horizontal><button id='selectAllBtn' text='选中全部' w='auto' marginRight='8'/><button id='clearAllBtn' text='清空选择' w='auto'/></horizontal><ScrollView><vertical h='*' paddingBottom='16'>" + checkboxXml + "</vertical></ScrollView></vertical>";
+
+        let customView = ui.inflate(dialogXml);
+
+        // 根据当前配置设置checkbox的初始状态
+        for (let i = 0; i < accounts.length; i++) {
+            let account = accounts[i];
+            let checkboxId = 'storageUpgrade_' + account;
+            if (customView[checkboxId]) {
+                customView[checkboxId].setChecked(selectedAccounts.includes(account));
+            }
+        }
+
+        // 选中全部按钮点击事件
+        customView.selectAllBtn.on("click", function () {
+            for (let i = 0; i < accounts.length; i++) {
+                let account = accounts[i];
+                let checkboxId = 'storageUpgrade_' + account;
+                if (customView[checkboxId]) {
+                    customView[checkboxId].setChecked(true);
+                }
+            }
+        });
+
+        // 清空选择按钮点击事件
+        customView.clearAllBtn.on("click", function () {
+            for (let i = 0; i < accounts.length; i++) {
+                let account = accounts[i];
+                let checkboxId = 'storageUpgrade_' + account;
+                if (customView[checkboxId]) {
+                    customView[checkboxId].setChecked(false);
+                }
+            }
+        });
+
+        // 创建对话框
+        let dialog = dialogs.build({
+            customView: customView,
+            positive: "确定",
+            negative: "取消",
+            wrapInScrollView: true,
+            cancelable: true
+        });
+
+        // 为确定按钮添加点击事件
+        dialog.on("positive", function () {
+            // 收集选中的账号
+            let selectedTitles = [];
+            for (let i = 0; i < accounts.length; i++) {
+                let account = accounts[i];
+                let checkboxId = 'storageUpgrade_' + account;
+                if (customView[checkboxId] && customView[checkboxId].isChecked()) {
+                    selectedTitles.push(account);
+                }
+            }
+
+            // 更新当前配置的账号
+            config.storageUpgrade_upgradeAccount = selectedTitles;
+
+            // 保存修改后的配置
+            configs.put("storageUpgrade_upgradeAccount", selectedTitles);
+
+            toast("账号选择设置成功");
         });
 
         // 显示对话框
