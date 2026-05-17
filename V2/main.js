@@ -24,11 +24,9 @@ const configDir = files.join(appExternalDir, "configs");
 const configPath = files.join(configDir, "config.json");
 const logDir = files.join(appExternalDir, "logs");
 const accountImgDir = files.join(appExternalDir, "accountImgs");
-const scPath = "/storage/emulated/0/$MuMu12Shared/Screenshots"
 // 确保目录存在
 files.ensureDir(configDir + "/1");  // 创建配置目录
 files.ensureDir(logDir + "/1");  // 创建日志目录
-files.ensureDir(scPath + "/1");  // 创建截图目录
 files.ensureDir(accountImgDir + "/1");  // 创建账号照片目录
 
 
@@ -1677,7 +1675,7 @@ ui.layout(
                                             <spinner id="serverPlatform" entries="Pushplus|Server酱|WxPusher|Telegram"
                                                 w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                         </horizontal>
-                                        <horizontal gravity="center_vertical" >
+                                        <horizontal id="tokenRow" gravity="center_vertical" >
                                             <text text="token" textSize="14" w="65" marginRight="12" />
                                             <img id="eyeIcon" w="20dp" h="20dp" src="@drawable/ic_visibility_off_black_48dp" />
                                             <input id="tokenInput" password="true" hint="切勿泄漏token" w="*" textSize="14" h="auto" bg="#FFFFFF" padding="8" marginRight="8" gravity="center_vertical" visibility="visible" />
@@ -2116,7 +2114,11 @@ ui.emitter.on("options_item_selected", (e, item) => {
             break;
         case "调试":
             // log("当前配置:", JSON.stringify(loadConfig(), null, 2));
-            log("当前配置:", loadConfig());
+            const config = loadConfig();
+            log("当前配置:");
+            Object.entries(config).forEach(([key, value]) => {
+                console.log(key + " : ", JSON.stringify(value, null, 2));
+            });
             // log(typeof config.harvestX)
             break;
     }
@@ -4989,7 +4991,9 @@ function getDefaultConfig() {
         push_settings: {
             1: false,
             2: false,
-            3: false
+            3: false,
+            4: false,
+            5: false
         },
         cangkuStatisticsTime: 300,
         cangkuStatisticsPage: 2,
@@ -6304,7 +6308,7 @@ function initUI() {
         // 显示对话框
         dialog.show();
     });
-    
+
     // 升仓账号选择按钮点击事件
     ui.storageUpgrade_selectAccount.on("click", function () {
         // 获取账号列表
@@ -6685,10 +6689,16 @@ function initUI() {
                                 <checkbox id="pushSetting_1" text="刷地脚本停止时" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pushSetting_2" text="等待开发" />
+                                <checkbox id="pushSetting_2" text="倒金币完成" />
                             </horizontal>
                             <horizontal gravity="center_vertical" marginBottom="8">
-                                <checkbox id="pushSetting_3" text="等待开发" />
+                                <checkbox id="pushSetting_3" text="升仓完成" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pushSetting_4" text="等待开发" />
+                            </horizontal>
+                            <horizontal gravity="center_vertical" marginBottom="8">
+                                <checkbox id="pushSetting_5" text="等待开发" />
                             </horizontal>
                         </vertical>
                     </horizontal>
@@ -6696,8 +6706,8 @@ function initUI() {
             </vertical>
         );
         // 根据当前账号配置设置checkbox的初始状态
-        for (let i = 1; i <= 3; i++) {
-            customView[`pushSetting_${i}`].setChecked(currentSettings[i]);
+        for (let i = 1; i <= 5; i++) {
+            customView[`pushSetting_${i}`].setChecked(currentSettings[i] || false);
         }
 
         // 创建对话框
@@ -6713,12 +6723,13 @@ function initUI() {
             // 收集项目状态
             let selectedItems = {};
 
-            for (let i = 1; i <= 3; i++) {
+            for (let i = 1; i <= 5; i++) {
                 selectedItems[i] = customView[`pushSetting_${i}`].isChecked();
             }
 
             // 保存修改后的账号配置
             configs.put("push_settings", selectedItems);
+            config.push_settings = selectedItems;
 
             toast("推送设置成功");
         });
@@ -7317,10 +7328,12 @@ function initUI() {
             // 保存选择的推送方式到配置
             configs.put("serverPlatform", { "text": item, "code": position });
             if (item === "Telegram") {
+                ui.tokenRow.attr("visibility", "gone");
                 ui.telegramChatRow.attr("visibility", "visible");
                 ui.telegramBotTokenRow.attr("visibility", "visible");
                 ui.telegramCommandRow.attr("visibility", "visible");
             } else {
+                ui.tokenRow.attr("visibility", "visible");
                 ui.telegramChatRow.attr("visibility", "gone");
                 ui.telegramBotTokenRow.attr("visibility", "gone");
                 ui.telegramCommandRow.attr("visibility", "gone");

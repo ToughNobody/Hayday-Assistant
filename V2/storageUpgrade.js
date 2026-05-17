@@ -32,6 +32,7 @@ function ran() {
 }
 
 
+const startTime = Date.now();
 
 let config = module.config;
 let shengcang_h = config.storageUpgradeMethod === "粮仓" ? false : true;
@@ -224,7 +225,12 @@ function convertToAllocationFormat(rawData, storageType) {
  *    c. 然后尝试获取所需材料进行升级
  * 6. 生成分配结果和统计信息
  */
-function allocateMaterials(accounts) {
+function allocateMaterials(accounts,upgradeAccount) {
+    var upgradeAccountSet = null;
+    if (upgradeAccount && Array.isArray(upgradeAccount) && upgradeAccount.length > 0) {
+        upgradeAccountSet = new Set(upgradeAccount);
+    }
+
     // 复制原始数据，添加剩余容量字段
     var accountsCopy = [];
 
@@ -326,6 +332,8 @@ function allocateMaterials(accounts) {
     for (var k = 0; k < accountsCopy.length; k++) {
         var currentAccount = accountsCopy[k];
         var currentResult = resultMap[currentAccount.name];
+
+        if (upgradeAccountSet && !upgradeAccountSet.has(currentAccount.name)) continue;
 
         var needSum = calculateNeedSum(currentAccount.need);
 
@@ -488,6 +496,8 @@ function allocateMaterials(accounts) {
         var k = pending.index;
         var currentAccount = accountsCopy[k];
         var currentResult = resultMap[currentAccount.name];
+
+        if (upgradeAccountSet && !upgradeAccountSet.has(currentAccount.name)) continue;
 
         if (currentResult.是否可升级) continue;
 
@@ -1143,7 +1153,7 @@ function main() {
     sleep(500);
 
     //新建账号列表
-    const doneAccountsList = config.accountList.filter(account => account.done === true);
+    const doneAccountsList = configs.get("storageUpgrade_selectedAccounts");
 
     // 判断照片是否存在
     function isPhotoExists(accountTitle) {
@@ -1196,38 +1206,50 @@ function main() {
     });
 
     //输出原始数据
-    log(storageUpgradeStatisticsData);
+    const statisticsTime = Date.now();
+    try {
+        log(storageUpgradeStatisticsData);
+        log(`仓库统计用时: ${module.formatDuration(parseInt((statisticsTime - startTime) / 1000))}`);
+    }
+    catch (error) {
+        console.error(error);
+    }
 
     //转换函数
     let allocationData = convertToAllocationFormat(storageUpgradeStatisticsData, storageType);
     log(JSON.stringify(allocationData));
 
     //传入数据
-    let allocationResult = allocateMaterials(allocationData);
+    let upgradeAccount = configs.get("storageUpgrade_upgradeAccount");
+    let allocationResult = allocateMaterials(allocationData,upgradeAccount);
     log(JSON.stringify(allocationResult));
+    //提取出能够升仓的账号
+    let upgradeAccounts = allocationResult["账号分配结果"].filter(account => account["是否可升级"] === true).map(account => account["账号名称"]);
 
     for (let account of allocationResult["账号分配结果"]) {
         upgradeOperation(account);
     }
 
+    const upgradeTime = Date.now();
+    log(`升仓用时: ${module.formatDuration(parseInt((upgradeTime - statisticsTime) / 1000))}`);
+
     toastLog("升仓完成");
     module.showTip("升仓完成");
+
+    log(`总用时: ${module.formatDuration(parseInt((upgradeTime - startTime) / 1000))}`);
+
+    let contentData = `
+    统计用时: ${module.formatDuration(parseInt((statisticsTime - startTime) / 1000))}
+    升仓用时: ${module.formatDuration(parseInt((upgradeTime - statisticsTime) / 1000))}
+    总用时: ${module.formatDuration(parseInt((upgradeTime - startTime) / 1000))}
+    升仓账号: ${upgradeAccounts.join("\n")}
+    `;
+    log(contentData);
+    if (configs.get("push_settings")[3]) {
+        module.pushTo(contentData, "小助手:升仓完成");
+    }
 
 }
 
 
 main();
-
-// let friendInterface = "社区"
-// if (friendInterface === "社区") {
-//     findCommunityFriendMenu();
-//     sleep(500)
-//     click(550, 150)
-//     sleep(1000)
-//     findCommunityFriend("z1");
-// } else {
-//     module.openFriendMenu();
-//     sleep(500);
-//     click(550, 150)
-//     findFriend("z1")
-// }

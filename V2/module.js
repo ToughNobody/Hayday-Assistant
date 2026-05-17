@@ -3561,25 +3561,46 @@ function coin() {
     let allcenters = [];
     let sc = captureScreen();
     let region = [158, 160, 1117, 542] // 收集区域,[x1,y1,x2,y2]
-    let templateImg = images.interval(images.fromBase64(Font.img.shopSold), "#FFFFFF", 32);
+    let templateImg = images.interval(images.fromBase64(Font.img.shopSold), "#FFFFFF", 32);  //二值化图片
+    let templateImg_original = images.fromBase64(Font.img.shopSold_original);   //原始图片
     let centers1 = findimages(templateImg, 0.6, 10, images.interval(sc, "#FFFFFF", 32));
-    // images.save(templateImg, "/storage/emulated/0/$MuMu12Shared/Screenshots/coin.png");
-    // images.save(images.interval(sc, "#FFFFFF", 32), "/storage/emulated/0/$MuMu12Shared/Screenshots/coin_centers.png");
-    // log(images.matchTemplate(images.interval(sc, "#FFFFFF", 32), templateImg, {
-    //         max: 10,
-    //         threshold: 0.6
-    //     }))
+    let centers2 = findimages(templateImg_original, 0.6, 10, sc);
+
+
+    let allPoints = centers1.concat(centers2);
+    let filteredPoints = [];
 
     try {
-        let filteredPoints = [];
-        for (let i = 0; i < centers1.length; i++) {
-            let point = centers1[i];
+        for (let i = 0; i < allPoints.length; i++) {
+            if (!allPoints[i]) continue;
+            // 过滤出在收集区域内的点
+            let point = allPoints[i];
             if (point.x < region[0] || point.x > region[2] || point.y < region[1] || point.y > region[3]) {
-                log("金币不在收集区域");
                 continue;
             }
-            filteredPoints.push(point);
+            let shouldKeep = true;
+            // 检查当前点是否与已保留的点距离过近
+            for (let j = 0; j < filteredPoints.length; j++) {
+                let dx = Math.abs(allPoints[i].x - filteredPoints[j].x);
+                let dy = Math.abs(allPoints[i].y - filteredPoints[j].y);
+                // 如果x和y坐标差值都小于20，则排除当前点
+                if (dx < 20 && dy < 20) {
+                    shouldKeep = false;
+                    break;
+                }
+            }
+            // 如果没有距离过近的点，则保留当前点
+            if (shouldKeep) {
+                filteredPoints.push(allPoints[i]);
+            }
         }
+    } catch (error) {
+        log(error);
+        return [];
+    }
+
+
+    try {
 
         allcenters = allcenters.concat(filteredPoints);
         allcenters.sort((a, b) => a.x - b.x);
@@ -6397,8 +6418,8 @@ function setText_inGame(text) {
     return true;
 }
 
-function pushTo(contentData) {
-    let title = "卡通农场小助手仓库统计"; //推送标题
+function pushTo(contentData,title) {
+    title = title || "卡通农场小助手仓库统计"; //推送标题
     let response = null;
     log(configs.get("serverPlatform").text, title, contentData)
     try {
@@ -6596,6 +6617,18 @@ function waitFor_click(point, matchColorPoints, MCPoints, max = 10, xiangsidu, s
     return false;
 }
 
+/**
+ * 格式化秒数为小时:秒格式
+ * @param {number} seconds - 秒数
+ * @returns {string} - 格式化后的小时:分钟:秒字符串
+ */
+function formatDuration(seconds) {
+    let h = Math.floor(seconds / 3600);
+    let m = Math.floor((seconds % 3600) / 60);
+    let s = seconds % 60;
+    return `${String(h).padStart(2, "0")}小时${String(m).padStart(2, "0")}分${String(s).padStart(2, "0")}秒`;
+}
+
 // 模块导出
 module.exports = {
     // 工具函数
@@ -6628,6 +6661,7 @@ module.exports = {
     find_honeyTree: find_honeyTree,
     machine_produce: machine_produce,
     click_cangku: click_cangku,
+    formatDuration: formatDuration,
 
     //鱼塘相关
     pond_operation: pond_operation,

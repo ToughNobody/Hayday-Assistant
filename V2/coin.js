@@ -106,6 +106,7 @@ try {
 let currAccount = null
 
 function main() {
+    const startTime = Date.now();
     module.checkmenu();
     module.switch_account(主号);
     currAccount = 主号
@@ -159,7 +160,12 @@ function main() {
         { x: 1119, y: 67, color: "#ed424d" }, { x: 1120, y: 109, color: "#f3c341" },
         { x: 629, y: 407, color: "#ffeb3e" }, { x: 1091, y: 252, color: "#fff9db" },
         { x: 923, y: 599, color: "#f6b633" }])) {
-            toastLog("倒金币完成")
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            toastLog(`倒金币完成,耗时: ${module.formatDuration(parseInt(duration / 1000))}`);
+            if (configs.get("push_settings")[2]) {
+                module.pushTo(`倒金币完成,耗时: ${module.formatDuration(parseInt(duration / 1000))}`, "小助手:倒金币完成");
+            }
             engines.myEngine().forceStop();
         }
         //商店右滑
