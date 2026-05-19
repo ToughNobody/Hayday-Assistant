@@ -1,6 +1,7 @@
 "ui";
 
 const icon = require("./img_Base64.js");
+const heartbeat = require("./heartbeat.js");
 
 // 创建存储对象
 let token_storage = storages.create("token_storage");
@@ -7897,6 +7898,11 @@ function updateSwitchStatus() {
 }
 // 初始化界面
 initUI();
+
+// 启动心跳服务（在新线程中运行）
+threads.start(function() {
+    heartbeat.startHeartbeat();
+});
 
 
 
