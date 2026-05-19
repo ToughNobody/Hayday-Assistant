@@ -1,7 +1,7 @@
 {
-  "version": "2.3.6",
-  "description": "v2.3.6\n\n Bug修复\n- 修复进入路边小店中的农场帮手库存时的识别和点击问题\n- 修复倒金币时有时会卡在好友农场的问题\n- 修复收金币时货架下面一排的金币识别问题\n\n 功能优化\n- 路边小店收金币优化\n- 优化悬浮窗截图功能\n- token输入框显示优化,当选择telegram时,只显示有关telegram的输入框,其他平台的输入框隐藏\n- 倒金币和升仓完成后会在日志输出用时\n- 添加倒金币完成和升仓完成的推送功能\n- 升仓功能添加账号列表,可选择升级哪些账号的仓库\n\n 新增功能\n- 添加心跳检测",
-  "zip_name": "卡通农场小助手v2.3.6.zip",
-  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.6/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.6.zip",
-  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.6/v2.3.6.zip"
+  "version": "2.3.7",
+  "description": "v2.3.7\n\n Bug修复\n- 修复升仓功能的configs和account读取问题\n- 修复进入路边小店中的农场帮手库存时的识别和点击问题\n- 修复倒金币时有时会卡在好友农场的问题\n- 修复收金币时货架下面一排的金币识别问题\n\n 功能优化\n- 路边小店收金币优化\n- 优化悬浮窗截图功能\n- token输入框显示优化,当选择telegram时,只显示有关telegram的输入框,其他平台的输入框隐藏\n- 倒金币和升仓完成后会在日志输出用时\n- 添加倒金币完成和升仓完成的推送功能\n- 升仓功能添加账号列表,可选择升级哪些账号的仓库\n\n 新增功能\n- 添加心跳检测",
+  "zip_name": "卡通农场小助手v2.3.7.zip",
+  "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.7/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.7.zip",
+  "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.7/v2.3.7.zip"
 }

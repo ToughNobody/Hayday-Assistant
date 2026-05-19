@@ -35,6 +35,7 @@ function ran() {
 const startTime = Date.now();
 
 let config = module.config;
+let configs = storages.create("config");
 let shengcang_h = config.storageUpgradeMethod === "粮仓" ? false : true;
 let shengcang_l = config.storageUpgradeMethod === "粮仓" ? true : false;
 log("升仓:", "货仓:" + shengcang_h, "粮仓:" + shengcang_l)
@@ -225,7 +226,7 @@ function convertToAllocationFormat(rawData, storageType) {
  *    c. 然后尝试获取所需材料进行升级
  * 6. 生成分配结果和统计信息
  */
-function allocateMaterials(accounts,upgradeAccount) {
+function allocateMaterials(accounts, upgradeAccount) {
     var upgradeAccountSet = null;
     if (upgradeAccount && Array.isArray(upgradeAccount) && upgradeAccount.length > 0) {
         upgradeAccountSet = new Set(upgradeAccount);
@@ -1165,12 +1166,12 @@ function main() {
     log("============检查所有账号照片============");
     for (let i = 0; i < doneAccountsList.length; i++) {
         let account = doneAccountsList[i];
-        if (!isPhotoExists(account.title)) {
-            toastLog(`账号${account.title}的照片不存在,已退出`);
-            module.showTip(`账号${account.title}的照片不存在,已退出`);
+        if (!isPhotoExists(account)) {
+            toastLog(`账号${account}的照片不存在,已退出`);
+            module.showTip(`账号${account}的照片不存在,已退出`);
             exit();
         } else {
-            log(`账号${account.title}的照片存在`);
+            log(`账号${account}的照片存在`);
         }
     }
 
@@ -1181,8 +1182,8 @@ function main() {
 
         // 已在前面统一检查过照片存在性，此处无需重复检查
 
-        module.switch_account(account.title);
-        log("============当前账号: " + account.title + "============");
+        module.switch_account(account);
+        log("============当前账号: " + account + "============");
         module.huadong();
         sleep(500);
         let isFindShop = module.findshop()
@@ -1197,10 +1198,10 @@ function main() {
         let storageType = config.storageUpgradeMethod === "粮仓" ? "lc" : "hc";
         rawData["数据"] = storageUpgradeStatistics(storageType);
         if (!rawData["数据"]) {
-            log("账号" + account.title + "仓库统计数据为空");
+            log("账号" + account + "仓库统计数据为空");
             return;
         }
-        rawData["账号"] = account.title
+        rawData["账号"] = account
         //将仓库统计结果添加到统计数据
         storageUpgradeStatisticsData.push(rawData);
     });
@@ -1221,7 +1222,7 @@ function main() {
 
     //传入数据
     let upgradeAccount = configs.get("storageUpgrade_upgradeAccount");
-    let allocationResult = allocateMaterials(allocationData,upgradeAccount);
+    let allocationResult = allocateMaterials(allocationData, upgradeAccount);
     log(JSON.stringify(allocationResult));
     //提取出能够升仓的账号
     let upgradeAccounts = allocationResult["账号分配结果"].filter(account => account["是否可升级"] === true).map(account => account["账号名称"]);
