@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hayday-Assistant 在线人数</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #fff;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+            letter-spacing: 0.1em;
+        }
+
+        .online-count {
+            font-size: 8rem;
+            font-weight: 700;
+            background: linear-gradient(180deg, #00d9ff 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            text-shadow: 0 0 60px rgba(0, 217, 255, 0.3);
+            margin: 1rem 0;
+        }
+
+        .unit {
+            font-size: 1.5rem;
+            font-weight: 300;
+            opacity: 0.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .offline-hint {
+            font-size: 0.75rem;
+            opacity: 0.35;
+            margin-bottom: 1.5rem;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.error {
+            background: #ff4757;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .last-update {
+            font-size: 0.75rem;
+            opacity: 0.25;
+            margin-bottom: 2.5rem;
+        }
+
+        /* 图表区域 */
+        .chart-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .tab-group {
+            display: flex;
+            gap: 0.4rem;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 217, 255, 0.2);
+            color: #00d9ff;
+            font-weight: 500;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 320px;
+        }
+
+        .chart-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            opacity: 0.5;
+        }
+
+        .chart-empty {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            opacity: 0.4;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* 历史记录 */
+        .history-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 0.6rem 0.5rem;
+            text-align: center;
+        }
+
+        .history-table th {
+            opacity: 0.5;
+            font-weight: 400;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-table td {
+            opacity: 0.85;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .history-table .count-cell {
+            color: #00ff88;
+            font-weight: 500;
+        }
+
+        .info {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Hayday-Assistant</div>
+        <div class="online-count" id="count">--</div>
+        <div class="unit">在线设备</div>
+        <div class="offline-hint">断开三分钟视为离线</div>
+
+        <div class="status">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">连接中...</span>
+        </div>
+
+        <div class="last-update" id="lastUpdate">--</div>
+
+        <!-- 柱状图统计 -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <div class="chart-title">在线人数统计</div>
+                <div class="tab-group">
+                    <button class="tab-btn active" data-type="day" onclick="switchTab('day')">按天</button>
+                    <button class="tab-btn" data-type="week" onclick="switchTab('week')">按周</button>
+                    <button class="tab-btn" data-type="month" onclick="switchTab('month')">按月</button>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="chartCanvas"></canvas>
+                <div class="chart-loading" id="chartLoading">加载中...</div>
+                <div class="chart-empty" id="chartEmpty">
+                    <div>暂无数据</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史记录 -->
+        <div class="history-section">
+            <div class="history-header">
+                <div class="chart-title">历史记录</div>
+            </div>
+            <table class="history-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th id="colTime">日期</th>
+                        <th>峰值在线人数</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr><td colspan="2" style="opacity:0.4">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="info">每分钟自动刷新</div>
+    </div>
+
+    <script>
+        // ==================== 配置区 ====================
+        const SCF_BASE_URL = "https://1421669870-5irzcc98vv.ap-guangzhou.tencentscf.com";
+        const REFRESH_INTERVAL_MS = 60 * 1000;
+
+        // ==================== DOM 元素 ====================
+        const countEl = document.getElementById('count');
+        const statusDotEl = document.getElementById('statusDot');
+        const statusTextEl = document.getElementById('statusText');
+        const lastUpdateEl = document.getElementById('lastUpdate');
+        const chartLoading = document.getElementById('chartLoading');
+        const chartEmpty = document.getElementById('chartEmpty');
+        const historyBody = document.getElementById('historyBody');
+        const colTime = document.getElementById('colTime');
+
+        // ==================== 状态 ====================
+        let lastOnlineCount = null;
+        let consecutiveErrors = 0;
+        let currentTab = 'day';
+        let chartInstance = null;
+
+        // ==================== 格式化时间 ====================
+        function formatTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        // ==================== 更新在线人数 ====================
+        async function fetchOnlineCount() {
+            try {
+                const response = await fetch(`${SCF_BASE_URL}/getOnlineCount`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                const online = data.online || 0;
+
+                countEl.textContent = online;
+                statusDotEl.classList.remove('error');
+                statusTextEl.textContent = '实时同步';
+                lastUpdateEl.textContent = `最后更新: ${formatTime()}`;
+                consecutiveErrors = 0;
+                lastOnlineCount = online;
+            } catch (err) {
+                console.error('获取在线人数失败:', err);
+                consecutiveErrors++;
+                statusDotEl.classList.add('error');
+                statusTextEl.textContent = '连接异常';
+                if (consecutiveErrors > 3 && lastOnlineCount !== null) {
+                    statusTextEl.textContent = '离线（显示缓存）';
+                }
+            }
+        }
+
+        // ==================== 图表与历史 ====================
+        async function fetchStats(type) {
+            try {
+                chartLoading.style.display = 'flex';
+                chartEmpty.style.display = 'none';
+                const response = await fetch(`${SCF_BASE_URL}/getOnlineCount?history=${type}`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                return data.stats || [];
+            } catch (err) {
+                console.error('获取统计失败:', err);
+                return [];
+            }
+        }
+
+        function renderChart(stats, type) {
+            chartLoading.style.display = 'none';
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+
+            if (!stats || stats.length === 0) {
+                chartEmpty.style.display = 'flex';
+                return;
+            }
+            chartEmpty.style.display = 'none';
+
+            const labels = stats.map(s => {
+                if (type === 'day') return s.hour?.slice(-2) || '';
+                return s.date?.slice(5) || '';
+            });
+            const values = stats.map(s => s.max_count || 0);
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(0, 217, 255, 0.7)');
+            gradient.addColorStop(1, 'rgba(0, 255, 136, 0.2)');
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: '峰值在线人数',
+                        data: values,
+                        backgroundColor: gradient,
+                        borderColor: 'rgba(0, 217, 255, 0.8)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        barPercentage: 0.65,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(20, 20, 40, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#00ff88',
+                            borderColor: 'rgba(0, 217, 255, 0.3)',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: (ctx) => `峰值: ${ctx.raw} 人`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: type === 'day' ? '小时' : '日期',
+                                color: 'rgba(255,255,255,0.5)',
+                                font: { size: 12 }
+                            },
+                            ticks: {
+                                color: 'rgba(255,255,255,0.4)',
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)',
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: 'rgba(255,255,255,0.4)',
+                                font: { size: 11 },
+                                stepSize: 1,
+                                beginAtZero: true
+                            },
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)',
+                                drawBorder: false
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHistory(stats, type) {
+            if (!stats || stats.length === 0) {
+                historyBody.innerHTML = '<tr><td colspan="2" style="opacity:0.4">暂无数据</td></tr>';
+                return;
+            }
+
+            const reversed = [...stats].reverse();
+            const labelMap = { day: '时间', week: '日期', month: '日期' };
+            colTime.textContent = labelMap[type] || '时间';
+
+            historyBody.innerHTML = reversed.map(s => {
+                const time = s.hour || s.date || '';
+                return `<tr><td>${time}</td><td class="count-cell">${s.max_count || 0}</td></tr>`;
+            }).join('');
+        }
+
+        async function switchTab(type) {
+            currentTab = type;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+
+            const stats = await fetchStats(type);
+            renderChart(stats, type);
+            renderHistory(stats, type);
+        }
+
+        // ==================== 初始化 ====================
+        function init() {
+            fetchOnlineCount();
+            setInterval(fetchOnlineCount, REFRESH_INTERVAL_MS);
+            switchTab('day');
+        }
+
+        init();
+    </script>
+</body>
+</html>
