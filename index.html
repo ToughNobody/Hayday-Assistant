@@ -239,7 +239,7 @@
         <div class="title">Hayday-Assistant</div>
         <div class="online-count" id="count">--</div>
         <div class="unit">在线设备</div>
-        <div class="offline-hint">断开三分钟视为离线</div>
+        <div class="offline-hint">断开一小时视为离线</div>
 
         <div class="status">
             <span class="status-dot" id="statusDot"></span>
@@ -333,7 +333,7 @@
 
                 countEl.textContent = online;
                 statusDotEl.classList.remove('error');
-                statusTextEl.textContent = '实时同步';
+                statusTextEl.textContent = '每分钟同步';
                 lastUpdateEl.textContent = `最后更新: ${formatTime()}`;
                 consecutiveErrors = 0;
                 lastOnlineCount = online;

@@ -8,8 +8,8 @@
 // 云函数地址
 const SCF_BASE_URL = "https://1421669870-5okh06mwvp.ap-guangzhou.tencentscf.com";
 
-// 心跳间隔（毫秒），默认 2 分钟
-const HEARTBEAT_INTERVAL_MS = 2 * 60 * 1000;
+// 心跳间隔（毫秒），默认 30 分钟
+const HEARTBEAT_INTERVAL_MS = 30 * 60 * 1000;
 
 // ==================== 设备 ID 管理 ====================
 
