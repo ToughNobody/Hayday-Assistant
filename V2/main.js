@@ -1,7 +1,9 @@
 "ui";
 
-const icon = require("./img_Base64.js");
-const heartbeat = require("./heartbeat.js");
+const icon = require("./modules/img_Base64.js");
+const heartbeat = require("./modules/heartbeat.js");
+const sponsor = require("./modules/sponsor.js");
+sponsor.recordInfo();
 
 // 创建存储对象
 let token_storage = storages.create("token_storage");
@@ -2974,7 +2976,7 @@ function downloadZip_dialogs() {
                 }
 
                 // 加载热更新模块
-                let hotUpdate = require("./hot_update.js");
+                let hotUpdate = require("./modules/hot_update.js");
 
                 if (updateSource == "gitee") {
                     downloadUrl = result.zip_url_gitee;
@@ -3258,7 +3260,7 @@ function checkForUpdates(silence = false) {
                             //     threads.start(() => {
                             //         try {
                             //             // 加载热更新模块
-                            //             let hotUpdate = require("./hot_update.js");
+                            //             let hotUpdate = require("./modules/hot_update.js");
 
                             //             // 初始化热更新
                             //             hotUpdate.init({
@@ -3400,7 +3402,7 @@ ui.telegramCmdStartBtn.setOnClickListener(() => {
     }
     threads.start(() => {
         try {
-            let newEngine = engines.execScriptFile("./tg_command_listener.js");
+            let newEngine = engines.execScriptFile("./modules/tg_command_listener.js");
             log("启动Telegram指令监听引擎，ID: " + newEngine.id);
             toast("Telegram指令监听已启动");
         } catch (e) {
@@ -7880,9 +7882,11 @@ function initUI() {
 
     let nobody_Config = configs.get("Nobody");
     let showDonationDialogProbability = (nobody_Config && nobody_Config.showDonationDialogProbability) || 0.3;
-    if (Math.random() < showDonationDialogProbability) {
-        showDonateDialog();
-    }
+    // if (Math.random() < showDonationDialogProbability) {
+    //     showDonateDialog();
+    // }
+    sponsor.checkSponsor();
+    
 }
 
 /**

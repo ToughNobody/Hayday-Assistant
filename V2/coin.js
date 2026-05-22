@@ -32,7 +32,7 @@ let configs = storages.create("config");
 let cangkuItemColor = module.cangkuItemColor;
 let otherItemColor = module.otherItemColor;
 let allItemColor = module.allItemColor;
-const color_lib = require("./color_lib.js");
+const color_lib = require("./modules/color_lib.js");
 //商店物品颜色
 const shopItemColor = color_lib.shopItemColor;
 const shopSellItemColor = color_lib.shopSellItemColor;

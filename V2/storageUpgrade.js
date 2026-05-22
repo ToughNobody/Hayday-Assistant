@@ -40,7 +40,7 @@ let shengcang_h = config.storageUpgradeMethod === "粮仓" ? false : true;
 let shengcang_l = config.storageUpgradeMethod === "粮仓" ? true : false;
 log("升仓:", "货仓:" + shengcang_h, "粮仓:" + shengcang_l)
 
-const color_lib = require("./color_lib.js");
+const color_lib = require("./modules/color_lib.js");
 const shopItemColor = color_lib.shopItemColor;
 const shopSellItemColor = color_lib.shopSellItemColor;
 const allItemColor = color_lib.allItemColor;

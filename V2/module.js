@@ -3,8 +3,8 @@
 
 //全局
 
-const Font = require("./img_Base64.js");
-const color_lib = require("./color_lib.js");
+const Font = require("./modules/img_Base64.js");
+const color_lib = require("./modules/color_lib.js");
 const timerMap = new Map();
 
 const startTime = Date.now();

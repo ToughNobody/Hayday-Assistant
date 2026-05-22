@@ -8,6 +8,9 @@
 // 云函数地址
 const SCF_BASE_URL = "https://1421669870-5okh06mwvp.ap-guangzhou.tencentscf.com";
 
+// 心跳存储对象
+const user_stats = storages.create("hayday-assistant");
+
 // 心跳间隔（毫秒），默认 30 分钟
 const HEARTBEAT_INTERVAL_MS = 30 * 60 * 1000;
 
@@ -21,12 +24,12 @@ function getDeviceId() {
     const STORAGE_KEY = "hayday_assistant_device_id";
 
     // 尝试读取已保存的 deviceId
-    let deviceId = storages.create("hayday-assistant").get(STORAGE_KEY);
+    let deviceId = user_stats.get(STORAGE_KEY);
 
     if (!deviceId) {
         // 生成新的随机 UUID v4
         deviceId = generateUUID();
-        storages.create("hayday-assistant").put(STORAGE_KEY, deviceId);
+        user_stats.put(STORAGE_KEY, deviceId);
         log("生成新设备 ID: " + deviceId);
     }
 
@@ -56,12 +59,19 @@ function reportOnline() {
     const url = SCF_BASE_URL + "/reportOnline?deviceId=" + encodeURIComponent(deviceId);
 
     try {
+        if (user_stats.get("last_heartbeat") && Date.now() - Number(user_stats.get("last_heartbeat")) * 1000 < HEARTBEAT_INTERVAL_MS - 5 * 60 * 1000) {
+            log("最近一次心跳时间: " + user_stats.get("last_heartbeat"));
+            log("心跳间隔过短，跳过");
+            return false;
+        }
         const response = http.get(url);
 
         if (response.statusCode === 200) {
             const body = response.body.json();
             if (body.success) {
                 log("心跳上报成功，当前时间戳: " + body.timestamp);
+                // 记录最近一次心跳时间
+                user_stats.put("last_heartbeat", body.timestamp);
                 return true;
             }
         }

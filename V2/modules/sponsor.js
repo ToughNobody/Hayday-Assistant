@@ -29,6 +29,10 @@ function recordInfo() {
     } else {
         user_stats.put("run_times", Number(user_stats.get("run_times")) + 1);
     }
+    // user_stats.put("run_times", 100);
+    // user_stats.put("first_run_date", "2026-04-23");
+    log(user_stats.get("run_times"));
+    log(user_stats.get("first_run_date"));
 }
 
 const COUNT_TEXTS = [
@@ -56,7 +60,7 @@ const SPONSOR_TEXTS = [
     "你的赞助，是我继续维护的理由 💖",
     "开源不易，感谢每一份支持 🙏",
     "如果它真的帮到你，欢迎回馈一点点 ❤️",
-    "你的鼓励，胜过千言万语 🌟",
+    "你的支持，胜过千言万语 🌟",
     "喜欢的话，不妨支持一下作者呀"
 ];
 
@@ -72,7 +76,9 @@ function randomChoice(arr) {
  */
 function formatText(text, replacements) {
     let result = text;
-    for (const key in replacements) {
+    var keys = Object.keys(replacements);
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
         result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), replacements[key]);
     }
     return result;
@@ -85,8 +91,8 @@ function showSponsorDialog(contentText, sponsorText) {
     dialogs.build({
         title: "🌟投喂作者🌟",
         content: contentText + "\n\n" + sponsorText + "\n(ฅ´ω`ฅ)",
-        positive: "真的😍",
-        neutral: "逗你玩😝",
+        positive: "没问题",
+        neutral: "我拒绝",
         cancelable: false,
     }).on("positive", () => {
         toast("您的支持是我最大的动力！❤️");
@@ -131,11 +137,11 @@ function checkSponsor() {
     // 检查运行次数是否达到50或整百
     if (runTimes == 50 || runTimes % 100 === 0) {
         const countText = formatText(randomChoice(COUNT_TEXTS), { count: runTimes });
-        const sponsorText = randomChoice(SPONSOR_TEXTS);
+        let sponsorText = randomChoice(SPONSOR_TEXTS);
         showSponsorDialog(countText, sponsorText);
     }
-
-    if (firstRunDateStr) {
+    //
+    else if (firstRunDateStr) {
         const firstRunDate = new Date(firstRunDateStr);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -144,12 +150,13 @@ function checkSponsor() {
         const daysDiff = Math.floor((today - firstRunDate) / (1000 * 60 * 60 * 24));
         
         const lastMonthlyTrigger = user_stats.get("last_monthly_trigger");
+
         const todayStr = today.toDateString();
-        
-        if (daysDiff > 0 && daysDiff % 30 === 0 && lastMonthlyTrigger !== todayStr) {
-            const months = Math.floor(daysDiff / 30);
+        // 检查运行时间是否是整月
+        if (daysDiff > 0 && (daysDiff + 1) % 30 === 0 && lastMonthlyTrigger !== todayStr) {
+            const months = Math.floor((daysDiff + 1) / 30);
             const monthText = formatText(randomChoice(MONTH_TEXTS), { month: months });
-            const sponsorText = randomChoice(SPONSOR_TEXTS);
+            let sponsorText = randomChoice(SPONSOR_TEXTS);
             showSponsorDialog(monthText, sponsorText);
             user_stats.put("last_monthly_trigger", todayStr);
         }

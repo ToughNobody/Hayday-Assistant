@@ -25,7 +25,7 @@ try {
     }
 }
 
-const color_lib = require("./color_lib.js");
+const color_lib = require("./modules/color_lib.js");
 //全局
 
 let config = module.config;
