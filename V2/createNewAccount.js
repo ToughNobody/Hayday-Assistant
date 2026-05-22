@@ -1,5 +1,5 @@
 // 导入module模块
-const module = require("./module.js");
+const module = require("./modules/module.js");
 
 //全局
 

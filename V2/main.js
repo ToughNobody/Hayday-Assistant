@@ -1268,7 +1268,7 @@ ui.layout(
                                         <vertical id="cropSelectContainer" gravity="center_vertical" visibility="visible">
                                             <horizontal gravity="center_vertical">
                                                 <text text="种植作物：" textSize="14" w="80" marginRight="8" />
-                                                <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗|黑豆"
+                                                <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗|黑豆|土豆|西红柿|芦笋|草莓"
                                                     w="auto" textSize="14" h="48" bg="#FFFFFF" />
                                                 <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
                                                 <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
@@ -4501,7 +4501,7 @@ function validateConfig(config) {
 
     // 验证作物选择
     if (!config.selectedCrop) config.selectedCrop = defaultConfig.selectedCrop;
-    const cropOptions = ["小麦", "玉米", "胡萝卜", "大豆", "甘蔗", "黑豆"];
+    const cropOptions = ["小麦", "玉米", "胡萝卜", "大豆", "甘蔗", "黑豆", "土豆", "西红柿", "芦笋", "草莓"];
     if (config.selectedCrop.code < 0 || config.selectedCrop.code >= cropOptions.length) {
         config.selectedCrop.code = defaultConfig.selectedCrop.code;
     }
@@ -6797,7 +6797,11 @@ function initUI() {
                 "胡萝卜": 10,
                 "大豆": 20,
                 "甘蔗": 30,
-                "黑豆": 10
+                "黑豆": 10,
+                "土豆": 220,
+                "西红柿": 360,
+                "芦笋": 360,
+                "草莓": 480,
             };
 
             if (matureTimes[item] !== undefined) {

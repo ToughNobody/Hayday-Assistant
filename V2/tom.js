@@ -1,7 +1,7 @@
 // 导入module模块
 let module;
 try {
-    module = require("./module.js");
+    module = require("./modules/module.js");
     if (!module) {
         throw new Error("模块导入结果为空");
     }
@@ -11,8 +11,8 @@ try {
     // 尝试重新导入
     try {
         // 清除缓存后重试
-        delete require.cache[require.resolve("./module.js")];
-        module = require("./module.js");
+        delete require.cache[require.resolve("./modules/module.js")];
+        module = require("./modules/module.js");
         if (!module) {
             throw new Error("重新导入模块结果为空");
         }
