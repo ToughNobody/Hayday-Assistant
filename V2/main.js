@@ -1615,6 +1615,15 @@ ui.layout(
                                             </radiogroup>
                                         </horizontal>
 
+                                        <horizontal gravity="center_vertical">
+                                            <text text="作物售卖方式" textSize="14" w="100" marginRight="8" />
+                                            <radiogroup id="cropSellMethod" orientation="horizontal">
+                                                <radio id="cropSell_shop" checked="true" text="商店" />
+                                                <frame w="2" />
+                                                <radio id="cropSell_visitor"  checked="false" text="访客" />
+                                            </radiogroup>
+                                        </horizontal>
+
                                         <horizontal paddingTop="8">
                                             <text text="坐标点击" textSize="14" w="auto" marginRight="8" />
                                             <img id="helpIcon_coordClick" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
@@ -4113,6 +4122,7 @@ function getConfig() {
         pauseTime: configs.get("pauseTime", defaultConfig.pauseTime),
         landFindMethod: configs.get("landFindMethod", defaultConfig.landFindMethod),
         coinCollectionMethod: configs.get("coinCollectionMethod", defaultConfig.coinCollectionMethod),
+        cropSellMethod: configs.get("cropSellMethod", defaultConfig.cropSellMethod),
         syncHarvest: configs.get("syncHarvest", defaultConfig.syncHarvest),
         tom_FirstHire: configs.get("tom_FirstHire", defaultConfig.tom_FirstHire),
         landOffset: {
@@ -4256,6 +4266,7 @@ function saveConfig(con) {
         configs.put("pauseTime", con.pauseTime !== undefined ? con.pauseTime : defaultConfig.pauseTime);
         configs.put("landFindMethod", con.landFindMethod !== undefined ? con.landFindMethod : defaultConfig.landFindMethod);
         configs.put("coinCollectionMethod", con.coinCollectionMethod !== undefined ? con.coinCollectionMethod : defaultConfig.coinCollectionMethod);
+        configs.put("cropSellMethod", con.cropSellMethod !== undefined ? con.cropSellMethod : defaultConfig.cropSellMethod);
         configs.put("syncHarvest", con.syncHarvest !== undefined ? con.syncHarvest : defaultConfig.syncHarvest);
         configs.put("tom_FirstHire", con.tom_FirstHire !== undefined ? con.tom_FirstHire : defaultConfig.tom_FirstHire);
 
@@ -4470,6 +4481,8 @@ function validateConfig(config) {
     if (config.landFindMethod != "商店" && config.landFindMethod != "面包房") config.landFindMethod = defaultConfig.landFindMethod;
 
     if (config.coinCollectionMethod != "一键收取" && config.coinCollectionMethod != "逐个点击") config.coinCollectionMethod = defaultConfig.coinCollectionMethod;
+    // 验证作物售卖方式
+    if (config.cropSellMethod != "shop" && config.cropSellMethod != "visitor") config.cropSellMethod = defaultConfig.cropSellMethod;
 
     // 验证升仓方式
     if (config.storageUpgradeMethod != "粮仓" && config.storageUpgradeMethod != "货仓") config.storageUpgradeMethod = defaultConfig.storageUpgradeMethod;
@@ -4952,6 +4965,7 @@ function getDefaultConfig() {
         pauseTime: 5, // 默认顶号延迟为5分钟
         landFindMethod: "商店", // 默认使用商店查找
         coinCollectionMethod: "一键收取", // 默认使用一键收取金币
+        cropSellMethod: "shop", // 默认使用商店售卖作物
         storageUpgradeMethod: "货仓", // 默认升仓货仓
         friendInterface: "好友簿", // 默认好友界面好友簿
         storageUpgrade_picDirPath: "", // 默认升仓照片文件夹路径为空
@@ -5168,7 +5182,12 @@ function loadConfigToUI(loadConfigFromFile = false) {
     } else {
         ui.coinCollect_single.setChecked(true);
     }
-
+    // 设置作物售卖方式
+    if (config.cropSellMethod == "shop") {
+        ui.cropSell_shop.setChecked(true);
+    } else {
+        ui.cropSell_visitor.setChecked(true);
+    }
     // 设置升仓选项
     if (config.storageUpgradeMethod == "粮仓") {
         ui.storageUpgrade_l.setChecked(true);
@@ -5519,6 +5538,7 @@ function logCurrentConfig(config) {
     console.log("目标阈值：" + config.CangkuSold_targetNum);
     console.log("地块查找方法: " + config.landFindMethod);
     console.log("金币收取方式: " + config.coinCollectionMethod);
+    console.log("作物售卖方式: " + config.cropSellMethod);
     console.log("切换账号: " + (config.switchAccount ? "是" : "否"));
     console.log("切换账号方式: " + config.accountMethod);
     console.log("顶号延迟: " + config.pauseTime + "分钟");
@@ -6013,6 +6033,15 @@ function initUI() {
         // 获取被选中的单选框的文字内容
         let selectedText = selectedRadioButton.getText();
         configs.put("coinCollectionMethod", selectedText);
+    });
+    // 绑定作物售卖方式单选框事件
+    ui.cropSellMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
+        // 根据选中的单选框ID存储对应值
+        let sellMethod = isCheckedId === ui.cropSell_shop.getId() ? "shop" : "visitor";
+        // log("作物售卖方式: " + sellMethod);
+        // log("选中的单选框ID: " + isCheckedId);
+        // log(ui.cropSell_shop.getId());
+        configs.put("cropSellMethod", sellMethod);
     });
 
     // 绑定升仓方式单选框事件

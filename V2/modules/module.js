@@ -55,6 +55,7 @@ const cropName = config.selectedCrop.text
 let crop = cropItemColor[cropName].crop;
 let crop_plant = cropItemColor[cropName].crop_plant;
 let crop_sell = cropItemColor[cropName].crop_sell;
+let crop_visitors = cropItemColor[cropName].crop_visitors;
 
 //界面
 const 商店界面范围 = [294, 133, 728 - 294, 673 - 133]
@@ -1740,14 +1741,15 @@ function huadong_zuoshang() {
  */
 function huadong_visitor() {
 
-    module.huadong_adjust([60,50],[300,600])
+    huadong_adjust([60, 50], [300, 600])
+    showTip("滑动到访客位置")
     sleep(500);
     //900,360中心点
     gestures([0, 400, [800, 360], [600, 360]],
         [0, 400, [1000, 360], [1200, 360]
         ]);
     sleep(300);
-        gestures([0, 400, [800, 360], [600, 360]],
+    gestures([0, 400, [800, 360], [600, 360]],
         [0, 400, [1000, 360], [1200, 360]
         ]);
 }
@@ -5716,7 +5718,6 @@ function operation(Account) {
     let timerName = accountName ? accountName + "计时器" : config.selectedCrop.text;
     timer(timerName, cropTime);
 
-    //打开路边小店
     sleep(500);
     //缩放
     gestures([0, 200, [420 + ran(), 133 + ran()], [860 + ran(), 133 + ran()]],
@@ -5724,11 +5725,58 @@ function operation(Account) {
         ]);
 
     sleep(500);
-    openshop();
+    let cropSellMethod = configs.get("cropSellMethod", "shop");
+    if (cropSellMethod === "shop") {
+        //打开路边小店
+        openshop();
 
-    //开始售卖
-    console.log("============开始售卖系列操作===============")
-    shop();
+        //开始售卖
+        console.log("============开始售卖系列操作===============")
+        shop();
+    } else if (cropSellMethod === "visitor") {
+        huadong_visitor()
+        sleep(500);
+        //最多点击2次访客头像
+        for (let i = 0; i < 2; i++) {
+            showTip("检测访客")
+            if (!clickVisitor()) {
+                log("未检测到访客,结束售卖");
+                showTip("未检测到访客,结束售卖");
+                break;
+            }
+            sleep(1000);
+            //检测访客对话框
+            if (!findMC(otherItemColor["访客对话框"])) {
+                log("未找到访客对话框");
+                showTip("未找到访客对话框");
+                close();
+                continue;
+            }
+            //检测访客需求物品
+            if (findMC(crop_visitors, null, [705, 133, 1037 - 705, 296 - 133])) {
+                click(867 + ran(), 631 + ran())
+                log("访客卖出物品");
+                showTip("访客卖出物品");
+                sleep(1000)
+                if (findMC(allItemColor["资源不足"])) {
+                    log("资源不足");
+                    showTip("资源不足");
+                    close();
+                    sleep(1000);
+                    break;
+                }
+                if (i == 0) sleep(5000);
+                continue;
+            } else {
+                click(1020 + ran(), 543 + ran())
+                log("访客需求物品不一致");
+                showTip("访客需求物品不一致");
+                if (i == 0) sleep(5000);
+                continue;
+            }
+        }
+        huadong();
+    }
     // log(Account,config.tomFind,config.pond)
 
     let accountList_config
@@ -6436,7 +6484,7 @@ function setText_inGame(text) {
     return true;
 }
 
-function pushTo(contentData,title) {
+function pushTo(contentData, title) {
     title = title || "卡通农场小助手仓库统计"; //推送标题
     let response = null;
     log(configs.get("serverPlatform").text, title, contentData)
@@ -6649,8 +6697,9 @@ function formatDuration(seconds) {
 
 /**
  * 点击访客头像
+ * @param {number} duration 持续时间，默认15秒
  */
-function clickVisitor() {
+function clickVisitor(duration = 15) {
     let visitorImg = Font.visitor;
 
     // 预先转换所有Base64图像
@@ -6661,7 +6710,9 @@ function clickVisitor() {
         visitorTemplates.push({ visitor: key, template: template });
     }
 
-    while (true) {
+    let startTime = Date.now();
+
+    while (Date.now() - startTime < duration * 1000) {
         for (let template of visitorTemplates) {
             var Pos = images.findImage(captureScreen(), template.template, {
                 threshold: 0.8
@@ -6672,11 +6723,14 @@ function clickVisitor() {
                 var centerX = Pos.x + template.template.getWidth() / 2;
                 var centerY = Pos.y + template.template.getHeight() / 2;
                 click(centerX, centerY);
-                log(centerX, centerY)
+                log(template.visitor, "点击坐标:", centerX, centerY)
+                showTip("点击坐标:", centerX, centerY)
                 return { visitor: template.visitor, centerX, centerY };
             }
         }
     }
+    log("未找到访客头像");
+    return false;
 }
 
 
