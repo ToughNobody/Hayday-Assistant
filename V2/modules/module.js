@@ -1734,6 +1734,24 @@ function huadong_zuoshang() {
     sleep(200)
 }
 
+
+/**
+ * 滑动到访客位置
+ */
+function huadong_visitor() {
+
+    module.huadong_adjust([60,50],[300,600])
+    sleep(500);
+    //900,360中心点
+    gestures([0, 400, [800, 360], [600, 360]],
+        [0, 400, [1000, 360], [1200, 360]
+        ]);
+    sleep(300);
+        gestures([0, 400, [800, 360], [600, 360]],
+        [0, 400, [1000, 360], [1200, 360]
+        ]);
+}
+
 /**
  * 调整视角到正确位置
  * 根据商店坐标定位商店，调整视角到商店位置
@@ -6629,6 +6647,39 @@ function formatDuration(seconds) {
     return `${String(h).padStart(2, "0")}小时${String(m).padStart(2, "0")}分${String(s).padStart(2, "0")}秒`;
 }
 
+/**
+ * 点击访客头像
+ */
+function clickVisitor() {
+    let visitorImg = Font.visitor;
+
+    // 预先转换所有Base64图像
+    let visitorTemplates = [];
+    for (let [key, value] of Object.entries(visitorImg)) {
+        let image_base64 = value;
+        let template = images.fromBase64(image_base64);
+        visitorTemplates.push({ visitor: key, template: template });
+    }
+
+    while (true) {
+        for (let template of visitorTemplates) {
+            var Pos = images.findImage(captureScreen(), template.template, {
+                threshold: 0.8
+            });
+
+            if (Pos) {
+                // 计算图片中心位置
+                var centerX = Pos.x + template.template.getWidth() / 2;
+                var centerY = Pos.y + template.template.getHeight() / 2;
+                click(centerX, centerY);
+                log(centerX, centerY)
+                return { visitor: template.visitor, centerX, centerY };
+            }
+        }
+    }
+}
+
+
 // 模块导出
 module.exports = {
     // 工具函数
@@ -6643,6 +6694,7 @@ module.exports = {
     findNum_findMC: findNum_findMC,
     huadong: huadong,
     huadong_zuoshang: huadong_zuoshang,
+    huadong_visitor: huadong_visitor,
     huadong_adjust: huadong_adjust,
     createWindow: createWindow,
     closeWindow: closeWindow,
@@ -6662,6 +6714,9 @@ module.exports = {
     machine_produce: machine_produce,
     click_cangku: click_cangku,
     formatDuration: formatDuration,
+
+    //访客相关
+    clickVisitor: clickVisitor,
 
     //鱼塘相关
     pond_operation: pond_operation,

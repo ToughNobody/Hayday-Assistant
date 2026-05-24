@@ -6947,6 +6947,8 @@ function initUI() {
                 "- 照片样式详情请看使用文档\n" +
                 "- 倒金币的账号最好不要参加游戏内的全球活动,参加后其他的非好友也可进入你的农场,可能会偷你的1金物品\n\n" +
                 "升仓:\n" +
+                "- 选择账号: 勾选的账号执行仓库统计和材料供给\n" +
+                "- 升仓账号: 仅升级勾选的账号\n" +
                 "- 转移逻辑：\n" +
                 "  1. 先进行仓库统计,对数据进行处理\n" +
                 "  2. 排序账号：按货仓容量从小到大，货仓相同则按缺量总和从小到大\n" +
@@ -7890,7 +7892,7 @@ function initUI() {
     //     showDonateDialog();
     // }
     sponsor.checkSponsor();
-    
+
 }
 
 /**
@@ -7908,7 +7910,7 @@ function updateSwitchStatus() {
 initUI();
 
 // 启动心跳服务（在新线程中运行）
-threads.start(function() {
+threads.start(function () {
     heartbeat.startHeartbeat();
 });
 
