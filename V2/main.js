@@ -1619,7 +1619,7 @@ ui.layout(
                                             <text text="作物售卖方式" textSize="14" w="100" marginRight="8" />
                                             <radiogroup id="cropSellMethod" orientation="horizontal">
                                                 <radio id="cropSell_shop" checked="true" text="商店" />
-                                                <frame w="2" />
+                                                <frame w="30" />
                                                 <radio id="cropSell_visitor"  checked="false" text="访客" />
                                             </radiogroup>
                                         </horizontal>
@@ -7915,13 +7915,16 @@ function initUI() {
             });
     });
 
-    let nobody_Config = configs.get("Nobody");
-    let showDonationDialogProbability = (nobody_Config && nobody_Config.showDonationDialogProbability) || 0.3;
-    // if (Math.random() < showDonationDialogProbability) {
-    //     showDonateDialog();
-    // }
-    sponsor.checkSponsor();
+    // let nobody_Config = configs.get("Nobody");
 
+    let sponsorResult = sponsor.checkSponsor();
+    if (!sponsorResult) {
+        if (Math.random() > 0.0001) {
+            sponsor.showToast();
+        } else {
+            toast("你今天很幸运(万分之一的概率)")
+        }
+    }
 }
 
 /**

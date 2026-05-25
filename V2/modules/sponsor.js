@@ -64,6 +64,55 @@ const SPONSOR_TEXTS = [
     "喜欢的话，不妨支持一下作者呀"
 ];
 
+const TOAST_TEXTS = [
+    "今日份存在感 +1",
+    "经验+3",
+    "好感度+10",
+    "刷一点存在感",
+    "又来啦~",
+
+    "在GitHub 点个赞吧 ~",
+    "在Gitee 点个赞吧 ~",
+    "庄稼熟了，快去收",
+    "小麦滞销,帮帮我们",
+    "没有零风险的脚本",
+    "作者摸鱼中🖐️🐟️",
+
+    "手动升仓太累?试试升仓功能",
+    "浮动按钮开关不是必开的",
+    "账号配置可单独配置每个账号信息哦",
+    "推荐使用邮箱切号",
+    "邮箱不够?试试无限邮箱",
+    "图片识别速度快,文字识别操作少",
+
+    "每天炸矿最多可得10颗钻石",
+    "炸矿获得钻石最多的工具是铲子",
+    "每天炸矿获得钻石数量在早上8点重置",
+    "每天可购买最多89个建材",
+    "建材购买数量在早上8点重置",
+    "每周一下午四点的第一艘货船可获得拼图",
+    "访客会买仓库数量前二多的,或者数量为0的",
+    "访客不会买工具",
+    "双指收割更快哦",
+    "每天刷地可获得的建材为土地数量x4",
+    "记得定期清理粉丝",
+    "全球活动开启时,别人可用过排行榜进入你的农场",
+    "开启加速器可进入商店",
+    "加入游戏社区可提升游戏体验",
+    // "",
+    // "",
+
+    "试试《星露谷物语》",
+    "试试《泰拉瑞亚》",
+    "I have a goddamn Plan!",
+    "The cake is a lie!",
+    "两边包夹芝士",
+    "歪比巴卜",
+    "↑→→→↑→↓↓↓↓↓↓↓",
+    "上上下下左右左右baba",
+    // "",
+]
+
 /**
  * 随机选择数组中的一个元素
  */
@@ -139,6 +188,7 @@ function checkSponsor() {
         const countText = formatText(randomChoice(COUNT_TEXTS), { count: runTimes });
         let sponsorText = randomChoice(SPONSOR_TEXTS);
         showSponsorDialog(countText, sponsorText);
+        return "run_times";
     }
     //
     else if (firstRunDateStr) {
@@ -159,13 +209,24 @@ function checkSponsor() {
             let sponsorText = randomChoice(SPONSOR_TEXTS);
             showSponsorDialog(monthText, sponsorText);
             user_stats.put("last_monthly_trigger", todayStr);
+            return "month";
         }
     }
+    return false;
+}
+
+function showToast() {
+    let toastText = randomChoice(TOAST_TEXTS);
+    if (toastText === "好感度+10") {
+        user_stats.put("friendship", Number(user_stats.get("friendship", 0)) + 10);
+    }
+    toast(toastText);
 }
 
 module.exports = {
     recordInfo,
-    checkSponsor
+    checkSponsor,
+    showToast
 };
 
 

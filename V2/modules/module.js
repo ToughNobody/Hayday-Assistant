@@ -3708,7 +3708,26 @@ function inShop_sell() {
     }
 }
 
-
+/**
+ * 判断是否在商店售卖界面的指定页面
+ * @returns {string} 当前页面，"lc"、"hc"、"bs"
+ * @description 检查当前商店售卖界面是粮仓、货仓还是帮手界面
+ */
+function inShop_sell_page() {
+    for (let i = 0; i < 5; i++) {
+        if( matchColor(allItemColor["商店粮仓界面"])) {
+            return "lc";
+        }
+        if( matchColor(allItemColor["商店货仓界面"])) {
+            return "hc";
+        }
+        if( matchColor(allItemColor["商店帮手界面"])) {
+            return "bs";
+        }
+        sleep(1000);
+    }
+    return null;
+}
 
 //商店售卖
 function shop() {
@@ -3746,7 +3765,7 @@ function shop() {
             }
 
             //判断是否在粮仓界面
-            if (!matchColor(allItemColor["商店粮仓界面"])) {
+            if (inShop_sell_page() != "lc") {
                 click(200 + ran(), 220 + ran());//点击售卖粮仓按钮
                 sleep(100);
                 console.log("点击粮仓按钮")
@@ -3955,7 +3974,7 @@ function shopStatistic(sc) {
             return false;
         }
         //判断是否在货仓界面
-        if (!matchColor(allItemColor["商店货仓界面"])) {
+        if (inShop_sell_page() != "hc") {
             click(205 + ran(), 350 + ran());//点击售卖货仓按钮
             sleep(100);
             console.log("点击货仓按钮")
@@ -4268,7 +4287,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             sleep(500)
             if (matchColor(allItemColor["商店售卖界面1"]) || matchColor(allItemColor["商店售卖界面2"])) {
                 if (pos == "货仓") {
-                    if (!matchColor(allItemColor["商店货仓界面"])) {
+                    if (inShop_sell_page() != "hc") {
                         click(205 + ran(), 350 + ran());//点击售卖货仓按钮
                         sleep(100);
                         console.log("点击货仓按钮")
@@ -4276,7 +4295,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
                 }
 
                 else if (pos == "粮仓") {
-                    if (!matchColor(allItemColor["商店粮仓界面"])) {
+                    if (inShop_sell_page() != "lc") {
                         click(200 + ran(), 220 + ran());//点击售卖粮仓按钮
                         sleep(100);
                         console.log("点击粮仓按钮")
@@ -4405,7 +4424,7 @@ function sellPlanValidate(sellPlan_original) {
             return false;
         }
         //判断是否在货仓界面
-        if (!matchColor(allItemColor["商店货仓界面"])) {
+        if (inShop_sell_page() != "hc") {
             click(205 + ran(), 350 + ran());//点击售卖货仓按钮
             sleep(100);
             console.log("点击货仓按钮")
@@ -5775,6 +5794,7 @@ function operation(Account) {
                 continue;
             }
         }
+        sleep(500);
         huadong();
     }
     // log(Account,config.tomFind,config.pond)
@@ -6813,6 +6833,7 @@ module.exports = {
     clickShopSearchButton: clickShopSearchButton,
     inShop: inShop,
     inShop_sell: inShop_sell,
+    inShop_sell_page: inShop_sell_page,
 
     // 关闭和界面处理
     find_close: find_close,
