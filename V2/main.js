@@ -6663,6 +6663,7 @@ function initUI() {
             </vertical>
         );
 
+        //空字符串为对齐数字编号
         const itemNames = [
             "", "盒钉", "螺钉", "镶板", "螺栓", "木板", "胶带", "土地契约", "木槌", "标桩",
             "斧头", "木锯", "炸药", "炸药桶", "铁铲", "十字镐", "鱼片", "龙虾尾", "小鸭羽毛",
@@ -6670,7 +6671,7 @@ function initUI() {
         ];
 
         // 根据当前账号配置设置checkbox的初始状态
-        for (let i = 1; i <= 20; i++) {
+        for (let i = 1; i <= itemNames.length - 1; i++) {
             customView[`cangkuStatistics_${i}`].setChecked(currentSettings.includes(itemNames[i]));
         }
 
@@ -6688,7 +6689,7 @@ function initUI() {
             // 收集选中的物品名称
             let selectedItems = [];
 
-            for (let i = 1; i <= 20; i++) {
+            for (let i = 1; i <= itemNames.length - 1; i++) {
                 if (customView[`cangkuStatistics_${i}`].isChecked()) {
                     selectedItems.push(itemNames[i]);
                 }

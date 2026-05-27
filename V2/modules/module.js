@@ -1773,9 +1773,9 @@ function huadong_adjust([x, y], [endX, endY]) {
             return true;
         }
         swipe(shopPos.x + _x, shopPos.y + _y, _endX, _endY, 300);
-        sleep(50);
-        click(_endX, _endY);
-        sleep(100);
+        // sleep(50);
+        press(_endX, _endY, 500);
+        // sleep(100);
         return true;
     } else {
         log("未识别到商店")
@@ -1847,16 +1847,14 @@ function find_fishPond(pondNum, huadong = false) {
     } else if (pondNum == 2) {
         //上部中间
         swipe(320 + ran(), 220 + ran(), 1000 + ran(), 220 + ran(), 500)
-        sleep(10)
-        click(900 + ran(), 120 + ran())
+        press(900 + ran(), 120 + ran(), 500)
         sleep(100)
 
         click(680 + ran(), 270 + ran())
     } else if (pondNum == 3) {
         //上部中间
         swipe(320 + ran(), 220 + ran(), 1000 + ran(), 220 + ran(), 500)
-        sleep(10)
-        click(900 + ran(), 120 + ran())
+        press(900 + ran(), 120 + ran(), 500)
         sleep(100)
 
         click(350 + ran(), 405 + ran())
@@ -1865,8 +1863,7 @@ function find_fishPond(pondNum, huadong = false) {
         swipe(200 + ran(), 170 + ran(), 1000 + ran(), 175 + ran(), 100)
         sleep(300)
         swipe(820 + ran(), 480 + ran(), 300 + ran(), 100 + ran(), 800)
-        sleep(10);
-        click(300 + ran(), 100 + ran())
+        press(300 + ran(), 100 + ran(), 500)
         sleep(100)
 
         click(440 + ran(), 280 + ran())
@@ -1875,16 +1872,14 @@ function find_fishPond(pondNum, huadong = false) {
         swipe(300 + ran(), 270 + ran(), 1100 + ran(), 275 + ran(), 100)
         sleep(300)
         swipe(820 + ran(), 480 + ran(), 300 + ran(), 100 + ran(), 800)
-        sleep(10);
-        click(300 + ran(), 100 + ran())
+        press(300 + ran(), 100 + ran(), 500)
         sleep(100)
 
         click(780 + ran(), 370 + ran())
     } else if (pondNum == 6) {
         //直接下滑一段距离
         swipe(790 + ran(), 360 + ran(), 950 + ran(), 100 + ran(), 500)
-        sleep(10)
-        click(950 + ran(), 100 + ran())
+        press(950 + ran(), 100 + ran(), 500)
         sleep(100)
 
         click(390 + ran(), 600 + ran())
@@ -1893,8 +1888,7 @@ function find_fishPond(pondNum, huadong = false) {
     } else if (pondNum == 8) {
         //直接下滑一段距离
         swipe(790 + ran(), 360 + ran(), 950 + ran(), 100 + ran(), 500)
-        sleep(10)
-        click(950 + ran(), 100 + ran())
+        press(950 + ran(), 100 + ran(), 500)
         sleep(100)
 
         click(890 + ran(), 380 + ran())
@@ -1907,12 +1901,10 @@ function find_fishPond(pondNum, huadong = false) {
     } else if (pondNum == 10) {
         //下滑两段
         swipe(790 + ran(), 360 + ran(), 950 + ran(), 100 + ran(), 500)
-        sleep(10)
-        click(950 + ran(), 100 + ran())
+        press(950 + ran(), 100 + ran(), 500)
         sleep(100)
         swipe(720 + ran(), 515 + ran(), 900 + ran(), 100 + ran(), 500)
-        sleep(10)
-        click(900 + ran(), 100 + ran())
+        press(900 + ran(), 100 + ran(), 500)
         sleep(100)
 
         click(310 + ran(), 400 + ran())
@@ -1951,8 +1943,7 @@ function find_fishPond(pondNum, huadong = false) {
         //鸭毛
         //垂直下滑一段距离
         swipe(780 + ran(), 370 + ran(), 775 + ran(), 50 + ran(), 500)
-        sleep(10)
-        click(775 + ran(), 50 + ran())
+        press(775 + ran(), 50 + ran(), 500)
         sleep(100)
 
         click(1000 + ran(), 460 + ran())
@@ -3715,13 +3706,13 @@ function inShop_sell() {
  */
 function inShop_sell_page() {
     for (let i = 0; i < 5; i++) {
-        if( matchColor(allItemColor["商店粮仓界面"])) {
+        if (matchColor(allItemColor["商店粮仓界面"])) {
             return "lc";
         }
-        if( matchColor(allItemColor["商店货仓界面"])) {
+        if (matchColor(allItemColor["商店货仓界面"])) {
             return "hc";
         }
-        if( matchColor(allItemColor["商店帮手界面"])) {
+        if (matchColor(allItemColor["商店帮手界面"])) {
             return "bs";
         }
         sleep(1000);
@@ -6724,10 +6715,15 @@ function clickVisitor(duration = 15) {
 
     // 预先转换所有Base64图像
     let visitorTemplates = [];
-    for (let [key, value] of Object.entries(visitorImg)) {
-        let image_base64 = value;
-        let template = images.fromBase64(image_base64);
-        visitorTemplates.push({ visitor: key, template: template });
+    try {
+        for (let [key, value] of Object.entries(visitorImg)) {
+            let image_base64 = value;
+            let template = images.fromBase64(image_base64);
+            visitorTemplates.push({ visitor: key, template: template });
+        }
+    } catch (error) {
+        log("转换访客头像失败:", error);
+        return false;
     }
 
     let startTime = Date.now();
@@ -6740,11 +6736,16 @@ function clickVisitor(duration = 15) {
 
             if (Pos) {
                 // 计算图片中心位置
-                var centerX = Pos.x + template.template.getWidth() / 2;
-                var centerY = Pos.y + template.template.getHeight() / 2;
-                click(centerX, centerY);
-                log(template.visitor, "点击坐标:", centerX, centerY)
-                showTip("点击坐标:", centerX, centerY)
+                try {
+                    var centerX = Pos.x + template.template.getWidth() / 2;
+                    var centerY = Pos.y + template.template.getHeight() / 2;
+                    click(centerX, centerY);
+                    log(template.visitor, "点击坐标:", centerX, centerY)
+                    showTip("点击坐标:", centerX, centerY)
+                } catch (error) {
+                    log("点击访客头像失败:", error);
+                    return false;
+                }
                 return { visitor: template.visitor, centerX, centerY };
             }
         }

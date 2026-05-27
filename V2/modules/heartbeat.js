@@ -6,7 +6,7 @@
 // ==================== 配置区 ====================
 
 // 云函数地址
-const SCF_BASE_URL = "https://1421669870-5okh06mwvp.ap-guangzhou.tencentscf.com";
+const SCF_BASE_URL = "https://1421669870-57duhhki45.ap-guangzhou.tencentscf.com";
 
 // 心跳存储对象
 const user_stats = storages.create("hayday-assistant");
