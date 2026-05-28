@@ -1700,13 +1700,15 @@ function huadong(right = false) {
             sleep(200)
         }
         //下滑
-        gesture(1000, [650 + ran(), 580 + ran()],
-            [630 + ran(), 250 + ran()]);
+        gesture(1000, [700 + ran(), 530 + ran()],
+            [500 + ran(), 150 + ran()]);
         //右滑
         if (right) {
             sleep(100)
             swipe(600 + ran(), 580 + ran(), 600 - 350 + ran(), 580 - 200 + ran(), 1000);
             sleep(350)
+        } else {
+            press(500 + ran(), 150 + ran(), 500);
         }
 
         sleep(600);
@@ -1741,7 +1743,7 @@ function huadong_zuoshang() {
  */
 function huadong_visitor() {
 
-    huadong_adjust([60, 50], [300, 600])
+    huadong_adjust([300, 600])
     showTip("滑动到访客位置")
     sleep(500);
     //900,360中心点
@@ -1757,25 +1759,41 @@ function huadong_visitor() {
 /**
  * 调整视角到正确位置
  * 根据商店坐标定位商店，调整视角到商店位置
- * @param {Array} [x, y] - 商店坐标偏移量，默认[60, 50]
- * @param {Array} [endX, endY] - 目标位置偏移量，默认[250, 400]
+ * @param {Array} [endX, endY] - 目标位置偏移量，默认[250, 400]  //耕地推荐[530, 490]
  * @returns {boolean} - 如果调整成功则返回 `true`，否则返回 `false`
  */
-function huadong_adjust([x, y], [endX, endY]) {
+function huadong_adjust([endX, endY]) {
     let shopPos = findshop(false, 3);
     if (shopPos) {
-        const [_x, _y] = (x && y) ? [x, y] : [60, 50]
-        const [_endX, _endY] = (endX && endY) ? [endX + _x, endY + _y] : [250, 400]
-        log(Math.abs(shopPos.x + _x - _endX), Math.abs(shopPos.y + _y - _endY))
-        const distance = Math.sqrt(Math.pow(shopPos.x + _x - _endX, 2) + Math.pow(shopPos.y + _y - _endY, 2));
-        if (distance < 100) {
-            log("调整视角到正确位置,无需滑动")
-            return true;
+        try {
+            const [_x, _y] = [640, 360]
+            const [_endX, _endY] = (endX && endY) ? [endX, endY] : [250, 400]
+            // log(Math.abs(shopPos.x - _endX), Math.abs(shopPos.y - _endY))
+            const distance = Math.sqrt(Math.pow(shopPos.x - _endX, 2) + Math.pow(shopPos.y - _endY, 2));
+            if (distance < 100) {
+                log("调整视角到正确位置,无需滑动")
+                return true;
+            }
+            // 计算终点并限制在屏幕范围内（左右留100间距，上下留50间距）
+            const _clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+            const _SW = 1280, _SH = 720;
+            const _MX = 100, _MY = 50;
+            const _deltaX = _endX - shopPos.x;
+            const _deltaY = _endY - shopPos.y;
+            let _toX = _x + _deltaX;
+            let _toY = _y + _deltaY;
+            if (_toX < _MX || _toX >= _SW - _MX || _toY < _MY || _toY >= _SH - _MY) {
+                _toX = _clamp(_toX, _MX, _SW - 1 - _MX);
+                _toY = _clamp(_toY, _MY, _SH - 1 - _MY);
+                _x = _clamp(_toX - _deltaX, _MX, _SW - 1 - _MX);
+                _y = _clamp(_toY - _deltaY, _MY, _SH - 1 - _MY);
+            }
+            swipe(_x, _y, _toX, _toY, 300);
+            press(_toX, _toY, 500);
+        } catch (error) {
+            log("huadong_adjust函数出错" + error)
+            return false;
         }
-        swipe(shopPos.x + _x, shopPos.y + _y, _endX, _endY, 300);
-        // sleep(50);
-        press(_endX, _endY, 500);
-        // sleep(100);
         return true;
     } else {
         log("未识别到商店")
@@ -2410,7 +2428,7 @@ function honeycomb_operation(account_config) {
         // sleep(100);
 
         //滑动微调
-        huadong_adjust([60, 50], [250, 400])
+        huadong_adjust([250, 400])
         sleep(500)
 
         let honeyTreePos = find_honeyTree(10) //检测5秒
@@ -2497,7 +2515,7 @@ function honeycomb_operation(account_config) {
             huadong()
 
             //滑动微调
-            huadong_adjust([60, 50], [250, 400])
+            huadong_adjust([250, 400])
         }
     }
 
@@ -2649,9 +2667,9 @@ function tomOperation(account_config) {
         find_close();
         sleep(100);
 
-        if (!huadong_adjust([60, 50], [210, 240])) {
+        if (!huadong_adjust([210, 240])) {
             huadong()
-            huadong_adjust([60, 50], [210, 240])
+            huadong_adjust([210, 240])
         }
         sleep(350)
         let tomPos = clickTom();
@@ -3174,10 +3192,7 @@ function findland(isclick = true) {
 
         //滑动微调
         if (center_land.x < 300 || center_land.y > 500 || center_land.y < 300) {
-            const [x, y] = [10, 40];
-            swipe(center_land.x + x, center_land.y + y, 644 + x, 460 + y, 300);
-            click(644 + x, 460 + y);
-
+            huadong_adjust([530, 490])
             pos_shop = findshop(true);
 
             center_land = {
@@ -5256,7 +5271,7 @@ function shengcang(h, l) {
             sleep(100);
             let isFindShop = findshop(true);
             if (isFindShop) {  //判断是否找到商店
-                huadong_adjust([60, 50], [330, 310]);
+                huadong_adjust([330, 310]);
                 sleep(100);
                 isFindShop = findshop(true);
                 console.log("点击粮仓");
@@ -5888,8 +5903,8 @@ function accountInfoStatistics() {
                     log("金币:" + accountInfo.金币 + ", 钻石:" + accountInfo.钻石);
                     showTip("金币:" + accountInfo.金币 + ", 钻石:" + accountInfo.钻石);
                 } else {
-                    if (i % 2 == 0) huadong_adjust([60, 50], [210, 240]);
-                    else huadong_adjust([60, 50], [330, 210]);
+                    if (i % 2 == 0) huadong_adjust([210, 240]);
+                    else huadong_adjust([330, 210]);
                 }
 
             }
@@ -5974,7 +5989,7 @@ function cangkuStatistics(maxPages = 2) {
         if (isFindShop) {  //判断是否找到商店
             var accountInfo = accountInfoStatistics();
 
-            huadong_adjust([60, 50], [330, 310]);
+            huadong_adjust([330, 310]);
             sleep(300);
             isFindShop = findshop(true);
             console.log("点击粮仓");

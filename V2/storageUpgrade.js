@@ -67,7 +67,7 @@ function storageUpgradeStatistics(type) {
         log("未找到商店");
         return;
     }
-    module.huadong_adjust([60, 50], [330, 310]);
+    module.huadong_adjust([330, 310]);
     sleep(300);
     isFindShop = module.findshop(true);
 
@@ -954,7 +954,7 @@ function findFriend(Account, isclick = true) {
  */
 function findCommunityFriendMenu() {
     for (var i = 0; i < 2; i++) {
-        module.huadong_adjust([60, 50], [640, 450]);
+        module.huadong_adjust([640, 450]);
         sleep(500)
         let shopPos = module.findshop();
         if (shopPos) {
@@ -966,7 +966,7 @@ function findCommunityFriendMenu() {
             sleep(500)
             module.huadong();
             sleep(500)
-            module.huadong_adjust([60, 50], [640, 450]);
+            module.huadong_adjust([640, 450]);
             sleep(500)
             if (shopPos) {
                 module.showTip("")
