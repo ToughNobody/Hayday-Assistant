@@ -159,24 +159,23 @@ function computeGridCenters() {
 
     let baseX = 0.5 * (p0.x + p3.x) + (p3.y - p0.y);
 
-    // 外循环：按列（从左到右）
+    // 外循环：按列从前到后（左→右）
     for (let col = 0; col < ncols; col++) {
-        // 内循环：每列从上到下
+        // 内循环：每列行从前到后（顶→底）
         for (let row = nrows - 1; row >= 0; row--) {
             let cx = baseX + 35 * (col - row);
             let cy = 0.5 * cx - 0.5 * p0.x + p0.y - (col + 0.5) * 35;
             gridCenters.push({
-                col: col,
-                row: row,
+                col: nrows - row,
+                row: ncols - col,
                 x: Math.round(cx * 10) / 10,
                 y: Math.round(cy * 10) / 10
             });
         }
     }
-    //排序：先按列，再按行
     gridCenters.sort((a, b) => a.col - b.col || a.row - b.row);
 }
-
+//660,480 630,500 700,500
 // 在平行四边形内部绘制网格（小平行四边形划分）
 function drawGrid(canvas) {
     let p0 = points[0], p1 = points[1], p2 = points[2], p3 = points[3];
@@ -470,6 +469,7 @@ confirmWindow.confirmBtn.click(function () {
     let selfPath = engines.myEngine().getSource().toString();
     const currentPath = selfPath.substring(0, selfPath.lastIndexOf("/"));
     engines.execScriptFile(currentPath.substring(0, currentPath.lastIndexOf("/")) + "/zhongshuV2.js")
+    exit();
 
 });
 

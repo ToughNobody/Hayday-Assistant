@@ -84,13 +84,18 @@ function main() {
     } catch (error) {
         console.error(error);
     }
-    
-    while (true) {
-        if (plantTree.setTreeText()) {
-            break;
-        }
-        sleep(500);
-    };
+
+    if (!config.treeSearch) {
+        while (true) {
+            if (plantTree.setTreeText()) {
+                break;
+            }
+            sleep(500);
+        };
+    } else {
+        plantTree.buy_menu();
+        sleep(2000)
+    }
 
     //设置滑动方向
     let right = 36;

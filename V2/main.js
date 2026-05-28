@@ -1368,6 +1368,14 @@ ui.layout(
                                         {/* 树木选择 - 仅在种树时显示 */}
                                         <vertical id="treeSelectContainer" gravity="center_vertical" visibility="gone">
                                             <horizontal gravity="center_vertical">
+                                                <text text="模式选择" textSize="14" w="100" marginRight="8" />
+                                                <radiogroup id="plantTreeMode" orientation="vertical">
+                                                    <radio id="plantTreeMode1" checked="true" text="模式一(检测土地随机种植)" />
+                                                    <radio id="plantTreeMode2" checked="false" text="模式二(框选区域种植,需root或开启shizuku)" />
+                                                </radiogroup>
+                                            </horizontal>
+
+                                            <horizontal gravity="center_vertical">
                                                 <text text="种植树木：" textSize="14" w="80" marginRight="8" />
                                                 <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
                                                     w="auto" textSize="14" h="48" bg="#FFFFFF" />
@@ -1375,10 +1383,17 @@ ui.layout(
 
                                             {/* 是否滑动 - 仅在种树时显示 */}
                                             <horizontal gravity="center_vertical">
-                                                <text text="是否自动滑动：" textSize="14" w="80" marginRight="8" />
+                                                <text text="是否自动滑动(仅模式一生效):" textSize="14" w="auto" marginRight="8" />
                                                 <View w="0" h="0" layout_weight="1" />
                                                 <Switch id="treeShouldSwipeSwitch" />
                                             </horizontal>
+
+                                            <horizontal gravity="center_vertical">
+                                                <text text="手动搜索树木名称:" textSize="14" w="auto" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <Switch id="treeSearchSwitch" />
+                                            </horizontal>
+                                            <text text="(防止部分设备呼出键盘,需在种植界面搜索树木名称)" textSize="14" w="auto" marginRight="8" />
                                         </vertical>
 
                                         <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2" visibility="gone">
@@ -1620,7 +1635,7 @@ ui.layout(
                                             <radiogroup id="cropSellMethod" orientation="horizontal">
                                                 <radio id="cropSell_shop" checked="true" text="商店" />
                                                 <frame w="30" />
-                                                <radio id="cropSell_visitor"  checked="false" text="访客" />
+                                                <radio id="cropSell_visitor" checked="false" text="访客" />
                                             </radiogroup>
                                         </horizontal>
 
@@ -4123,6 +4138,9 @@ function getConfig() {
         landFindMethod: configs.get("landFindMethod", defaultConfig.landFindMethod),
         coinCollectionMethod: configs.get("coinCollectionMethod", defaultConfig.coinCollectionMethod),
         cropSellMethod: configs.get("cropSellMethod", defaultConfig.cropSellMethod),
+        plantTreeMode: configs.get("plantTreeMode", defaultConfig.plantTreeMode),
+        treeSearch: configs.get("treeSearch", defaultConfig.treeSearch),
+        
         syncHarvest: configs.get("syncHarvest", defaultConfig.syncHarvest),
         tom_FirstHire: configs.get("tom_FirstHire", defaultConfig.tom_FirstHire),
         landOffset: {
@@ -4267,6 +4285,8 @@ function saveConfig(con) {
         configs.put("landFindMethod", con.landFindMethod !== undefined ? con.landFindMethod : defaultConfig.landFindMethod);
         configs.put("coinCollectionMethod", con.coinCollectionMethod !== undefined ? con.coinCollectionMethod : defaultConfig.coinCollectionMethod);
         configs.put("cropSellMethod", con.cropSellMethod !== undefined ? con.cropSellMethod : defaultConfig.cropSellMethod);
+        configs.put("plantTreeMode", con.plantTreeMode !== undefined ? con.plantTreeMode : defaultConfig.plantTreeMode);
+        configs.put("treeSearch", con.treeSearch !== undefined ? con.treeSearch : defaultConfig.treeSearch);
         configs.put("syncHarvest", con.syncHarvest !== undefined ? con.syncHarvest : defaultConfig.syncHarvest);
         configs.put("tom_FirstHire", con.tom_FirstHire !== undefined ? con.tom_FirstHire : defaultConfig.tom_FirstHire);
 
@@ -4483,6 +4503,14 @@ function validateConfig(config) {
     if (config.coinCollectionMethod != "一键收取" && config.coinCollectionMethod != "逐个点击") config.coinCollectionMethod = defaultConfig.coinCollectionMethod;
     // 验证作物售卖方式
     if (config.cropSellMethod != "shop" && config.cropSellMethod != "visitor") config.cropSellMethod = defaultConfig.cropSellMethod;
+    
+    // 验证种植模式
+    if (config.plantTreeMode != 0 && config.plantTreeMode != 1) config.plantTreeMode = defaultConfig.plantTreeMode;
+    
+    // 验证手动搜索树木名称
+    if (config.treeSearch == undefined || typeof config.treeSearch !== "boolean") {
+        config.treeSearch = defaultConfig.treeSearch;
+    }
 
     // 验证升仓方式
     if (config.storageUpgradeMethod != "粮仓" && config.storageUpgradeMethod != "货仓") config.storageUpgradeMethod = defaultConfig.storageUpgradeMethod;
@@ -4950,6 +4978,8 @@ function getDefaultConfig() {
             text: "苹果树",
             code: 0
         },
+        plantTreeMode: 1, // 默认种植模式
+        treeSearch: false, // 默认不开启搜索树木名称
         shuadi_enabled: true,
         switchAccount: false,
         accountMethod: "email", // 账号切换方式，默认使用邮箱切换
@@ -5188,6 +5218,13 @@ function loadConfigToUI(loadConfigFromFile = false) {
     } else {
         ui.cropSell_visitor.setChecked(true);
     }
+    // 设置种植模式
+    if (config.plantTreeMode == 0) {
+        ui.plantTreeMode1.setChecked(true);
+    } else {
+        ui.plantTreeMode2.setChecked(true);
+    }
+
     // 设置升仓选项
     if (config.storageUpgradeMethod == "粮仓") {
         ui.storageUpgrade_l.setChecked(true);
@@ -5298,6 +5335,9 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 设置是否自动滑动
     ui.treeShouldSwipeSwitch.setChecked(config.treeShouldSwipe);
+    
+    // 设置是否手动搜索树木名称
+    ui.treeSearchSwitch.setChecked(config.treeSearch);
 
     ui.clearFans.setChecked(config.clearFans);
 
@@ -5887,10 +5927,19 @@ function winStartButton() {
         case 1: // 种树
             stopOtherEngines();
             setTimeout(() => { }, 100);
-            threads.start(() => {
-                let newEngine = engines.execScriptFile("./zhongshu.js");
-                log("启动种树引擎，ID: " + newEngine.id);
-            });
+            let plantTreeMode = configs.get("plantTreeMode", 1);
+            if (plantTreeMode == 0) {
+                threads.start(() => {
+                    let newEngine = engines.execScriptFile("./zhongshu.js");
+                    log("启动种树引擎，ID: " + newEngine.id);
+                });
+            } else if (plantTreeMode == 1) {
+                threads.start(() => {
+                    storages.create("plantTreeInfo").clear();
+                    let newEngine = engines.execScriptFile("./modules/areaSelector.js");
+                    log("启动种树引擎，ID: " + newEngine.id);
+                });
+            }
             break;
 
         case 2: // 创新号
@@ -6043,6 +6092,19 @@ function initUI() {
         // log(ui.cropSell_shop.getId());
         configs.put("cropSellMethod", sellMethod);
     });
+
+    ui.plantTreeMode.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
+        // 根据选中的单选框ID存储对应值
+        let plantTreeMode = isCheckedId === ui.plantTreeMode1.getId() ? 0 : 1;
+        configs.put("plantTreeMode", plantTreeMode);
+    });
+
+    // 是否开关状态变化监听
+    ui.treeSearchSwitch.on("check", (checked) => {
+        // 保存修改后的开关状态到配置
+        configs.put("treeSearch", checked);
+    });
+    
 
     // 绑定升仓方式单选框事件
     ui.storageUpgradeMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {
