@@ -2285,12 +2285,12 @@ function pond_operation(account_config) {
     let netMaker = null
 
     if (item == "鱼片") {
-        Times.push(4 * 60 * 60)//4小时
+        Times.push(8 * 60 * 60)//8小时
         huadong_pond()
         netMaker = click_netMaker()
         netMaker_produce(itemName)
     } else if (item == "龙虾尾") {
-        Times.push(2 * 60 * 60)//2小时
+        Times.push(4 * 60 * 60)//4小时
         huadong_pond()
         collect_lobster()
         sleep(500);
@@ -2298,7 +2298,7 @@ function pond_operation(account_config) {
         netMaker = click_netMaker()
         netMaker_produce(itemName)
     } else if (item == "鸭毛") {
-        Times.push(1 * 60 * 60)//1小时
+        Times.push(2 * 60 * 60)//2小时
         collect_duckSalon()
         sleep(500);
         huadong_pond()

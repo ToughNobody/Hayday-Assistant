@@ -1,6 +1,6 @@
 {
   "version": "2.3.9",
-  "description": "v2.3.9\n\n新增功能\n- 添加区域框选种树\n- 种树添加手动搜索选项\n\n功能优化\n- 优化滑动和界面滑动调整函数\n\nBug修复\n- 修复仓库统计蜂蜡勾选问题",
+  "description": "v2.3.9\n\n新增功能\n- 添加区域框选种树\n- 种树添加手动搜索选项\n\n功能优化\n- 优化滑动和界面滑动调整函数\n\n功能调整\n- 鱼塘时间调整\n\n\n\nBug修复\n- 修复仓库统计蜂蜡勾选问题",
   "zip_name": "卡通农场小助手v2.3.9.zip",
   "zip_url_gitee": "https://gitee.com/toughnobody/Hayday-Assistant/releases/download/v2.3.9/%E5%8D%A1%E9%80%9A%E5%86%9C%E5%9C%BA%E5%B0%8F%E5%8A%A9%E6%89%8Bv2.3.9.zip",
   "zip_url_github": "https://github.com/ToughNobody/Hayday-Assistant/releases/download/v2.3.9/v2.3.9.zip"
