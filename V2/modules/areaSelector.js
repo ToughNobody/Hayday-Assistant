@@ -87,6 +87,7 @@ const device_height = 720;
 let pointWindows = [];
 let canvasWindow;
 let exitWindow;
+let countWindow;
 
 // 网格中心点坐标存储
 let gridCenters = [];
@@ -147,6 +148,9 @@ canvasWindow.canvas.on("draw", function (canvas) {
 
     // 绘制内部网格
     drawGrid(canvas);
+
+    // 绘制四个直角框
+    drawCornerBrackets(canvas);
 });
 
 // 计算所有小平行四边形的中心点坐标
@@ -247,6 +251,29 @@ function drawGrid(canvas) {
     }
 }
 
+// 绘制四个直角（框选范围标记）
+function drawCornerBrackets(canvas) {
+    const CORNER_LEN = 30;
+    const corners = [
+        { x: 340, y: 120, dirX: 1, dirY: 1 },    // 左上：向右、向下
+        { x: 900, y: 120, dirX: -1, dirY: 1 },    // 右上：向左、向下
+        { x: 340, y: 600, dirX: 1, dirY: -1 },    // 左下：向右、向上
+        { x: 900, y: 600, dirX: -1, dirY: -1 }    // 右下：向左、向上
+    ];
+
+    let paint = new Paint();
+    paint.setStyle(Paint.Style.STROKE);
+    paint.setStrokeWidth(4);
+    paint.setARGB(200, 255, 255, 0);
+
+    for (let c of corners) {
+        // 水平线
+        canvas.drawLine(c.x, c.y, c.x + c.dirX * CORNER_LEN, c.y, paint);
+        // 垂直线
+        canvas.drawLine(c.x, c.y, c.x, c.y + c.dirY * CORNER_LEN, paint);
+    }
+}
+
 // 判断点是否在四边形内部
 function isPointInQuadrilateral(px, py) {
     let path = new android.graphics.Path();
@@ -324,6 +351,7 @@ canvasWindow.canvas.setOnTouchListener(function (view, event) {
                 dragStartY = event.getRawY();
 
                 canvasWindow.canvas.updateCanvas();
+                updateGridCountDisplay();
             }
             return true;
 
@@ -404,6 +432,7 @@ for (let i = 0; i < 4; i++) {
 
                 // 触发画布重绘
                 canvasWindow.canvas.updateCanvas();
+                updateGridCountDisplay();
                 return true;
 
             case event.ACTION_UP:
@@ -440,6 +469,7 @@ exitWindow.exitBtn.click(function () {
     }
     canvasWindow.close();
     exitWindow.close();
+    countWindow.close();
     // 退出脚本
     exit();
 });
@@ -464,14 +494,45 @@ confirmWindow.confirmBtn.click(function () {
 
     storages.create("plantTreeInfo").put("treePos", gridCenters);
 
-    // 显示 toast 提示
-    toast("已获取 " + gridCenters.length + " 个中心点坐标");
+    // 显示 log 提示
+    log("已获取 " + gridCenters.length + " 个中心点坐标");
     let selfPath = engines.myEngine().getSource().toString();
     const currentPath = selfPath.substring(0, selfPath.lastIndexOf("/"));
     engines.execScriptFile(currentPath.substring(0, currentPath.lastIndexOf("/")) + "/zhongshuV2.js")
+    for (let win of pointWindows) {
+        win.close();
+    }
+    canvasWindow.close();
+    exitWindow.close();
+    countWindow.close();
     exit();
 
 });
+
+// 获取当前网格的小平行四边形个数
+function getGridCount() {
+    let p0 = points[0], p1 = points[1], p3 = points[3];
+    let ncols = Math.floor((p1.x - p0.x) / 35);
+    let nrows = Math.floor((p3.y - p0.y) / 17.5);
+    return ncols * nrows;
+}
+
+// 更新网格计数显示
+function updateGridCountDisplay() {
+    let count = getGridCount();
+    countWindow.countText.setText("数量: " + count + "个");
+}
+
+// 创建网格计数显示悬浮窗（退出按钮左侧）
+countWindow = floaty.rawWindow(
+    <frame w="auto" h="40" bg="#88000000">
+        <text id="countText" textSize="14" textColor="#ffffff" gravity="center" w="*" h="*" />
+    </frame>
+);
+countWindow.setPosition(device_width - 230, 20);
+
+// 初始显示计数
+updateGridCountDisplay();
 
 // 保持脚本运行
 setInterval(() => { }, 1000);

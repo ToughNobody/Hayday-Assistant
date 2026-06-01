@@ -7,6 +7,13 @@ const plantTree = require("./modules/module_plantTree.js");
 // const plantTree = require("/storage/emulated/0/脚本/Hayday-Assistant/V2/modules/module_plantTree.js");
 
 let config = module.config;
+let configs = storages.create("config");
+
+let gesturesFirstPos = [90, 270];
+if (configs.get("selectedTree").text === "石榴树") {
+    gesturesFirstPos = [280, 270];
+}
+//建议种植区域X:[340,900],Y:[120,600]
 
 const Touch = (function () {
 
@@ -107,7 +114,7 @@ function plantTrees(pos) {
 
     // swipe(90 + module.ran(), 270 + module.ran(), land.x, land.y, 200);
 
-    Touch.down(90 + module.ran(), 270 + module.ran());
+    Touch.down(gesturesFirstPos[0] + module.ran(), gesturesFirstPos[1] + module.ran());
     sleep(50);
 
     Touch.move(800 + module.ran(), 400 + module.ran());
@@ -148,6 +155,7 @@ function main() {
     }
 
     //不知道为什么每次的第一次总是滑动不了,这里先预热一下,哈哈哈,绝了
+    log("执行手势");
     Touch.down(90 + module.ran(), 570 + module.ran());
     sleep(50);
 
@@ -159,7 +167,7 @@ function main() {
     // sleep(1000);
 
     Touch.up(90, 570);
-
+    log("执行手势完成");
 
     for (let i = 0; i < treePosArr.length; i++) {
         let treePos = treePosArr[i];

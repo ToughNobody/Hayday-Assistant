@@ -1225,290 +1225,292 @@ ui.layout(
                 <viewpager id="viewpager">
                     {/* 首页 */}
                     <frame>
-                        <scroll>
-                            <vertical w="*" h="*" padding="16">
+                        <vertical w="*" h="*">
+                            <scroll w="*" h="*" layout_weight="1">
+                                <vertical w="*" h="*" padding="16">
 
-                                <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                    <vertical padding="16">
-                                        <text text="权限设置" textSize="16" textStyle="bold" marginBottom="8" />
-                                        <horizontal gravity="center_vertical" marginBottom="4">
-                                            {/*无障碍服务开关*/}
-                                            <text text="无障碍服务" textSize="14" w="100" marginRight="8" />
-                                            <View w="0" h="0" layout_weight="1" />
-                                            <Switch id="autoService" />
-                                        </horizontal>
-                                        <horizontal gravity="center_vertical" marginBottom="4">
-                                            {/*截图权限获取开关*/}
-                                            <text text="截图权限" textSize="14" w="100" marginRight="8" />
-                                            <View w="0" h="0" layout_weight="1" />
-                                            <Switch id="requestScBtn" />
-                                        </horizontal>
-                                        <horizontal gravity="center_vertical" marginBottom="4">
-                                            {/*浮动按钮开关*/}
-                                            <text text="浮动按钮" textSize="14" w="100" marginRight="8" />
-                                            <View w="0" h="0" layout_weight="1" />
-                                            <Switch id="win_switch" />
-                                        </horizontal>
-                                    </vertical>
-                                </card>
-                                {/* 功能选择卡片 */}
-                                <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
-                                    <vertical padding="16">
-                                        <text text="功能设置" textSize="16" textStyle="bold" />
+                                    <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                        <vertical padding="16">
+                                            <text text="权限设置" textSize="16" textStyle="bold" marginBottom="8" />
+                                            <horizontal gravity="center_vertical" marginBottom="4">
+                                                {/*无障碍服务开关*/}
+                                                <text text="无障碍服务" textSize="14" w="100" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <Switch id="autoService" />
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical" marginBottom="4">
+                                                {/*截图权限获取开关*/}
+                                                <text text="截图权限" textSize="14" w="100" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <Switch id="requestScBtn" />
+                                            </horizontal>
+                                            <horizontal gravity="center_vertical" marginBottom="4">
+                                                {/*浮动按钮开关*/}
+                                                <text text="浮动按钮" textSize="14" w="100" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <Switch id="win_switch" />
+                                            </horizontal>
+                                        </vertical>
+                                    </card>
+                                    {/* 功能选择卡片 */}
+                                    <card w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2">
+                                        <vertical padding="16">
+                                            <text text="功能设置" textSize="16" textStyle="bold" />
 
-                                        {/* 主功能选择 */}
-                                        <horizontal gravity="center_vertical">
-                                            <text text="选择功能：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|仅鱼塘|物品售卖|倒金币|升仓"
-                                                w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                            <img id="helpIcon_functionSelect" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
-                                        </horizontal>
-
-                                        {/* 作物选择 - 仅在刷地时显示 */}
-                                        <vertical id="cropSelectContainer" gravity="center_vertical" visibility="visible">
+                                            {/* 主功能选择 */}
                                             <horizontal gravity="center_vertical">
-                                                <text text="种植作物：" textSize="14" w="80" marginRight="8" />
-                                                <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗|黑豆|土豆|西红柿|芦笋|草莓"
+                                                <text text="选择功能：" textSize="14" w="80" marginRight="8" />
+                                                <spinner id="functionSelect" entries="刷地|种树|创新号|仅汤姆|仅鱼塘|物品售卖|倒金币|升仓"
                                                     w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                                <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
-                                                <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                                <img id="helpIcon_functionSelect" src="@drawable/ic_help_outline_black_48dp" w="18" h="18" tint="#007AFF" marginRight="8" />
                                             </horizontal>
 
-                                            {/* 商店售价 - 仅在刷地时显示*/}
-                                            <horizontal gravity="center_vertical" >
-                                                <text text="商店售价：" textSize="14" w="80" marginRight="8" />
-                                                <spinner id="shopPrice" entries="最低|平价|最高" w="50" textSize="14" h="48" bg="#FFFFFF" />
-                                                <text text="保留数量:" textSize="14" w="80" marginLeft="20" />
-                                                <input id="ReservedQuantity" inputType="number" marginRight="8" hint="20" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                            </horizontal>
+                                            {/* 作物选择 - 仅在刷地时显示 */}
+                                            <vertical id="cropSelectContainer" gravity="center_vertical" visibility="visible">
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="种植作物：" textSize="14" w="80" marginRight="8" />
+                                                    <spinner id="cropSelect" entries="小麦|玉米|胡萝卜|大豆|甘蔗|黑豆|土豆|西红柿|芦笋|草莓"
+                                                        w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                                    <text text="成熟时间:" textSize="14" w="80" marginLeft="14" />
+                                                    <input id="matureTime" inputType="number" marginRight="8" hint="2" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                                </horizontal>
 
-                                            {/* 仓库售卖 - 仅在刷地时显示*/}
-                                            <horizontal gravity="center_vertical">
-                                                <text text="仓库售卖：" textSize="14" w="80" marginRight="8" />
-                                                <button id="cangkuSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
-                                                <text text="触发阈值:" textSize="14" w="80" marginRight="3" paddingLeft="20" />
-                                                <input id="CangkuSold_triggerNum" type="number" w="auto" h="48" text="10" marginLeft="5" marginRight="5" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                                <text text="~" textSize="14" w="auto" />
-                                                <input id="CangkuSold_targetNum" type="number" w="auto" h="48" text="25" marginLeft="5" textSize="14" bg="#FFFFFF" maxLength="3" />
-                                            </horizontal>
+                                                {/* 商店售价 - 仅在刷地时显示*/}
+                                                <horizontal gravity="center_vertical" >
+                                                    <text text="商店售价：" textSize="14" w="80" marginRight="8" />
+                                                    <spinner id="shopPrice" entries="最低|平价|最高" w="50" textSize="14" h="48" bg="#FFFFFF" />
+                                                    <text text="保留数量:" textSize="14" w="80" marginLeft="20" />
+                                                    <input id="ReservedQuantity" inputType="number" marginRight="8" hint="20" w="50" h="48" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                                </horizontal>
 
-                                        </vertical>
+                                                {/* 仓库售卖 - 仅在刷地时显示*/}
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="仓库售卖：" textSize="14" w="80" marginRight="8" />
+                                                    <button id="cangkuSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                    <text text="触发阈值:" textSize="14" w="80" marginRight="3" paddingLeft="20" />
+                                                    <input id="CangkuSold_triggerNum" type="number" w="auto" h="48" text="10" marginLeft="5" marginRight="5" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                                    <text text="~" textSize="14" w="auto" />
+                                                    <input id="CangkuSold_targetNum" type="number" w="auto" h="48" text="25" marginLeft="5" textSize="14" bg="#FFFFFF" maxLength="3" />
+                                                </horizontal>
 
-                                        {/* 刷地 - 仅在刷地时显示*/}
-                                        <horizontal id="shuadiSwitchContainer" gravity="center_vertical" visibility="visible">
-                                            <text text="开启刷地：" textSize="14" w="80" marginRight="8" />
-                                            <View w="0" h="0" layout_weight="1" />
-                                            <Switch id="shuadiSwitch" />
-                                        </horizontal>
-
-                                        {/* 汤姆 - 仅在刷地时显示*/}
-                                        <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="visible">
-                                            <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
-                                            <View w="0" h="0" layout_weight="1" />
-                                            <Switch id="tomSwitch" />
-                                        </horizontal>
-
-                                        {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
-                                        <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
-                                            <text text="物品类型：" textSize="14" w="80" marginRight="8" />
-                                            <spinner id="Tom_itemType" entries="货仓|粮仓" w="100" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
-                                            <input id="Tom_itemName" hint="物品名称" h="48" textSize="14" bg="#FFFFFF" />
-                                        </horizontal>
-
-
-
-                                        {/* 鱼塘 - 仅在刷地时显示*/}
-                                        <horizontal id="pondSwitchContainer" gravity="center_vertical" visibility="visible">
-                                            <text text="开启鱼塘：" textSize="14" w="80" marginRight="8" />
-                                            <View w="0" h="0" layout_weight="1" />
-                                            <Switch id="pondSwitch" />
-                                        </horizontal>
-
-                                        {/* 鱼塘编号和鱼类名称 - 仅在鱼塘开关开启时显示 */}
-                                        <vertical id="pondItemContainer" gravity="center_vertical" visibility="gone">
-                                            {/* 鱼塘编号设置 */}
-                                            <horizontal gravity="center_vertical" marginBottom="12">
-                                                <text text="鱼塘编号：" textSize="14" w="80" marginRight="8" />
-                                                <View w="0" h="0" layout_weight="1" />
-                                                <button id="pond_number" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
-                                            </horizontal>
-
-                                            {/* 显示开启的鱼塘编号 */}
-                                            <horizontal gravity="center_vertical" marginBottom="12">
-                                                <text text="已开启鱼塘:" textSize="14" w="80" marginRight="8" />
-                                                <text id="pond_numbers_display" text="" textSize="14" textColor="#666666" />
-                                            </horizontal>
-
-                                            {/* 鱼塘物品类型 */}
-                                            <horizontal gravity="center_vertical" marginBottom="12">
-                                                <text text="鱼塘物品类型：" textSize="14" w="120" marginRight="8" />
-                                                <spinner id="pond_fish_item_type" entries="鱼片|龙虾尾|鸭毛" w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                            </horizontal>
-                                        </vertical>
-
-
-                                        {/* 蜂蜜 - 仅在刷地时显示 */}
-                                        <horizontal id="honeySwitchContainer" gravity="center_vertical">
-                                            <text text="开启蜂蜜：" textSize="14" w="80" marginRight="8" />
-                                            <View w="0" h="0" layout_weight="1" />
-                                            <Switch id="honeySwitch" />
-                                        </horizontal>
-
-                                        {/* 蜂蜜信息 - 仅在蜂蜜开关开启时显示 */}
-                                        <vertical id="honeyInfoContainer" gravity="center_vertical" visibility="gone">
-                                            <horizontal gravity="center_vertical">
-                                                <text text="制作物品：" textSize="14" w="80" marginRight="8" />
-                                                <spinner id="honeycomb_itemName" entries="不做|蜂蜜|蜂蜡" w="auto" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
-                                                <View w="0" h="0" layout_weight="1" />
-                                                <checkbox id="honeycomb_addFlower" text="补种花蜜" h="48" textSize="14" bg="#FFFFFF" />
-                                            </horizontal>
-                                        </vertical>
-
-
-                                        {/* 树木选择 - 仅在种树时显示 */}
-                                        <vertical id="treeSelectContainer" gravity="center_vertical" visibility="gone">
-                                            <horizontal gravity="center_vertical">
-                                                <text text="模式选择" textSize="14" w="100" marginRight="8" />
-                                                <radiogroup id="plantTreeMode" orientation="vertical">
-                                                    <radio id="plantTreeMode1" checked="true" text="模式一(检测土地随机种植)" />
-                                                    <radio id="plantTreeMode2" checked="false" text="模式二(框选区域种植,需root或开启shizuku)" />
-                                                </radiogroup>
-                                            </horizontal>
-
-                                            <horizontal gravity="center_vertical">
-                                                <text text="种植树木：" textSize="14" w="80" marginRight="8" />
-                                                <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|咖啡丛|橄榄树|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
-                                                    w="auto" textSize="14" h="48" bg="#FFFFFF" />
-                                            </horizontal>
-
-                                            {/* 是否滑动 - 仅在种树时显示 */}
-                                            <horizontal gravity="center_vertical">
-                                                <text text="是否自动滑动(仅模式一生效):" textSize="14" w="auto" marginRight="8" />
-                                                <View w="0" h="0" layout_weight="1" />
-                                                <Switch id="treeShouldSwipeSwitch" />
-                                            </horizontal>
-
-                                            <horizontal gravity="center_vertical">
-                                                <text text="手动搜索树木名称:" textSize="14" w="auto" marginRight="8" />
-                                                <View w="0" h="0" layout_weight="1" />
-                                                <Switch id="treeSearchSwitch" />
-                                            </horizontal>
-                                            <text text="(防止部分设备呼出键盘,需在种植界面搜索树木名称)" textSize="14" w="auto" marginRight="8" />
-                                        </vertical>
-
-                                        <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2" visibility="gone">
-                                            <vertical padding="16">
-                                                {/* 账号标签列表显示 */}
-                                                <vertical id="addFriendsListDisplay" marginTop="8">
-                                                    <text text="账号标签：" textSize="14" textStyle="bold" />
-                                                </vertical>
-                                                {/* 账号标签输入框 */}
-                                                <list id="addFriendsList" h="auto">
-                                                    <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
-                                                        cardElevation="1dp" foreground="?selectableItemBackground">
-                                                        <horizontal gravity="center_vertical">
-                                                            <frame h="*" w="10" bg="#f27272" />
-                                                            <vertical padding="10 8" h="auto" w="0" layout_weight="1">
-                                                                <text id="addFriendstitle" text="{{this.addFriendstitle}}" textColor="#333333" textSize="16sp" maxLines="1" />
-                                                            </vertical>
-                                                            <checkbox id="addFriendsdone" marginLeft="4" marginRight="50" checked="{{this.addFriendsdone}}" />
-                                                        </horizontal>
-                                                    </card>
-                                                </list>
                                             </vertical>
-                                            <fab id="addFriend" w="50" h="50" src="@drawable/ic_add_black_48dp" scaleType="fitCenter"
-                                                margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
-                                        </card>
 
-                                        {/* 物品售卖 - 仅在物品售卖时显示*/}
-                                        <vertical id="sell_itemSoldContainer" gravity="center_vertical" visibility="gone">
-                                            <horizontal gravity="center_vertical">
-                                                <text text="物品售卖：" textSize="14" w="80" marginRight="8" />
-                                                <button id="sell_itemSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
-                                                <text text="清除粉丝：" textSize="14" w="80" marginLeft="20" />
-                                                <checkbox id="clearFans" checked="${configs.get('clearFans') || false}" />
-                                            </horizontal>
-                                            <horizontal gravity="center_vertical">
-                                                <text text="等待货架：" textSize="14" w="80" marginRight="8" />
-                                                <checkbox id="waitShelf" checked="${configs.get('waitShelf') || false}" />
-                                            </horizontal>
-                                        </vertical>
-
-                                        {/* 倒金币 - 仅在倒金币时显示 */}
-                                        <vertical id="coinContainer" gravity="center_vertical" visibility="gone">
-                                            <horizontal gravity="center_vertical">
-                                                <text text="主号:" textSize="14" w="auto" marginRight="10" />
-                                                <input id="coin_mainAccount" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
-                                                <text text="照片名:" textSize="14" w="auto" />
-                                                <input id="coin_mainAccount_picName" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
-                                            </horizontal>
-                                            <horizontal gravity="center_vertical">
-                                                <text text="小号:" textSize="14" w="auto" marginRight="10" />
-                                                <input id="coin_subAccount" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
-                                                <text text="照片名:" textSize="14" w="auto" />
-                                                <input id="coin_subAccount_picName" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
-                                            </horizontal>
-                                            <horizontal gravity="center_vertical">
-                                                <text text="倒金币物品:" textSize="14" w="auto" marginRight="10" />
-                                                <input id="coin_item" marginRight="8" w="*" h="48" textSize="14" bg="#FFFFFF" />
-                                            </horizontal>
-                                            <horizontal gravity="center_vertical">
-                                                <text text="照片文件夹路径:" textSize="14" w="auto" marginRight="10" />
-                                                <input id="coin_picDirPath" marginRight="8" w="*" h="auto" textSize="14" bg="#FFFFFF" />
-                                            </horizontal>
-                                        </vertical>
-
-                                        {/* 升仓 - 仅在升仓时显示 */}
-                                        <vertical id="storageUpgradeContainer" gravity="center_vertical" visibility="gone">
-                                            <horizontal gravity="center_vertical" marginBottom="12">
-                                                <text text="选择账号：" textSize="14" w="80" marginRight="8" />
+                                            {/* 刷地 - 仅在刷地时显示*/}
+                                            <horizontal id="shuadiSwitchContainer" gravity="center_vertical" visibility="visible">
+                                                <text text="开启刷地：" textSize="14" w="80" marginRight="8" />
                                                 <View w="0" h="0" layout_weight="1" />
-                                                <button id="storageUpgrade_selectAccount" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                <Switch id="shuadiSwitch" />
                                             </horizontal>
-                                            <horizontal gravity="center_vertical" marginBottom="12">
-                                                <text text="升仓账号：" textSize="14" w="80" marginRight="8" />
+
+                                            {/* 汤姆 - 仅在刷地时显示*/}
+                                            <horizontal id="tomSwitchContainer" gravity="center_vertical" visibility="visible">
+                                                <text text="开启汤姆：" textSize="14" w="80" marginRight="8" />
                                                 <View w="0" h="0" layout_weight="1" />
-                                                <button id="storageUpgrade_upgradeAccount" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                <Switch id="tomSwitch" />
                                             </horizontal>
-                                            <horizontal gravity="center_vertical">
-                                                <text text="升仓选项" textSize="14" w="100" marginRight="8" />
-                                                <radiogroup id="storageUpgradeMethod" orientation="horizontal">
-                                                    <radio id="storageUpgrade_l" checked="false" text="粮仓" />
-                                                    <frame w="2" />
-                                                    <radio id="storageUpgrade_h" checked="true" text="货仓" />
-                                                </radiogroup>
+
+                                            {/* 物品类型和名称 - 仅在汤姆开关开启时显示 */}
+                                            <horizontal id="tomItemContainer" gravity="center_vertical" visibility="gone">
+                                                <text text="物品类型：" textSize="14" w="80" marginRight="8" />
+                                                <spinner id="Tom_itemType" entries="货仓|粮仓" w="100" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
+                                                <input id="Tom_itemName" hint="物品名称" h="48" textSize="14" bg="#FFFFFF" />
                                             </horizontal>
-                                            <horizontal gravity="center_vertical">
-                                                <text text="访问方式" textSize="14" w="100" marginRight="8" />
-                                                <radiogroup id="friendInterface" orientation="horizontal">
-                                                    <radio id="friendInterface_community" checked="false" text="社区" />
-                                                    <frame w="2" />
-                                                    <radio id="friendInterface_friendbook" checked="true" text="好友簿" />
-                                                </radiogroup>
+
+
+
+                                            {/* 鱼塘 - 仅在刷地时显示*/}
+                                            <horizontal id="pondSwitchContainer" gravity="center_vertical" visibility="visible">
+                                                <text text="开启鱼塘：" textSize="14" w="80" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <Switch id="pondSwitch" />
                                             </horizontal>
-                                            <horizontal gravity="center_vertical">
-                                                <text text="照片文件夹路径:" textSize="14" w="auto" marginRight="10" />
-                                                <input id="storageUpgrade_picDirPath" marginRight="8" w="*" h="auto" textSize="14" bg="#FFFFFF" />
+
+                                            {/* 鱼塘编号和鱼类名称 - 仅在鱼塘开关开启时显示 */}
+                                            <vertical id="pondItemContainer" gravity="center_vertical" visibility="gone">
+                                                {/* 鱼塘编号设置 */}
+                                                <horizontal gravity="center_vertical" marginBottom="12">
+                                                    <text text="鱼塘编号：" textSize="14" w="80" marginRight="8" />
+                                                    <View w="0" h="0" layout_weight="1" />
+                                                    <button id="pond_number" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                </horizontal>
+
+                                                {/* 显示开启的鱼塘编号 */}
+                                                <horizontal gravity="center_vertical" marginBottom="12">
+                                                    <text text="已开启鱼塘:" textSize="14" w="80" marginRight="8" />
+                                                    <text id="pond_numbers_display" text="" textSize="14" textColor="#666666" />
+                                                </horizontal>
+
+                                                {/* 鱼塘物品类型 */}
+                                                <horizontal gravity="center_vertical" marginBottom="12">
+                                                    <text text="鱼塘物品类型：" textSize="14" w="120" marginRight="8" />
+                                                    <spinner id="pond_fish_item_type" entries="鱼片|龙虾尾|鸭毛" w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                                </horizontal>
+                                            </vertical>
+
+
+                                            {/* 蜂蜜 - 仅在刷地时显示 */}
+                                            <horizontal id="honeySwitchContainer" gravity="center_vertical">
+                                                <text text="开启蜂蜜：" textSize="14" w="80" marginRight="8" />
+                                                <View w="0" h="0" layout_weight="1" />
+                                                <Switch id="honeySwitch" />
                                             </horizontal>
+
+                                            {/* 蜂蜜信息 - 仅在蜂蜜开关开启时显示 */}
+                                            <vertical id="honeyInfoContainer" gravity="center_vertical" visibility="gone">
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="制作物品：" textSize="14" w="80" marginRight="8" />
+                                                    <spinner id="honeycomb_itemName" entries="不做|蜂蜜|蜂蜡" w="auto" textSize="14" h="48" bg="#FFFFFF" marginRight="8" />
+                                                    <View w="0" h="0" layout_weight="1" />
+                                                    <checkbox id="honeycomb_addFlower" text="补种花蜜" h="48" textSize="14" bg="#FFFFFF" />
+                                                </horizontal>
+                                            </vertical>
+
+
+                                            {/* 树木选择 - 仅在种树时显示 */}
+                                            <vertical id="treeSelectContainer" gravity="center_vertical" visibility="gone">
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="模式选择" textSize="14" w="100" marginRight="8" />
+                                                    <radiogroup id="plantTreeMode" orientation="vertical">
+                                                        <radio id="plantTreeMode1" checked="true" text="模式一(检测土地随机种植)" />
+                                                        <radio id="plantTreeMode2" checked="false" text="模式二(框选区域种植,需root或开启shizuku)" />
+                                                    </radiogroup>
+                                                </horizontal>
+
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="种植树木：" textSize="14" w="80" marginRight="8" />
+                                                    <spinner id="treeSelect" entries="苹果树|树莓丛|樱桃树|黑莓丛|蓝莓丛|可可树|甘露花蜜丛|咖啡丛|橄榄树|花生丛|柠檬树|香橙树|水蜜桃树|香蕉树|西梅树|芒果树|椰子树|番石榴树|石榴树"
+                                                        w="auto" textSize="14" h="48" bg="#FFFFFF" />
+                                                </horizontal>
+
+                                                {/* 是否滑动 - 仅在种树时显示 */}
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="是否自动滑动(仅模式一生效):" textSize="14" w="auto" marginRight="8" />
+                                                    <View w="0" h="0" layout_weight="1" />
+                                                    <Switch id="treeShouldSwipeSwitch" />
+                                                </horizontal>
+
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="手动搜索树木名称:" textSize="14" w="auto" marginRight="8" />
+                                                    <View w="0" h="0" layout_weight="1" />
+                                                    <Switch id="treeSearchSwitch" />
+                                                </horizontal>
+                                                <text text="(防止部分设备呼出键盘,需在种植界面搜索树木名称)" textSize="14" w="auto" marginRight="8" />
+                                            </vertical>
+
+                                            <card id="addFriendsCard" w="*" h="auto" marginBottom="12" cardCornerRadius="8" cardElevation="2" visibility="gone">
+                                                <vertical padding="16">
+                                                    {/* 账号标签列表显示 */}
+                                                    <vertical id="addFriendsListDisplay" marginTop="8">
+                                                        <text text="账号标签：" textSize="14" textStyle="bold" />
+                                                    </vertical>
+                                                    {/* 账号标签输入框 */}
+                                                    <list id="addFriendsList" h="auto">
+                                                        <card w="*" h="40" margin="0 5" cardCornerRadius="5dp"
+                                                            cardElevation="1dp" foreground="?selectableItemBackground">
+                                                            <horizontal gravity="center_vertical">
+                                                                <frame h="*" w="10" bg="#f27272" />
+                                                                <vertical padding="10 8" h="auto" w="0" layout_weight="1">
+                                                                    <text id="addFriendstitle" text="{{this.addFriendstitle}}" textColor="#333333" textSize="16sp" maxLines="1" />
+                                                                </vertical>
+                                                                <checkbox id="addFriendsdone" marginLeft="4" marginRight="50" checked="{{this.addFriendsdone}}" />
+                                                            </horizontal>
+                                                        </card>
+                                                    </list>
+                                                </vertical>
+                                                <fab id="addFriend" w="50" h="50" src="@drawable/ic_add_black_48dp" scaleType="fitCenter"
+                                                    margin="8" layout_gravity="bottom|right" tint="black" backgroundTint="#7fffd4" />
+                                            </card>
+
+                                            {/* 物品售卖 - 仅在物品售卖时显示*/}
+                                            <vertical id="sell_itemSoldContainer" gravity="center_vertical" visibility="gone">
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="物品售卖：" textSize="14" w="80" marginRight="8" />
+                                                    <button id="sell_itemSoldBtn" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                    <text text="清除粉丝：" textSize="14" w="80" marginLeft="20" />
+                                                    <checkbox id="clearFans" checked="${configs.get('clearFans') || false}" />
+                                                </horizontal>
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="等待货架：" textSize="14" w="80" marginRight="8" />
+                                                    <checkbox id="waitShelf" checked="${configs.get('waitShelf') || false}" />
+                                                </horizontal>
+                                            </vertical>
+
+                                            {/* 倒金币 - 仅在倒金币时显示 */}
+                                            <vertical id="coinContainer" gravity="center_vertical" visibility="gone">
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="主号:" textSize="14" w="auto" marginRight="10" />
+                                                    <input id="coin_mainAccount" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
+                                                    <text text="照片名:" textSize="14" w="auto" />
+                                                    <input id="coin_mainAccount_picName" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
+                                                </horizontal>
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="小号:" textSize="14" w="auto" marginRight="10" />
+                                                    <input id="coin_subAccount" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
+                                                    <text text="照片名:" textSize="14" w="auto" />
+                                                    <input id="coin_subAccount_picName" marginRight="8" w="100" h="48" textSize="14" bg="#FFFFFF" />
+                                                </horizontal>
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="倒金币物品:" textSize="14" w="auto" marginRight="10" />
+                                                    <input id="coin_item" marginRight="8" w="*" h="48" textSize="14" bg="#FFFFFF" />
+                                                </horizontal>
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="照片文件夹路径:" textSize="14" w="auto" marginRight="10" />
+                                                    <input id="coin_picDirPath" marginRight="8" w="*" h="auto" textSize="14" bg="#FFFFFF" />
+                                                </horizontal>
+                                            </vertical>
+
+                                            {/* 升仓 - 仅在升仓时显示 */}
+                                            <vertical id="storageUpgradeContainer" gravity="center_vertical" visibility="gone">
+                                                <horizontal gravity="center_vertical" marginBottom="12">
+                                                    <text text="选择账号：" textSize="14" w="80" marginRight="8" />
+                                                    <View w="0" h="0" layout_weight="1" />
+                                                    <button id="storageUpgrade_selectAccount" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                </horizontal>
+                                                <horizontal gravity="center_vertical" marginBottom="12">
+                                                    <text text="升仓账号：" textSize="14" w="80" marginRight="8" />
+                                                    <View w="0" h="0" layout_weight="1" />
+                                                    <button id="storageUpgrade_upgradeAccount" text="设置" textColor="#3fdacd" textSize="14" w="50" h="48" bg="#FFFFFF" style="Widget.AppCompat.Button.Borderless.Colored" />
+                                                </horizontal>
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="升仓选项" textSize="14" w="100" marginRight="8" />
+                                                    <radiogroup id="storageUpgradeMethod" orientation="horizontal">
+                                                        <radio id="storageUpgrade_l" checked="false" text="粮仓" />
+                                                        <frame w="2" />
+                                                        <radio id="storageUpgrade_h" checked="true" text="货仓" />
+                                                    </radiogroup>
+                                                </horizontal>
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="访问方式" textSize="14" w="100" marginRight="8" />
+                                                    <radiogroup id="friendInterface" orientation="horizontal">
+                                                        <radio id="friendInterface_community" checked="false" text="社区" />
+                                                        <frame w="2" />
+                                                        <radio id="friendInterface_friendbook" checked="true" text="好友簿" />
+                                                    </radiogroup>
+                                                </horizontal>
+                                                <horizontal gravity="center_vertical">
+                                                    <text text="照片文件夹路径:" textSize="14" w="auto" marginRight="10" />
+                                                    <input id="storageUpgrade_picDirPath" marginRight="8" w="*" h="auto" textSize="14" bg="#FFFFFF" />
+                                                </horizontal>
+                                            </vertical>
+
                                         </vertical>
+                                    </card>
 
-                                    </vertical>
-                                </card>
+                                    {/* 操作按钮区 */}
+                                    <horizontal gravity="center" marginTop="8">
+                                        <button id="btnInstructions" text="使用须知" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
+                                        <button id="btnLoadConfig" text="加载配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
+                                        <button id="btnSave" text="保存配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" />
+                                    </horizontal>
 
-                                {/* 操作按钮区 */}
-                                <horizontal gravity="center" marginTop="8">
-                                    <button id="btnInstructions" text="使用须知" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
-                                    <button id="btnLoadConfig" text="加载配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" marginRight="16" />
-                                    <button id="btnSave" text="保存配置" w="100" h="48" textSize="14" style="Widget.AppCompat.Button.Colored" />
-                                </horizontal>
-
-                                <horizontal gravity="center" marginTop="16">
-                                    <button id="btnStop" text="停止" w="100" h="48" textSize="16" color="#FFFFFF" backgroundTint="#FF9AA2" />
-                                    <frame w="16" />
-                                    <button id="btnStart" text="开始" w="216" h="48" textSize="16" color="#FFFFFF" backgroundTint="#4ECDC4" />
-                                </horizontal>
-                            </vertical>
-                        </scroll>
+                                </vertical>
+                            </scroll>
+                            <horizontal gravity="center|bottom" marginTop="8" marginBottom="16">
+                                <button id="btnStop" text="停止" w="100" h="48" textSize="16" color="#FFFFFF" backgroundTint="#FF9AA2" />
+                                <frame w="16" />
+                                <button id="btnStart" text="开始" w="216" h="48" textSize="16" color="#FFFFFF" backgroundTint="#4ECDC4" />
+                            </horizontal>
+                        </vertical>
                     </frame>
                     {/* 账号信息 */}
                     <frame>
@@ -4140,7 +4142,7 @@ function getConfig() {
         cropSellMethod: configs.get("cropSellMethod", defaultConfig.cropSellMethod),
         plantTreeMode: configs.get("plantTreeMode", defaultConfig.plantTreeMode),
         treeSearch: configs.get("treeSearch", defaultConfig.treeSearch),
-        
+
         syncHarvest: configs.get("syncHarvest", defaultConfig.syncHarvest),
         tom_FirstHire: configs.get("tom_FirstHire", defaultConfig.tom_FirstHire),
         landOffset: {
@@ -4503,10 +4505,10 @@ function validateConfig(config) {
     if (config.coinCollectionMethod != "一键收取" && config.coinCollectionMethod != "逐个点击") config.coinCollectionMethod = defaultConfig.coinCollectionMethod;
     // 验证作物售卖方式
     if (config.cropSellMethod != "shop" && config.cropSellMethod != "visitor") config.cropSellMethod = defaultConfig.cropSellMethod;
-    
+
     // 验证种植模式
     if (config.plantTreeMode != 0 && config.plantTreeMode != 1) config.plantTreeMode = defaultConfig.plantTreeMode;
-    
+
     // 验证手动搜索树木名称
     if (config.treeSearch == undefined || typeof config.treeSearch !== "boolean") {
         config.treeSearch = defaultConfig.treeSearch;
@@ -4550,7 +4552,7 @@ function validateConfig(config) {
 
     // 验证树木选择
     if (!config.selectedTree) config.selectedTree = defaultConfig.selectedTree;
-    const treeOptions = ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "咖啡丛", "橄榄树", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"];
+    const treeOptions = ["苹果树", "树莓丛", "樱桃树", "黑莓丛", "蓝莓丛", "可可树", "甘露花蜜丛", "咖啡丛", "橄榄树", "花生丛", "柠檬树", "香橙树", "水蜜桃树", "香蕉树", "西梅树", "芒果树", "椰子树", "番石榴树", "石榴树"];
     if (config.selectedTree.code < 0 || config.selectedTree.code >= treeOptions.length) {
         config.selectedTree.code = defaultConfig.selectedTree.code;
     }
@@ -5335,7 +5337,7 @@ function loadConfigToUI(loadConfigFromFile = false) {
 
     // 设置是否自动滑动
     ui.treeShouldSwipeSwitch.setChecked(config.treeShouldSwipe);
-    
+
     // 设置是否手动搜索树木名称
     ui.treeSearchSwitch.setChecked(config.treeSearch);
 
@@ -6104,7 +6106,7 @@ function initUI() {
         // 保存修改后的开关状态到配置
         configs.put("treeSearch", checked);
     });
-    
+
 
     // 绑定升仓方式单选框事件
     ui.storageUpgradeMethod.setOnCheckedChangeListener(function (radioGroup, isCheckedId) {

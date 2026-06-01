@@ -4,7 +4,8 @@
 const mod = require("./module.js");
 
 let config = mod.config;
-
+let configs = storages.create("config");
+const selectedTree = configs.get("selectedTree").text;
 let method
 
 /**
@@ -89,9 +90,9 @@ function sousuo() {
 function setTreeText() {
     if (sousuo()) {
         sleep(500);
-        mod.setText_inGame(config.selectedTree.text); //输入搜索内容
-        log("输入" + config.selectedTree.text);
-        mod.showTip("输入" + config.selectedTree.text);
+        mod.setText_inGame(selectedTree); //输入搜索内容
+        log("输入" + selectedTree);
+        mod.showTip("输入" + selectedTree);
         sleep(500);
         //检测搜索后的界面
         if (method === 2) {
@@ -112,7 +113,7 @@ function setTreeText() {
         // find_close();
         log("未找到搜索，再次寻找");
         if (sousuo()) {
-            mod.setText_inGame(config.selectedTree.text); //输入搜索内容
+            mod.setText_inGame(selectedTree); //输入搜索内容
             if (mod.matchColor([{ x: 45, y: 59, color: "#ffffff" }, { x: 142, y: 151, color: "#ffffca" }, { x: 478, y: 316, color: "#ffc837" }])) {
                 return true;  //成功搜索到
             }
