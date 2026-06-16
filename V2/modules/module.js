@@ -58,10 +58,13 @@ let crop_sell = cropItemColor[cropName].crop_sell;
 let crop_visitors = cropItemColor[cropName].crop_visitors;
 
 //界面
-const 商店界面范围 = [294, 133, 728 - 294, 673 - 133]
-const 商店售卖数字范围 = [870, 170, 935 - 870, 230 - 170]
+const 商店界面范围 = [263, 135, 689 - 263, 649 - 135];
+const 商店售卖数字范围 = [839, 176, 901 - 839, 226 - 176];
+const shop_lc_button = [200,220];
+const shop_hc_button = [205,350];
+const shop_bs_button = [];
 
-const 货仓界面范围 = [201, 124, 1093 - 201, 563 - 124]
+const 货仓界面范围 = [201, 124, 1093 - 201, 563 - 124];
 
 
 let randomOffset = 5; // 随机偏移量
@@ -1759,7 +1762,7 @@ function huadong_visitor() {
 /**
  * 调整视角到正确位置
  * 根据商店坐标定位商店，调整视角到商店位置
- * @param {Array} [endX, endY] - 目标位置偏移量，默认[250, 400]  //耕地推荐[530, 490]
+ * @param {Array} [endX, endY] - 目标位置偏移量，默认[250, 400]  //耕地推荐[400,450]
  * @returns {boolean} - 如果调整成功则返回 `true`，否则返回 `false`
  */
 function huadong_adjust([endX, endY]) {
@@ -2057,9 +2060,14 @@ function netMaker_produce(itemName) {
         if (item) {
             swipe(item.x + ran(), item.y + ran(), 1022 + ran(), 190 + ran(), 300)
             close()//防止制作神奇渔网
-            if (click_waitFor(null, null, allItemColor["生产栏位已满"], 5, 16, 100)) {
+            if (click_waitFor(null, null, allItemColor["生产栏位已满"], 3, 16, 100)) {
                 log("生产栏位已满")
                 showTip("生产栏位已满")
+                return true
+            } else if (click_waitFor(null, null, allItemColor["请先收集产品"], 3, 16, 100)) {
+                log("生产过量")
+                showTip("生产过量")
+                close()
                 return true
             }
         }
@@ -2097,7 +2105,13 @@ function machine_produce(itemInfo, [x, y]) {
                 log("生产栏位已满")
                 showTip("生产栏位已满")
                 return true
-            } else if (findMC(allItemColor["资源不足"])) {
+            } else if (findMC(allItemColor["请先收集产品"])) {
+                log("生产过量")
+                showTip("生产过量")
+                close()
+                return true
+            }
+             else if (findMC(allItemColor["资源不足"])) {
                 log("资源不足")
                 showTip("资源不足")
                 close()
@@ -3192,7 +3206,7 @@ function findland(isclick = true) {
 
         //滑动微调
         if (center_land.x < 300 || center_land.y > 500 || center_land.y < 300) {
-            huadong_adjust([530, 490])
+            huadong_adjust([400,450])
             pos_shop = findshop(true);
 
             center_land = {
@@ -3772,16 +3786,16 @@ function shop() {
 
             //判断是否在粮仓界面
             if (inShop_sell_page() != "lc") {
-                click(200 + ran(), 220 + ran());//点击售卖粮仓按钮
+                click(shop_lc_button[0] + ran(), shop_lc_button[1] + ran());//点击售卖粮仓按钮
                 sleep(100);
                 console.log("点击粮仓按钮")
             }
 
-            let wheat_sell = findMC(crop_sell, null, [292, 131, 729 - 292, 676 - 131], 16);
-
+            let wheat_sell = findMC(crop_sell, null, 商店界面范围, 16);
+            
             if (!wheat_sell) {   //没找到售卖货架上的作物
                 sleep(100);
-                wheat_sell = findMC(crop_sell, null, [292, 131, 729 - 292, 676 - 131], 16);
+                wheat_sell = findMC(crop_sell, null, 商店界面范围, 16);
                 if (!wheat_sell) {
                     console.log("未识别到" + config.selectedCrop.text);
                     showTip("未识别到" + config.selectedCrop.text);
@@ -3973,6 +3987,8 @@ function find_kongxian_until() {
  */
 function shopStatistic(sc) {
     try {
+        const capacity_range = [484, 60, 687 - 484, 110];
+
         let kongxian = find_kongxian();
         if (!kongxian) {    //没有空闲货架
             console.log("未找到空闲货架,商店售卖结束");
@@ -3981,13 +3997,13 @@ function shopStatistic(sc) {
         }
         //判断是否在货仓界面
         if (inShop_sell_page() != "hc") {
-            click(205 + ran(), 350 + ran());//点击售卖货仓按钮
+            click(shop_hc_button[0] + ran(), shop_hc_button[1] + ran());//点击售卖货仓按钮
             sleep(100);
             console.log("点击货仓按钮")
         }
 
         sc = sc || captureScreen();
-        let capacity_result = findFont(sc, [503, 61, 687 - 503, 110 - 61], "#FFFFFF", 8, Font.FontLibrary_ShopCapacity, 0.7);
+        let capacity_result = findFont(sc, capacity_range, "#FFFFFF", 8, Font.FontLibrary_ShopCapacity, 0.7);
         log(capacity_result);
 
         // 提取 '/' 两边的数字并计算差值
@@ -4263,6 +4279,14 @@ function distributeSellQuantity(itemQuantities, totalSellQuantity) {
  * @returns 
  */
 function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
+
+    const firstPos_OpenSearchButton = [330, 350];//打开搜索按钮后的第一个物品位置
+    const add_sellNum_button = [1033, 190];
+    const minus_sellNum_button = [795, 190];
+    const max_sellPrice_button = [970, 380];
+    const min_sellPrice_button = [860, 380];
+    const close_button = [1080, 70];
+
     pos = pos || "货仓";
     sleep(500);
     if (inShop_sell()) {
@@ -4294,7 +4318,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             if (matchColor(allItemColor["商店售卖界面1"]) || matchColor(allItemColor["商店售卖界面2"])) {
                 if (pos == "货仓") {
                     if (inShop_sell_page() != "hc") {
-                        click(205 + ran(), 350 + ran());//点击售卖货仓按钮
+                        click(shop_hc_button[0] + ran(), shop_hc_button[1] + ran());//点击售卖货仓按钮
                         sleep(100);
                         console.log("点击货仓按钮")
                     }
@@ -4302,7 +4326,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
 
                 else if (pos == "粮仓") {
                     if (inShop_sell_page() != "lc") {
-                        click(200 + ran(), 220 + ran());//点击售卖粮仓按钮
+                        click(shop_lc_button[0] + ran(), shop_lc_button[1] + ran());//点击售卖粮仓按钮
                         sleep(100);
                         console.log("点击粮仓按钮")
                     }
@@ -4311,7 +4335,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
 
             //如果打开搜索按钮，关闭搜索栏
             if (matchColor(allItemColor["商店搜索框"])) {
-                click(265 + ran(), 70 + ran())
+                click(230 + ran(), 70 + ran())
                 sleep(300);
             }
 
@@ -4331,7 +4355,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
                     if (!item_sell) {
                         console.log("未找到" + item.title + "，尝试下一个");
                         showTip("未找到" + item.title + "，尝试下一个");
-                        click(1110 + ran(), 70 + ran())//点击叉号
+                        click(close_button[0] + ran(), close_button[1] + ran())//点击叉号
                         break;
                     }
                 }
@@ -4343,7 +4367,7 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
 
                 clickShopSearchButton(item.title);
 
-                click(350 + ran(), 350 + ran()); //点击第一个
+                click(firstPos_OpenSearchButton[0] + ran(), firstPos_OpenSearchButton[1] + ran()); //点击第一个
             }
 
             // 识别售卖数字
@@ -4351,10 +4375,9 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             let item_num
 
             for (let i = 0; i < 5; i++) {
-                if (matchColor([{ x: 825, y: 210, color: "#f4c000" }, { x: 1077, y: 208, color: "#b9b9b9" }])) {
+                if (matchColor(allItemColor["shop_num_10"])) {
                     item_num = 10
-                } else if (matchColor([{ x: 828, y: 211, color: "#bababa" }, { x: 1078, y: 208, color: "#f6bd00" }]) ||
-                    matchColor([{ x: 827, y: 210, color: "#bbbbbb" }, { x: 1076, y: 211, color: "#b8b8b8" }])) {
+                } else if (matchColor(allItemColor["shop_num_1"]) || matchColor(allItemColor["shop_num_only1"])) {
                     item_num = 1
                 } else {
                     let region2 = 商店售卖数字范围 //识别售卖数字的区域
@@ -4380,21 +4403,21 @@ function shop_sell(sellPlan, itemColor, pos = "货仓", price = 2) {
             showTip("售卖:" + item.title + ",个数:" + sellNum)
             if (sellNum_difference >= 0) {
                 for (let i = 0; i < sellNum_difference; i++) {
-                    click(1060 + ran(), 190 + ran()); //点击增加按钮
+                    click(add_sellNum_button[0] + ran(), add_sellNum_button[1] + ran()); //点击增加按钮
                 }
             }
 
             if (sellNum_difference < 0) {
                 for (let i = 0; i < -sellNum_difference; i++) {
-                    click(830 + ran(), 190 + ran()); //点击减少按钮
+                    click(minus_sellNum_button[0] + ran(), minus_sellNum_button[1] + ran()); //点击减少按钮
                 }
             }
 
             console.log("修改售价");
             if (price == 0) {
-                click(890 + ran(), 380 + ran());//修改售价(最低)
+                click(min_sellPrice_button[0] + ran(), min_sellPrice_button[1] + ran());//修改售价(最低)
             } else if (price == 2) {
-                click(1000 + ran(), 380 + ran());//修改售价(最高)
+                click(max_sellPrice_button[0] + ran(), max_sellPrice_button[1] + ran());//修改售价(最高)
             }
 
             //上架
@@ -4431,7 +4454,7 @@ function sellPlanValidate(sellPlan_original) {
         }
         //判断是否在货仓界面
         if (inShop_sell_page() != "hc") {
-            click(205 + ran(), 350 + ran());//点击售卖货仓按钮
+            click(shop_hc_button[0] + ran(), shop_hc_button[1] + ran());//点击售卖货仓按钮
             sleep(100);
             console.log("点击货仓按钮")
         }
@@ -4533,7 +4556,7 @@ function sellPlanValidate(sellPlan_original) {
 function clickShopSearchButton(item) {
     for (let i = 0; i < 3; i++) {
         if (!matchColor(allItemColor["商店搜索框"])) {
-            click_waitFor([265 + ran(), 70 + ran()],
+            click_waitFor([230 + ran(), 70 + ran()],
                 allItemColor["商店搜索框"], null, 10)
             sleep(300);
         }
