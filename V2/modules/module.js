@@ -60,8 +60,8 @@ let crop_visitors = cropItemColor[cropName].crop_visitors;
 //界面
 const 商店界面范围 = [263, 135, 689 - 263, 649 - 135];
 const 商店售卖数字范围 = [839, 176, 901 - 839, 226 - 176];
-const shop_lc_button = [200,220];
-const shop_hc_button = [205,350];
+const shop_lc_button = [200, 220];
+const shop_hc_button = [205, 350];
 const shop_bs_button = [];
 
 const 货仓界面范围 = [201, 124, 1093 - 201, 563 - 124];
@@ -150,11 +150,23 @@ function findimage(imagepath, xiangsidu, sc = null, region = null) {
             return null;
         }
 
-        picture = images.read(imagepath);
-        if (!picture) {
-            toast("模板图片读取失败,读取路径:" + imagepath);
-            log("模板图片读取失败,读取路径:" + imagepath);
-            return null;
+        // 判断传入的是路径还是图片对象
+        if (typeof imagepath === "string") {
+            // 如果是字符串，当作文件路径处理
+            picture = images.read(imagepath);
+            if (!picture) {
+                if (!screenImage) sc.recycle(); // 只有不是传入的截图才回收
+                console.log("图片读取出错，请检查路径,当前传入路径:", imagepath);
+                return null;
+            }
+        } else {
+            // 如果是图片对象，直接使用
+            picture = imagepath;
+            if (!picture) {
+                if (!screenImage) sc.recycle(); // 只有不是传入的截图才回收
+                console.log("图片对象无效");
+                return null;
+            }
         }
 
         // 如果指定了区域参数，则只在区域内搜索
@@ -1762,7 +1774,7 @@ function huadong_visitor() {
 /**
  * 调整视角到正确位置
  * 根据商店坐标定位商店，调整视角到商店位置
- * @param {Array} [endX, endY] - 目标位置偏移量，默认[250, 400]  //耕地推荐[400,450]
+ * @param {Array} [endX, endY] - 目标位置偏移量，默认[250, 400]  ////耕地滑动微调[550, 420]
  * @returns {boolean} - 如果调整成功则返回 `true`，否则返回 `false`
  */
 function huadong_adjust([endX, endY]) {
@@ -2111,7 +2123,7 @@ function machine_produce(itemInfo, [x, y]) {
                 close()
                 return true
             }
-             else if (findMC(allItemColor["资源不足"])) {
+            else if (findMC(allItemColor["资源不足"])) {
                 log("资源不足")
                 showTip("资源不足")
                 close()
@@ -2605,36 +2617,39 @@ function find_honeyTree(maxTry) {
 /**
  * 查找报纸箱
  * 每次间隔500ms
+ * 对商店坐标偏移[-194, -74]
  * @param {number} maxTry 最大尝试次数
  * @returns {boolean} 返回报纸坐标
  */
 function find_baozhi(maxTry = 20) {
     for (let i = 0; i < maxTry; i++) {
-        let sc = captureScreen();
-        let baozhi = findMC(allItemColor["报纸1"], sc, null, 20) || findMC(allItemColor["报纸2"], sc, null, 20);
-
-        if (baozhi) {
-            return baozhi;
+        // let pos1 = findMC(allItemColor["报纸1"]) || findMC(allItemColor["报纸2"]);
+        // log(pos1)
+        let pos = findimage(images.fromBase64(Font.img.报纸), 0.8)
+        if (pos) {
+            return { x: pos.x + 4, y: pos.y + 15 };
         }
-        sleep(500);
+        if (i < maxTry - 1) sleep(500);
     }
 }
 
 /**
  * 查找邮箱
  * 每次间隔500ms
+ * 对商店坐标偏移[-256, -112]
  * @param {number} maxTry 最大尝试次数
  * @returns {boolean} 返回邮箱坐标
  */
 function find_youxiang(maxTry = 20) {
     for (let i = 0; i < maxTry; i++) {
-        let sc = captureScreen();
-        let youxiang = findMC(allItemColor["邮箱1"], sc) || findMC(allItemColor["邮箱2"], sc, null, 20);
+        // let pos1 = findMC(allItemColor["邮箱1"]) || findMC(allItemColor["邮箱2"]);
+        // log(pos1)
 
-        if (youxiang) {
-            return youxiang;
+        let pos = findimage(images.fromBase64(Font.img.邮箱), 0.8)
+        if (pos) {
+            return { x: pos.x + 2, y: pos.y + 18 };
         }
-        sleep(500);
+        if (i < maxTry - 1) sleep(500);
     }
 }
 
@@ -3206,7 +3221,7 @@ function findland(isclick = true) {
 
         //滑动微调
         if (center_land.x < 300 || center_land.y > 500 || center_land.y < 300) {
-            huadong_adjust([400,450])
+            huadong_adjust([550, 420]) //耕地滑动微调
             pos_shop = findshop(true);
 
             center_land = {
@@ -3241,40 +3256,55 @@ function findland(isclick = true) {
  */
 function findshop(silence = false, maxTry = 5) {
     console.log("找" + config.landFindMethod);
-    let center;
-    for (let i = 0; i < maxTry; i++) {
-        try {
-            if (!silence) showTip("第 " + (i + 1) + " 次检测" + config.landFindMethod);
-            if (config.landFindMethod == "商店") {
-                center = findimage(files.join(config.photoPath, "shop.png"), 0.6);
-                if (!center) {
-                    center1 = findimage(files.join(config.photoPath, "shop1.png"), 0.6);
-                    if (center1) center = { x: center1.x - 5, y: center1.y };
-                };
-            } else {
-                center = findimage(files.join(config.photoPath, "bakery.png"), 0.6);
-                if (!center) {
-                    center = findimage(files.join(config.photoPath, "bakery1.png"), 0.6);
-                };
+
+    // 寻找土地函数
+    const tryFindLand = function () {
+        const base = config.photoPath;
+
+        if (config.landFindMethod !== "商店") {
+            return (
+                findimage(files.join(base, "bakery.png"), 0.6) ||
+                findimage(files.join(base, "bakery1.png"), 0.6)
+            );
+        }
+
+        let pos;
+
+        pos = findimage(files.join(base, "shop.png"), 0.6);
+        if (pos) return pos;
+
+        pos = findimage(files.join(base, "shop1.png"), 0.6);
+        if (pos) return { x: pos.x - 5, y: pos.y };
+
+        const baozhi = find_baozhi(1);
+        if (baozhi) {
+            return {
+                x: baozhi.x - 194,
+                y: baozhi.y - 74
             };
-        } catch (error) {
-            log(error);
         }
-        if (center) break
-        else {
-            find_close(null, ["except_homeBtn"]);
-            if (i < maxTry - 1) sleep(500);
+
+        return null;
+    };
+
+    for (let i = 0; i < maxTry; i++) {
+        if (!silence) {
+            showTip(`第 ${i + 1} 次检测：${config.landFindMethod}`);
+            log(`第 ${i + 1} 次检测：${config.landFindMethod}`);
         }
+
+        const center = tryFindLand();
+        if (center) {
+            console.log(`找到${config.landFindMethod}，坐标: ${center.x},${center.y}`);
+            return center;
+        }
+
+        find_close(null, ["except_homeBtn"]);
+        if (i < maxTry - 1) sleep(500);
     }
-    if (center) {
-        console.log("找到" + config.landFindMethod + "，坐标: " + center.x + "," + center.y,);
-        // 找到面包房
-        return center;
-    } else {
-        console.log("未找到" + config.landFindMethod);
-        // 未找到面包房
-        return false;
-    }
+
+    console.log("未找到" + config.landFindMethod);
+    return false;
 }
 
 //打开路边小店
@@ -3792,7 +3822,7 @@ function shop() {
             }
 
             let wheat_sell = findMC(crop_sell, null, 商店界面范围, 16);
-            
+
             if (!wheat_sell) {   //没找到售卖货架上的作物
                 sleep(100);
                 wheat_sell = findMC(crop_sell, null, 商店界面范围, 16);
@@ -3916,11 +3946,17 @@ function find_kongxian(maxAttempts = 5) {
     let currentAttempts = 0;
     let findCoin = false;
     showTip("");
+    let kongxian_img = images.fromBase64(Font.img.kongxian);
     // log("当前尝试次数: " + currentAttempts);
 
     while (true) {
         sleep(100);
-        var kongxian = findMC(["#f1e044", [15, -2, "#7b593d"], [-8, 57, "#e4ad3d"], [-10, 67, "#f7ce8d"]], null, [160, 130, 1100 - 160, 600 - 130], 10);
+        var kongxian = findimages(kongxian_img, 0.8, 10).sort((a, b) => {
+            if (Math.abs(a.x - b.x) < 10) {
+                return a.y - b.y;
+            }
+            return a.x - b.x;
+        })[0];
 
         if (kongxian) break;
 
@@ -4484,7 +4520,7 @@ function sellPlanValidate(sellPlan_original) {
             // 搜索物品后
             let detected = true
             let itemNum = 0;
-            let numRegion = [360, 330, 130, 80];
+            let numRegion = [300, 330, 420 - 300, 420 - 330];//第一个物品数字区域
 
             let itemPos = null;
             //搜索后，如果颜色库有该物品
@@ -5691,6 +5727,9 @@ function operation(Account) {
             find_close();
             sleep(200);
         }
+
+        huadong_adjust([550, 420]) //耕地滑动微调
+        sleep(300);
 
         let center_land = findland();
         console.log("寻找耕地");

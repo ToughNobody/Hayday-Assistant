@@ -249,7 +249,7 @@ const otherItemColor = {
     "商店售卖界面1": [{ x: 1123, y: 67, color: "#ea3f48" }, { x: 827, y: 669, color: "#f6c041" }],
     "商店售卖界面2": [{ x: 1121, y: 64, color: "#ed424d" }, { x: 820, y: 663, color: "#c3c3c3" }],
 
-    "商店搜索框": [{ x: 268, y: 173, color: "#e8ca8a" }, { x: 314, y: 186, color: "#ffffca" }, { x: 728, y: 180, color: "#ffffca" }, { x: 768, y: 195, color: "#e8c787" }, { x: 770, y: 171, color: "#dfbc7e" }],
+    "商店搜索框": [{ x: 267, y: 166, color: "#ffffca" }, { x: 271, y: 198, color: "#ffffca" }, { x: 699, y: 198, color: "#ffffca" }, { x: 737, y: 210, color: "#e7c586" }, { x: 720, y: 147, color: "#eacf8e" }],
     "加载界面": [{ x: 438, y: 565, color: "#fcffa2" },
     { x: 409, y: 550, color: "#85cbec" }, { x: 418, y: 585, color: "#c4e3e8" },
     { x: 867, y: 546, color: "#7ec8ed" }, { x: 861, y: 587, color: "#c7e3e8" }],
